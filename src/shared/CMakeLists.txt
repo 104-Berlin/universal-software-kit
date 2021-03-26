@@ -8,3 +8,5 @@ add_library(Shared SHARED   file/engine_file_collection.cpp
                             logging/engine_logging.cpp)
 target_include_directories(Shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(Shared PRIVATE EEXPORT)
+
+target_link_libraries(Shared --coverage)

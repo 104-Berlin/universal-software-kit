@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+add_compile_options(--coverage --cov-report=xml)
 
 # Add system definitions
 if (WIN32)
@@ -33,4 +34,5 @@ add_subdirectory(deps/googletets)
 
 add_executable(UnitTest src/tests/test_engine_file.cpp)
 target_link_libraries(UnitTest gtest_main)
+target_link_libraries(UnitTest --coverage)
 target_link_libraries(UnitTest Shared)

@@ -38,4 +38,6 @@ jobs:
       run: |
             cd build
             ${{ matrix.unit_test_exec }}
+    - name: Collect Coverage reports
+      run: bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
 
