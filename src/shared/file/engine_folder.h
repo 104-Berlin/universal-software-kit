@@ -25,19 +25,19 @@ namespace Engine {
         i32             fFolderOptions;
     public:
         /**
-         * @param path - path to folder
-         * @param folderOptions - additional bitfield options for the folder
+         * @param path Path to folder
+         * @param folderOptions Additional bitfield options for the folder
          */
         EFolder(const EString& path, i32 folderOptions = EFolderOptions_None);
         /**
-         * @param f - BaseFolder path 
-         * @param path - Path to append to BaseFolder
-         * @param folderOptions - additional bitfield options for the folder
+         * @param f BaseFolder path 
+         * @param path Path to append to BaseFolder
+         * @param folderOptions Additional bitfield options for the folder
          */
         EFolder(EBaseFolder f, const EString& path = "", i32 folderOptions = EFolderOptions_None);
 
         /**
-         * @return lexically correct full path to folder
+         * @return Lexically correct full path to folder
          */
         const EString& GetFullPath() const;
 

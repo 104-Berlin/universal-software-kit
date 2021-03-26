@@ -67,7 +67,7 @@ namespace Engine {
 
         /**
          * Init the buffer with empty data
-         * @param size_in_bytes - the size in bytes
+         * @param size_in_bytes The size in bytes
          */
         template <typename PointerType>
         ESharedBuffer& InitWith(size_t size_in_bytes)
@@ -78,9 +78,9 @@ namespace Engine {
         }
 
         /*
-            @param data - Used to copy into this buffer. 
+            @param data Used to copy into this buffer. 
                             When set nullptr buffer will be created with given size and set all memory to zero.
-            @param size_in_bytes - the size of the buffer in bytes
+            @param size_in_bytes The size of the buffer in bytes
         */
         template <typename PointerType>
         ESharedBuffer& InitWith(void* data, size_t size_in_bytes)
