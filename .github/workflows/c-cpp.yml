@@ -38,9 +38,9 @@ jobs:
       run: |
             cd build
             ${{ matrix.unit_test_exec }}
-    uses: romeovs/lcov-reporter-action@v0.2.16
-    with:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: romeovs/lcov-reporter-action@v0.2.16
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
