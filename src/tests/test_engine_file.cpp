@@ -47,7 +47,6 @@ TEST(FileTest, FielSaveAndRead)
 
     {
         EFile writeFile(filePath);
-        std::cout << writeFile.GetFullPath() << std::endl;
         writeFile.SetFileAsString(fileContent);
     }
     
