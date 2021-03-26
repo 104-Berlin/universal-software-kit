@@ -3,6 +3,10 @@
 namespace Engine {
 
     namespace Path {
+
+        /**
+         * Joins the path with the system path seperator
+         */
         template <typename ...T>
         EString Join(const T&... args)
         {
@@ -16,7 +20,9 @@ namespace Engine {
             return result;
         }
     }
-
+    /**
+     * Representation of a File inside the Engine
+     */
     class E_API EFile
     {
     private:
@@ -26,18 +32,40 @@ namespace Engine {
 
         ESharedBuffer fFileBuffer;
     public:
+        /**
+         * @param path - relative or absolute path to file (dont need to exist)
+         */
         EFile(const EString& path);
+        /**
+         * @param baseFolder - start from a predefined folder
+         * @param path - relative path from the start of the base folder to file
+         */
         EFile(EBaseFolder baseFolder, const EString& path);
         ~EFile();
 
         bool Exist() const;
 
+        /**
+         * @return lexical correct full path to file
+         */
         EString GetFullPath() const;
+        /**
+         * @return path passed in creation
+         */
         const EString& GetPath() const;
+        /**
+         * @return the file extension without the dot
+         */
         const EString& GetFileExtension() const;
+        /**
+         * @return the raw name of the file without extension 
+         */
         const EString& GetFileName() const;
 
 
+        /**
+         * @param extensions - a list of all extensions to check for
+         */
         template <typename ...T>
         bool HasExtension(const T&... extensions) const
         {
@@ -53,17 +81,38 @@ namespace Engine {
             return false;
         }
 
+        /**
+         * @return reads the file as string and returns it
+         */
         EString GetFileAsString() const;
+        /**
+         * writes a string to the file
+         * @param string - the string to write
+         */
         void SetFileAsString(const EString& string) const;
 
-        // This function will store the file as buffer in the file
+        /**
+         * This function will store the file as buffer in the file
+         */
         void LoadToMemory();
-        // This function will dispose the file buffer if its been filled
+        /**
+         * This function will clear the file buffer if its been filled
+         */
         void DisposeMemory();
-
+        
+        /**
+         * This fill save the current loaded buffer to disk
+         */
         void SaveBufferToDisk();
 
+        /**
+         * @return The file as buffer. Buffer must be filled via LoadToMemory()
+         */
         ESharedBuffer GetBuffer() const;
+        /**
+         * Override the Buffer. Use SaveBufferToDisk for saving the buffer to HardDrive
+         * @param sharedBuffer - the buffer to override to current loaded
+         */
         void SetFileBuffer(ESharedBuffer sharedBuffer);
     private:
         void CreatePathStrings();
