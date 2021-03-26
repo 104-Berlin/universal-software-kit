@@ -24,7 +24,7 @@ namespace Engine {
 }
 
 
-#define E_ERROR(x) ::Engine::Logging::Log(Engine::Logging::ELogType::ERR, (x), __LINE__, __FILE__)
+#define E_ERROR(x) ::Engine::Logging::Log(::Engine::Logging::ELogType::ERR, (x), __LINE__, __FILE__)
 #define E_DEBUG(x) ::Engine::Logging::Log(::Engine::Logging::ELogType::DB, (x), __LINE__, __FILE__)
 #define E_UNDO(x) ::Engine::Logging::Log(::Engine::Logging::ELogType::UNDO, (x), __LINE__, __FILE__)
 #define E_WARN(x) ::Engine::Logging::Log(::Engine::Logging::ELogType::WARN, (x), __LINE__, __FILE__)
