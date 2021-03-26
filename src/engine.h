@@ -13,6 +13,7 @@
 #include <queue>
 #include <thread>
 #include <set>
+#include <exception>
 
 #ifdef M_PI
 #undef M_PI

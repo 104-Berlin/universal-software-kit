@@ -8,11 +8,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include_directories(src/)
 
+add_executable(USK_StartTesting src/test_executable.cpp)
 
+add_subdirectory(src/shared)
+target_link_libraries(USK_StartTesting Shared)
 
-add_subdirectory(src/ecs)
-
-
-add_library(USKShared src/engine_shared.cpp)
-
-target_link_libraries(EntityModel)
+#add_subdirectory(src/ecs)
+#target_link_libraries(EntityModel)
