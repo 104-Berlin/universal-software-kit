@@ -7,3 +7,4 @@ add_library(Shared SHARED   file/engine_file_collection.cpp
                             file/engine_shared_buffer.cpp
                             logging/engine_logging.cpp)
 target_include_directories(Shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(Shared PRIVATE EEXPORT)

@@ -3,11 +3,9 @@
 namespace Engine {
 
 	namespace Logging {
-		static const std::chrono::system_clock::time_point g_AppStart = std::chrono::system_clock::now();
-		
-		enum ELogType
+				enum class ELogType
 		{
-			ERROR,
+			ERR,
 			INFO,
 			WARN,
 			DB,
@@ -15,52 +13,17 @@ namespace Engine {
 			ASSERT
 		};
 
-		static inline EString GetPrefixString(ELogType type)
-		{
-			std::chrono::duration<double> duration = std::chrono::system_clock::now() - g_AppStart;
-			switch (type)
-			{
-			case Engine::Logging::ERROR:
-				return "[ERROR]" + std::to_string(duration.count()) + "[";
-				break;
-			case Engine::Logging::ASSERT:
-				return "[ASSERT]" + std::to_string(duration.count()) + "[";
-				break;
-			case Engine::Logging::INFO:
-				return "[INFO]" + std::to_string(duration.count()) + "[";
-				break;
-			case Engine::Logging::WARN:
-				return "[WARN]" + std::to_string(duration.count()) + "[";
-				break;
-			case Engine::Logging::DB:
-				return "[DEBUG]" + std::to_string(duration.count()) + "[";
-				break;
-			case Engine::Logging::UNDO:
-				return "[UNDO]" + std::to_string(duration.count()) + "[";
-				break;
-			default:
-				break;
-			}
-			return "";
-		}
 
-		static inline EString GetFileNameFromPath(const EString& path)
-		{
-			size_t lastSlashPos = path.find_last_of('/');
-			return path.substr(lastSlashPos + 1);
-		}
-
-		static inline void Log(ELogType type, const EString& str, u32 line, const char* file)
-		{
-			std::cout << GetPrefixString(type) << GetFileNameFromPath(file) << "l." << line << "]" << str << std::endl;
-		}
+		extern E_API EString GetPrefixString(ELogType type);
+		extern E_API EString GetFileNameFromPath(const EString& path);
+		extern E_API void Log(ELogType type, const EString& str, u32 line, const char* file);
 
 	}
 
 }
 
 
-#define E_ERROR(x) ::Engine::Logging::Log(::Engine::Logging::ELogType::ERROR, (x), __LINE__, __FILE__)
+#define E_ERROR(x) ::Engine::Logging::Log(::Engine::Logging::ELogType::ERR, (x), __LINE__, __FILE__)
 #define E_DEBUG(x) ::Engine::Logging::Log(::Engine::Logging::ELogType::DB, (x), __LINE__, __FILE__)
 #define E_UNDO(x) ::Engine::Logging::Log(::Engine::Logging::ELogType::UNDO, (x), __LINE__, __FILE__)
 #define E_WARN(x) ::Engine::Logging::Log(::Engine::Logging::ELogType::WARN, (x), __LINE__, __FILE__)

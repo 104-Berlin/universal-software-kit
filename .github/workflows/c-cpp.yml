@@ -2,9 +2,9 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -12,12 +12,10 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubunutu-lastest]
+        os: [windows-latest, macos-latest, ubuntu-latest]
 
     steps:
     - uses: actions/checkout@v2
-    - name: Checkout submodules
-      run: git submodule update --init --recursive
     - name: configure
       run: |
             mkdir build
