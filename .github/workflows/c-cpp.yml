@@ -25,4 +25,8 @@ jobs:
       run: |
             cd build
             cmake --build .
+    - name: test
+      run: |
+            cd build
+            ./UnitTest
 
