@@ -15,11 +15,11 @@ jobs:
         os: [windows-latest, macos-latest, ubuntu-latest]
         include:
           - os: windows-latest
-            unit_test_exec: .\UnitTest.cmd
+            unit_test_exec: .\UnitTest.exe
           - os: macos-latest
-            unit_test_exec: ./UnitTest.sh
+            unit_test_exec: ./UnitTest
           - os: ubuntu-latest
-            unit_test_exec: ./UnitTest.sh
+            unit_test_exec: ./UnitTest
 
     steps:
     - uses: actions/checkout@v2
