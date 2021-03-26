@@ -28,25 +28,24 @@ namespace Engine {
 
         /**
          * 
-         * @param path - path to file inside collection
-         * @param oBuffer - pointer to resulting file buffer
+         * @param path Path to file inside collection
+         * @param oBuffer Pointer to resulting file buffer
          * 
-         * @return wether the was found
+         * @return Wether the File was found
         */
         bool GetFileAt(const EString& path, ESharedBuffer* oBuffer);
         /**
-         * @param path - path to file inside collection
-         * @param buffer - filebuffer to put inside colleciton
+         * @param path Path to file inside collection
+         * @param buffer Filebuffer to put inside collection
         */
         void AddFile(const EString& path, ESharedBuffer buffer);
 
         /**
-         * @return a buffer packed with all the files
+         * @return A buffer packed with all the files
          */
         ESharedBuffer GetCompleteBuffer() const;
         /**
-         * @param buffer - Buffer to create the FileCollection.
-         *                 This buffer must been created with GetCompleteBuffer methode to get parsed correct
+         * @param buffer Buffer to create the FileCollection. This buffer must been created with GetCompleteBuffer methode to get parsed correct
          */
         void SetFromCompleteBuffer(ESharedBuffer buffer);
 
