@@ -9,7 +9,7 @@ TEST(FileTest, CheckFileStrings)
 
     EXPECT_STREQ(file.GetFileExtension().c_str(), "png");
     EXPECT_STREQ(file.GetFileName().c_str(), "TestFile");
-    EXPECT_STREQ(file.GetPath().c_str(), "test/Testle.png");
+    EXPECT_STREQ(file.GetPath().c_str(), "test/TestFile.png");
 }
 
 TEST(FileTest, FileCollection)
