@@ -3,7 +3,8 @@
 namespace Engine {
 
 	namespace Logging {
-				enum class ELogType
+
+		enum class ELogType
 		{
 			ERR,
 			INFO,

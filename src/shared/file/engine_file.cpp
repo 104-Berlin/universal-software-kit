@@ -117,7 +117,7 @@ void EFile::SaveBufferToDisk()
 {
     if (fFileBuffer.IsNull())
     {
-        std::cout << "Cant save empty file buffer to Disk" << std::endl;
+        E_ERROR("Cant save empty file buffer to Disk!");
         return;
     }
     std::ofstream oStream(GetFullPath(), std::ios::binary);
