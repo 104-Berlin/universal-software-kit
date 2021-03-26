@@ -12,10 +12,19 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest]
+        include:
+#          - os: windows-latest
+#            unit_test_exec: .\Debug\UnitTest.exe
+          - os: macos-latest
+            unit_test_exec: ./UnitTest
+          - os: ubuntu-latest
+            unit_test_exec: ./UnitTest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@master
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
     - name: configure
       run: |
             mkdir build
@@ -25,4 +34,16 @@ jobs:
       run: |
             cd build
             cmake --build .
-
+    - name: Test
+      run: |
+            cd build
+            ${{ matrix.unit_test_exec }}
+    - uses: romeovs/lcov-reporter-action@v0.2.16
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+        fail_ci_if_error: true # optional (default = false)
+        verbose: true # optional (default = false)

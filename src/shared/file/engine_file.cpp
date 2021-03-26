@@ -90,6 +90,7 @@ const EString& EFile::GetFileName() const
 
 void EFile::LoadToMemory() 
 {
+    if (!Exist()) { return; }
     if (!fFileBuffer.IsNull())
     {
         fFileBuffer.Dispose();
