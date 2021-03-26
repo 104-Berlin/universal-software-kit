@@ -1,24 +1,8 @@
 #include "engine.h"
-#include <logging/engine_error.h>
-
-void TestFunc(int x)
-{
-    if (x > 10)
-    {
-        throw(Engine::EError("Integer to big"));   
-    }
-}
+#include "shared/prefix_shared.h"
 
 int main()
 {
-    try
-    {
-        TestFunc(100);
-    }
-    catch(Engine::EError e)
-    {
-        std::cerr << e.what() << std::endl;
-        return 1;
-    }
+    E_DEBUG("Testing the logging");
     return 0;
 }
