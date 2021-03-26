@@ -26,10 +26,28 @@ namespace Engine {
         FileMap::iterator end();
         FileMap::const_iterator end() const;
 
+        /**
+         * 
+         * @param path - path to file inside collection
+         * @param oBuffer - pointer to resulting file buffer
+         * 
+         * @return wether the was found
+        */
         bool GetFileAt(const EString& path, ESharedBuffer* oBuffer);
+        /**
+         * @param path - path to file inside collection
+         * @param buffer - filebuffer to put inside colleciton
+        */
         void AddFile(const EString& path, ESharedBuffer buffer);
 
+        /**
+         * @return a buffer packed with all the files
+         */
         ESharedBuffer GetCompleteBuffer() const;
+        /**
+         * @param buffer - Buffer to create the FileCollection.
+         *                 This buffer must been created with GetCompleteBuffer methode to get parsed correct
+         */
         void SetFromCompleteBuffer(ESharedBuffer buffer);
 
     private:
