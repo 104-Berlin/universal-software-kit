@@ -12,10 +12,10 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest]
         include:
-          - os: windows-latest
-            unit_test_exec: .\Debug\UnitTest.exe
+#          - os: windows-latest
+#            unit_test_exec: .\Debug\UnitTest.exe
           - os: macos-latest
             unit_test_exec: ./UnitTest
           - os: ubuntu-latest
