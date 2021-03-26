@@ -6,6 +6,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+
+# Add system definitions
+if (WIN32)
+add_compile_definitions(EWIN)
+else()
+add_compile_definitions(EUNI)
+endif(WIN32)
+
 include_directories(src/)
 
 add_executable(USK_StartTesting src/test_executable.cpp)
