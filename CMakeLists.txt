@@ -20,6 +20,7 @@ add_executable(USK_StartTesting src/test_executable.cpp)
 
 add_subdirectory(src/shared)
 target_link_libraries(USK_StartTesting Shared)
+target_compile_definitions(USK_StartTesting PRIVATE EEXPORT)
 
 #add_subdirectory(src/ecs)
 #target_link_libraries(EntityModel)
