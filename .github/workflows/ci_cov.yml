@@ -37,7 +37,6 @@ jobs:
             cd bin
             ${{ matrix.unit_test_exec }}
 
-jobs:
   cover:
     runs-on: self-hosted
 
