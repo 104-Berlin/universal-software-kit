@@ -6,20 +6,20 @@ TEST(FileTest, CheckFileStrings)
 {
     E_INFO("Log Something");
     using namespace Engine;
-    EFile file("test/TestFile.png");
+    EFile file(Path::Join("test", "TestFile.png"));
 
     EXPECT_STREQ(file.GetFileExtension().c_str(), "png");
     EXPECT_STREQ(file.GetFileName().c_str(), "TestFile");
-    EXPECT_STREQ(file.GetPath().c_str(), "test/TestFile.png");
+    EXPECT_STREQ(file.GetPath().c_str(), Path::Join("test", "TestFile.png").c_str());
 }
 
 TEST(FileTest, FileCollection)
 {
-    const char* fileContent = "MyFileContent";
-    const char* collectionPath = "intern/MyFile.mf";
+    EString fileContent = "MyFileContent";
+    EString collectionPath = Engine::Path::Join("intern", "MyFile.mf");
     using namespace Engine;
     ESharedBuffer fileBuffer;
-    fileBuffer.InitWith<char>((void*)fileContent, strlen(fileContent) + 1);
+    fileBuffer.InitWith<char>((void*)fileContent.c_str(), fileContent.length() + 1);
 
     EFileCollection fileCollection;
     fileCollection.AddFile(collectionPath, fileBuffer);
@@ -38,13 +38,13 @@ TEST(FileTest, FileCollection)
 
 TEST(FileTest, FielSaveAndRead)
 {
-    const char* fileContent = "MyFileContent";
-    const char* filePath = "MyFile.mf";
-    const char* fileBufferPath = "MyFile.buf";
+    EString fileContent = "MyFileContent";
+    EString filePath = "MyFile.mf";
+    EString fileBufferPath = "MyFile.buf";
     using namespace Engine;
 
     ESharedBuffer fileBuffer;
-    fileBuffer.InitWith<char>((void*)fileContent, strlen(fileContent) + 1);
+    fileBuffer.InitWith<char>((void*)fileContent.c_str(), fileContent.length() + 1);
 
     {
         EFile writeFile(filePath);
@@ -55,7 +55,7 @@ TEST(FileTest, FielSaveAndRead)
         EFile readFile(filePath);
         EXPECT_TRUE(readFile.Exist());
         EString readString = readFile.GetFileAsString();
-        EXPECT_STREQ(readString.c_str(), fileContent);
+        EXPECT_STREQ(readString.c_str(), fileContent.c_str());
     }
 
     {
