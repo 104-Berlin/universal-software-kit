@@ -6,7 +6,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+
+
+if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 add_compile_options(--coverage)
+endif()
 
 # Add system definitions
 if (WIN32)
@@ -38,4 +45,8 @@ if (${BUILD_TEST})
     target_link_libraries(UnitTest gtest_main)
     target_link_libraries(UnitTest --coverage)
     target_link_libraries(UnitTest Shared)
+    
+    if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+      target_link_libraries(UnitTest --coverage)
+    endif()
 endif()
