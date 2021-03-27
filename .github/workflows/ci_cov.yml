@@ -52,7 +52,7 @@ jobs:
     - name: build
       run: |
             cd build
-            cmake --build .
+            make -j
     - name: Test
       run: |
             cd bin
