@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: CodeCov - Unix CI
 
 on:
   push:
@@ -8,18 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-        include:
-          - os: windows-latest
-            unit_test_exec: .\Debug\UnitTest.exe
-          - os: macos-latest
-            unit_test_exec: ./UnitTest
-          - os: ubuntu-latest
-            unit_test_exec: ./UnitTest
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@master
@@ -37,7 +26,7 @@ jobs:
     - name: Test
       run: |
             cd bin
-            ${{ matrix.unit_test_exec }}
+            ./UnitTest
     - uses: romeovs/lcov-reporter-action@v0.2.16
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
