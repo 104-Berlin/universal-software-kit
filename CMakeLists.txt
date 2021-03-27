@@ -14,7 +14,7 @@ option(USE_COV "Use the covarage option when not using MSVC" FALSE)
 
 if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC AND USE_COV)
 add_compile_options(--coverage)
-link_libraries(--covarage)
+link_libraries(--coverage)
 endif()
 
 # Add system definitions
