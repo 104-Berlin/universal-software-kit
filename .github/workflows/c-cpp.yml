@@ -14,8 +14,8 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
         include:
-#          - os: windows-latest
-#            unit_test_exec: .\Debug\UnitTest.exe
+          - os: windows-latest
+            unit_test_exec: .\Debug\UnitTest.exe
           - os: macos-latest
             unit_test_exec: ./UnitTest
           - os: ubuntu-latest
@@ -36,7 +36,7 @@ jobs:
             cmake --build .
     - name: Test
       run: |
-            cd build
+            cd bin
             ${{ matrix.unit_test_exec }}
     - uses: romeovs/lcov-reporter-action@v0.2.16
       with:
