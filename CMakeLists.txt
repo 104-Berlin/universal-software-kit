@@ -30,9 +30,12 @@ target_compile_definitions(USK_StartTesting PRIVATE EEXPORT)
 
 #########################
 ###### TESTING ##########
-add_subdirectory(deps/googletets)
+option(BUILD_TEST "Toggle the unittest" TRUE)
+if (${BUILD_TEST})
+    add_subdirectory(deps/googletets)
 
-add_executable(UnitTest src/tests/test_engine_file.cpp)
-target_link_libraries(UnitTest gtest_main)
-target_link_libraries(UnitTest --coverage)
-target_link_libraries(UnitTest Shared)
+    add_executable(UnitTest src/tests/test_engine_file.cpp)
+    target_link_libraries(UnitTest gtest_main)
+    target_link_libraries(UnitTest --coverage)
+    target_link_libraries(UnitTest Shared)
+endif()
