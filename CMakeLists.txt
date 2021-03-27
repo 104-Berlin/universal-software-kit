@@ -6,7 +6,16 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+
+
+if(MSVC)
 add_compile_options(--coverage)
+else()
+add_compile_options(/EnableCodeCoverage)
+endif(MSVC)
 
 # Add system definitions
 if (WIN32)
@@ -34,5 +43,8 @@ add_subdirectory(deps/googletets)
 
 add_executable(UnitTest src/tests/test_engine_file.cpp)
 target_link_libraries(UnitTest gtest_main)
-target_link_libraries(UnitTest --coverage)
 target_link_libraries(UnitTest Shared)
+
+if (!MSVC)
+target_link_libraries(UnitTest --coverage)
+endif()
