@@ -11,11 +11,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 
-if(MSVC)
+if(!MSVC)
 add_compile_options(--coverage)
-else()
-add_compile_options(/EnableCodeCoverage)
-endif(MSVC)
+endif()
 
 # Add system definitions
 if (WIN32)
