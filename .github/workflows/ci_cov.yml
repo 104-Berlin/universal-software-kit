@@ -38,7 +38,7 @@ jobs:
             ${{ matrix.unit_test_exec }}
 
   cover:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@master
