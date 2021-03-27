@@ -1,4 +1,4 @@
-name: CodeCov - Unix CI
+name: CodeCov - CI
 
 on:
   push:
@@ -7,7 +7,38 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  build-test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+       matrix:
+         os: [macos-latest, windows-latest]
+         include:
+           - os: windows-latest
+             unit_test_exec: .\Debug\UnitTest.exe
+           - os: macos-latest
+             unit_test_exec: ./UnitTest
+
+    steps:
+    - uses: actions/checkout@master
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
+    - name: configure
+      run: |
+            mkdir build
+            cd build
+            cmake ..
+    - name: build
+      run: |
+            cd build
+            cmake --build .
+    - name: Test
+      run: |
+            cd bin
+            ${{ matrix.unit_test_exec }}
+
+jobs:
+  cover:
     runs-on: self-hosted
 
     steps:
