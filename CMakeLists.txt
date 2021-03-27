@@ -11,7 +11,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 
-if(!MSVC)
+if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 add_compile_options(--coverage)
 endif()
 
@@ -43,6 +43,8 @@ add_executable(UnitTest src/tests/test_engine_file.cpp)
 target_link_libraries(UnitTest gtest_main)
 target_link_libraries(UnitTest Shared)
 
-if (!MSVC)
-target_link_libraries(UnitTest --coverage)
+
+
+if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+  target_link_libraries(UnitTest --coverage)
 endif()
