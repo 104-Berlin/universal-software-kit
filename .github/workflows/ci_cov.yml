@@ -48,7 +48,7 @@ jobs:
       run: |
             mkdir build
             cd build
-            cmake ..
+            cmake -DUSE_COV=TRUE ..
     - name: build
       run: |
             cd build

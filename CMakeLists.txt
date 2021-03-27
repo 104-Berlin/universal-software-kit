@@ -10,9 +10,11 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
+option(USE_COV "Use the covarage option when not using MSVC" FALSE)
 
-if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC AND USE_COV)
 add_compile_options(--coverage)
+link_libraries(--covarage)
 endif()
 
 # Add system definitions
@@ -23,30 +25,18 @@ add_compile_definitions(EUNI)
 endif(WIN32)
 
 include_directories(src/)
-
-add_executable(USK_StartTesting src/test_executable.cpp)
-
 add_subdirectory(src/shared)
-target_link_libraries(USK_StartTesting Shared)
-target_compile_definitions(USK_StartTesting PRIVATE EEXPORT)
-
-#add_subdirectory(src/ecs)
-#target_link_libraries(EntityModel)
-
 
 
 #########################
 ###### TESTING ##########
 option(BUILD_TEST "Toggle the unittest" TRUE)
 if (${BUILD_TEST})
-    add_subdirectory(deps/googletets)
+  add_subdirectory(deps/googletets)
 
-    add_executable(UnitTest src/tests/test_engine_file.cpp)
-    target_link_libraries(UnitTest gtest_main)
-    target_link_libraries(UnitTest --coverage)
-    target_link_libraries(UnitTest Shared)
-    
-    if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-      target_link_libraries(UnitTest --coverage)
-    endif()
+  add_executable(UnitTest src/tests/test_engine_file.cpp
+                          src/tests/test_engine_register.cpp)
+  target_link_libraries(UnitTest gtest_main)
+  target_link_libraries(UnitTest --coverage)
+  target_link_libraries(UnitTest Shared)
 endif()

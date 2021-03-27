@@ -88,9 +88,8 @@ using ERef = std::shared_ptr<T>;
 template <typename T>
 using EWeakRef = std::weak_ptr<T>;
 
-const char kPathSeparator =
 #ifdef EWIN
-                            '\\';
+#define kPathSeparator '\\'
 #else
-                            '/';
+#define kPathSeparator '/'
 #endif

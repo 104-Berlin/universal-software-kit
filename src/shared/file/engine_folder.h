@@ -11,8 +11,8 @@ namespace Engine {
 
 
 
-    constexpr i32 EFolderOptions_None = 0;
-    constexpr i32 EFolderOptions_CreateIfNotExist = BIT(0);
+#define EFolderOptions_None 0
+#define EFolderOptions_CreateIfNotExist BIT(0)
 
     /**
      * Representation of a Folder inside the Engine
