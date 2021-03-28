@@ -23,5 +23,12 @@ TEST(RegisterTest, StructureDataHandle)
     EStructureDataHandle structureHandle("MyStruct");
     structureHandle.AddField({"MyInteger", EDataType::INTEGER});
 
-    
+    EXPECT_TRUE(structureHandle.GetFieldAt("MyInteger"));
+
+    ERef<EIntegerDataHandle> integerHandle = structureHandle.GetFieldAt<EIntegerDataHandle>("MyInteger");
+    EXPECT_NE(integerHandle, nullptr);
+    if (integerHandle)
+    {
+        EXPECT_EQ(integerHandle->GetValue(), 0);
+    }
 }

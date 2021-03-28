@@ -3,10 +3,25 @@
 
 using namespace Engine;
 
+EDataType EDataHandle::data_type = EDataType::UNKNOWN;
+EDataType EIntegerDataHandle::data_type = EDataType::INTEGER;
+EDataType EStructureDataHandle::data_type = EDataType::STRUCTURE;
+
+
 EDataHandle::EDataHandle(const EString& name, EDataType type)
     : fDataDescription({name, type})
 {
     
+}
+
+const EString& EDataHandle::GetName() const
+{
+    return fDataDescription.DataName;   
+}
+
+EDataType EDataHandle::GetDataType() const
+{
+    return fDataDescription.DataType;
 }
 
 EIntegerDataHandle::EIntegerDataHandle(const EString& name, i32 defaultValue) 
@@ -51,9 +66,15 @@ EStructureDataHandle::~EStructureDataHandle()
     
 }
 
-bool EStructureDataHandle::GetFieldAt(const EString& name) 
+ERef<EDataHandle> EStructureDataHandle::GetFieldAt(const EString& name) 
 {
-    return false;
+    if (!HasFieldAt(name)) { return nullptr; }
+    return fFields.at(name);
+}
+
+bool EStructureDataHandle::HasFieldAt(const EString& name) 
+{
+    return fFields.find(name) != fFields.end();
 }
 
 void EStructureDataHandle::AddField(EDataDescriptor descriptor) 
@@ -82,7 +103,7 @@ void EStructureDataHandle::AddField(EDataDescriptor descriptor)
         break;
     case Engine::EDataType::STRUCTURE:
         break;
-    case Engine::EDataType::STRUCTURE_REF:
+    case Engine::EDataType::DATA_REF:
         break;
     }
 }
