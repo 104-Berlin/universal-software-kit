@@ -63,7 +63,6 @@ namespace Engine {
     public:
         EIntegerDataHandle(const EString& name, i32 defaultValue = 0);
         E_DEF_CCTOR(EIntegerDataHandle);
-        ~EIntegerDataHandle();
 
         i32 GetValue() const;
         void SetValue(i32 value);
@@ -85,7 +84,6 @@ namespace Engine {
     public:
         EFloatDataHandle(const EString& name, float defaultValue = 0);
         E_DEF_CCTOR(EFloatDataHandle);
-        ~EFloatDataHandle();
 
         float GetValue() const;
         void SetValue(float value);
@@ -107,7 +105,6 @@ namespace Engine {
     public:
         EBooleanDataHandle(const EString& name, bool defaultValue = false);
         E_DEF_CCTOR(EBooleanDataHandle);
-        ~EBooleanDataHandle() = default;
 
         bool GetValue() const;
         void SetValue(bool value);

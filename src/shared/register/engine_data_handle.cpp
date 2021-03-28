@@ -32,11 +32,6 @@ EIntegerDataHandle::EIntegerDataHandle(const EString& name, i32 defaultValue)
     
 }
 
-EIntegerDataHandle::~EIntegerDataHandle() 
-{
-    
-}
-
 i32 EIntegerDataHandle::GetValue() const
 {
     return fValue;
@@ -59,11 +54,6 @@ void EIntegerDataHandle::operator=(i32 value)
 
 EFloatDataHandle::EFloatDataHandle(const EString& name, float defaultValue) 
     : EDataHandle(name, EDataType::FLOAT), fValue(defaultValue)
-{
-    
-}
-
-EFloatDataHandle::~EFloatDataHandle() 
 {
     
 }
@@ -122,7 +112,7 @@ EStructureDataHandle::EStructureDataHandle(const EString& name)
 
 EStructureDataHandle::~EStructureDataHandle() 
 {
-    
+    fFields.clear();
 }
 
 ERef<EDataHandle> EStructureDataHandle::GetFieldAt(const EString& name) 
