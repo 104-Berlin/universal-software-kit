@@ -36,15 +36,26 @@ TEST(RegisterTest, StructureDataHandle)
 
     EStructureDataHandle structureHandle("MyStruct");
     structureHandle.AddField({"MyInteger", EDataType::INTEGER}, 20);
-    structureHandle.AddField({"MyFloat", EDataType::FLOAT}, 20);
-    structureHandle.AddField({"MyBoolean", EDataType::BOOLEAN}, 20);
+    structureHandle.AddField({"MyFloat", EDataType::FLOAT}, 3.5);
+    structureHandle.AddField({"MyBoolean", EDataType::BOOLEAN}, true);
 
     EXPECT_TRUE(structureHandle.GetFieldAt("MyInteger"));
+    EXPECT_FALSE(structureHandle.GetFieldAt("WRONG FIELD NAME"));
 
     ERef<EIntegerDataHandle> integerHandle = structureHandle.GetFieldAt<EIntegerDataHandle>("MyInteger");
+    ERef<EFloatDataHandle> wrongFloatHandle = structureHandle.GetFieldAt<EFloatDataHandle>("MyInteger");
+    ERef<EFloatDataHandle> floatHandle = structureHandle.GetFieldAt<EFloatDataHandle>("MyFloat");
+    ERef<EBooleanDataHandle> boolHandle = structureHandle.GetFieldAt<EBooleanDataHandle>("MyBoolean");
+
+    EXPECT_EQ(wrongFloatHandle, nullptr);
     EXPECT_NE(integerHandle, nullptr);
-    if (integerHandle)
+    EXPECT_NE(floatHandle, nullptr);
+    EXPECT_NE(boolHandle, nullptr);
+
+    if (integerHandle && boolHandle && floatHandle)
     {
         EXPECT_EQ(integerHandle->GetValue(), 20);
+        EXPECT_EQ(floatHandle->GetValue(), 3.5);
+        EXPECT_EQ(boolHandle->GetValue(), true);
     }
 }

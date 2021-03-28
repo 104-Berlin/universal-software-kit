@@ -172,8 +172,10 @@ namespace Engine {
                 fFields.insert({descriptor.DataName, EMakeRef<EIntegerDataHandle>(descriptor.DataName, args...)});
                 break;
             case Engine::EDataType::FLOAT:
+                fFields.insert({descriptor.DataName, EMakeRef<EFloatDataHandle>(descriptor.DataName, args...)});
                 break;
             case Engine::EDataType::BOOLEAN:
+                fFields.insert({descriptor.DataName, EMakeRef<EBooleanDataHandle>(descriptor.DataName, args...)});
                 break;
             case Engine::EDataType::STRING:
                 break;
