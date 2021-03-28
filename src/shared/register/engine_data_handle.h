@@ -29,14 +29,14 @@ namespace Engine {
         FLOAT,
         BOOLEAN,
         STRING,
-        VECTOR2,
-        VECTOR3,
-        VECTOR4,
+        //VECTOR2,
+        //VECTOR3,
+        //VECTOR4,
 
-        ARRAY,
+        //ARRAY,
 
         STRUCTURE,          // Some map-combination of types
-        DATA_REF       // Pointer to other data
+        //DATA_REF       // Pointer to other data
     };
 
     /**
