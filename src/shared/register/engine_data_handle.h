@@ -105,11 +105,6 @@ namespace Engine {
     {
         using type = EIntegerDataHandle;
     };
-    template <>
-    struct EPrimitiveTypeMap<i16>
-    {
-        using type = EIntegerDataHandle;
-    };
 
 
 
