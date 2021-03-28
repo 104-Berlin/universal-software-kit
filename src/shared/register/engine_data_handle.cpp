@@ -132,7 +132,7 @@ void EStringDataHandle::operator=(const EString& value)
 }
 
 
-EStructureDataHandle::EStructureDataHandle(const EString& name) 
+EStructureDataHandle::EStructureDataHandle(const EString& name, const EStructureDescription& description) 
     : EDataHandle(name, EDataType::STRUCTURE)
 {
     
@@ -147,6 +147,17 @@ ERef<EDataHandle> EStructureDataHandle::GetFieldAt(const EString& name)
 {
     if (!HasFieldAt(name)) { return nullptr; }
     return fFields.at(name);
+}
+
+void EStructureDataHandle::AddFieldsFromDescpription(const EStructureDescription& description) 
+{
+    if (description.TypeData.DataType == EDataType::STRUCTURE)
+    {
+        for (auto child : description.Childs)
+        {
+            
+        }
+    }
 }
 
 bool EStructureDataHandle::HasFieldAt(const EString& name) 

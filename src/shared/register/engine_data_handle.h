@@ -213,6 +213,15 @@ namespace Engine {
         using type = EStringDataHandle;
     };
 
+    struct EStructureDescription
+    {
+        EStructureDescription(EDataDescriptor typeData, EVector<EStructureDescription> childs = {})
+            : TypeData(typeData), Childs(childs)
+        {}
+
+        EDataDescriptor                 TypeData;
+        EVector<EStructureDescription>  Childs; // This only gets filled when TypeData.DataType == EDataType::STRUCTURE
+    };
 
     /**
      * Structure Data handle.
@@ -226,7 +235,7 @@ namespace Engine {
     private:
         FieldMap    fFields;
     public:
-        EStructureDataHandle(const EString& name);
+        EStructureDataHandle(const EString& name, const EStructureDescription& description);
         E_DEF_CCTOR(EStructureDataHandle);
         ~EStructureDataHandle();
 
@@ -298,6 +307,8 @@ namespace Engine {
             E_WARN("Could not get field " + name + " from " + GetName() + "! WRONG TYPE");
             return nullptr;
         }
+    private:
+        void AddFieldsFromDescpription(const EStructureDescription& description);
     };
 
 
@@ -307,5 +318,12 @@ namespace Engine {
         static constexpr bool value = true;
     };
 
-
 }
+
+#define E_BEGIN_STRUCT(name) Engine::EStructureDescription name; \
+                            [&name](){\
+                             Engine::EStructureDescription& currently_setting = name;
+
+#define E_STRUCT_DATA(name, type) currently_setting.Childs.push_back({{#name, type}});
+
+#define E_END_STRUCT() }()

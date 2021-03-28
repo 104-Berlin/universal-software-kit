@@ -2,6 +2,14 @@
 #include <engine.h>
 #include <prefix_shared.h>
 
+Engine::EStructureDescription TestStruct({"TestStruct", Engine::EDataType::STRUCTURE}, {
+                        Engine::EStructureDescription({"MyInteger", Engine::EDataType::INTEGER}),
+                        Engine::EStructureDescription({"MyFloat", Engine::EDataType::FLOAT}),
+                        Engine::EStructureDescription({"MyBool", Engine::EDataType::BOOLEAN}),
+                        Engine::EStructureDescription({"MyString", Engine::EDataType::STRING})
+});
+
+
 TEST(RegisterTest, IntegerDataHandle)
 {
     using namespace Engine;
@@ -62,11 +70,7 @@ TEST(RegisterTest, StructureDataHandle)
 {
     using namespace Engine;
 
-    EStructureDataHandle structureHandle("MyStruct");
-    structureHandle.AddField<int>("MyInteger", 20);
-    structureHandle.AddField<float>("MyFloat", 3.5);
-    structureHandle.AddField<EBooleanDataHandle>("MyBoolean", true);
-    structureHandle.AddField<EString>("MyString", "Hey you");
+    EStructureDataHandle structureHandle("MyStruct", TestStruct);
 
     EXPECT_EQ(structureHandle.GetFieldAt("WRONG FIELD NAME"), nullptr);
     EXPECT_NE(structureHandle.GetFieldAt("MyInteger"), nullptr);
@@ -83,11 +87,9 @@ TEST(RegisterTest, StructureDataHandle)
     EXPECT_NE(boolHandle, nullptr);
     EXPECT_NE(stringHandle, nullptr);
 
-    if (integerHandle && boolHandle && floatHandle && stringHandle)
+    const EStructureDataHandle& const_ref_handle = structureHandle;
+    for (auto x : const_ref_handle) 
     {
-        EXPECT_EQ(integerHandle->GetValue(), 20);
-        EXPECT_FLOAT_EQ(floatHandle->GetValue(), 3.5);
-        EXPECT_TRUE(boolHandle->GetValue());
-        EXPECT_STREQ(stringHandle->GetValue().c_str(), "Hey you");
+        EXPECT_FALSE(x.first.empty());
     }
 }
