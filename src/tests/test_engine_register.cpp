@@ -63,7 +63,7 @@ TEST(RegisterTest, StructureDataHandle)
     using namespace Engine;
 
     EStructureDataHandle structureHandle("MyStruct");
-    structureHandle.AddField<i32>("MyInteger", 20);
+    structureHandle.AddField<int>("MyInteger", 20);
     structureHandle.AddField<float>("MyFloat", 3.5);
     structureHandle.AddField<EBooleanDataHandle>("MyBoolean", true);
     structureHandle.AddField<EString>("MyString", "Hey you");
