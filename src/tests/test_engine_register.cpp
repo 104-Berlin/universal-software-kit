@@ -23,4 +23,5 @@ TEST(RegisterTest, StructureDataHandle)
     EStructureDataHandle structureHandle("MyStruct");
     structureHandle.AddField({"MyInteger", EDataType::INTEGER});
 
+    
 }

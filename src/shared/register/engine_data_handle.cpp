@@ -64,7 +64,7 @@ void EStructureDataHandle::AddField(EDataDescriptor descriptor)
         E_WARN("Cant add unknown data type to StructureData called " + descriptor.DataName);
         break;
     case Engine::EDataType::INTEGER:
-        fFields.push_back(EIntegerDataHandle(descriptor.DataName));
+        fFields.insert({descriptor.DataName, EMakeRef<EIntegerDataHandle>(descriptor.DataName)});
         break;
     case Engine::EDataType::FLOAT:
         break;
@@ -88,27 +88,27 @@ void EStructureDataHandle::AddField(EDataDescriptor descriptor)
 }
 
 
-const EVector<EDataHandle> EStructureDataHandle::GetFields() 
+const EStructureDataHandle::FieldMap& EStructureDataHandle::GetFields() 
 {
     return fFields;
 }
 
-EVector<EDataHandle>::iterator EStructureDataHandle::begin() 
+EStructureDataHandle::FieldMap::iterator EStructureDataHandle::begin() 
 {
     return fFields.begin();
 }
 
-EVector<EDataHandle>::iterator EStructureDataHandle::end() 
+EStructureDataHandle::FieldMap::iterator EStructureDataHandle::end() 
 {
     return fFields.end();
 }
 
-EVector<EDataHandle>::const_iterator EStructureDataHandle::begin() const
+EStructureDataHandle::FieldMap::const_iterator EStructureDataHandle::begin() const
 {
     return fFields.begin();
 }
 
-EVector<EDataHandle>::const_iterator EStructureDataHandle::end() const
+EStructureDataHandle::FieldMap::const_iterator EStructureDataHandle::end() const
 {
     return fFields.end();
 }

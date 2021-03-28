@@ -58,8 +58,9 @@ namespace Engine {
 
     class E_API EStructureDataHandle : public EDataHandle
     {
+        using FieldMap = EUnorderedMap<EString, ERef<EDataHandle>>;
     private:
-        EVector<EDataHandle>    fFields;
+        FieldMap    fFields;
     public:
         EStructureDataHandle(const EString& name);
         ~EStructureDataHandle();
@@ -68,11 +69,11 @@ namespace Engine {
 
         void AddField(EDataDescriptor descriptor);
 
-        const EVector<EDataHandle> GetFields();
-        EVector<EDataHandle>::iterator begin();
-        EVector<EDataHandle>::iterator end();
-        EVector<EDataHandle>::const_iterator begin() const;
-        EVector<EDataHandle>::const_iterator end() const;
+        const FieldMap& GetFields();
+        FieldMap::iterator begin();
+        FieldMap::iterator end();
+        FieldMap::const_iterator begin() const;
+        FieldMap::const_iterator end() const;
     };
 
 }

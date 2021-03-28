@@ -82,7 +82,9 @@ using EScope = std::unique_ptr<T>;
 
 template <typename T>
 using ERef = std::shared_ptr<T>;
-#define EMakeRef(Type, ...) std::make_shared<Type>(__VA_ARGS__)
+
+template <typename T>
+static constexpr auto EMakeRef = [](auto... args) {return std::make_shared<T>(args...);};
 
 
 template <typename T>
