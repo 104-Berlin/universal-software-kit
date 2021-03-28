@@ -215,7 +215,7 @@ namespace Engine {
     };
 
 
-    class EStructureDescription
+    class E_API EStructureDescription
     {
     private:
         EDataDescriptor                 fTypeData;
@@ -226,7 +226,7 @@ namespace Engine {
         EDataDescriptor GetTypeData() const;
     };
 
-    class EStructureStructDescription : public EStructureDescription
+    class E_API EStructureStructDescription : public EStructureDescription
     {
     private:
         EVector<EStructureDescription>  fChilds;
