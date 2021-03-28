@@ -95,3 +95,5 @@ using EWeakRef = std::weak_ptr<T>;
 #else
 #define kPathSeparator '/'
 #endif
+
+#define E_DEF_CCTOR(Class) Class(const Class&) = default

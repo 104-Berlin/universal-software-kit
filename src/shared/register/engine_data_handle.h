@@ -38,12 +38,13 @@ namespace Engine {
     class E_API EDataHandle
     {
     public:
-        static EDataType data_type; // The static type. This is reuired in all sub-classes
+        static EDataType data_type; // The static type. This is reuired in all sub-classes for static type checking
     private:
         EDataDescriptor fDataDescription;
     protected:
         EDataHandle(const EString& name, EDataType type);
     public:
+        E_DEF_CCTOR(EDataHandle);
         virtual ~EDataHandle() = default;
 
         const EString& GetName() const;
@@ -61,6 +62,7 @@ namespace Engine {
         i32     fValue;
     public:
         EIntegerDataHandle(const EString& name, i32 defaultValue = 0);
+        E_DEF_CCTOR(EIntegerDataHandle);
         ~EIntegerDataHandle();
 
         i32 GetValue() const;
@@ -69,6 +71,28 @@ namespace Engine {
 
         operator i32() const;
         void operator=(i32 value);
+    };
+
+    /**
+     * Integer Data field
+     */
+    class E_API EFloatDataHandle : public EDataHandle
+    {
+    public:
+        static EDataType data_type;
+    private:
+        float     fValue;
+    public:
+        EFloatDataHandle(const EString& name, float defaultValue = 0);
+        E_DEF_CCTOR(EFloatDataHandle);
+        ~EFloatDataHandle();
+
+        float GetValue() const;
+        void SetValue(float value);
+
+
+        operator float() const;
+        void operator=(float value);
     };
 
 
@@ -85,6 +109,7 @@ namespace Engine {
         FieldMap    fFields;
     public:
         EStructureDataHandle(const EString& name);
+        E_DEF_CCTOR(EStructureDataHandle);
         ~EStructureDataHandle();
 
         /**

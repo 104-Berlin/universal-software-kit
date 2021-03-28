@@ -2,7 +2,7 @@
 #include <engine.h>
 #include <prefix_shared.h>
 
-TEST(RegisterTest, DataHandle)
+TEST(RegisterTest, IntegerDataHandle)
 {
     using namespace Engine;
     EIntegerDataHandle emptyData("EmptyInteger");
@@ -14,6 +14,20 @@ TEST(RegisterTest, DataHandle)
     EXPECT_EQ(defaultValueData.GetValue(), 40);
     defaultValueData = 10;
     EXPECT_EQ(((i32)defaultValueData), 10);
+}
+
+TEST(RegisterTest, FloatDataHandle)
+{
+    using namespace Engine;
+    EFloatDataHandle emptyData("EmptyFloat");
+    EXPECT_EQ(emptyData, 0);
+
+    EFloatDataHandle defaultValueData("DataWithDefaultValue", 2.4);
+    EXPECT_FLOAT_EQ(defaultValueData.GetValue(), 2.4);
+    defaultValueData.SetValue(5.2);
+    EXPECT_FLOAT_EQ(defaultValueData.GetValue(), 5.2);
+    defaultValueData = 2.22;
+    EXPECT_FLOAT_EQ(((float)defaultValueData), 2.22);
 }
 
 TEST(RegisterTest, StructureDataHandle)

@@ -5,6 +5,7 @@ using namespace Engine;
 
 EDataType EDataHandle::data_type = EDataType::UNKNOWN;
 EDataType EIntegerDataHandle::data_type = EDataType::INTEGER;
+EDataType EFloatDataHandle::data_type = EDataType::FLOAT;
 EDataType EStructureDataHandle::data_type = EDataType::STRUCTURE;
 
 
@@ -51,6 +52,37 @@ EIntegerDataHandle::operator i32() const
 }
 
 void EIntegerDataHandle::operator=(i32 value) 
+{
+    fValue = value;
+}
+
+EFloatDataHandle::EFloatDataHandle(const EString& name, float defaultValue) 
+    : EDataHandle(name, EDataType::FLOAT), fValue(defaultValue)
+{
+    
+}
+
+EFloatDataHandle::~EFloatDataHandle() 
+{
+    
+}
+
+float EFloatDataHandle::GetValue() const
+{
+    return fValue;
+}
+
+void EFloatDataHandle::SetValue(float value) 
+{
+    fValue = value;
+}
+
+EFloatDataHandle::operator float() const
+{
+    return fValue;
+}
+
+void EFloatDataHandle::operator=(float value) 
 {
     fValue = value;
 }
