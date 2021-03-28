@@ -71,6 +71,10 @@ TEST(RegisterTest, StructureDataHandle)
     using namespace Engine;
 
     EStructureDataHandle structureHandle("MyStruct", TestStruct);
+    structureHandle.AddField<int>("MyInteger", 20);
+    structureHandle.AddField<float>("MyFloat", 3.5);
+    structureHandle.AddField<EBooleanDataHandle>("MyBoolean", true);
+    structureHandle.AddField<EString>("MyString", "Hey you");
 
     EXPECT_EQ(structureHandle.GetFields().size(), 4);
     for (auto x : structureHandle) 
@@ -92,13 +96,6 @@ TEST(RegisterTest, StructureDataHandle)
     EXPECT_NE(floatHandle, nullptr);
     EXPECT_NE(boolHandle, nullptr);
     EXPECT_NE(stringHandle, nullptr);
-
-    const EStructureDataHandle& const_ref_handle = structureHandle;
-    for (auto x : const_ref_handle) 
-    {
-        EXPECT_FALSE(x.first.empty());
-    }
-
 
     const EStructureDataHandle& const_ref_handle = structureHandle;
     for (auto x : const_ref_handle) 
