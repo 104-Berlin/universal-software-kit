@@ -101,7 +101,7 @@ namespace Engine {
     };
 
     template <>
-    struct EPrimitiveTypeMap<i32>
+    struct EPrimitiveTypeMap<int>
     {
         using type = EIntegerDataHandle;
     };

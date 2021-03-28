@@ -63,9 +63,9 @@ TEST(RegisterTest, StructureDataHandle)
     using namespace Engine;
 
     EStructureDataHandle structureHandle("MyStruct");
-    structureHandle.AddField<int>("MyInteger", 20);
+    structureHandle.AddField<i32>("MyInteger", 20);
     structureHandle.AddField<float>("MyFloat", 3.5);
-    structureHandle.AddField<bool>("MyBoolean", true);
+    structureHandle.AddField<EBooleanDataHandle>("MyBoolean", true);
     structureHandle.AddField<EString>("MyString", "Hey you");
 
     EXPECT_EQ(structureHandle.GetFieldAt("WRONG FIELD NAME"), nullptr);
