@@ -36,8 +36,8 @@ TEST(RegisterTest, StructureDataHandle)
 
     EStructureDataHandle structureHandle("MyStruct");
     structureHandle.AddField({"MyInteger", EDataType::INTEGER}, 20);
-    structureHandle.AddField({"MyInteger", EDataType::FLOAT}, 20);
-    structureHandle.AddField({"MyInteger", EDataType::BOOLEAN}, 20);
+    structureHandle.AddField({"MyFloat", EDataType::FLOAT}, 20);
+    structureHandle.AddField({"MyBoolean", EDataType::BOOLEAN}, 20);
 
     EXPECT_TRUE(structureHandle.GetFieldAt("MyInteger"));
 
