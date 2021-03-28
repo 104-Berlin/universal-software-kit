@@ -30,6 +30,20 @@ TEST(RegisterTest, FloatDataHandle)
     EXPECT_FLOAT_EQ(((float)defaultValueData), 2.22);
 }
 
+TEST(RegisterTest, BooleanDataHandle)
+{
+    using namespace Engine;
+    EFloatDataHandle emptyData("EmptyBoolean");
+    EXPECT_EQ(emptyData, false);
+
+    EFloatDataHandle defaultValueData("DataWithDefaultValue", true);
+    EXPECT_TRUE(defaultValueData.GetValue());
+    defaultValueData.SetValue(false);
+    EXPECT_FALSE(defaultValueData.GetValue());
+    defaultValueData = true;
+    EXPECT_TRUE(((bool)defaultValueData));
+}
+
 TEST(RegisterTest, StructureDataHandle)
 {
     using namespace Engine;
