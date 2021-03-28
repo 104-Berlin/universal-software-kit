@@ -97,11 +97,6 @@ namespace Engine {
          */
         bool HasFieldAt(const EString& name);
 
-        /**
-         * Adds an field to the structure
-         * @param descriptor The minimum data to describe a DataHandle
-         */
-        void AddField(EDataDescriptor descriptor);
 
         /**
          * @return Map of Fields
@@ -112,6 +107,45 @@ namespace Engine {
         FieldMap::iterator end();
         FieldMap::const_iterator begin() const;
         FieldMap::const_iterator end() const;
+
+        // ---------------------------------------------
+        // Templates
+
+        /**
+         * Adds an field to the structure
+         * @param descriptor The minimum data to describe a DataHandle
+         */
+        template <typename... Args>
+        void AddField(EDataDescriptor descriptor, Args&& ... args)
+        {
+            switch (descriptor.DataType)
+            {
+            case Engine::EDataType::UNKNOWN:
+                E_WARN("Cant add unknown data type to StructureData called " + descriptor.DataName);
+                break;
+            case Engine::EDataType::INTEGER:
+                fFields.insert({descriptor.DataName, EMakeRef<EIntegerDataHandle>(descriptor.DataName, args...)});
+                break;
+            case Engine::EDataType::FLOAT:
+                break;
+            case Engine::EDataType::BOOLEAN:
+                break;
+            case Engine::EDataType::STRING:
+                break;
+            case Engine::EDataType::VECTOR2:
+                break;
+            case Engine::EDataType::VECTOR3:
+                break;
+            case Engine::EDataType::VECTOR4:
+                break;
+            case Engine::EDataType::ARRAY:
+                break;
+            case Engine::EDataType::STRUCTURE:
+                break;
+            case Engine::EDataType::DATA_REF:
+                break;
+            }
+        }
 
 
         /**

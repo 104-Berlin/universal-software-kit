@@ -21,7 +21,7 @@ TEST(RegisterTest, StructureDataHandle)
     using namespace Engine;
 
     EStructureDataHandle structureHandle("MyStruct");
-    structureHandle.AddField({"MyInteger", EDataType::INTEGER});
+    structureHandle.AddField({"MyInteger", EDataType::INTEGER}, 20);
 
     EXPECT_TRUE(structureHandle.GetFieldAt("MyInteger"));
 
@@ -29,6 +29,6 @@ TEST(RegisterTest, StructureDataHandle)
     EXPECT_NE(integerHandle, nullptr);
     if (integerHandle)
     {
-        EXPECT_EQ(integerHandle->GetValue(), 0);
+        EXPECT_EQ(integerHandle->GetValue(), 20);
     }
 }
