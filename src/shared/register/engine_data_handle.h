@@ -95,6 +95,28 @@ namespace Engine {
         void operator=(float value);
     };
 
+    /**
+     * Float Data field
+     */
+    class E_API EBooleanDataHandle : public EDataHandle
+    {
+    public:
+        static EDataType data_type;
+    private:
+        bool     fValue;
+    public:
+        EBooleanDataHandle(const EString& name, bool defaultValue = false);
+        E_DEF_CCTOR(EBooleanDataHandle);
+        ~EBooleanDataHandle() = default;
+
+        bool GetValue() const;
+        void SetValue(bool value);
+
+
+        operator bool() const;
+        void operator=(bool value);
+    };
+
 
     /**
      * Structure Data handle.
@@ -143,6 +165,7 @@ namespace Engine {
         template <typename... Args>
         void AddField(EDataDescriptor descriptor, Args&& ... args)
         {
+            E_ASSERT(!HasFieldAt(descriptor.DataName), "Field already exists!");
             switch (descriptor.DataType)
             {
             case Engine::EDataType::UNKNOWN:

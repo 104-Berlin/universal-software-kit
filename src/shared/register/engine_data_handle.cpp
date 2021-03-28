@@ -6,6 +6,7 @@ using namespace Engine;
 EDataType EDataHandle::data_type = EDataType::UNKNOWN;
 EDataType EIntegerDataHandle::data_type = EDataType::INTEGER;
 EDataType EFloatDataHandle::data_type = EDataType::FLOAT;
+EDataType EBooleanDataHandle::data_type = EDataType::BOOLEAN;
 EDataType EStructureDataHandle::data_type = EDataType::STRUCTURE;
 
 
@@ -83,6 +84,32 @@ EFloatDataHandle::operator float() const
 }
 
 void EFloatDataHandle::operator=(float value) 
+{
+    fValue = value;
+}
+
+EBooleanDataHandle::EBooleanDataHandle(const EString& name, bool defaultValue) 
+    : EDataHandle(name, EDataType::BOOLEAN), fValue(defaultValue)
+{
+    
+}
+
+bool EBooleanDataHandle::GetValue() const
+{
+    return fValue;
+}
+
+void EBooleanDataHandle::SetValue(bool value) 
+{
+    fValue = value;
+}
+
+EBooleanDataHandle::operator bool() const
+{
+    return fValue;
+}
+
+void EBooleanDataHandle::operator=(bool value) 
 {
     fValue = value;
 }
