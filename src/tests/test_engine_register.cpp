@@ -72,6 +72,12 @@ TEST(RegisterTest, StructureDataHandle)
 
     EStructureDataHandle structureHandle("MyStruct", TestStruct);
 
+    EXPECT_EQ(structureHandle.GetFields().size(), 4);
+    for (auto x : structureHandle) 
+    {
+        EXPECT_FALSE(x.first.empty());
+    }
+
     EXPECT_EQ(structureHandle.GetFieldAt("WRONG FIELD NAME"), nullptr);
     EXPECT_NE(structureHandle.GetFieldAt("MyInteger"), nullptr);
 
@@ -86,6 +92,13 @@ TEST(RegisterTest, StructureDataHandle)
     EXPECT_NE(floatHandle, nullptr);
     EXPECT_NE(boolHandle, nullptr);
     EXPECT_NE(stringHandle, nullptr);
+
+    const EStructureDataHandle& const_ref_handle = structureHandle;
+    for (auto x : const_ref_handle) 
+    {
+        EXPECT_FALSE(x.first.empty());
+    }
+
 
     const EStructureDataHandle& const_ref_handle = structureHandle;
     for (auto x : const_ref_handle) 
