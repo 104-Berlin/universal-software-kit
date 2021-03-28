@@ -74,7 +74,7 @@ namespace Engine {
     };
 
     /**
-     * Integer Data field
+     * Float Data field
      */
     class E_API EFloatDataHandle : public EDataHandle
     {
