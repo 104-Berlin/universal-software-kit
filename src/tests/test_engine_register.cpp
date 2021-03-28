@@ -44,32 +44,50 @@ TEST(RegisterTest, BooleanDataHandle)
     EXPECT_TRUE(((bool)defaultValueData));
 }
 
+TEST(RegisterTest, StringDataHandle)
+{
+    using namespace Engine;
+    EStringDataHandle emptyData("EmptyString");
+    EXPECT_STREQ(emptyData.GetValue().c_str(), "");
+
+    EStringDataHandle defaultValueData("DataWithDefaultValue", "Default");
+    EXPECT_STREQ(defaultValueData.GetValue().c_str(), "Default");
+    defaultValueData.SetValue("Second");
+    EXPECT_STREQ(defaultValueData.GetValue().c_str(), "Second");
+    defaultValueData = "Third";
+    EXPECT_STREQ(((EString)defaultValueData).c_str(), "Third");
+}
+
 TEST(RegisterTest, StructureDataHandle)
 {
     using namespace Engine;
 
     EStructureDataHandle structureHandle("MyStruct");
-    structureHandle.AddField({"MyInteger", EDataType::INTEGER}, 20);
-    structureHandle.AddField({"MyFloat", EDataType::FLOAT}, 3.5);
-    structureHandle.AddField({"MyBoolean", EDataType::BOOLEAN}, true);
+    structureHandle.AddField<int>("MyInteger", 20);
+    structureHandle.AddField<float>("MyFloat", 3.5);
+    structureHandle.AddField<bool>("MyBoolean", true);
+    structureHandle.AddField<EString>("MyString", "Hey you");
 
-    EXPECT_TRUE(structureHandle.GetFieldAt("MyInteger"));
-    EXPECT_FALSE(structureHandle.GetFieldAt("WRONG FIELD NAME"));
+    EXPECT_EQ(structureHandle.GetFieldAt("WRONG FIELD NAME"), nullptr);
+    EXPECT_NE(structureHandle.GetFieldAt("MyInteger"), nullptr);
 
     ERef<EIntegerDataHandle> integerHandle = structureHandle.GetFieldAt<EIntegerDataHandle>("MyInteger");
     ERef<EFloatDataHandle> wrongFloatHandle = structureHandle.GetFieldAt<EFloatDataHandle>("MyInteger");
     ERef<EFloatDataHandle> floatHandle = structureHandle.GetFieldAt<EFloatDataHandle>("MyFloat");
     ERef<EBooleanDataHandle> boolHandle = structureHandle.GetFieldAt<EBooleanDataHandle>("MyBoolean");
+    ERef<EStringDataHandle> stringHandle = structureHandle.GetFieldAt<EStringDataHandle>("MyString");
 
     EXPECT_EQ(wrongFloatHandle, nullptr);
     EXPECT_NE(integerHandle, nullptr);
     EXPECT_NE(floatHandle, nullptr);
     EXPECT_NE(boolHandle, nullptr);
+    EXPECT_NE(stringHandle, nullptr);
 
-    if (integerHandle && boolHandle && floatHandle)
+    if (integerHandle && boolHandle && floatHandle && stringHandle)
     {
         EXPECT_EQ(integerHandle->GetValue(), 20);
-        EXPECT_EQ(floatHandle->GetValue(), 3.5);
-        EXPECT_EQ(boolHandle->GetValue(), true);
+        EXPECT_FLOAT_EQ(floatHandle->GetValue(), 3.5);
+        EXPECT_TRUE(boolHandle->GetValue());
+        EXPECT_STREQ(stringHandle->GetValue().c_str(), "Hey you");
     }
 }

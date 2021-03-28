@@ -2,6 +2,22 @@
 
 namespace Engine {
 
+    template <typename T>
+    struct EIsHandleClass
+    {
+        static constexpr bool value = false;
+    };
+
+    template <typename T>
+    static constexpr bool EIsNotHandleClass = !(EIsHandleClass<T>::value);
+
+
+    template <typename T>
+    struct EPrimitiveTypeMap
+    {
+        using type = void;
+    };
+
     /**
      * All Supported Data types in the engine
      */
@@ -51,6 +67,12 @@ namespace Engine {
         EDataType GetDataType() const;
     };
 
+    template <>
+    struct EIsHandleClass<EDataHandle>
+    {
+        static constexpr bool value = true;
+    };
+
     /**
      * Integer Data field
      */
@@ -71,6 +93,25 @@ namespace Engine {
         operator i32() const;
         void operator=(i32 value);
     };
+
+    template <>
+    struct EIsHandleClass<EIntegerDataHandle>
+    {
+        static constexpr bool value = true;
+    };
+
+    template <>
+    struct EPrimitiveTypeMap<i32>
+    {
+        using type = EIntegerDataHandle;
+    };
+    template <>
+    struct EPrimitiveTypeMap<i16>
+    {
+        using type = EIntegerDataHandle;
+    };
+
+
 
     /**
      * Float Data field
@@ -93,8 +134,25 @@ namespace Engine {
         void operator=(float value);
     };
 
+    template <>
+    struct EIsHandleClass<EFloatDataHandle>
+    {
+        static constexpr bool value = true;
+    };
+
+    template <>
+    struct EPrimitiveTypeMap<float>
+    {
+        using type = EFloatDataHandle;
+    };
+    template <>
+    struct EPrimitiveTypeMap<double>
+    {
+        using type = EFloatDataHandle;
+    };
+
     /**
-     * Float Data field
+     * Bool Data field
      */
     class E_API EBooleanDataHandle : public EDataHandle
     {
@@ -112,6 +170,52 @@ namespace Engine {
 
         operator bool() const;
         void operator=(bool value);
+    };
+
+
+    template <>
+    struct EIsHandleClass<EBooleanDataHandle>
+    {
+        static constexpr bool value = true;
+    };
+
+    template <>
+    struct EPrimitiveTypeMap<bool>
+    {
+        using type = EBooleanDataHandle;
+    };
+
+    /**
+     * String Data field
+     */
+    class E_API EStringDataHandle : public EDataHandle
+    {
+    public:
+        static EDataType data_type;
+    private:
+        EString     fValue;
+    public:
+        EStringDataHandle(const EString& name, const EString& defaultValue = "");
+        E_DEF_CCTOR(EStringDataHandle);
+
+        const EString& GetValue() const;
+        void SetValue(const EString& value);
+
+
+        operator const EString&() const;
+        void operator=(const EString& value);
+    };
+
+    template <>
+    struct EIsHandleClass<EStringDataHandle>
+    {
+        static constexpr bool value = true;
+    };
+
+    template <>
+    struct EPrimitiveTypeMap<EString>
+    {
+        using type = EStringDataHandle;
     };
 
 
@@ -159,38 +263,26 @@ namespace Engine {
          * Adds an field to the structure
          * @param descriptor The minimum data to describe a DataHandle
          */
-        template <typename... Args>
-        void AddField(EDataDescriptor descriptor, Args&& ... args)
+        template <typename Field, typename... Args>
+        auto AddField(const EString& name, Args&& ... args)
+        -> decltype(EIsHandleClass<Field>::value, void())
         {
-            E_ASSERT(!HasFieldAt(descriptor.DataName), "Field already exists!");
-            switch (descriptor.DataType)
+            E_ASSERT(!HasFieldAt(name), "Field already exists!");
+            if constexpr (!EIsHandleClass<Field>::value)
             {
-            case Engine::EDataType::UNKNOWN:
-                E_WARN("Cant add unknown data type to StructureData called " + descriptor.DataName);
-                break;
-            case Engine::EDataType::INTEGER:
-                fFields.insert({descriptor.DataName, EMakeRef<EIntegerDataHandle>(descriptor.DataName, args...)});
-                break;
-            case Engine::EDataType::FLOAT:
-                fFields.insert({descriptor.DataName, EMakeRef<EFloatDataHandle>(descriptor.DataName, args...)});
-                break;
-            case Engine::EDataType::BOOLEAN:
-                fFields.insert({descriptor.DataName, EMakeRef<EBooleanDataHandle>(descriptor.DataName, args...)});
-                break;
-            case Engine::EDataType::STRING:
-                break;
-            case Engine::EDataType::VECTOR2:
-                break;
-            case Engine::EDataType::VECTOR3:
-                break;
-            case Engine::EDataType::VECTOR4:
-                break;
-            case Engine::EDataType::ARRAY:
-                break;
-            case Engine::EDataType::STRUCTURE:
-                break;
-            case Engine::EDataType::DATA_REF:
-                break;
+                using FieldDataType = typename EPrimitiveTypeMap<Field>::type;
+                if constexpr (!std::is_same<FieldDataType, void>())
+                {
+                    EDataType dataType = FieldDataType::data_type;
+                    E_ASSERT(dataType != EDataType::UNKNOWN, "Cant add unknown data type to structure data called " + name);
+                    fFields.insert({name, EMakeRef<FieldDataType>(name, args...)});
+                }
+            }
+            else
+            {
+                EDataType dataType = Field::data_type;
+                E_ASSERT(dataType != EDataType::UNKNOWN, "Cant add unknown data type to structure data called " + name);
+                fFields.insert({name, EMakeRef<Field>(name, args...)});
             }
         }
 
@@ -212,5 +304,13 @@ namespace Engine {
             return nullptr;
         }
     };
+
+
+    template <>
+    struct EIsHandleClass<EStructureDataHandle>
+    {
+        static constexpr bool value = true;
+    };
+
 
 }

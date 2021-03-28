@@ -7,6 +7,7 @@ EDataType EDataHandle::data_type = EDataType::UNKNOWN;
 EDataType EIntegerDataHandle::data_type = EDataType::INTEGER;
 EDataType EFloatDataHandle::data_type = EDataType::FLOAT;
 EDataType EBooleanDataHandle::data_type = EDataType::BOOLEAN;
+EDataType EStringDataHandle::data_type = EDataType::STRING;
 EDataType EStructureDataHandle::data_type = EDataType::STRUCTURE;
 
 
@@ -103,6 +104,33 @@ void EBooleanDataHandle::operator=(bool value)
 {
     fValue = value;
 }
+
+EStringDataHandle::EStringDataHandle(const EString& name, const EString& defaultValue) 
+    : EDataHandle(name, EDataType::STRING), fValue(defaultValue)
+{
+    
+}
+
+const EString& EStringDataHandle::GetValue() const
+{
+    return fValue;    
+}
+
+void EStringDataHandle::SetValue(const EString& value) 
+{
+    fValue = value;
+}
+
+EStringDataHandle::operator const EString&() const
+{
+    return fValue;
+}
+
+void EStringDataHandle::operator=(const EString& value) 
+{
+    fValue = value;
+}
+
 
 EStructureDataHandle::EStructureDataHandle(const EString& name) 
     : EDataHandle(name, EDataType::STRUCTURE)
