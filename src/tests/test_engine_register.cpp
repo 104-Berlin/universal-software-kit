@@ -68,6 +68,12 @@ TEST(RegisterTest, StructureDataHandle)
     structureHandle.AddField<EBooleanDataHandle>("MyBoolean", true);
     structureHandle.AddField<EString>("MyString", "Hey you");
 
+    EXPECT_EQ(structureHandle.GetFields().size(), 4);
+    for (auto x : structureHandle) 
+    {
+        EXPECT_FALSE(x.first.empty());
+    }
+
     EXPECT_EQ(structureHandle.GetFieldAt("WRONG FIELD NAME"), nullptr);
     EXPECT_NE(structureHandle.GetFieldAt("MyInteger"), nullptr);
 
@@ -89,5 +95,12 @@ TEST(RegisterTest, StructureDataHandle)
         EXPECT_FLOAT_EQ(floatHandle->GetValue(), 3.5);
         EXPECT_TRUE(boolHandle->GetValue());
         EXPECT_STREQ(stringHandle->GetValue().c_str(), "Hey you");
+    }
+
+
+    const EStructureDataHandle& const_ref_handle = structureHandle;
+    for (auto x : const_ref_handle) 
+    {
+        EXPECT_FALSE(x.first.empty());
     }
 }
