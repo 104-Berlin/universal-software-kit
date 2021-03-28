@@ -232,6 +232,7 @@ namespace Engine {
         EVector<EStructureDescription>  fChilds;
     public:
         EStructureStructDescription(const EVector<EStructureDescription>&  childs);
+        EStructureStructDescription(const EString& name, const EStructureStructDescription& other);
 
         const EVector<EStructureDescription>& GetChilds() const;
     };

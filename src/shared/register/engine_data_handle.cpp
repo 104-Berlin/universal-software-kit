@@ -148,6 +148,12 @@ EStructureStructDescription::EStructureStructDescription(const EVector<EStructur
     
 }
 
+EStructureStructDescription::EStructureStructDescription(const EString& name, const EStructureStructDescription& other)
+    : EStructureDescription({name, EDataType::STRUCTURE}), fChilds(other.fChilds)
+{
+
+}
+
 const EVector<EStructureDescription>& EStructureStructDescription::GetChilds() const
 {
     return fChilds;
@@ -175,11 +181,10 @@ ERef<EDataHandle> EStructureDataHandle::GetFieldAt(const EString& name)
 
 void EStructureDataHandle::AddFieldsFromDescpription(const EStructureDescription& description) 
 {
-    E_INFO("Adding field " + description.GetTypeData().DataName + std::to_string((int)description.GetTypeData().DataType));
     if (description.GetTypeData().DataType == EDataType::STRUCTURE)
     {
         const EStructureStructDescription& structure = (EStructureStructDescription&)description;
-
+        fFields.insert({description.GetTypeData().DataName, EMakeRef<EStructureDataHandle>(description.GetTypeData().DataName, structure.GetChilds())});
     }
     else
     {

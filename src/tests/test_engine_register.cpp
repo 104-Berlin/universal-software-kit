@@ -9,7 +9,10 @@ Engine::EStructureStructDescription TestStruct({
                         Engine::EStructureDescription({"MyString", Engine::EDataType::STRING})
 });
 
-Engine::EStructureStructDescription SecondStruct({});
+Engine::EStructureStructDescription SecondStruct({
+                        Engine::EStructureStructDescription("SubStruct", TestStruct),
+                        Engine::EStructureDescription({"SomeInt", Engine::EDataType::INTEGER})
+});
 
 
 TEST(RegisterTest, IntegerDataHandle)
@@ -68,6 +71,7 @@ TEST(RegisterTest, StringDataHandle)
     EXPECT_STREQ(((EString)defaultValueData).c_str(), "Third");
 }
 
+
 TEST(RegisterTest, StructureDataHandle)
 {
     using namespace Engine;
@@ -100,4 +104,23 @@ TEST(RegisterTest, StructureDataHandle)
     {
         EXPECT_FALSE(x.first.empty());
     }
+}
+
+TEST(RegisterTest, SubStructureDataHandle)
+{
+    using namespace Engine;
+
+    //EStructureDataHandle baseStruct("MyBase", SecondStruct);
+
+    /*EXPECT_EQ(baseStruct.GetFields().size(), 2);
+    EXPECT_TRUE(baseStruct.HasFieldAt("SubStruct"));
+    if (baseStruct.HasFieldAt("SubStruct"))
+    {
+        ERef<EStructureDataHandle> subStruct = baseStruct.GetFieldAt<EStructureDataHandle>("SubStruct");
+        EXPECT_NE(subStruct, nullptr);
+        if (subStruct)
+        {
+            EXPECT_EQ(subStruct->GetFields().size(), 4);
+        }
+    }*/
 }
