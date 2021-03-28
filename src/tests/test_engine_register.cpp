@@ -2,12 +2,14 @@
 #include <engine.h>
 #include <prefix_shared.h>
 
-Engine::EStructureDescription TestStruct({"TestStruct", Engine::EDataType::STRUCTURE}, {
+Engine::EStructureStructDescription TestStruct({
                         Engine::EStructureDescription({"MyInteger", Engine::EDataType::INTEGER}),
                         Engine::EStructureDescription({"MyFloat", Engine::EDataType::FLOAT}),
-                        Engine::EStructureDescription({"MyBool", Engine::EDataType::BOOLEAN}),
+                        Engine::EStructureDescription({"MyBoolean", Engine::EDataType::BOOLEAN}),
                         Engine::EStructureDescription({"MyString", Engine::EDataType::STRING})
 });
+
+Engine::EStructureStructDescription SecondStruct({});
 
 
 TEST(RegisterTest, IntegerDataHandle)
@@ -71,10 +73,6 @@ TEST(RegisterTest, StructureDataHandle)
     using namespace Engine;
 
     EStructureDataHandle structureHandle("MyStruct", TestStruct);
-    structureHandle.AddField<int>("MyInteger", 20);
-    structureHandle.AddField<float>("MyFloat", 3.5);
-    structureHandle.AddField<EBooleanDataHandle>("MyBoolean", true);
-    structureHandle.AddField<EString>("MyString", "Hey you");
 
     EXPECT_EQ(structureHandle.GetFields().size(), 4);
     for (auto x : structureHandle) 

@@ -44,6 +44,7 @@ namespace Engine {
      */
     struct E_API EDataDescriptor
     {
+        EDataDescriptor(const EString& name, EDataType type) : DataName(name), DataType(type) {}
         EString     DataName;
         EDataType   DataType;
     };
@@ -213,14 +214,26 @@ namespace Engine {
         using type = EStringDataHandle;
     };
 
-    struct EStructureDescription
-    {
-        EStructureDescription(EDataDescriptor typeData, EVector<EStructureDescription> childs = {})
-            : TypeData(typeData), Childs(childs)
-        {}
 
-        EDataDescriptor                 TypeData;
-        EVector<EStructureDescription>  Childs; // This only gets filled when TypeData.DataType == EDataType::STRUCTURE
+    class EStructureDescription
+    {
+    private:
+        EDataDescriptor                 fTypeData;
+    public:
+        EStructureDescription(EDataDescriptor typeData);
+        virtual ~EStructureDescription() = default;
+
+        EDataDescriptor GetTypeData() const;
+    };
+
+    class EStructureStructDescription : public EStructureDescription
+    {
+    private:
+        EVector<EStructureDescription>  fChilds;
+    public:
+        EStructureStructDescription(const EVector<EStructureDescription>&  childs);
+
+        const EVector<EStructureDescription>& GetChilds() const;
     };
 
     /**
@@ -235,7 +248,7 @@ namespace Engine {
     private:
         FieldMap    fFields;
     public:
-        EStructureDataHandle(const EString& name, const EStructureDescription& description);
+        EStructureDataHandle(const EString& name, const EStructureStructDescription& description);
         E_DEF_CCTOR(EStructureDataHandle);
         ~EStructureDataHandle();
 
