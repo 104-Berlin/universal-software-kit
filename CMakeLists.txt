@@ -17,6 +17,11 @@ add_compile_options(--coverage)
 link_libraries(--coverage)
 endif()
 
+# set global define unittesting enabled
+option(BUILD_TEST "Toggle the unittest" TRUE)
+add_compile_definitions(E_TEST)
+
+
 # Add system definitions
 if (WIN32)
 add_compile_definitions(EWIN)
@@ -30,7 +35,6 @@ add_subdirectory(src/shared)
 
 #########################
 ###### TESTING ##########
-option(BUILD_TEST "Toggle the unittest" TRUE)
 if (${BUILD_TEST})
   add_subdirectory(deps/googletets)
 
