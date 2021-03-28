@@ -4,7 +4,6 @@
 
 TEST(FileTest, CheckFileStrings)
 {
-    E_INFO("Log Something");
     using namespace Engine;
     EFile file(Path::Join("test", "TestFile.png"));
 

@@ -3,19 +3,32 @@
 
 using namespace Engine;
 
+EDataType EDataHandle::data_type = EDataType::UNKNOWN;
+EDataType EIntegerDataHandle::data_type = EDataType::INTEGER;
+EDataType EFloatDataHandle::data_type = EDataType::FLOAT;
+EDataType EBooleanDataHandle::data_type = EDataType::BOOLEAN;
+EDataType EStringDataHandle::data_type = EDataType::STRING;
+EDataType EStructureDataHandle::data_type = EDataType::STRUCTURE;
+
+
 EDataHandle::EDataHandle(const EString& name, EDataType type)
     : fDataDescription({name, type})
 {
     
 }
 
-EIntegerDataHandle::EIntegerDataHandle(const EString& name, i32 defaultValue) 
-    : EDataHandle(name, EDataType::INTEGER), fValue(defaultValue)
+const EString& EDataHandle::GetName() const
 {
-    
+    return fDataDescription.DataName;   
 }
 
-EIntegerDataHandle::~EIntegerDataHandle() 
+EDataType EDataHandle::GetDataType() const
+{
+    return fDataDescription.DataType;
+}
+
+EIntegerDataHandle::EIntegerDataHandle(const EString& name, i32 defaultValue) 
+    : EDataHandle(name, EDataType::INTEGER), fValue(defaultValue)
 {
     
 }
@@ -40,6 +53,85 @@ void EIntegerDataHandle::operator=(i32 value)
     fValue = value;
 }
 
+EFloatDataHandle::EFloatDataHandle(const EString& name, float defaultValue) 
+    : EDataHandle(name, EDataType::FLOAT), fValue(defaultValue)
+{
+    
+}
+
+float EFloatDataHandle::GetValue() const
+{
+    return fValue;
+}
+
+void EFloatDataHandle::SetValue(float value) 
+{
+    fValue = value;
+}
+
+EFloatDataHandle::operator float() const
+{
+    return fValue;
+}
+
+void EFloatDataHandle::operator=(float value) 
+{
+    fValue = value;
+}
+
+EBooleanDataHandle::EBooleanDataHandle(const EString& name, bool defaultValue) 
+    : EDataHandle(name, EDataType::BOOLEAN), fValue(defaultValue)
+{
+    
+}
+
+bool EBooleanDataHandle::GetValue() const
+{
+    return fValue;
+}
+
+void EBooleanDataHandle::SetValue(bool value) 
+{
+    fValue = value;
+}
+
+EBooleanDataHandle::operator bool() const
+{
+    return fValue;
+}
+
+void EBooleanDataHandle::operator=(bool value) 
+{
+    fValue = value;
+}
+
+EStringDataHandle::EStringDataHandle(const EString& name, const EString& defaultValue) 
+    : EDataHandle(name, EDataType::STRING), fValue(defaultValue)
+{
+    
+}
+
+const EString& EStringDataHandle::GetValue() const
+{
+    return fValue;    
+}
+
+void EStringDataHandle::SetValue(const EString& value) 
+{
+    fValue = value;
+}
+
+EStringDataHandle::operator const EString&() const
+{
+    return fValue;
+}
+
+void EStringDataHandle::operator=(const EString& value) 
+{
+    fValue = value;
+}
+
+
 EStructureDataHandle::EStructureDataHandle(const EString& name) 
     : EDataHandle(name, EDataType::STRUCTURE)
 {
@@ -48,67 +140,42 @@ EStructureDataHandle::EStructureDataHandle(const EString& name)
 
 EStructureDataHandle::~EStructureDataHandle() 
 {
-    
+    fFields.clear();
 }
 
-bool EStructureDataHandle::GetFieldAt(const EString& name) 
+ERef<EDataHandle> EStructureDataHandle::GetFieldAt(const EString& name) 
 {
-    return false;
+    if (!HasFieldAt(name)) { return nullptr; }
+    return fFields.at(name);
 }
 
-void EStructureDataHandle::AddField(EDataDescriptor descriptor) 
+bool EStructureDataHandle::HasFieldAt(const EString& name) 
 {
-    switch (descriptor.DataType)
-    {
-    case Engine::EDataType::UNKNOWN:
-        E_WARN("Cant add unknown data type to StructureData called " + descriptor.DataName);
-        break;
-    case Engine::EDataType::INTEGER:
-        fFields.push_back(EIntegerDataHandle(descriptor.DataName));
-        break;
-    case Engine::EDataType::FLOAT:
-        break;
-    case Engine::EDataType::BOOLEAN:
-        break;
-    case Engine::EDataType::STRING:
-        break;
-    case Engine::EDataType::VECTOR2:
-        break;
-    case Engine::EDataType::VECTOR3:
-        break;
-    case Engine::EDataType::VECTOR4:
-        break;
-    case Engine::EDataType::ARRAY:
-        break;
-    case Engine::EDataType::STRUCTURE:
-        break;
-    case Engine::EDataType::STRUCTURE_REF:
-        break;
-    }
+    return fFields.find(name) != fFields.end();
 }
 
 
-const EVector<EDataHandle> EStructureDataHandle::GetFields() 
+const EStructureDataHandle::FieldMap& EStructureDataHandle::GetFields() 
 {
     return fFields;
 }
 
-EVector<EDataHandle>::iterator EStructureDataHandle::begin() 
+EStructureDataHandle::FieldMap::iterator EStructureDataHandle::begin() 
 {
     return fFields.begin();
 }
 
-EVector<EDataHandle>::iterator EStructureDataHandle::end() 
+EStructureDataHandle::FieldMap::iterator EStructureDataHandle::end() 
 {
     return fFields.end();
 }
 
-EVector<EDataHandle>::const_iterator EStructureDataHandle::begin() const
+EStructureDataHandle::FieldMap::const_iterator EStructureDataHandle::begin() const
 {
     return fFields.begin();
 }
 
-EVector<EDataHandle>::const_iterator EStructureDataHandle::end() const
+EStructureDataHandle::FieldMap::const_iterator EStructureDataHandle::end() const
 {
     return fFields.end();
 }
