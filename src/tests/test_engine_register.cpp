@@ -33,10 +33,10 @@ TEST(RegisterTest, FloatDataHandle)
 TEST(RegisterTest, BooleanDataHandle)
 {
     using namespace Engine;
-    EFloatDataHandle emptyData("EmptyBoolean");
+    EBooleanDataHandle emptyData("EmptyBoolean");
     EXPECT_EQ(emptyData, false);
 
-    EFloatDataHandle defaultValueData("DataWithDefaultValue", true);
+    EBooleanDataHandle defaultValueData("DataWithDefaultValue", true);
     EXPECT_TRUE(defaultValueData.GetValue());
     defaultValueData.SetValue(false);
     EXPECT_FALSE(defaultValueData.GetValue());
