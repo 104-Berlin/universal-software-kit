@@ -2,16 +2,16 @@
 #include <engine.h>
 #include <prefix_shared.h>
 
-Engine::EStructureDescription TestStruct({"TestStruct", Engine::EDataType::STRUCTURE}, {
-                        Engine::EStructureDescription({"MyInteger", Engine::EDataType::INTEGER}),
-                        Engine::EStructureDescription({"MyFloat", Engine::EDataType::FLOAT}),
-                        Engine::EStructureDescription({"MyBoolean", Engine::EDataType::BOOLEAN}),
-                        Engine::EStructureDescription({"MyString", Engine::EDataType::STRING})
+Engine::EStructureDescription TestStruct("TestStruct", Engine::EDataType::STRUCTURE, {
+                        Engine::EStructureDescription("MyInteger", Engine::EDataType::INTEGER),
+                        Engine::EStructureDescription("MyFloat", Engine::EDataType::FLOAT),
+                        Engine::EStructureDescription("MyBoolean", Engine::EDataType::BOOLEAN),
+                        Engine::EStructureDescription("MyString", Engine::EDataType::STRING)
 });
 
-Engine::EStructureDescription SecondStruct({"SecondStruct", Engine::EDataType::STRUCTURE}, {
-                        Engine::EStructureDescription({"SubStruct", Engine::EDataType::STRUCTURE}, TestStruct.GetChilds()),
-                        Engine::EStructureDescription({"SomeInt", Engine::EDataType::INTEGER})
+Engine::EStructureDescription SecondStruct("SecondStruct", Engine::EDataType::STRUCTURE, {
+                        Engine::EStructureDescription("SubStruct", Engine::EDataType::STRUCTURE, TestStruct.GetChilds()),
+                        Engine::EStructureDescription("SomeInt", Engine::EDataType::INTEGER)
 });
 
 
