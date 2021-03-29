@@ -52,13 +52,15 @@ namespace Engine {
         static EDataType data_type; // The static type. This is reuired in all sub-classes for static type checking
     private:
         EStructureDescription fDataDescription;
+        EString fTypeName;
     protected:
-        EDataHandle(const EString& name, EDataType type);
+        EDataHandle(const EString& name, EDataType type, const EString& typeName = "unknown");
     public:
         E_DEF_CCTOR(EDataHandle);
         virtual ~EDataHandle() = default;
 
         const EString& GetName() const;
+        const EString& GetTypeName() const;
         EDataType GetDataType() const;
     };
 
@@ -185,7 +187,6 @@ namespace Engine {
          * @return Wether the field is found
          */
         bool HasFieldAt(const EString& name);
-
 
         /**
          * @return Map of Fields

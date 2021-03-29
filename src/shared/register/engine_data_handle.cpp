@@ -39,8 +39,8 @@ EDataHandle* Handle::CreateDataFromDescpription(const EStructureDescription& des
 
 
 
-EDataHandle::EDataHandle(const EString& name, EDataType type)
-    : fDataDescription({name, type})
+EDataHandle::EDataHandle(const EString& name, EDataType type, const EString& typeName)
+    : fDataDescription({name, type}), fTypeName(typeName)
 {
     
 }
@@ -50,13 +50,18 @@ const EString& EDataHandle::GetName() const
     return fDataDescription.GetDataName();   
 }
 
+const EString& EDataHandle::GetTypeName() const
+{
+    return fTypeName;
+}
+
 EDataType EDataHandle::GetDataType() const
 {
     return fDataDescription.GetDataType();
 }
 
 EIntegerDataHandle::EIntegerDataHandle(const EString& name, i32 defaultValue) 
-    : EDataHandle(name, EDataType::INTEGER), fValue(defaultValue)
+    : EDataHandle(name, EDataType::INTEGER, "int"), fValue(defaultValue)
 {
     
 }
@@ -82,7 +87,7 @@ void EIntegerDataHandle::operator=(i32 value)
 }
 
 EFloatDataHandle::EFloatDataHandle(const EString& name, float defaultValue) 
-    : EDataHandle(name, EDataType::FLOAT), fValue(defaultValue)
+    : EDataHandle(name, EDataType::FLOAT, "float"), fValue(defaultValue)
 {
     
 }
@@ -108,7 +113,7 @@ void EFloatDataHandle::operator=(float value)
 }
 
 EBooleanDataHandle::EBooleanDataHandle(const EString& name, bool defaultValue) 
-    : EDataHandle(name, EDataType::BOOLEAN), fValue(defaultValue)
+    : EDataHandle(name, EDataType::BOOLEAN, "bool"), fValue(defaultValue)
 {
     
 }
@@ -134,7 +139,7 @@ void EBooleanDataHandle::operator=(bool value)
 }
 
 EStringDataHandle::EStringDataHandle(const EString& name, const EString& defaultValue) 
-    : EDataHandle(name, EDataType::STRING), fValue(defaultValue)
+    : EDataHandle(name, EDataType::STRING, "String"), fValue(defaultValue)
 {
     
 }
@@ -188,7 +193,7 @@ const EVector<EStructureDescription>& EStructureDescription::GetChilds() const
 }
 
 EStructureDataHandle::EStructureDataHandle(const EString& name, const EStructureDescription& description) 
-    : EDataHandle(name, EDataType::STRUCTURE)
+    : EDataHandle(name, EDataType::STRUCTURE, description.GetDataName())
 {
     E_ASSERT(description.GetDataType() == EDataType::STRUCTURE, "Can't init structure data with non structure description");
     if (description.GetDataType() == EDataType::STRUCTURE)
