@@ -2,7 +2,6 @@
 
 namespace Engine {
 
-    
     /**
      * All Supported Data types in the engine
      */
@@ -25,28 +24,20 @@ namespace Engine {
     };
 
     /**
-     * Hold the Name and Type of the data
-     */
-    struct E_API EDataDescriptor
-    {
-        EDataDescriptor(const EString& name, EDataType type) : DataName(name), DataType(type) {}
-        EString     DataName;
-        EDataType   DataType;
-    };
-
-    /**
      * Description of data.
      */
     class E_API EStructureDescription
     {
     private:
-        EDataDescriptor                 fTypeData;
+        EString                         fDataName;
+        EDataType                       fDataType;
         EVector<EStructureDescription>  fChilds;
     public:
-        EStructureDescription(EDataDescriptor typeData, const EVector<EStructureDescription>&  childs = {});
+        EStructureDescription(const EString& name, EDataType type, const EVector<EStructureDescription>&  childs = {});
         virtual ~EStructureDescription() = default;
 
-        EDataDescriptor GetTypeData() const;
+        const EString& GetDataName() const;
+        EDataType GetDataType() const;
 
         const EVector<EStructureDescription>& GetChilds() const;
     };
@@ -60,7 +51,7 @@ namespace Engine {
     public:
         static EDataType data_type; // The static type. This is reuired in all sub-classes for static type checking
     private:
-        EDataDescriptor fDataDescription;
+        EStructureDescription fDataDescription;
     protected:
         EDataHandle(const EString& name, EDataType type);
     public:
@@ -70,6 +61,16 @@ namespace Engine {
         const EString& GetName() const;
         EDataType GetDataType() const;
     };
+
+    namespace Handle {
+        /**
+         * This function creates the right data for the given type.
+         * @return The pointer to the DataHandle memory which has to be managed from the user!
+         */
+        EDataHandle* CreateDataFromDescpription(const EStructureDescription& description);
+    }
+    
+
 
     /**
      * Integer Data field
@@ -216,8 +217,6 @@ namespace Engine {
             E_WARN("Could not get field " + name + " from " + GetName() + "! WRONG TYPE");
             return nullptr;
         }
-    private:
-        void AddFieldsFromDescpription(const EStructureDescription& description);
     };
 
 }
