@@ -2,15 +2,15 @@
 #include <engine.h>
 #include <prefix_shared.h>
 
-Engine::EStructureStructDescription TestStruct({
+Engine::EStructureDescription TestStruct({"TestStruct", Engine::EDataType::STRUCTURE}, {
                         Engine::EStructureDescription({"MyInteger", Engine::EDataType::INTEGER}),
                         Engine::EStructureDescription({"MyFloat", Engine::EDataType::FLOAT}),
                         Engine::EStructureDescription({"MyBoolean", Engine::EDataType::BOOLEAN}),
                         Engine::EStructureDescription({"MyString", Engine::EDataType::STRING})
 });
 
-Engine::EStructureStructDescription SecondStruct({
-                        Engine::EStructureStructDescription("SubStruct", TestStruct),
+Engine::EStructureDescription SecondStruct({"SecondStruct", Engine::EDataType::STRUCTURE}, {
+                        Engine::EStructureDescription({"SubStruct", Engine::EDataType::STRUCTURE}, TestStruct.GetChilds()),
                         Engine::EStructureDescription({"SomeInt", Engine::EDataType::INTEGER})
 });
 
@@ -110,9 +110,9 @@ TEST(RegisterTest, SubStructureDataHandle)
 {
     using namespace Engine;
 
-    //EStructureDataHandle baseStruct("MyBase", SecondStruct);
+    EStructureDataHandle baseStruct("MyBase", SecondStruct);
 
-    /*EXPECT_EQ(baseStruct.GetFields().size(), 2);
+    EXPECT_EQ(baseStruct.GetFields().size(), 2);
     EXPECT_TRUE(baseStruct.HasFieldAt("SubStruct"));
     if (baseStruct.HasFieldAt("SubStruct"))
     {
@@ -121,6 +121,13 @@ TEST(RegisterTest, SubStructureDataHandle)
         if (subStruct)
         {
             EXPECT_EQ(subStruct->GetFields().size(), 4);
+
+            ERef<EIntegerDataHandle> subStructInt = subStruct->GetFieldAt<EIntegerDataHandle>("MyInteger");
+            EXPECT_NE(subStructInt, nullptr);
+            if (subStructInt)
+            {
+                EXPECT_EQ(subStructInt->GetValue(), 0);
+            }
         }
-    }*/
+    }
 }

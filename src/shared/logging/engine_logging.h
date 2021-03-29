@@ -31,7 +31,7 @@ namespace Engine {
 #define E_INFO(x) ::Engine::Logging::Log(::Engine::Logging::ELogType::INFO, (x), __LINE__, __FILE__)
 
 #ifdef E_TEST
-#define E_ASSERT(x, msg) if (!(x)) { ::Engine::Logging::Log(::Engine::Logging::ELogType::ASSERT, msg, __LINE__, __FILE__); exit(1); } 
+#define E_ASSERT(x, msg) if (!(x)) { ::Engine::Logging::Log(::Engine::Logging::ELogType::ASSERT, (msg), __LINE__, __FILE__); exit(1); } 
 #else
-#define E_ASSERT(x, msg) if (!(x)) { ::Engine::Logging::Log(::Engine::Logging::ELogType::ASSERT, msg, __LINE__, __FILE__); } 
+#define E_ASSERT(x, msg) if (!(x)) { ::Engine::Logging::Log(::Engine::Logging::ELogType::ASSERT, (msg), __LINE__, __FILE__); } 
 #endif
