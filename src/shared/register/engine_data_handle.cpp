@@ -18,20 +18,18 @@ EDataHandle* Handle::CreateDataFromDescpription(const EStructureDescription& des
     {
     case EDataType::UNKNOWN:
         E_WARN("Cant create unknown data type!");
-        break;
+        return nullptr;
     case EDataType::INTEGER:
         return new EIntegerDataHandle(description.GetDataName());
     case EDataType::FLOAT:
         return new EFloatDataHandle(description.GetDataName());
     case EDataType::BOOLEAN:
         return new EBooleanDataHandle(description.GetDataName());
-        break;
     case EDataType::STRING:
         return new EStringDataHandle(description.GetDataName());
     case EDataType::STRUCTURE:
         return new EStructureDataHandle(description.GetDataName(), description);
     }
-    return nullptr;
 }
 
 
