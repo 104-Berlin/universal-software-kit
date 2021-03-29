@@ -5,8 +5,13 @@
 Engine::EStructureDescription TestStruct({"TestStruct", Engine::EDataType::STRUCTURE}, {
                         Engine::EStructureDescription({"MyInteger", Engine::EDataType::INTEGER}),
                         Engine::EStructureDescription({"MyFloat", Engine::EDataType::FLOAT}),
-                        Engine::EStructureDescription({"MyBool", Engine::EDataType::BOOLEAN}),
+                        Engine::EStructureDescription({"MyBoolean", Engine::EDataType::BOOLEAN}),
                         Engine::EStructureDescription({"MyString", Engine::EDataType::STRING})
+});
+
+Engine::EStructureDescription SecondStruct({"SecondStruct", Engine::EDataType::STRUCTURE}, {
+                        Engine::EStructureDescription({"SubStruct", Engine::EDataType::STRUCTURE}, TestStruct.GetChilds()),
+                        Engine::EStructureDescription({"SomeInt", Engine::EDataType::INTEGER})
 });
 
 
@@ -66,15 +71,12 @@ TEST(RegisterTest, StringDataHandle)
     EXPECT_STREQ(((EString)defaultValueData).c_str(), "Third");
 }
 
+
 TEST(RegisterTest, StructureDataHandle)
 {
     using namespace Engine;
 
     EStructureDataHandle structureHandle("MyStruct", TestStruct);
-    structureHandle.AddField<int>("MyInteger", 20);
-    structureHandle.AddField<float>("MyFloat", 3.5);
-    structureHandle.AddField<EBooleanDataHandle>("MyBoolean", true);
-    structureHandle.AddField<EString>("MyString", "Hey you");
 
     EXPECT_EQ(structureHandle.GetFields().size(), 4);
     for (auto x : structureHandle) 
@@ -101,5 +103,31 @@ TEST(RegisterTest, StructureDataHandle)
     for (auto x : const_ref_handle) 
     {
         EXPECT_FALSE(x.first.empty());
+    }
+}
+
+TEST(RegisterTest, SubStructureDataHandle)
+{
+    using namespace Engine;
+
+    EStructureDataHandle baseStruct("MyBase", SecondStruct);
+
+    EXPECT_EQ(baseStruct.GetFields().size(), 2);
+    EXPECT_TRUE(baseStruct.HasFieldAt("SubStruct"));
+    if (baseStruct.HasFieldAt("SubStruct"))
+    {
+        ERef<EStructureDataHandle> subStruct = baseStruct.GetFieldAt<EStructureDataHandle>("SubStruct");
+        EXPECT_NE(subStruct, nullptr);
+        if (subStruct)
+        {
+            EXPECT_EQ(subStruct->GetFields().size(), 4);
+
+            ERef<EIntegerDataHandle> subStructInt = subStruct->GetFieldAt<EIntegerDataHandle>("MyInteger");
+            EXPECT_NE(subStructInt, nullptr);
+            if (subStructInt)
+            {
+                EXPECT_EQ(subStructInt->GetValue(), 0);
+            }
+        }
     }
 }

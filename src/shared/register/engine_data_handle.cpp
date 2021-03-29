@@ -131,11 +131,40 @@ void EStringDataHandle::operator=(const EString& value)
     fValue = value;
 }
 
+EStructureDescription::EStructureDescription(EDataDescriptor typeData, const EVector<EStructureDescription>& childs) 
+    : fTypeData(typeData)
+{
+    if (typeData.DataType != EDataType::STRUCTURE)
+    {
+        E_ASSERT(childs.size() == 0, "Can't describe non structure value with childs. The childs will be ignored! " + typeData.DataName); // If not structure type we wont expept any childs
+    }
+    else
+    {
+        fChilds = childs;
+    }
+}
+
+EDataDescriptor EStructureDescription::GetTypeData() const
+{
+    return fTypeData;
+}
+
+const EVector<EStructureDescription>& EStructureDescription::GetChilds() const
+{
+    return fChilds;
+}
 
 EStructureDataHandle::EStructureDataHandle(const EString& name, const EStructureDescription& description) 
     : EDataHandle(name, EDataType::STRUCTURE)
 {
-    
+    E_ASSERT(description.GetTypeData().DataType == EDataType::STRUCTURE, "Can't init structure data with non structure description");
+    if (description.GetTypeData().DataType == EDataType::STRUCTURE)
+    {
+        for (const auto& entry : description.GetChilds())
+        {
+            AddFieldsFromDescpription(entry);
+        }
+    }
 }
 
 EStructureDataHandle::~EStructureDataHandle() 
@@ -151,12 +180,26 @@ ERef<EDataHandle> EStructureDataHandle::GetFieldAt(const EString& name)
 
 void EStructureDataHandle::AddFieldsFromDescpription(const EStructureDescription& description) 
 {
-    if (description.TypeData.DataType == EDataType::STRUCTURE)
+    switch (description.GetTypeData().DataType)
     {
-        for (auto child : description.Childs)
-        {
-            
-        }
+    case EDataType::UNKNOWN:
+        E_WARN("Cant add unknown data type tp structure " + GetName());
+        break;
+    case EDataType::INTEGER:
+        fFields.insert({description.GetTypeData().DataName, EMakeRef<EIntegerDataHandle>(description.GetTypeData().DataName)});
+        break;
+    case EDataType::FLOAT:
+        fFields.insert({description.GetTypeData().DataName, EMakeRef<EFloatDataHandle>(description.GetTypeData().DataName)});
+        break;
+    case EDataType::BOOLEAN:
+        fFields.insert({description.GetTypeData().DataName, EMakeRef<EBooleanDataHandle>(description.GetTypeData().DataName)});
+        break;
+    case EDataType::STRING:
+        fFields.insert({description.GetTypeData().DataName, EMakeRef<EStringDataHandle>(description.GetTypeData().DataName)});
+        break;
+    case EDataType::STRUCTURE:
+        fFields.insert({description.GetTypeData().DataName, EMakeRef<EStructureDataHandle>(description.GetTypeData().DataName, description)});
+        break;
     }
 }
 
