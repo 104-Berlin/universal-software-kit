@@ -19,7 +19,9 @@ endif()
 
 # set global define unittesting enabled
 option(BUILD_TEST "Toggle the unittest" TRUE)
+if (${BUILD_TEST})
 add_compile_definitions(E_TEST)
+endif()
 
 
 # Add system definitions
@@ -44,4 +46,15 @@ if (${BUILD_TEST})
   target_link_libraries(UnitTest gtest_main)
   target_link_libraries(UnitTest --coverage)
   target_link_libraries(UnitTest Shared)
+endif()
+
+#########################
+####### EDITOR ##########
+option(BUILD_EDITOR "Build the editor for mac or windows" TRUE)
+if (${BUILD_EDITOR})
+  if (WIN32 OR APPLE)
+    add_executable(USKEditor src/editor/editor_main.cpp)
+
+    target_link_libraries(USKEditor Shared)
+  endif()
 endif()
