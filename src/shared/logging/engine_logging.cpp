@@ -43,7 +43,7 @@ namespace Engine {
 
     void Logging::Log(Logging::ELogType type, const EString& str, u32 line, const char* file)
     {
-        std::cout << GetPrefixString(type) << GetFileNameFromPath(file) << ", l." << line << "]" << str << std::endl;
+        std::cout << GetPrefixString(type) << GetFileNameFromPath(file) << ":l." << line << "]" << str << std::endl;
     }
 
 }
