@@ -1,8 +1,8 @@
 #include "engine.h"
-#include "prefix_shared.h"
+#include "prefix_editor.h"
 
-int main()
+int main(int argc, const char** argv)
 {
-    E_INFO("Hello Editor");
+    Editor::Application::Run();
     return 0;
 }

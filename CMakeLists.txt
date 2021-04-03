@@ -11,6 +11,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 option(USE_COV "Use the covarage option when not using MSVC" FALSE)
+option(BUILD_EDITOR "Build the editor for mac or windows" TRUE)
 
 if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC AND USE_COV)
 add_compile_options(--coverage)
@@ -36,6 +37,44 @@ add_subdirectory(src/shared)
 
 
 #########################
+######## IMGUI ##########
+
+if (${BUILD_EDITOR})
+  if (WIN32 OR APPLE)
+    add_library(ImGui SHARED  deps/imgui/imgui_demo.cpp
+                              deps/imgui/imgui_draw.cpp
+                              deps/imgui/imgui_widgets.cpp
+                              deps/imgui/imgui.cpp
+                              deps/imgui/imgui_tables.cpp)
+
+    target_include_directories(ImGui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/
+                                            ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/)
+
+    if (WIN32)
+    elseif(APPLE)
+
+      find_library(OpenGL_LIBRARY OpenGL)
+      find_library(COCOA_LIBRARY Cocoa)
+      find_library(METAL_LIBRARY Metal)
+      find_library(METALKIT_LIBRARY MetalKit)
+      find_library(APPKIT_LIBRARY AppKit)
+      find_library(CORE_LIBRARY QuartzCore)
+
+      target_compile_options(ImGui PUBLIC -fobjc-arc)
+
+      target_link_libraries(ImGui ${OpenGL_LIBRARY})
+      target_link_libraries(ImGui ${COCOA_LIBRARY})
+      target_link_libraries(ImGui ${METAL_LIBRARY})
+      target_link_libraries(ImGui ${METALKIT_LIBRARY})
+      target_link_libraries(ImGui ${CORE_LIBRARY})
+      target_link_libraries(ImGui ${APPKIT_LIBRARY})
+    endif(WIN32)
+  endif()
+endif()
+
+
+
+#########################
 ###### TESTING ##########
 if (${BUILD_TEST})
   add_subdirectory(deps/googletets)
@@ -50,11 +89,23 @@ endif()
 
 #########################
 ####### EDITOR ##########
-option(BUILD_EDITOR "Build the editor for mac or windows" TRUE)
 if (${BUILD_EDITOR})
   if (WIN32 OR APPLE)
-    add_executable(USKEditor src/editor/editor_main.cpp)
+    add_executable(USKEditor  src/editor/editor_main.cpp
+                              src/editor/editor_application.cpp
+                              deps/imgui/backends/imgui_impl_glfw.cpp
+                              deps/glad/src/glad.c
+                              deps/imgui/backends/imgui_impl_opengl3.cpp)
 
     target_link_libraries(USKEditor Shared)
+    target_link_libraries(USKEditor ImGui)
+    target_compile_definitions(USKEditor PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
+
+    add_subdirectory(deps/glfw)
+    target_link_libraries(USKEditor glfw)
+
+    target_include_directories(USKEditor PRIVATE src/editor/
+                                                  deps/glad/include
+                                                  deps/glfw/include)
   endif()
 endif()
