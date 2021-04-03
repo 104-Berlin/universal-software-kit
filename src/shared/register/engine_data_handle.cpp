@@ -30,6 +30,7 @@ EDataHandle* Handle::CreateDataFromDescpription(const EStructureDescription& des
     case EDataType::STRUCTURE:
         return new EStructureDataHandle(description.GetDataName(), description);
     }
+    return nullptr;
 }
 
 
