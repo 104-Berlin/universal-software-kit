@@ -96,7 +96,7 @@ if (${BUILD_EDITOR})
     if (WIN32)
       set(EDITOR_EXTRA_SOURCES src/editor/platform/win32/editor_platform_win32.cpp)
     elseif(APPLE)
-      set(EDITOR_EXTRA_SOURCES src/editor/platform/macos/editor_platform_win32.cpp)
+      set(EDITOR_EXTRA_SOURCES src/editor/platform/macos/editor_platform_macos.mm)
     endif()
 
     add_executable(USKEditor  src/editor/editor_main.cpp
