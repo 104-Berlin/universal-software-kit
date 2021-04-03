@@ -41,7 +41,7 @@ add_subdirectory(src/shared)
 
 if (${BUILD_EDITOR})
   if (WIN32 OR APPLE)
-    add_library(ImGui SHARED  deps/imgui/imgui_demo.cpp
+    add_library(ImGui STATIC  deps/imgui/imgui_demo.cpp
                               deps/imgui/imgui_draw.cpp
                               deps/imgui/imgui_widgets.cpp
                               deps/imgui/imgui.cpp
