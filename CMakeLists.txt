@@ -83,8 +83,10 @@ if (${BUILD_TEST})
                           src/tests/test_engine_register.cpp
                           src/tests/test_engine_events.cpp)
   target_link_libraries(UnitTest gtest_main)
-  target_link_libraries(UnitTest --coverage)
   target_link_libraries(UnitTest Shared)
+  if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC AND USE_COV)
+    target_link_libraries(UnitTest --coverage)
+  endif()
 endif()
 
 #########################
