@@ -45,3 +45,13 @@ if (${BUILD_TEST})
   target_link_libraries(UnitTest --coverage)
   target_link_libraries(UnitTest Shared)
 endif()
+
+
+#########################
+####### EDITOR ##########
+if (WIN32 OR APPLE)
+  add_subdirectory(deps/usk-graphics)
+
+  add_executable(USKEditor src/editor/editor_entry.cpp)
+  target_link_libraries(USKEditor GPlatformWrapper)
+endif()
