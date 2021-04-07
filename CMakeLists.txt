@@ -54,4 +54,5 @@ if (WIN32 OR APPLE)
 
   add_executable(USKEditor src/editor/editor_entry.cpp)
   target_link_libraries(USKEditor GPlatformWrapper)
+  target_link_libraries(USKEditor GRenderer)
 endif()
