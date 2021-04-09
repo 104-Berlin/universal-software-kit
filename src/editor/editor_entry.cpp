@@ -1,5 +1,4 @@
-#include "graphics_wrapper.h"
-#include "graphics_renderer.h"
+#include "editor.h"
 
 using namespace Graphics;
 using namespace Renderer;

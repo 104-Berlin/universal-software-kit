@@ -53,6 +53,7 @@ if (WIN32 OR APPLE)
   add_subdirectory(deps/usk-graphics)
 
   add_executable(USKEditor src/editor/editor_entry.cpp)
+  target_include_directories(USKEditor PUBLIC src/editor/)
   target_link_libraries(USKEditor GPlatformWrapper)
   target_link_libraries(USKEditor GRenderer)
 endif()
