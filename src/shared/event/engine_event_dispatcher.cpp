@@ -3,7 +3,7 @@
 
 using namespace Engine;
 
-void EEventDispatcher::Enqueue(ERef<EDataHandle> dataHandle)
+/*void EEventDispatcher::Enqueue(ERef<EDataHandle> dataHandle)
 {
     fPostedEvents.push_back(dataHandle);
 }
@@ -18,4 +18,4 @@ void EEventDispatcher::Update()
         }
     }
     fPostedEvents.clear();
-}
+}*/

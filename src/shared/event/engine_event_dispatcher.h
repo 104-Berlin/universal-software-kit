@@ -2,7 +2,7 @@
 
 namespace Engine {
 
-    class E_API EEventDispatcher
+    /*class E_API EEventDispatcher
     {
     public:
 
@@ -29,6 +29,6 @@ namespace Engine {
     private:
         EUnorderedMap<EString, EVector<std::function<void(ERef<EDataHandle>)>>>  fObservers;
         EVector<ERef<EDataHandle>>                                               fPostedEvents;
-    };
+    };*/
 
 }

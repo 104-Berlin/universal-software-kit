@@ -2,230 +2,84 @@
 
 namespace Engine {
 
-    /**
-     * All Supported Data types in the engine
-     */
-    enum class EDataType
+    enum class EType
     {
-        UNKNOWN = 0,
-
-        INTEGER,
+        INT,
         FLOAT,
-        BOOLEAN,
         STRING,
-        //VECTOR2,
-        //VECTOR3,
-        //VECTOR4,
 
         //ARRAY,
-
-        STRUCTURE,          // Some map-combination of types
-        //DATA_REF       // Pointer to other data
+        //ENUM,
+        STRUCT
     };
 
-    /**
-     * Description of data.
-     */
-    class E_API EStructureDescription
+    struct ETypeDescription
     {
-    private:
-        EString                         fDataName;
-        EDataType                       fDataType;
-        EVector<EStructureDescription>  fChilds;
-    public:
-        EStructureDescription(const EString& name, EDataType type, const EVector<EStructureDescription>&  childs = {});
-        virtual ~EStructureDescription() = default;
+        EType                       fType;
+        EString                     fName;
+        size_t                      fOffset;
+        size_t                      fSize;
+        EVector<ETypeDescription>   fChilds;
 
-        const EString& GetDataName() const;
-        EDataType GetDataType() const;
-
-        const EVector<EStructureDescription>& GetChilds() const;
-    };
-
-
-    /**
-     * The base class for all the Data Handles
-     */
-    class E_API EDataHandle
-    {
-    public:
-        static EDataType data_type; // The static type. This is reuired in all sub-classes for static type checking
-    private:
-        EStructureDescription fDataDescription;
-        EString fTypeName;
-    protected:
-        EDataHandle(const EString& name, EDataType type, const EString& typeName = "unknown");
-    public:
-        E_DEF_CCTOR(EDataHandle);
-        virtual ~EDataHandle() = default;
-
-        const EString& GetName() const;
-        const EString& GetTypeName() const;
-        EDataType GetDataType() const;
-    };
-
-    namespace Handle {
-        /**
-         * This function creates the right data for the given type.
-         * @return The pointer to the DataHandle memory which has to be managed from the user!
-         */
-        EDataHandle* CreateDataFromDescpription(const EStructureDescription& description);
-    }
-    
-
-
-    /**
-     * Integer Data field
-     */
-    class E_API EIntegerDataHandle : public EDataHandle
-    {
-    public:
-        static EDataType data_type;
-    private:
-        i32     fValue;
-    public:
-        EIntegerDataHandle(const EString& name, i32 defaultValue = 0);
-        E_DEF_CCTOR(EIntegerDataHandle);
-
-        i32 GetValue() const;
-        void SetValue(i32 value);
-
-
-        operator i32() const;
-        void operator=(i32 value);
-    };
-
-
-
-
-    /**
-     * Float Data field
-     */
-    class E_API EFloatDataHandle : public EDataHandle
-    {
-    public:
-        static EDataType data_type;
-    private:
-        float     fValue;
-    public:
-        EFloatDataHandle(const EString& name, float defaultValue = 0);
-        E_DEF_CCTOR(EFloatDataHandle);
-
-        float GetValue() const;
-        void SetValue(float value);
-
-
-        operator float() const;
-        void operator=(float value);
-    };
-
-    /**
-     * Bool Data field
-     */
-    class E_API EBooleanDataHandle : public EDataHandle
-    {
-    public:
-        static EDataType data_type;
-    private:
-        bool     fValue;
-    public:
-        EBooleanDataHandle(const EString& name, bool defaultValue = false);
-        E_DEF_CCTOR(EBooleanDataHandle);
-
-        bool GetValue() const;
-        void SetValue(bool value);
-
-
-        operator bool() const;
-        void operator=(bool value);
-    };
-
-
-    /**
-     * String Data field
-     */
-    class E_API EStringDataHandle : public EDataHandle
-    {
-    public:
-        static EDataType data_type;
-    private:
-        EString     fValue;
-    public:
-        EStringDataHandle(const EString& name, const EString& defaultValue = "");
-        E_DEF_CCTOR(EStringDataHandle);
-
-        const EString& GetValue() const;
-        void SetValue(const EString& value);
-
-
-        operator const EString&() const;
-        void operator=(const EString& value);
-    };
-
-    /**
-     * Structure Data handle.
-     * This Stores a map containing data handles. This is like a struct in c/c++
-     */
-    class E_API EStructureDataHandle : public EDataHandle
-    {
-        using FieldMap = EUnorderedMap<EString, ERef<EDataHandle>>;
-    public:
-        static EDataType data_type;
-    private:
-        FieldMap    fFields;
-    public:
-        EStructureDataHandle(const EString& name, const EStructureDescription& description);
-        E_DEF_CCTOR(EStructureDataHandle);
-        ~EStructureDataHandle();
-
-        /**
-         * @param name The Field name to look in the map
-         * @return Field at map entry. nullptr if not found
-         */
-        ERef<EDataHandle> GetFieldAt(const EString& name);
-        /**
-         * @return Wether the field is found
-         */
-        bool HasFieldAt(const EString& name);
-
-        /**
-         * @return Map of Fields
-         */
-        const FieldMap& GetFields();
-        // Lopping
-        FieldMap::iterator begin();
-        FieldMap::iterator end();
-        FieldMap::const_iterator begin() const;
-        FieldMap::const_iterator end() const;
-
-
-
-        // ---------------------------------------------
-        // Templates
-        /**
-         * @param name The Field name to look in the map
-         * @return Field at map entry. nullptr if not found or type missmatched
-         */
-        template<typename T>
-        ERef<T> GetFieldAt(const EString& name)
-        {
-            ERef<EDataHandle> result = GetFieldAt(name);
-            if (!result) { return nullptr; }
-            if (result->GetDataType() == T::data_type)
-            {
-                return std::dynamic_pointer_cast<T>(result);
-            }
-            E_WARN("Could not get field " + name + " from " + GetName() + "! WRONG TYPE");
-            return nullptr;
-        }
+        ETypeDescription(EType type, const EString& name, size_t offset, size_t size, const EVector<ETypeDescription>& childs = {})
+            : fType(type), fName(name), fOffset(offset), fSize(size), fChilds(childs)
+            {}
     };
 
 }
 
-#define E_BEGIN_STRUCT(name) Engine::EStructureDescription name; \
-                            [&name](){\
-                             Engine::EStructureDescription& currently_setting = name;
+#define E_DEFINE_STRUCT_VAR(typename) E_PAIR(typename);
+
+#define E_DEFINE_STRUCT_ARG1(param) E_DEFINE_STRUCT_VAR(param)
+#define E_DEFINE_STRUCT_ARG2(param, ...) E_DEFINE_STRUCT_VAR(param)\
+                                            E_DEFINE_STRUCT_ARG1(__VA_ARGS__)
+#define E_DEFINE_STRUCT_ARG3(param, ...) E_DEFINE_STRUCT_VAR(param)\
+                                            E_DEFINE_STRUCT_ARG2(__VA_ARGS__)
+#define E_DEFINE_STRUCT_ARG4(param, ...) E_DEFINE_STRUCT_VAR(param)\
+                                            E_DEFINE_STRUCT_ARG3(__VA_ARGS__)
+
+
+
+
+
+
+#define E_DEFINE_STRUCT_DESC_VAR_int(structname, name) Engine::ETypeDescription(Engine::EType::INT, E_STRINGIFY(name), offsetof(structname, name), sizeof(int))
+#define E_DEFINE_STRUCT_DESC_VAR_EString(structname, name) Engine::ETypeDescription(Engine::EType::STRING, E_STRINGIFY(name), offsetof(structname, name), sizeof(EString))
+
+
+#define E_DEFINE_STRUCT_DESC_VAR(structname, typename) E_CONCATENATE(E_DEFINE_STRUCT_DESC_VAR_, E_TYPEOF(typename))(structname, E_STRIP(typename))
+
+#define E_DEFINE_STRUCT_DESC_ARG1(structname, param, ...) E_DEFINE_STRUCT_DESC_VAR(structname, param)
+#define E_DEFINE_STRUCT_DESC_ARG2(structname, param, ...) E_DEFINE_STRUCT_DESC_VAR(structname, param),\
+                                                            E_DEFINE_STRUCT_DESC_ARG1(structname, __VA_ARGS__)
+#define E_DEFINE_STRUCT_DESC_ARG3(structname, param, ...) E_DEFINE_STRUCT_DESC_VAR(structname, param),\
+                                                            E_DEFINE_STRUCT_DESC_ARG2(structname, __VA_ARGS__)
+#define E_DEFINE_STRUCT_DESC_ARG4(structname, param, ...) E_DEFINE_STRUCT_DESC_VAR(structname, param),\
+                                                            E_DEFINE_STRUCT_DESC_ARG3(structname, __VA_ARGS__)
+#define E_DEFINE_STRUCT_DESC_ARG5(structname, param, ...) E_DEFINE_STRUCT_DESC_VAR(structname, param),\
+                                                            E_DEFINE_STRUCT_DESC_ARG4(structname, __VA_ARGS__)
+#define E_DEFINE_STRUCT_DESC_ARG6(structname, param, ...) E_DEFINE_STRUCT_DESC_VAR(structname, param),\
+                                                            E_DEFINE_STRUCT_DESC_ARG5(structname, __VA_ARGS__)
+
+
+
+
+#define E_START_STRUCT(name) struct name {
+#define E_END_STRUCT(name) };
+
+#define E_START_DESCRIPTION(name) static const auto E_CONCATENATE(name, _Desc) = Engine::ETypeDescription(Engine::EType::STRUCT, E_STRINGIFY(name), 0, sizeof(name), {
+#define E_END_DESCRIPTION() });
+
+
+#define E_STRUCTURE(name, ...)      E_START_STRUCT(name)\
+                                    E_CONCATENATE(E_DEFINE_STRUCT_ARG, E_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)\
+                                    E_END_STRUCT()\
+                                    E_START_DESCRIPTION(name)\
+                                    E_CONCATENATE(E_DEFINE_STRUCT_DESC_ARG, E_ARG_COUNT(__VA_ARGS__))(name, __VA_ARGS__)\
+                                    E_END_DESCRIPTION()
 
 #define E_STRUCT_DATA(name, type) currently_setting.Childs.push_back({{#name, type}});
 
-#define E_END_STRUCT() }()
+
+#define E_DESC(type) E_CONCATENATE(type, _Desc)
+        

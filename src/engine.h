@@ -14,6 +14,7 @@
 #include <thread>
 #include <set>
 #include <exception>
+#include <cstddef>
 
 #ifdef M_PI
 #undef M_PI

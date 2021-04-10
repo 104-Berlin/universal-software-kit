@@ -3,6 +3,8 @@
 #include <prefix_shared.h>
 
 using namespace Engine;
+
+/*
 EStructureDescription eventData("MyTestEvent", EDataType::STRUCTURE, {
     EStructureDescription("EventValue", EDataType::INTEGER)
 });
@@ -40,4 +42,4 @@ TEST(EventTests, Basics)
     // Should not call anything
     eventDispatcher.Update();
     EXPECT_EQ(testingValue, 10);
-}
+}*/
