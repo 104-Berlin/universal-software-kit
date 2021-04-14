@@ -36,42 +36,6 @@ include_directories(src/)
 add_subdirectory(src/shared)
 
 
-#########################
-######## IMGUI ##########
-
-if (${BUILD_EDITOR})
-  if (WIN32 OR APPLE)
-    add_library(ImGui STATIC  deps/imgui/imgui_demo.cpp
-                              deps/imgui/imgui_draw.cpp
-                              deps/imgui/imgui_widgets.cpp
-                              deps/imgui/imgui.cpp
-                              deps/imgui/imgui_tables.cpp)
-
-    target_include_directories(ImGui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/
-                                            ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/)
-
-    if (WIN32)
-    elseif(APPLE)
-
-      find_library(OpenGL_LIBRARY OpenGL)
-      find_library(COCOA_LIBRARY Cocoa)
-      find_library(METAL_LIBRARY Metal)
-      find_library(METALKIT_LIBRARY MetalKit)
-      find_library(APPKIT_LIBRARY AppKit)
-      find_library(CORE_LIBRARY QuartzCore)
-
-      target_compile_options(ImGui PUBLIC -fobjc-arc)
-
-      target_link_libraries(ImGui ${OpenGL_LIBRARY})
-      target_link_libraries(ImGui ${COCOA_LIBRARY})
-      target_link_libraries(ImGui ${METAL_LIBRARY})
-      target_link_libraries(ImGui ${METALKIT_LIBRARY})
-      target_link_libraries(ImGui ${CORE_LIBRARY})
-      target_link_libraries(ImGui ${APPKIT_LIBRARY})
-    endif(WIN32)
-  endif()
-endif()
-
 
 
 #########################
