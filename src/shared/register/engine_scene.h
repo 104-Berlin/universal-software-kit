@@ -11,7 +11,8 @@ namespace Engine {
         EScene();
         ~EScene();
 
-        void AddObject();
+        EObject CreateObject();
+        void DeleteObject(EObject object);
     };
 
     class E_API EObject
@@ -27,13 +28,23 @@ namespace Engine {
         {
             E_ASSERT(fScene, "Invalid scene set for object. Cant add Component!");
             E_ASSERT(fHandle != entt::null, "Invalid entity. Cant add Component!");
-            fScene->fRegistry.emplace<T>(fHandle, std::forward<Args>(args)...);
+            return fScene->fRegistry.emplace<T>(fHandle, std::forward<Args>(args)...);
         }
 
         template <typename T>
         bool HasComponent() const
         {
-            //fScene->fRegistry.has<T>(fHandle);
+            E_ASSERT(fScene, "Invalid scene set for object. Cant check Component Existance!");
+            E_ASSERT(fHandle != entt::null, "Invalid entity. Cant check Component Existance!");
+            fScene->fRegistry.any_of<T>(fHandle);
+        }
+
+        template <typename T>
+        T& GetComponent()
+        {
+            E_ASSERT(fScene, "Invalid scene set for object. Cant get Component!");
+            E_ASSERT(fHandle != entt::null, "Invalid entity. Cant get Component!");
+            return fScene->fRegistry.get<T>(fHandle);
         }
     };
 
