@@ -33,7 +33,7 @@ namespace Engine {
         {
             E_ASSERT(fScene, "Invalid scene set for object. Cant check Component Existance!");
             E_ASSERT(fHandle != entt::null, "Invalid entity. Cant check Component Existance!");
-            fScene->fRegistry.any_of<T>(fHandle);
+            return fScene->fRegistry.any_of<T>(fHandle);
         }
 
         template <typename T>
