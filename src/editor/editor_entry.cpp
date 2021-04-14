@@ -40,7 +40,7 @@ void RenderImGui();
 
 int main()
 {
-    Wrapper::RunApplicationLoop(&Init, &Render, &RenderImGui, &CleanUp);
+    Wrapper::RunApplicationLoop(&Init, &Render, &RenderImGui, &CleanUp, &Wrapper::SetImGuiContext);
 }
 
 void Render()
