@@ -1,12 +1,6 @@
 [submodule "deps/googletets"]
 	path = deps/googletets
 	url = https://github.com/google/googletest.git
-[submodule "deps/imgui"]
-	path = deps/imgui
-	url = https://github.com/ocornut/imgui.git
-[submodule "deps/glfw"]
-	path = deps/glfw
-	url = https://github.com/glfw/glfw.git
-[submodule "src/shared/glm"]
-	path = src/shared/glm
-	url = https://github.com/g-truc/glm.git
+[submodule "deps/usk-graphics"]
+	path = deps/usk-graphics
+	url = https://github.com/104-Berlin/usk-graphics.git

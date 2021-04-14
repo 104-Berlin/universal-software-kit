@@ -89,44 +89,14 @@ if (${BUILD_TEST})
   endif()
 endif()
 
+
 #########################
 ####### EDITOR ##########
-if (${BUILD_EDITOR})
-  if (WIN32 OR APPLE)
-    if (WIN32)
-      set(EDITOR_EXTRA_SOURCES src/editor/platform/win32/editor_platform_win32.cpp)
-    elseif(APPLE)
-      set(EDITOR_EXTRA_SOURCES src/editor/platform/macos/editor_platform_macos.mm)
-    endif()
+if (WIN32 OR APPLE)
+  add_subdirectory(deps/usk-graphics)
 
-    add_executable(USKEditor  src/editor/editor_main.cpp
-                              src/editor/editor_application.cpp
-                              src/editor/graphics/editor_buffer.cpp
-                              src/editor/graphics/editor_camera.cpp
-                              src/editor/graphics/editor_render_command_queue.cpp
-                              src/editor/graphics/editor_render_context.cpp
-                              src/editor/graphics/editor_renderer.cpp
-                              src/editor/graphics/editor_shader.cpp
-                              src/editor/graphics/editor_texture.cpp
-                              src/editor/graphics/editor_ui_renderer.cpp
-                              src/editor/platform/opengl/editor_opengl_buffer.cpp
-                              src/editor/platform/opengl/editor_opengl_render_context.cpp
-                              src/editor/platform/opengl/editor_opengl_shader.cpp
-                              src/editor/platform/opengl/editor_opengl_texture.cpp
-                              ${EDITOR_EXTRA_SOURCES}
-                              deps/imgui/backends/imgui_impl_glfw.cpp
-                              deps/glad/src/glad.c
-                              deps/imgui/backends/imgui_impl_opengl3.cpp)
-
-    target_link_libraries(USKEditor Shared)
-    target_link_libraries(USKEditor ImGui)
-    target_compile_definitions(USKEditor PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
-
-    add_subdirectory(deps/glfw)
-    target_link_libraries(USKEditor glfw)
-
-    target_include_directories(USKEditor PRIVATE src/editor/
-                                                  deps/glad/include
-                                                  deps/glfw/include)
-  endif()
+  add_executable(USKEditor src/editor/editor_entry.cpp)
+  target_include_directories(USKEditor PUBLIC src/editor/)
+  target_link_libraries(USKEditor GPlatformWrapper)
+  target_link_libraries(USKEditor GRenderer)
 endif()
