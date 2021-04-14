@@ -10,9 +10,6 @@ namespace Engine {
     public:
         EScene();
         ~EScene();
-
-        EObject CreateObject();
-        void DeleteObject(EObject object);
     };
 
     class E_API EObject
@@ -46,6 +43,9 @@ namespace Engine {
             E_ASSERT(fHandle != entt::null, "Invalid entity. Cant get Component!");
             return fScene->fRegistry.get<T>(fHandle);
         }
+
+        static EObject Create(EScene* scene);
+        static void Delete(EObject object);
     };
 
 }

@@ -1,5 +1,18 @@
 #pragma once
 
+
+#ifdef EWIN
+    #ifdef SHARED_EXPORT
+        #define E_API __declspec(dllexport)
+    #else
+        #define E_API __declspec(dllimport)
+    #endif
+#else
+    #define E_API
+#endif
+
+
+
 #include "macros/engine_basic_macros.h"
 
 
