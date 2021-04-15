@@ -3,7 +3,7 @@
 namespace Engine {
 
     template <typename T>
-    class E_UIAPI EExtensionRegister
+    class EExtensionRegister
     {
     protected:
         EUnorderedMap<EString, EVector<T>> fRegisteredItems;
