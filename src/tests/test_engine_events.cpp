@@ -4,10 +4,10 @@
 
 using namespace Engine;
 
-/*
-EStructureDescription eventData("MyTestEvent", EDataType::STRUCTURE, {
-    EStructureDescription("EventValue", EDataType::INTEGER)
-});
+struct MyEvent
+{
+    int SomeValue;
+};
 
 TEST(EventTests, Basics)
 {
@@ -16,24 +16,15 @@ TEST(EventTests, Basics)
     i32 testingValue = 0;
 
 
-    eventDispatcher.Connect(eventData, [&testingValue](ERef<EDataHandle> data){
-        if (data->GetDataType() == EDataType::STRUCTURE)
-        {
-            ERef<EStructureDataHandle> eventStructure = std::dynamic_pointer_cast<EStructureDataHandle>(data);
-            if (eventStructure->HasFieldAt("EventValue"))
-            {
-                ERef<EIntegerDataHandle> addValue = eventStructure->GetFieldAt<EIntegerDataHandle>("EventValue");
-                testingValue += addValue->GetValue();
-            }
-        }
+    eventDispatcher.Connect<MyEvent>([&testingValue](MyEvent data){
+        testingValue += data.SomeValue;
     });
 
-    ERef<EStructureDataHandle> myEventData = EMakeRef<EStructureDataHandle>("SomeEventData",eventData);
-    ERef<EIntegerDataHandle> eventValue = myEventData->GetFieldAt<EIntegerDataHandle>("EventValue");
-    eventValue->SetValue(10);
+    MyEvent eventData;
+    eventData.SomeValue = 10;
 
 
-    eventDispatcher.Enqueue(myEventData);
+    eventDispatcher.Enqueue(eventData);
     eventDispatcher.Update();
 
     // Check if event got fired with correct value
@@ -42,4 +33,4 @@ TEST(EventTests, Basics)
     // Should not call anything
     eventDispatcher.Update();
     EXPECT_EQ(testingValue, 10);
-}*/
+}

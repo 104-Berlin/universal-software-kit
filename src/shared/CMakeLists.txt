@@ -6,7 +6,6 @@ add_library(Shared SHARED   file/engine_file_collection.cpp
                             file/engine_file.cpp
                             file/engine_folder.cpp
                             file/engine_shared_buffer.cpp
-                            event/engine_event_dispatcher.cpp
                             register/engine_scene.cpp
                             logging/engine_logging.cpp)
 
