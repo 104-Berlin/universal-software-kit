@@ -2,132 +2,31 @@
 #include <engine.h>
 #include <prefix_shared.h>
 
-Engine::EStructureDescription TestStruct("TestStruct", Engine::EDataType::STRUCTURE, {
-                        Engine::EStructureDescription("MyInteger", Engine::EDataType::INTEGER),
-                        Engine::EStructureDescription("MyFloat", Engine::EDataType::FLOAT),
-                        Engine::EStructureDescription("MyBoolean", Engine::EDataType::BOOLEAN),
-                        Engine::EStructureDescription("MyString", Engine::EDataType::STRING)
-});
-
-Engine::EStructureDescription SecondStruct("SecondStruct", Engine::EDataType::STRUCTURE, {
-                        Engine::EStructureDescription("SubStruct", Engine::EDataType::STRUCTURE, TestStruct.GetChilds()),
-                        Engine::EStructureDescription("SomeInt", Engine::EDataType::INTEGER)
-});
-
-
-TEST(RegisterTest, IntegerDataHandle)
+using namespace Engine;
+using namespace entt::literals;
+struct MyTestComponent
 {
-    using namespace Engine;
-    EIntegerDataHandle emptyData("EmptyInteger");
-    EXPECT_EQ(emptyData, 0);
+	int SomeInteger;
+};
 
-    EIntegerDataHandle defaultValueData("DataWithDefaultValue", 20);
-    EXPECT_EQ(defaultValueData.GetValue(), 20);
-    defaultValueData.SetValue(40);
-    EXPECT_EQ(defaultValueData.GetValue(), 40);
-    defaultValueData = 10;
-    EXPECT_EQ(((i32)defaultValueData), 10);
-}
-
-TEST(RegisterTest, FloatDataHandle)
+TEST(RegisterTest, Basics)
 {
-    using namespace Engine;
-    EFloatDataHandle emptyData("EmptyFloat");
-    EXPECT_EQ(emptyData, 0);
+	EScene scene;
+	EObject object1 = EObject::Create(&scene);
 
-    EFloatDataHandle defaultValueData("DataWithDefaultValue", 2.4);
-    EXPECT_FLOAT_EQ(defaultValueData.GetValue(), 2.4);
-    defaultValueData.SetValue(5.2);
-    EXPECT_FLOAT_EQ(defaultValueData.GetValue(), 5.2);
-    defaultValueData = 2.22;
-    EXPECT_FLOAT_EQ(((float)defaultValueData), 2.22);
-}
+	MyTestComponent& comp = object1.AddComponent<MyTestComponent>();
+	comp.SomeInteger = 32;
 
-TEST(RegisterTest, BooleanDataHandle)
-{
-    using namespace Engine;
-    EBooleanDataHandle emptyData("EmptyBoolean");
-    EXPECT_EQ(emptyData, false);
+	EXPECT_TRUE(object1.HasComponent<MyTestComponent>());
+	EXPECT_EQ(object1.GetComponent<MyTestComponent>().SomeInteger, 32);
 
-    EBooleanDataHandle defaultValueData("DataWithDefaultValue", true);
-    EXPECT_TRUE(defaultValueData.GetValue());
-    defaultValueData.SetValue(false);
-    EXPECT_FALSE(defaultValueData.GetValue());
-    defaultValueData = true;
-    EXPECT_TRUE(((bool)defaultValueData));
-}
-
-TEST(RegisterTest, StringDataHandle)
-{
-    using namespace Engine;
-    EStringDataHandle emptyData("EmptyString");
-    EXPECT_STREQ(emptyData.GetValue().c_str(), "");
-
-    EStringDataHandle defaultValueData("DataWithDefaultValue", "Default");
-    EXPECT_STREQ(defaultValueData.GetValue().c_str(), "Default");
-    defaultValueData.SetValue("Second");
-    EXPECT_STREQ(defaultValueData.GetValue().c_str(), "Second");
-    defaultValueData = "Third";
-    EXPECT_STREQ(((EString)defaultValueData).c_str(), "Third");
-}
+	entt::meta<MyTestComponent>().type("MyTestComponent"_hs);
+	entt::meta<MyTestComponent>().data<&MyTestComponent::SomeInteger>("SomeInteger"_hs).prop("Name"_hs, "SomeInteger");
 
 
-TEST(RegisterTest, StructureDataHandle)
-{
-    using namespace Engine;
 
-    EStructureDataHandle structureHandle("MyStruct", TestStruct);
-
-    EXPECT_EQ(structureHandle.GetFields().size(), 4);
-    for (auto x : structureHandle) 
-    {
-        EXPECT_FALSE(x.first.empty());
-    }
-
-    EXPECT_EQ(structureHandle.GetFieldAt("WRONG FIELD NAME"), nullptr);
-    EXPECT_NE(structureHandle.GetFieldAt("MyInteger"), nullptr);
-
-    ERef<EIntegerDataHandle> integerHandle = structureHandle.GetFieldAt<EIntegerDataHandle>("MyInteger");
-    ERef<EFloatDataHandle> wrongFloatHandle = structureHandle.GetFieldAt<EFloatDataHandle>("MyInteger");
-    ERef<EFloatDataHandle> floatHandle = structureHandle.GetFieldAt<EFloatDataHandle>("MyFloat");
-    ERef<EBooleanDataHandle> boolHandle = structureHandle.GetFieldAt<EBooleanDataHandle>("MyBoolean");
-    ERef<EStringDataHandle> stringHandle = structureHandle.GetFieldAt<EStringDataHandle>("MyString");
-
-    EXPECT_EQ(wrongFloatHandle, nullptr);
-    EXPECT_NE(integerHandle, nullptr);
-    EXPECT_NE(floatHandle, nullptr);
-    EXPECT_NE(boolHandle, nullptr);
-    EXPECT_NE(stringHandle, nullptr);
-
-    const EStructureDataHandle& const_ref_handle = structureHandle;
-    for (auto x : const_ref_handle) 
-    {
-        EXPECT_FALSE(x.first.empty());
-    }
-}
-
-TEST(RegisterTest, SubStructureDataHandle)
-{
-    using namespace Engine;
-
-    EStructureDataHandle baseStruct("MyBase", SecondStruct);
-
-    EXPECT_EQ(baseStruct.GetFields().size(), 2);
-    EXPECT_TRUE(baseStruct.HasFieldAt("SubStruct"));
-    if (baseStruct.HasFieldAt("SubStruct"))
-    {
-        ERef<EStructureDataHandle> subStruct = baseStruct.GetFieldAt<EStructureDataHandle>("SubStruct");
-        EXPECT_NE(subStruct, nullptr);
-        if (subStruct)
-        {
-            EXPECT_EQ(subStruct->GetFields().size(), 4);
-
-            ERef<EIntegerDataHandle> subStructInt = subStruct->GetFieldAt<EIntegerDataHandle>("MyInteger");
-            EXPECT_NE(subStructInt, nullptr);
-            if (subStructInt)
-            {
-                EXPECT_EQ(subStructInt->GetValue(), 0);
-            }
-        }
-    }
+	for (auto type : entt::resolve<MyTestComponent>().data())
+	{
+		E_INFO((char*) type.prop("Name"_hs).value().data());
+	}
 }
