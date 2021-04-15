@@ -34,7 +34,9 @@ endif(WIN32)
 
 include_directories(src/)
 add_subdirectory(src/shared)
+add_subdirectory(src/extension)
 
+target_link_libraries(EExtension Shared)
 
 
 
@@ -45,9 +47,10 @@ if (${BUILD_TEST})
 
   add_executable(UnitTest src/tests/test_engine_file.cpp
                           src/tests/test_engine_register.cpp
+                          src/tests/test_engine_extension.cpp
                           src/tests/test_engine_events.cpp)
   target_link_libraries(UnitTest gtest_main)
-  target_link_libraries(UnitTest Shared)
+  target_link_libraries(UnitTest EExtension)
   if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC AND USE_COV)
     target_link_libraries(UnitTest --coverage)
   endif()
