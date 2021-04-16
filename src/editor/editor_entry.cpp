@@ -30,7 +30,7 @@ void Init(GContext* context)
     mesh = new Renderer::RMesh();
     mesh->SetData(vertices, indices);
 
-    extensionManager->LoadExtension("libExample1.so");
+    extensionManager->LoadExtension("Example1.uex");
 }
 
 void CleanUp()
