@@ -1,10 +1,13 @@
 #include "engine_extension.h"
 
-#ifdef EXT_RENDERER_ENABLED
-#endif
-#include "impl/engine_ui_impl_imgui.h"
-
 using namespace Engine;
+
+void intern::InitUI()
+{
+#ifdef EXT_RENDERER_ENABLED
+    UIImpl::ImplImGui::ResetContext();
+#endif
+}
 
 EUIField::EUIField(const EString& label) 
     : fLabel(label), fID(next_ui_id()), fVisible(true), fDirty(false)

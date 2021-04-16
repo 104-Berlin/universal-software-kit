@@ -2,9 +2,16 @@
 
 
 #include "imgui.h"
+#include "graphics_wrapper.h"
 
 using namespace Engine;
 using namespace UIImpl;
+
+void ImplImGui::ResetContext()
+{
+    Graphics::Wrapper::SetImGuiContext(Graphics::Wrapper::GetCurrentImGuiContext());
+    ImGui::SetCurrentContext(Graphics::Wrapper::GetCurrentImGuiContext());
+}
 
 bool EUIPanel::ImplRender(const char* headerName)
 {

@@ -3,6 +3,10 @@
 
 namespace Engine {
 
+    namespace intern {
+        E_EXTAPI void InitUI();
+    }
+
     /**
      * Gets the next ui id
      * This will hopefully be unique, but at least good enough to not mess anything up

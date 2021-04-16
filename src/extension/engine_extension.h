@@ -25,6 +25,23 @@
 #endif
 
 
+
+#ifdef EXT_RENDERER_ENABLED
+#include "impl/engine_ui_impl_imgui.h"
+
+
+#define INIT_IMGUI_FUNC EXTENSION_EXPORT_FUN void InitImGui()\
+{\
+    Engine::UIImpl::ImplImGui::ResetContext();\
+}
+#else
+#define INIT_IMGUI_FUNC
+#endif
+
+#define EXT_ENTRY INIT_IMGUI_FUNC\
+                    EXTENSION_EXPORT_FUN void entry(const char* extensionName, Engine::EExtInitInfo* extension)
+
+
 #include "engine.h"
 #include "prefix_shared.h"
 

@@ -5,7 +5,7 @@ target_include_directories(EExtension PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (WIN32 OR APPLE)
     add_subdirectory(impl)
-    target_compile_definitions(EExtension PRIVATE EXT_RENDERER_ENABLED)
+    target_compile_definitions(EExtension PUBLIC EXT_RENDERER_ENABLED)
     target_link_libraries(EExtension EExtImplRenderer)
 endif()
 

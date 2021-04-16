@@ -13,11 +13,10 @@ namespace Engine {
     public:
         EExtension(const EString& pathToPlugin);
         ~EExtension();
-    private:
+    public:
         void    LoadPlugin(const EString& fullPath);
         void*   GetFunction(const EString& functionName);
-    public:
-        void InitImGui();
+        void    InitImGui();
 
         const EString& GetName() const;
     private:
@@ -47,6 +46,19 @@ namespace Engine {
         bool LoadExtension(const EString& pathToExtension);
 
         const EExtInitInfo& GetRegisteres() const;
+
+        /**
+         * Get an extension by name
+         * @param extensionName Name of the extension
+         * @return Pointer to the extension data
+         */
+        EExtension* GetExtension(const EString& extensionName);
+
+        /**
+         * Gets all currently loaded extensions
+         * @return Vector of all extensions
+         */
+        EVector<EExtension*> GetLoadedExtensions();
     };
 
 }

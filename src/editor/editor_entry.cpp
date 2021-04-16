@@ -31,6 +31,11 @@ void Init(GContext* context)
     mesh->SetData(vertices, indices);
 
     extensionManager->LoadExtension("Example1.uex");
+
+    ERef<EUIPanel> testPanel = EMakeRef<EUIPanel>("Testing the panel");
+    extensionManager->GetRegisteres().UIRegister->RegisterItem("USK", testPanel);
+
+    intern::InitUI();
 }
 
 void CleanUp()

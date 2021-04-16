@@ -51,11 +51,11 @@ void* EExtension::GetFunction(const EString& functionName)
 
 void EExtension::InitImGui() 
 {
-    /*auto loadFunction = (void(*)())GetFunction("InitImGui");
+    auto loadFunction = (void(*)())GetFunction("InitImGui");
     if (loadFunction)
     {
         loadFunction();
-    }*/
+    }
 }
 
 const EString& EExtension::GetName() const
@@ -77,7 +77,7 @@ EExtensionManager::~EExtensionManager()
 bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
 {
     EFile file(pathToExtensio);
-    if (!file.Exist()) { E_ERROR("Could not find Plugin File \"" + pathToExtensio + "\""); return false; }
+    if (!file.Exist()) { E_ERROR("Could not find Plugin File \"" + file.GetFullPath() + "\""); return false; }
 
     if (fLoadedExtensions.find(file.GetFileName()) != fLoadedExtensions.end())
     {
@@ -86,6 +86,7 @@ bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
     }
 
     EExtension* newExtension = new EExtension(file.GetFullPath());
+    newExtension->InitImGui();
     // Run load function
     
     auto loadFunction = (void(*)(const char*, EExtInitInfo*))newExtension->GetFunction("entry");
@@ -102,4 +103,19 @@ bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
 const EExtInitInfo& EExtensionManager::GetRegisteres() const
 {
     return fExtensionRegisters;
+}
+
+EExtension* EExtensionManager::GetExtension(const EString& extensionName)
+{
+    return fLoadedExtensions[extensionName];
+}
+
+EVector<EExtension*> EExtensionManager::GetLoadedExtensions()
+{
+    EVector<EExtension*> result;
+    for (auto& entry : fLoadedExtensions)
+    {
+        result.push_back(entry.second);
+    }
+    return result;
 }
