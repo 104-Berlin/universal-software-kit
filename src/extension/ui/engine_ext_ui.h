@@ -17,7 +17,7 @@ namespace Engine {
     /**
      * Most Basic UI Element
      */
-    class E_UIAPI EUIField
+    class E_EXTAPI EUIField
     {
         using UpdateFunction = std::function<void()>;
     private:
@@ -97,6 +97,12 @@ namespace Engine {
         void UpdateEventDispatcher();
 
         /**
+         * Returns the current label of the field
+         * @return The current label
+         */
+        const EString& GetLabel() const;
+
+        /**
          * Adds a listener to specified EventType
          * @param EventType typename of one of the UI Event structs
          * @param callbackFunction Function which will be invoked with given EventType when event is triggered
@@ -108,7 +114,7 @@ namespace Engine {
         }
     };
 
-    class E_UIAPI EUIPanel : public EUIField
+    class E_EXTAPI EUIPanel : public EUIField
     {
     private:
         /**
@@ -137,6 +143,9 @@ namespace Engine {
          * Shows the panel
          */
         void Open();
+    private:
+        bool Impl_Render();
+        void Impl_RenderEnd();
     };
 
 }

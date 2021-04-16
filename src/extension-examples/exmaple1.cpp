@@ -1,7 +1,0 @@
-
-
-void entry()
-{
-    // Entry
-
-}

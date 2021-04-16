@@ -12,6 +12,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 option(USE_COV "Use the covarage option when not using MSVC" FALSE)
 option(BUILD_EDITOR "Build the editor for mac or windows" TRUE)
+option(BUILD_EXAMPLES "Build exmaples" TRUE)
 
 if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC AND USE_COV)
 add_compile_options(--coverage)
@@ -35,6 +36,16 @@ endif(WIN32)
 include_directories(src/)
 add_subdirectory(src/shared)
 add_subdirectory(src/extension)
+
+
+###############################
+######### DEPENDENCIES ########
+if ((WIN32 OR APPLE) AND ${BUILD_EDITOR})
+add_subdirectory(deps/usk-graphics)
+
+
+target_link_libraries(EExtImplRenderer GRenderer)
+endif()
 
 target_link_libraries(EExtension Shared)
 
@@ -60,10 +71,16 @@ endif()
 #########################
 ####### EDITOR ##########
 if (WIN32 OR APPLE)
-  add_subdirectory(deps/usk-graphics)
-
   add_executable(USKEditor src/editor/editor_entry.cpp)
   target_include_directories(USKEditor PUBLIC src/editor/)
-  target_link_libraries(USKEditor GPlatformWrapper)
-  target_link_libraries(USKEditor GRenderer)
+  target_link_libraries(USKEditor EExtension)
+endif()
+
+
+#########################
+######## EXAMPLES #######
+if (${BUILD_EXAMPLES})
+add_subdirectory(src/extension-examples)
+
+target_link_libraries(Example1 EExtension)
 endif()

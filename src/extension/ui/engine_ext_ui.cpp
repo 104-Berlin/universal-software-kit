@@ -1,5 +1,9 @@
 #include "engine_extension.h"
 
+#ifdef EXT_RENDERER_ENABLED
+#endif
+#include "impl/engine_ui_impl_imgui.h"
+
 using namespace Engine;
 
 EUIField::EUIField(const EString& label) 
@@ -51,6 +55,11 @@ void EUIField::UpdateEventDispatcher()
     fEventDispatcher.Update();
 }
 
+const EString& EUIField::GetLabel() const
+{
+    return fLabel;    
+}
+
 EUIPanel::EUIPanel(const EString& title) 
     : EUIField(title), fOpen(true), fWasJustClosed(false)
 {
@@ -59,12 +68,20 @@ EUIPanel::EUIPanel(const EString& title)
 
 bool EUIPanel::OnRender() 
 {
+#ifdef EXT_RENDERER_ENABLED
+    fOpen = UIImpl::EUIPanel::ImplRender(GetLabel().c_str());
+#endif
     return fOpen;   
 }
 
 void EUIPanel::OnRenderEnd() 
 {
-    
+#ifdef EXT_RENDERER_ENABLED
+    if (fOpen || fWasJustClosed)
+    {
+        UIImpl::EUIPanel::ImplRenderEnd();
+    }
+#endif
 }
 
 bool EUIPanel::IsOpen() const

@@ -15,3 +15,9 @@ TEST(ExtensionTest, Basics)
 
     uiRegister.RegisterItem(EXTENSION_NAME, uiPanel);
 }
+
+TEST(ExtensionTest, LoadExtension)
+{
+    EExtensionManager extensionManager;
+    extensionManager.LoadExtension("libExample1.so");
+}

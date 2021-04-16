@@ -1,1 +1,1 @@
-add_library(Example1 MODULE )
+add_library(Example1 MODULE example1.cpp)
