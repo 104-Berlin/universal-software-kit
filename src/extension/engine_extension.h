@@ -27,6 +27,7 @@
 
 
 #ifdef EXT_RENDERER_ENABLED
+#include "imgui.h"
 #include "impl/engine_ui_impl_imgui.h"
 
 
