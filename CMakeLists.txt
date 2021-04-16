@@ -25,7 +25,6 @@ if (${BUILD_TEST})
 add_compile_definitions(E_TEST)
 endif()
 
-
 # Add system definitions
 if (WIN32)
 add_compile_definitions(EWIN)

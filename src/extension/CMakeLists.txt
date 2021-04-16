@@ -10,3 +10,7 @@ if (WIN32 OR APPLE)
 endif()
 
 target_compile_definitions(EExtension PRIVATE EXTENSION_EXPORT)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+target_link_libraries(EExtension dl)
+endif()
