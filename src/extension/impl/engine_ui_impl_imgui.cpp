@@ -10,11 +10,9 @@ void ImplImGui::ResetContext()
     ImGui::SetCurrentContext(Graphics::Wrapper::GetCurrentImGuiContext());
 }
 
-bool EUIPanel::ImplRender(const char* headerName)
+void EUIPanel::ImplRender(const char* headerName, bool* open)
 {
-    bool open = true;
-    ImGui::Begin(headerName, &open);
-    return open;
+    ImGui::Begin(headerName, open);
 }
 
 void EUIPanel::ImplRenderEnd()

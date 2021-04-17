@@ -12,7 +12,7 @@ namespace Engine { namespace UIImpl {
     }
     namespace EUIPanel
     {
-        bool ImplRender(const char* headerName);
+        void ImplRender(const char* headerName, bool* open);
         void ImplRenderEnd();
     }
 
