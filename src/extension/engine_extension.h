@@ -27,7 +27,6 @@
 
 
 #ifdef EXT_RENDERER_ENABLED
-#include "imgui.h"
 #include "impl/engine_ui_impl_imgui.h"
 
 
@@ -41,6 +40,9 @@
 
 #define EXT_ENTRY INIT_IMGUI_FUNC\
                     EXTENSION_EXPORT_FUN void entry(const char* extensionName, Engine::EExtInitInfo* extension)
+
+
+#define EXT_CLEANUP EXTENSION_EXPORT_FUN void cleanUp()
 
 
 #include "engine.h"

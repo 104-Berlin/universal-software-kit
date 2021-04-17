@@ -101,3 +101,20 @@ void EUIPanel::Open()
 {
     fOpen = true;
 }
+
+EUIViewport::EUIViewport() 
+    : EUIField("VIEWPORT")
+{
+    
+}
+
+void EUIViewport::SetRenderFunction(RenderFunction renderFunction) 
+{
+    fRenderFuntion = renderFunction;
+}
+
+bool EUIViewport::OnRender() 
+{
+    fImGuiViewport.Render(fRenderFuntion);
+    return true;
+}

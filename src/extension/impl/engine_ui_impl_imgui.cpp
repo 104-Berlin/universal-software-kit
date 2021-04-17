@@ -1,9 +1,6 @@
 #include "engine_ui_impl_imgui.h"
 
 
-#include "imgui.h"
-#include "graphics_wrapper.h"
-
 using namespace Engine;
 using namespace UIImpl;
 
@@ -23,4 +20,29 @@ bool EUIPanel::ImplRender(const char* headerName)
 void EUIPanel::ImplRenderEnd()
 {
     ImGui::End();
+}
+
+EImGuiViewport::EImGuiViewport() 
+{
+    fFrameBuffer = Graphics::Wrapper::CreateFrameBuffer();
+}
+
+EImGuiViewport::~EImGuiViewport() 
+{
+    delete fFrameBuffer;   
+}
+
+void EImGuiViewport::Render(std::function<void(Graphics::GContext*, Graphics::GFrameBuffer*)> renderFunction) 
+{
+    ImVec2 contentRegion = ImGui::GetContentRegionAvail();
+
+    fFrameBuffer->Resize(contentRegion.x, contentRegion.y, Graphics::GFrameBufferFormat::RGBA8);
+    fFrameBuffer->Bind();
+    if (renderFunction)
+    {
+        renderFunction(Graphics::Wrapper::GetMainContext(), fFrameBuffer);
+    }
+    fFrameBuffer->Unbind();
+
+    ImGui::Image((ImTextureID)(unsigned long)fFrameBuffer->GetColorAttachment(), contentRegion);
 }

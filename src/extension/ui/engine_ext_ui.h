@@ -152,4 +152,25 @@ namespace Engine {
         void Impl_RenderEnd();
     };
 
+    class E_EXTAPI EUIViewport : public EUIField
+    {
+    public:
+        EUIViewport();
+
+
+        virtual bool OnRender() override;
+#ifdef EXT_RENDERER_ENABLED
+    private:
+        /**
+         * Render function which will be called with the viewport size
+         */
+        using RenderFunction = std::function<void(Graphics::GContext*, Graphics::GFrameBuffer*)>;
+
+        RenderFunction fRenderFuntion;
+        UIImpl::EImGuiViewport fImGuiViewport;
+    public:
+        void SetRenderFunction(RenderFunction renderFunction);
+#endif
+    };
+
 }

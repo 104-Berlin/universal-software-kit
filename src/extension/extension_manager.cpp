@@ -19,6 +19,11 @@ EExtension::EExtension(const EString& pathToPlugin)
 
 EExtension::~EExtension() 
 {
+    auto cleanFunction = (void(*)())GetFunction("cleanUp");
+    if (cleanFunction)
+    {
+        cleanFunction();
+    }
     #ifdef EWIN
     FreeLibrary(fHandle);
     #else
