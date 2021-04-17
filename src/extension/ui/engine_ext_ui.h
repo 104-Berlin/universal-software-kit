@@ -125,10 +125,6 @@ namespace Engine {
          * Wether the panel is open.
          */
         bool fOpen;
-        /**
-         * This is true when the panel was closed this frame. This is to remove an imgui bug
-         */
-        bool fWasJustClosed;
     public:
         EUIPanel(const EString& title);
 
@@ -147,9 +143,6 @@ namespace Engine {
          * Shows the panel
          */
         void Open();
-    private:
-        bool Impl_Render();
-        void Impl_RenderEnd();
     };
 
     class E_EXTAPI EUIViewport : public EUIField

@@ -52,11 +52,6 @@ int main()
 
 void Render()
 {
-    Renderer::RRenderer3D renderer(mainContext);
-
-    renderer.Begin(frameBuffer);
-    renderer.Submit(mesh);
-    renderer.End();
 }
 
 void RenderImGui()
@@ -66,10 +61,4 @@ void RenderImGui()
     {
         panel->Render();
     }
-
-    ImGui::Begin("MyMesh");
-    ImVec2 contentReg = ImGui::GetContentRegionAvail();
-    frameBuffer->Resize(contentReg.x, contentReg.y, GFrameBufferFormat::RGBA8);
-    ImGui::Image((ImTextureID)(unsigned long)frameBuffer->GetColorAttachment(), contentReg);
-    ImGui::End();
 }

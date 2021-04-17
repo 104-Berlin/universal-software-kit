@@ -64,7 +64,7 @@ const EString& EUIField::GetLabel() const
 }
 
 EUIPanel::EUIPanel(const EString& title) 
-    : EUIField(title), fOpen(true), fWasJustClosed(false)
+    : EUIField(title), fOpen(true)
 {
     
 }
@@ -72,18 +72,15 @@ EUIPanel::EUIPanel(const EString& title)
 bool EUIPanel::OnRender() 
 {
 #ifdef EXT_RENDERER_ENABLED
-    fOpen = UIImpl::EUIPanel::ImplRender(GetLabel().c_str());
+    UIImpl::EUIPanel::ImplRender(GetLabel().c_str(), &fOpen);
 #endif
-    return fOpen;   
+    return fOpen;
 }
 
 void EUIPanel::OnRenderEnd() 
 {
 #ifdef EXT_RENDERER_ENABLED
-    if (fOpen || fWasJustClosed)
-    {
-        UIImpl::EUIPanel::ImplRenderEnd();
-    }
+    UIImpl::EUIPanel::ImplRenderEnd();
 #endif
 }
 
