@@ -105,13 +105,17 @@ EUIViewport::EUIViewport()
     
 }
 
+#ifdef EXT_RENDERER_ENABLED
 void EUIViewport::SetRenderFunction(RenderFunction renderFunction) 
 {
     fRenderFuntion = renderFunction;
 }
+#endif
 
 bool EUIViewport::OnRender() 
 {
+#ifdef EXT_RENDERER_ENABLED
     fImGuiViewport.Render(fRenderFuntion);
+#endif
     return true;
 }
