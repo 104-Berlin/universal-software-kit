@@ -1,5 +1,5 @@
+#ifdef EXT_RENDERER_ENABLED
 #include "engine_extension.h"
-
 
 std::vector<Renderer::RMesh::Vertex> vertices = {
     {{-0.5f,-0.5f,0.0f}},
@@ -13,26 +13,6 @@ std::vector<unsigned int> indices = {
 };
 
 static Renderer::RMesh* mesh = nullptr;
-
-class TestUiField : public Engine::EUIField
-{
-public:
-    TestUiField();
-
-    virtual bool OnRender() override;
-};
-
-TestUiField::TestUiField() 
-    : Engine::EUIField("UIField")
-{
-    
-}
-
-bool TestUiField::OnRender()
-{
-    ImGui::Button("SomeButton");
-    return true;
-}
 
 void RenderViewport(Graphics::GContext* context, Graphics::GFrameBuffer* frameBuffer)
 {
@@ -60,3 +40,5 @@ EXT_CLEANUP
 {
     delete mesh;
 }
+
+#endif
