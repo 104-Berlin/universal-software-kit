@@ -3,6 +3,7 @@
 #include <functional>
 
 #include "imgui.h"
+#include "ImGuizmo.h"
 #include "graphics_renderer.h"
 
 namespace Engine { namespace UIImpl {
