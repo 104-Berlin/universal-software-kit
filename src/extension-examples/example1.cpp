@@ -1,11 +1,23 @@
 #ifdef EXT_RENDERER_ENABLED
 #include "engine_extension.h"
 
-std::vector<Renderer::RMesh::Vertex> vertices = {
-    {{-0.5f,-0.5f,0.0f}},
+/**
+ * {{-0.5f,-0.5f,0.0f}},
     {{ 0.5f,-0.5f,0.0f}},
     {{ 0.5f, 0.5f,0.0f}},
     {{-0.5f, 0.5f,0.0f}},
+
+    {{2.0f,-0.5f,-0.5f}},
+    {{2.0f,-0.5f, 0.5f}},
+    {{2.0f, 0.5f, 0.5f}},
+    {{2.0f, 0.5f,-0.5f}},
+    */
+
+std::vector<Renderer::RMesh::Vertex> vertices = {
+    {{-0.5f,-0.5f, 1.0f}},
+    {{ 0.5f,-0.5f, 1.0f}},
+    {{ 0.5f, 0.5f, 1.0f}},
+    {{-0.5f, 0.5f, 1.0f}},
 };
 
 std::vector<unsigned int> indices = {
@@ -27,17 +39,16 @@ static const float identityMatrix[16] =
     0.f, 0.f, 1.f, 0.f,
     0.f, 0.f, 0.f, 1.f };
 
-
-static float cameraView[16] =
-{ 1.f, 0.f, 0.f, 0.f,
-    0.f, 1.f, 0.f, 0.f,
-    0.f, 0.f, 1.f, 0.f,
-    0.f, 0.f, 0.f, 1.f };
-
-static float cameraProjection[16];
+static glm::mat4 cameraView;
+static glm::mat4 cameraProjection;
 
 static size_t selectedIndex = 0;
 static size_t selectedVertex = 0;
+
+static float cameraRotationDevider = 360.0f;
+static float cameraSpeedDevider = 10.0f;
+
+static Renderer::RCamera ViewportCamera(Renderer::ECameraMode::PERSPECTIVE);
 
 class TestUiField : public Engine::EUIField
 {
@@ -46,7 +57,7 @@ public:
     std::vector<unsigned int> fIndices;
 public:
     TestUiField()
-        : Engine::EUIField("TestField")
+        : Engine::EUIField("TestField"), fVertices(vertices), fIndices(indices)
     {
 
     }
@@ -77,9 +88,8 @@ public:
                 matrixScale[1] = 1;
                 matrixScale[2] = 1;
 
-                //ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
                 ImGuizmo::RecomposeMatrixFromComponents(&vertex.Position.x, matrixRotation, matrixScale, matrix);
-                ImGuizmo::Manipulate(cameraView, cameraProjection, ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, matrix);
+                ImGuizmo::Manipulate(&cameraView[0][0], &cameraProjection[0][0], ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::WORLD, matrix);
 
                 ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
                 vertex.Position.x = matrixTranslation[0];
@@ -110,53 +120,62 @@ public:
     }
 };
 
-static ERef<TestUiField> testUiField = nullptr;
-
-void OrthoGraphic(const float l, float r, float b, const float t, float zn, const float zf, float* m16)
+class InfoPanel : public Engine::EUIField
 {
-   m16[0] = 2 / (r - l);
-   m16[1] = 0.0f;
-   m16[2] = 0.0f;
-   m16[3] = 0.0f;
-   m16[4] = 0.0f;
-   m16[5] = 2 / (t - b);
-   m16[6] = 0.0f;
-   m16[7] = 0.0f;
-   m16[8] = 0.0f;
-   m16[9] = 0.0f;
-   m16[10] = 1.0f / (zf - zn);
-   m16[11] = 0.0f;
-   m16[12] = (l + r) / (l - r);
-   m16[13] = (t + b) / (b - t);
-   m16[14] = zn / (zn - zf);
-   m16[15] = 1.0f;
-}
+public:
+    InfoPanel()
+    : Engine::EUIField("InfoPanel") {}
 
+    virtual bool OnRender() override
+    {
+        glm::vec3 currentCamPos = ViewportCamera.GetPosition();
+        ImGui::DragFloat3("Camera Position", &currentCamPos.x);
+        ViewportCamera.SetPosition(currentCamPos);
+
+        ImGui::Text("Camera Forward: (%f, %f, %f)", ViewportCamera.GetForward().x, ViewportCamera.GetForward().y, ViewportCamera.GetForward().z);
+        ImGui::Text("Camera UP: (%f, %f, %f)", ViewportCamera.GetUp().x, ViewportCamera.GetUp().y, ViewportCamera.GetUp().z);
+        ImGui::Text("Camera Right: (%f, %f, %f)", ViewportCamera.GetRight().x, ViewportCamera.GetRight().y, ViewportCamera.GetRight().z);
+
+        ImGui::Spacing();
+        ImGui::DragFloat("Camera rotation devider", &cameraRotationDevider);
+        ImGui::DragFloat("Camera rotation devider", &cameraSpeedDevider);
+        return true;
+    }
+};
+
+static ERef<TestUiField> testUiField = nullptr;
 
 void RenderViewport(Graphics::GContext* context, Graphics::GFrameBuffer* frameBuffer)
 {
-    ImGuiIO& io = ImGui::GetIO();
-    float viewHeight = 1.0f * io.DisplaySize.y / io.DisplaySize.x;
-    OrthoGraphic(-1.0f, 1.0f, 1.0, -1.0, 1000.f, -1000.f, cameraProjection);
-
+    cameraProjection = ViewportCamera.GetProjectionMatrix(frameBuffer->GetWidth(), frameBuffer->GetHeight());
+    cameraView = ViewportCamera.GetViewMatrix();
     float windowWidth = (float)ImGui::GetWindowWidth();
     float windowHeight = (float)ImGui::GetWindowHeight();
     ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-    float viewManipulateRight = ImGui::GetWindowPos().x + windowWidth;
-    float viewManipulateTop = ImGui::GetWindowPos().y;
-
     ImGuizmo::SetDrawlist();
+    ImVec2 leftButtonDelta = ImGui::GetMouseDragDelta(0);
+    ImGui::ResetMouseDragDelta(0);
+    ImVec2 rightButtonDelta = ImGui::GetMouseDragDelta(1);
+    ImGui::ResetMouseDragDelta(1);
 
-    //ImGuizmo::DrawGrid(cameraView, cameraProjection, identityMatrix, 100.f);
-    //ImGuizmo::DrawCubes(cameraView, cameraProjection, &objectMatrix[0][0], 1);
-
-    //ImGuizmo::ViewManipulate(cameraView, 10, ImVec2(viewManipulateRight - 128, viewManipulateTop), ImVec2(128, 128), 0x10101010);
-
+    //printf("LeftDragDelta: (%f, %f)\n", leftButtonDelta.x, leftButtonDelta.y);
+    //printf("RightDragDelta: (%f, %f)\n", rightButtonDelta.x, rightButtonDelta.y);
+    if (!ImGuizmo::IsUsing() && ImGui::IsWindowFocused())
+    {
+        ViewportCamera.MoveForward(ImGui::GetIO().MouseWheel);
+        if (ImGui::IsKeyDown(USK_KEY_LEFT_CONTROL))
+        {
+            ViewportCamera.MoveRight(leftButtonDelta.x / 10.0f);
+            ViewportCamera.TurnRight(rightButtonDelta.x / 360.0f);
+            ViewportCamera.MoveUp(leftButtonDelta.y / 10.0f);
+            ViewportCamera.TurnUp(rightButtonDelta.y / 360.0f);
+        }
+    }
 
     mesh->SetData(testUiField->fVertices, testUiField->fIndices);
 
     Renderer::RRenderer3D renderer(context);
-    renderer.Begin(frameBuffer);
+    renderer.Begin(frameBuffer, &ViewportCamera);
     renderer.Submit(mesh);
     renderer.End();
 }
@@ -175,9 +194,13 @@ EXT_ENTRY
     testUiField = EMakeRef<TestUiField>();
     vertexChanginngPanel->AddChild(testUiField);
 
+    ERef<Engine::EUIPanel> infoPanel = EMakeRef<Engine::EUIPanel>("Info Panel");
+    infoPanel->AddChild(EMakeRef<InfoPanel>());
+
 
     extension->UIRegister->RegisterItem(extensionName, uiPanel);
     extension->UIRegister->RegisterItem(extensionName, vertexChanginngPanel);
+    extension->UIRegister->RegisterItem(extensionName, infoPanel);
 
     mesh = new Renderer::RMesh();
     mesh->SetData(vertices, indices);
