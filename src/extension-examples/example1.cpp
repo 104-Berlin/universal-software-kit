@@ -13,6 +13,17 @@
     {{2.0f, 0.5f,-0.5f}},
     */
 
+std::vector<Renderer::RMesh::Vertex> planeVertices = {
+    {{-1000.0f, -10.0f, -1000.0f}},
+    {{ 1000.0f, -10.0f, -1000.0f}},
+    {{ 1000.0f, -10.0f,  1000.0f}},
+    {{-1000.0f, -10.0f,  1000.0f}},
+};
+
+std::vector<unsigned int> planeIndices = {
+    0, 1, 2, 2, 3, 0
+};
+
 std::vector<Renderer::RMesh::Vertex> vertices = {
     {{-0.5f,-0.5f, 1.0f}},
     {{ 0.5f,-0.5f, 1.0f}},
@@ -25,6 +36,7 @@ std::vector<unsigned int> indices = {
 };
 
 static Renderer::RMesh* mesh = nullptr;
+static Renderer::RMesh* planeMesh = nullptr;
 
 static float matrix[16] =
 { 1.f, 0.f, 0.f, 0.f,
@@ -88,8 +100,8 @@ public:
                 matrixScale[1] = 1;
                 matrixScale[2] = 1;
 
-                ImGuizmo::RecomposeMatrixFromComponents(&vertex.Position.x, matrixRotation, matrixScale, matrix);
-                ImGuizmo::Manipulate(&cameraView[0][0], &cameraProjection[0][0], ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::WORLD, matrix);
+                ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix);
+                ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::WORLD, matrix);
 
                 ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
                 vertex.Position.x = matrixTranslation[0];
@@ -149,13 +161,15 @@ void RenderViewport(Graphics::GContext* context, Graphics::GFrameBuffer* frameBu
 {
     cameraProjection = ViewportCamera.GetProjectionMatrix(frameBuffer->GetWidth(), frameBuffer->GetHeight());
     cameraView = ViewportCamera.GetViewMatrix();
+    //cameraView = glm::inverse(cameraView);
     float windowWidth = (float)ImGui::GetWindowWidth();
     float windowHeight = (float)ImGui::GetWindowHeight();
     ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+    ImGuizmo::SetOrthographic(false);
     ImGuizmo::SetDrawlist();
-    ImVec2 leftButtonDelta = ImGui::GetMouseDragDelta(0);
+    ImVec2 leftButtonDelta = ImGui::GetMouseDragDelta(0, 0);
     ImGui::ResetMouseDragDelta(0);
-    ImVec2 rightButtonDelta = ImGui::GetMouseDragDelta(1);
+    ImVec2 rightButtonDelta = ImGui::GetMouseDragDelta(1, 0);
     ImGui::ResetMouseDragDelta(1);
 
     //printf("LeftDragDelta: (%f, %f)\n", leftButtonDelta.x, leftButtonDelta.y);
@@ -173,9 +187,11 @@ void RenderViewport(Graphics::GContext* context, Graphics::GFrameBuffer* frameBu
     }
 
     mesh->SetData(testUiField->fVertices, testUiField->fIndices);
+    //planeMesh->SetData(planeVertices, planeIndices);
 
     Renderer::RRenderer3D renderer(context);
     renderer.Begin(frameBuffer, &ViewportCamera);
+    renderer.Submit(planeMesh);
     renderer.Submit(mesh);
     renderer.End();
 }
@@ -204,11 +220,15 @@ EXT_ENTRY
 
     mesh = new Renderer::RMesh();
     mesh->SetData(vertices, indices);
+
+    planeMesh = new Renderer::RMesh();
+    planeMesh->SetData(planeVertices, planeIndices);
 }
 
 EXT_CLEANUP
 {
     delete mesh;
+    delete planeMesh;
 }
 
 #endif

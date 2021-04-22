@@ -42,5 +42,11 @@ void EImGuiViewport::Render(std::function<void(Graphics::GContext*, Graphics::GF
     }
     fFrameBuffer->Unbind();
 
-    ImGui::Image((ImTextureID)(unsigned long)fFrameBuffer->GetColorAttachment(), contentRegion);
+    ImGui::Image((ImTextureID)(unsigned long)fFrameBuffer->GetColorAttachment(), contentRegion, {0, 1}, {1, 0});
+
+
+    ImGui::Begin("Depth Attach");
+    ImVec2 depthcontentRegion = ImGui::GetContentRegionAvail();
+    ImGui::Image((ImTextureID)(unsigned long)fFrameBuffer->GetDepthAttachment(), depthcontentRegion, { 0, 1 }, { 1, 0 });
+    ImGui::End();
 }
