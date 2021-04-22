@@ -28,3 +28,5 @@
 
 
 #include "event/engine_event_dispatcher.h"
+
+#include "resource/engine_resource_manager.h"
