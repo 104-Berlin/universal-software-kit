@@ -172,22 +172,19 @@ void RenderViewport(Graphics::GContext* context, Graphics::GFrameBuffer* frameBu
     ImVec2 rightButtonDelta = ImGui::GetMouseDragDelta(1, 0);
     ImGui::ResetMouseDragDelta(1);
 
-    //printf("LeftDragDelta: (%f, %f)\n", leftButtonDelta.x, leftButtonDelta.y);
-    //printf("RightDragDelta: (%f, %f)\n", rightButtonDelta.x, rightButtonDelta.y);
     if (!ImGuizmo::IsUsing() && ImGui::IsWindowFocused())
     {
         ViewportCamera.MoveForward(ImGui::GetIO().MouseWheel);
         if (ImGui::IsKeyDown(USK_KEY_LEFT_CONTROL))
         {
-            ViewportCamera.MoveRight(leftButtonDelta.x / 10.0f);
-            ViewportCamera.TurnRight(rightButtonDelta.x / 360.0f);
+            ViewportCamera.MoveRight(-leftButtonDelta.x / 10.0f);
+            ViewportCamera.TurnRight(-rightButtonDelta.x / 360.0f);
             ViewportCamera.MoveUp(leftButtonDelta.y / 10.0f);
-            ViewportCamera.TurnUp(rightButtonDelta.y / 360.0f);
+            ViewportCamera.TurnUp(-rightButtonDelta.y / 360.0f);
         }
     }
 
     mesh->SetData(testUiField->fVertices, testUiField->fIndices);
-    //planeMesh->SetData(planeVertices, planeIndices);
 
     Renderer::RRenderer3D renderer(context);
     renderer.Begin(frameBuffer, &ViewportCamera);
