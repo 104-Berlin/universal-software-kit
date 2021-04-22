@@ -161,7 +161,6 @@ void RenderViewport(Graphics::GContext* context, Graphics::GFrameBuffer* frameBu
 {
     cameraProjection = ViewportCamera.GetProjectionMatrix(frameBuffer->GetWidth(), frameBuffer->GetHeight());
     cameraView = ViewportCamera.GetViewMatrix();
-    //cameraView = glm::inverse(cameraView);
     float windowWidth = (float)ImGui::GetWindowWidth();
     float windowHeight = (float)ImGui::GetWindowHeight();
     ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
