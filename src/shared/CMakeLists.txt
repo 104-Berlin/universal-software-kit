@@ -7,6 +7,7 @@ add_library(Shared SHARED   file/engine_file_collection.cpp
                             file/engine_folder.cpp
                             file/engine_shared_buffer.cpp
                             register/engine_scene.cpp
+                            resource/engine_resource_manager.cpp
                             logging/engine_logging.cpp)
 
 target_include_directories(Shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

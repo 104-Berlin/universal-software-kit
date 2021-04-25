@@ -7,9 +7,12 @@ namespace Engine {
     private:
         friend class EObject;
         entt::registry fRegistry;
+        EResourceManager fResourceManager;
     public:
         EScene();
         ~EScene();
+
+        EResourceManager& GetResourceManager();
     };
 
     class E_API EObject

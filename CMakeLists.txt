@@ -58,6 +58,7 @@ if (${BUILD_TEST})
   add_executable(UnitTest src/tests/test_engine_file.cpp
                           src/tests/test_engine_register.cpp
                           src/tests/test_engine_extension.cpp
+                          src/tests/test_engine_resource.cpp
                           src/tests/test_engine_events.cpp)
   target_link_libraries(UnitTest gtest_main)
   target_link_libraries(UnitTest EExtension)

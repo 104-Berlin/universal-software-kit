@@ -10,7 +10,7 @@ namespace Engine {
         public:
             virtual ~BufferDataBase() = default;
 
-            virtual void Create(void* data, size_t size_in_bytes) = 0;
+            virtual void Create(const void* data, size_t size_in_bytes) = 0;
             virtual void Delete() = 0;
             virtual void* Get() = 0;
         };
@@ -27,12 +27,19 @@ namespace Engine {
                 
             }
 
-            virtual void Create(void* data, size_t size_in_bytes)
+            virtual void Create(const void* data, size_t size_in_bytes)
             {
-                fData = new T[size_in_bytes /  sizeof(T)];
+                fData = new T[size_in_bytes / sizeof(T)];
                 if (data)
                 {
-                    memcpy(fData, data, size_in_bytes);
+                    if (size_in_bytes / sizeof(T) == 1)
+                    {
+                        *fData = T(*(T*)data);
+                    }
+                    else
+                    {
+                        memcpy(fData, data, size_in_bytes);
+                    }
                 }
                 else
                 {
@@ -83,13 +90,14 @@ namespace Engine {
             @param size_in_bytes The size of the buffer in bytes
         */
         template <typename PointerType>
-        ESharedBuffer& InitWith(void* data, size_t size_in_bytes)
+        ESharedBuffer& InitWith(const void* data, size_t size_in_bytes)
         {
             fRefCount = new int(1);
-            fBuffer = new InternBuffer<PointerType>();
-            fBuffer->Create(data, size_in_bytes);
             fSizeInBytes = size_in_bytes;
             fElementCount = size_in_bytes / sizeof(PointerType);
+
+            fBuffer = new InternBuffer<PointerType>();
+            fBuffer->Create(data, size_in_bytes);
 
             return *this;
         }
@@ -99,8 +107,19 @@ namespace Engine {
             return fBuffer->Get();
         }
 
+        const void* Data() const
+        {
+            return fBuffer->Get();
+        }
+
         template <typename T>
         T* Data()
+        {
+            return (T*)fBuffer->Get();
+        }
+
+        template <typename T>
+        const T* Data() const
         {
             return (T*)fBuffer->Get();
         }
