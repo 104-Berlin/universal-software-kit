@@ -17,6 +17,11 @@ namespace Engine { namespace UIImpl {
         void ImplRenderEnd();
     }
 
+    namespace EUIButton 
+    {
+        bool ImplRender(const char* label);
+    }
+
     class EImGuiViewport 
     {
     private:

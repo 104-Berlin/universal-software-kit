@@ -56,6 +56,11 @@ void EUIField::OnRenderEnd()
 void EUIField::UpdateEventDispatcher() 
 {
     fEventDispatcher.Update();
+
+    for (ERef<EUIField> child : fChildren)
+    {
+        child->UpdateEventDispatcher();
+    }
 }
 
 const EString& EUIField::GetLabel() const
@@ -116,6 +121,24 @@ bool EUIViewport::OnRender()
 {
 #ifdef EXT_RENDERER_ENABLED
     fImGuiViewport.Render(fRenderFuntion);
+#endif
+    return true;
+}
+
+
+EUIButton::EUIButton(const EString& label) 
+    : EUIField(label)
+{
+    
+}
+
+bool EUIButton::OnRender() 
+{
+#ifdef EXT_RENDERER_ENABLED
+    if (UIImpl::EUIButton::ImplRender(GetLabel().c_str()))
+    {
+        fEventDispatcher.Enqueue<EClickEvent>({0,0});
+    }
 #endif
     return true;
 }

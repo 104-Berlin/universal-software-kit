@@ -24,7 +24,7 @@ namespace Engine {
     class E_EXTAPI EUIField
     {
         using UpdateFunction = std::function<void()>;
-    private:
+    protected:
         /**
          * An id that will be incremented to be unique
          */
@@ -164,6 +164,20 @@ namespace Engine {
     public:
         void SetRenderFunction(RenderFunction renderFunction);
 #endif
+    };
+
+    struct EClickEvent
+    {
+        u32 MouseX;
+        u32 MouseY;
+    };
+
+    class E_EXTAPI EUIButton : public EUIField
+    {
+    public:
+        EUIButton(const EString& label);
+
+        virtual bool OnRender() override;
     };
 
 }

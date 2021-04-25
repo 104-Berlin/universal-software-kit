@@ -3,7 +3,8 @@
 
 using namespace Engine;
 
-EScene::EScene()
+EScene::EScene(const EString& name)
+    : fName(name)
 {
 
 }

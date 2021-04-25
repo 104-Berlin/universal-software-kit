@@ -71,7 +71,8 @@ endif()
 #########################
 ####### EDITOR ##########
 if (WIN32 OR APPLE)
-  add_executable(USKEditor src/editor/editor_entry.cpp)
+  add_executable(USKEditor src/editor/editor_entry.cpp
+                            src/editor/application/editor_application.cpp)
   target_include_directories(USKEditor PUBLIC src/editor/)
   target_link_libraries(USKEditor EExtension)
 endif()

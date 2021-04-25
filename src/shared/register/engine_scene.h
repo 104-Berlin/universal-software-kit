@@ -8,8 +8,9 @@ namespace Engine {
         friend class EObject;
         entt::registry fRegistry;
         EResourceManager fResourceManager;
+        EString fName;
     public:
-        EScene();
+        EScene(const EString& name = "Unknown");
         ~EScene();
 
         EResourceManager& GetResourceManager();
