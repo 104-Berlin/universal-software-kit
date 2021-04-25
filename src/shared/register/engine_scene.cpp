@@ -13,6 +13,11 @@ EScene::~EScene()
 
 }
 
+EResourceManager& EScene::GetResourceManager() 
+{
+    return fResourceManager;
+}
+
 EObject::EObject(EScene* scene, entt::entity handle)
     : fScene(scene), fHandle(handle)
 {
