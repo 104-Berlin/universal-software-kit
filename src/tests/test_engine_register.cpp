@@ -20,20 +20,3 @@ TEST(RegisterTest, Basics)
 	EXPECT_TRUE(object1.HasComponent<MyTestComponent>());
 	EXPECT_EQ(object1.GetComponent<MyTestComponent>().SomeInteger, 32);
 }
-
-TEST(RegisterTest, EventSystem)
-{
-	EScene scene;
-	EObject object1 = EObject::Create(&scene);
-
-	object1.AddChangeEvent<MyTestComponent>([](EObjectChangeEvent<MyTestComponent> changeEvent){
-		MyTestComponent newValue = changeEvent.NewValue;
-		E_INFO("NewValue: " + std::to_string(newValue.SomeInteger));
-	});
-
-	MyTestComponent newValues{};
-	newValues.SomeInteger = 10;
-
-	object1.UpdateComponent<MyTestComponent>(newValues);
-
-}
