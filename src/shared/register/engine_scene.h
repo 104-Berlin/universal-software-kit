@@ -70,6 +70,7 @@ namespace Engine {
         EString fName;
     public:
         EProperty(const EString& name);
+        virtual ~EProperty() = default;
 
         const EString& GetPropertyName() const;
     };
