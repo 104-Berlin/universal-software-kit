@@ -16,6 +16,21 @@ const EString& EProperty::GetPropertyName() const
     return fName;
 }
 
+EStructProperty::EStructProperty(const EString& name, const EVector<EProperty*>& properties) 
+    : EProperty(name), fProperties(properties)
+{
+    
+}
+
+EStructProperty::~EStructProperty() 
+{
+    for (EProperty* property : fProperties)
+    {
+        delete property;
+    }
+    fProperties.clear();
+}
+
 EComponentStorage::EComponentStorage(EComponentDescription dsc, const EUnorderedMap<EString, EProperty*>& propInit) 
     : fDsc(dsc), fProperties(propInit)
 {
@@ -56,7 +71,7 @@ bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<
     {
         return false;
     }
-    EComponentTypeDescription typeDsc;
+    EValueTypeDescription typeDsc;
     if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
     {
         E_WARN("Proeprty with name not added. Reset the component!");
@@ -77,7 +92,7 @@ bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<
     {
         return false;
     }
-    EComponentTypeDescription typeDsc;
+    EValueTypeDescription typeDsc;
     if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
     {
         E_WARN("Proeprty with name not added. Reset the component!");
@@ -98,7 +113,7 @@ bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<
     {
         return false;
     }
-    EComponentTypeDescription typeDsc;
+    EValueTypeDescription typeDsc;
     if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
     {
         E_WARN("Proeprty with name not added. Reset the component!");
@@ -119,7 +134,7 @@ bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<
     {
         return false;
     }
-    EComponentTypeDescription typeDsc;
+    EValueTypeDescription typeDsc;
     if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
     {
         E_WARN("Proeprty with name not added. Reset the component!");
@@ -201,7 +216,7 @@ void EScene::InsertComponent(Entity entity, EComponentDescription::ComponentID c
     {
         EUnorderedMap<EString, EProperty*> properties;
         const EComponentDescription& componentDesc = fRegisteredComponents[componentId];
-        for (const auto& entry : componentDesc.TypeDesciptions)
+        for (const auto& entry : componentDesc.ValueTypeDesciptions)
         {
             switch (entry.Type)
             {
@@ -209,9 +224,26 @@ void EScene::InsertComponent(Entity entity, EComponentDescription::ComponentID c
             case EValueType::DOUBLE: properties.insert({entry.Name, new EValueProperty<double>(entry.Name)}); break;
             case EValueType::STRING: properties.insert({entry.Name, new EValueProperty<EString>(entry.Name)}); break;
             case EValueType::BOOL: properties.insert({entry.Name, new EValueProperty<bool>(entry.Name)}); break;
-            case EValueType::STRUCT: break;
             case EValueType::COMPONENT_REFERENCE: break;
             }
+        }
+
+        for (const auto& entry : componentDesc.StructTypeDescriptions)
+        {
+            EVector<EProperty*> structProps;
+            for (const auto& valueType : entry.Fields)
+            {
+                switch (valueType.Type)
+                {
+                case EValueType::INTEGER: properties.insert({entry.Name, new EValueProperty<i32>(entry.Name)}); break;
+                case EValueType::DOUBLE: properties.insert({entry.Name, new EValueProperty<double>(entry.Name)}); break;
+                case EValueType::STRING: properties.insert({entry.Name, new EValueProperty<EString>(entry.Name)}); break;
+                case EValueType::BOOL: properties.insert({entry.Name, new EValueProperty<bool>(entry.Name)}); break;
+                case EValueType::COMPONENT_REFERENCE: break;
+                }
+            }
+            EStructProperty* newProperty = new EStructProperty(entry.Name);
+            properties.insert({entry.Name, newProperty});
         }
 
         EComponentStorage storage(componentDesc, properties);

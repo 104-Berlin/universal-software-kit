@@ -9,27 +9,33 @@ namespace Engine {
         BOOL,
         STRING,
 
-        STRUCT,
-
         COMPONENT_REFERENCE,
     };
 
-    struct EComponentTypeDescription
+    struct EValueTypeDescription
     {
         EValueType      Type;
         EString         Name;
     };
-    typedef EVector<EComponentTypeDescription> TComponentTypeList;
+    typedef EVector<EValueTypeDescription> TValueTypeList;
+
+    struct EStructTypeDescription
+    {
+        EString             Name;
+        TValueTypeList  Fields;
+    };
+    typedef EVector<EStructTypeDescription> TStructTypeList;
 
     struct EComponentDescription
     {
         using ComponentID = EString;
 
-        TComponentTypeList  TypeDesciptions;
+        TValueTypeList      ValueTypeDesciptions;
+        TStructTypeList     StructTypeDescriptions;
         ComponentID         ID;
 
-        EComponentDescription(const ComponentID& id = "Unknown", std::initializer_list<EComponentTypeDescription>&& types = {})
-            : TypeDesciptions(types), ID(id)
+        EComponentDescription(const ComponentID& id = "Unknown", std::initializer_list<EValueTypeDescription>&& types = {}, std::initializer_list<EStructTypeDescription>&& structDescriptions = {})
+            : ID(id), ValueTypeDesciptions(types), StructTypeDescriptions(structDescriptions)
         {}
 
         EComponentDescription(const EComponentDescription&) = default;
@@ -44,9 +50,9 @@ namespace Engine {
             return !ID.empty();
         }
 
-        bool GetTypeDescription(const EString& name, EComponentTypeDescription* outDesc)
+        bool GetTypeDescription(const EString& name, EValueTypeDescription* outDesc)
         {
-            for (const EComponentTypeDescription& dsc : TypeDesciptions)
+            for (const EValueTypeDescription& dsc : ValueTypeDesciptions)
             {
                 if (dsc.Name == name)
                 {
@@ -96,26 +102,23 @@ namespace Engine {
         }
     };
 
-    class EStructProperty : public EProperty
+    class E_API EStructProperty : public EProperty
     {
     private:
         EVector<EProperty*> fProperties;
     public:
-        EStructProperty(const EString& name, const EVector<EProperty*>& property);
+        EStructProperty(const EString& name, const EVector<EProperty*>& properties = {});
         ~EStructProperty();
-
-
     };
 
 
-    class EComponentStorage
+    class E_API EComponentStorage
     {
     private:
         EComponentDescription   fDsc;
         EUnorderedMap<EString, EProperty*>     fProperties;
     public:
         EComponentStorage(EComponentDescription dsc = EComponentDescription(), const EUnorderedMap<EString, EProperty*>& propInit = {});
-
         ~EComponentStorage();
 
         operator bool() const;
