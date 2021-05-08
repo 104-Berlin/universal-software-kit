@@ -2,19 +2,21 @@
 
 namespace Engine {
 
-    enum class EComponentType
+    enum class EValueType
     {
         INTEGER,
         DOUBLE,
         BOOL,
         STRING,
 
+        STRUCT,
+
         COMPONENT_REFERENCE,
     };
 
     struct EComponentTypeDescription
     {
-        EComponentType  Type;
+        EValueType      Type;
         EString         Name;
     };
     typedef EVector<EComponentTypeDescription> TComponentTypeList;
@@ -58,10 +60,6 @@ namespace Engine {
         friend class EScene;
     };
 
-    E_API size_t GetComponentTypeSize(EComponentType type);
-    E_API size_t GetComponentSize(EComponentDescription description);
-
-
 
     class E_API EProperty
     {
@@ -98,6 +96,17 @@ namespace Engine {
         }
     };
 
+    class EStructProperty : public EProperty
+    {
+    private:
+        EVector<EProperty*> fProperties;
+    public:
+        EStructProperty(const EString& name, const EVector<EProperty*>& property);
+        ~EStructProperty();
+
+
+    };
+
 
     class EComponentStorage
     {
@@ -105,127 +114,22 @@ namespace Engine {
         EComponentDescription   fDsc;
         EUnorderedMap<EString, EProperty*>     fProperties;
     public:
-        EComponentStorage(EComponentDescription dsc = EComponentDescription(), const EUnorderedMap<EString, EProperty*>& propInit = {})
-            : fDsc(dsc), fProperties(propInit)
-            {}
+        EComponentStorage(EComponentDescription dsc = EComponentDescription(), const EUnorderedMap<EString, EProperty*>& propInit = {});
 
-        ~EComponentStorage()
-        {
-            fProperties.clear();
-        }
+        ~EComponentStorage();
 
-        operator bool() const
-        {
-            return Valid();
-        }
+        operator bool() const;
+        bool Valid() const;
 
-        bool Valid() const
-        {
-            return fDsc.Valid();
-        }
 
-        void Reset()
-        {
-            for (auto& property : fProperties)
-            {
-                delete property.second;
-            }
-        }
+        void Reset();
 
-        bool HasProperty(const EString& propertyName)
-        {
-            return fProperties.find(propertyName) != fProperties.end();
-        }
+        bool HasProperty(const EString& propertyName);
 
-        template <typename T>
-        T* GetProperty(const EString& propertyName)
-        {
-            E_ERROR("Unknown property type to get from componentstorage");
-        }
-
-        template <>
-        EValueProperty<i32>* GetProperty(const EString& propertyName)
-        {
-            if (!HasProperty(propertyName))
-            {
-                return nullptr;
-            }
-            EComponentTypeDescription typeDsc;
-            if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
-            {
-                E_WARN("Proeprty with name not added. Reset the component!");
-                return nullptr;
-            }
-            if (typeDsc.Type != EComponentType::INTEGER)
-            {
-                E_ERROR("Wrong Type getting property " + propertyName);
-                return nullptr;
-            }
-            return (EValueProperty<i32>*) fProperties[propertyName];
-        }
-
-        template <>
-        EValueProperty<double>* GetProperty(const EString& propertyName)
-        {
-            if (!HasProperty(propertyName))
-            {
-                return nullptr;
-            }
-            EComponentTypeDescription typeDsc;
-            if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
-            {
-                E_WARN("Proeprty with name not added. Reset the component!");
-                return nullptr;
-            }
-            if (typeDsc.Type != EComponentType::DOUBLE)
-            {
-                E_ERROR("Wrong Type getting property " + propertyName);
-                return nullptr;
-            }
-            return (EValueProperty<double>*) fProperties[propertyName];
-        }
-
-        template <>
-        EValueProperty<bool>* GetProperty(const EString& propertyName)
-        {
-            if (!HasProperty(propertyName))
-            {
-                return nullptr;
-            }
-            EComponentTypeDescription typeDsc;
-            if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
-            {
-                E_WARN("Proeprty with name not added. Reset the component!");
-                return nullptr;
-            }
-            if (typeDsc.Type != EComponentType::BOOL)
-            {
-                E_ERROR("Wrong Type getting property " + propertyName);
-                return nullptr;
-            }
-            return (EValueProperty<bool>*) fProperties[propertyName];
-        }
-
-        template <>
-        EValueProperty<EString>* GetProperty(const EString& propertyName)
-        {
-            if (!HasProperty(propertyName))
-            {
-                return nullptr;
-            }
-            EComponentTypeDescription typeDsc;
-            if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
-            {
-                E_WARN("Proeprty with name not added. Reset the component!");
-                return nullptr;
-            }
-            if (typeDsc.Type != EComponentType::STRING)
-            {
-                E_ERROR("Wrong Type getting property " + propertyName);
-                return nullptr;
-            }
-            return (EValueProperty<EString>*) fProperties[propertyName];
-        }
+        bool GetProperty(const EString& propertyName, EValueProperty<i32>** outValue);
+        bool GetProperty(const EString& propertyName, EValueProperty<double>** outValue);
+        bool GetProperty(const EString& propertyName, EValueProperty<bool>** outValue);
+        bool GetProperty(const EString& propertyName, EValueProperty<EString>** outValue);
     };
 
     class E_API EScene

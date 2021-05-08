@@ -1,29 +1,6 @@
 #include "engine.h"
 #include "prefix_shared.h"
 
-
-size_t Engine::GetComponentTypeSize(EComponentType type) 
-{
-    switch (type)
-    {
-    case EComponentType::INTEGER: return sizeof(i32);
-    case EComponentType::DOUBLE: return sizeof(double);
-    case EComponentType::BOOL: return sizeof(bool);
-    case EComponentType::STRING: return sizeof(char*);
-    case EComponentType::COMPONENT_REFERENCE: return sizeof(int);
-    }
-    return 0;
-}
-    
-size_t Engine::GetComponentSize(EComponentDescription description) 
-{
-    size_t result = 0;
-    for (auto entry : description.TypeDesciptions)
-    {
-        result += GetComponentTypeSize(entry.Type);
-    }
-    return result;
-}
 using namespace Engine;
 
 
@@ -37,6 +14,124 @@ EProperty::EProperty(const EString& name)
 const EString& EProperty::GetPropertyName() const
 {
     return fName;
+}
+
+EComponentStorage::EComponentStorage(EComponentDescription dsc, const EUnorderedMap<EString, EProperty*>& propInit) 
+    : fDsc(dsc), fProperties(propInit)
+{
+
+}
+
+EComponentStorage::~EComponentStorage() 
+{
+    fProperties.clear();
+}
+
+EComponentStorage::operator bool() const
+{
+    return Valid();
+}
+
+bool EComponentStorage::Valid() const
+{
+    return fDsc.Valid();
+}
+
+void EComponentStorage::Reset() 
+{
+    for (auto& property : fProperties)
+    {
+        delete property.second;
+    }
+}
+
+bool EComponentStorage::HasProperty(const EString& propertyName) 
+{
+    return fProperties.find(propertyName) != fProperties.end();
+}
+
+bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<i32>** outValue) 
+{
+    if (!HasProperty(propertyName))
+    {
+        return false;
+    }
+    EComponentTypeDescription typeDsc;
+    if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
+    {
+        E_WARN("Proeprty with name not added. Reset the component!");
+        return false;
+    }
+    if (typeDsc.Type != EValueType::INTEGER)
+    {
+        E_ERROR("Wrong Type getting property " + propertyName);
+        return false;
+    }
+    *outValue = (EValueProperty<i32>*) fProperties[propertyName];
+    return true;
+}
+
+bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<double>** outValue) 
+{
+    if (!HasProperty(propertyName))
+    {
+        return false;
+    }
+    EComponentTypeDescription typeDsc;
+    if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
+    {
+        E_WARN("Proeprty with name not added. Reset the component!");
+        return false;
+    }
+    if (typeDsc.Type != EValueType::DOUBLE)
+    {
+        E_ERROR("Wrong Type getting property " + propertyName);
+        return false;
+    }
+    *outValue = (EValueProperty<double>*) fProperties[propertyName];
+    return true;
+}
+
+bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<bool>** outValue) 
+{
+    if (!HasProperty(propertyName))
+    {
+        return false;
+    }
+    EComponentTypeDescription typeDsc;
+    if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
+    {
+        E_WARN("Proeprty with name not added. Reset the component!");
+        return false;
+    }
+    if (typeDsc.Type != EValueType::BOOL)
+    {
+        E_ERROR("Wrong Type getting property " + propertyName);
+        return false;
+    }
+    *outValue = (EValueProperty<bool>*) fProperties[propertyName];
+    return true;
+}
+
+bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<EString>** outValue) 
+{
+    if (!HasProperty(propertyName))
+    {
+        return false;
+    }
+    EComponentTypeDescription typeDsc;
+    if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
+    {
+        E_WARN("Proeprty with name not added. Reset the component!");
+        return false;
+    }
+    if (typeDsc.Type != EValueType::STRING)
+    {
+        E_ERROR("Wrong Type getting property " + propertyName);
+        return false;
+    }
+    *outValue = (EValueProperty<EString>*) fProperties[propertyName];
+    return true;
 }
 
 
@@ -110,11 +205,12 @@ void EScene::InsertComponent(Entity entity, EComponentDescription::ComponentID c
         {
             switch (entry.Type)
             {
-            case EComponentType::INTEGER: properties.insert({entry.Name, new EValueProperty<i32>(entry.Name)}); break;
-            case EComponentType::DOUBLE: properties.insert({entry.Name, new EValueProperty<double>(entry.Name)}); break;
-            case EComponentType::STRING: properties.insert({entry.Name, new EValueProperty<EString>(entry.Name)}); break;
-            case EComponentType::BOOL: properties.insert({entry.Name, new EValueProperty<bool>(entry.Name)}); break;
-            case EComponentType::COMPONENT_REFERENCE: break;
+            case EValueType::INTEGER: properties.insert({entry.Name, new EValueProperty<i32>(entry.Name)}); break;
+            case EValueType::DOUBLE: properties.insert({entry.Name, new EValueProperty<double>(entry.Name)}); break;
+            case EValueType::STRING: properties.insert({entry.Name, new EValueProperty<EString>(entry.Name)}); break;
+            case EValueType::BOOL: properties.insert({entry.Name, new EValueProperty<bool>(entry.Name)}); break;
+            case EValueType::STRUCT: break;
+            case EValueType::COMPONENT_REFERENCE: break;
             }
         }
 

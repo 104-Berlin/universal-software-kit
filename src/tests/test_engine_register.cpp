@@ -5,19 +5,30 @@
 using namespace Engine;
 using namespace entt::literals;
 
-static EComponentDescription myTestComponent("TestComponent", {{EComponentType::INTEGER, "MyInteger"}});
+static EComponentDescription myTestComponent("TestComponent", {
+								{EValueType::INTEGER, "MyInteger"},
+								{EValueType::STRING, "MyString"}});
 
 bool TestStorage(EScene* scene, EScene::Entity entity, int valueToTest)
 {
 	EComponentStorage storage = scene->GetComponent(entity, myTestComponent.ID);
 	if (!storage) { return false; }
-	EValueProperty<i32>* someInt = storage.GetProperty<EValueProperty<i32>>("MyInteger");
-	if (!someInt) { return false; }
-
+	EValueProperty<i32>* someInt;
+	if (!storage.GetProperty("MyInteger", &someInt))
+	{
+		return false;
+	}
+	EValueProperty<EString>* someString;
+	if (!storage.GetProperty("MyString", &someString))
+	{
+		return false;
+	}
+	
 	if (someInt->GetValue() != valueToTest)
 	{
 		return false;
 	}
+	
 
 	someInt->SetValue(someInt->GetValue() + 20);
 	return true;
