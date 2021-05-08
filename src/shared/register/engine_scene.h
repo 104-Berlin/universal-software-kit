@@ -2,54 +2,63 @@
 
 namespace Engine {
 
-    class E_API EScene
+    enum class EComponentType
     {
-    private:
-        friend class EObject;
-        entt::registry fRegistry;
-        EResourceManager fResourceManager;
-        EString fName;
-    public:
-        EScene(const EString& name = "Unknown");
-        ~EScene();
+        INTEGER,
+        DOUBLE,
+        BOOL,
+        STRING,
 
-        EResourceManager& GetResourceManager();
+        COMPONENT_REFERENCE,
     };
 
-    class E_API EObject
+    struct EComponentTypeDescription
     {
+        EComponentType  Type;
+        EString         Name;
+    };
+    typedef EVector<EComponentTypeDescription> TComponentTypeList;
+
+    struct EComponentDescription
+    {
+        using ComponentID = EString;
+
+        TComponentTypeList  TypeDesciptions;
+        ComponentID         ID;
+
+        EComponentDescription(const ComponentID& id, std::initializer_list<EComponentTypeDescription>&& types)
+            : TypeDesciptions(types)
+        {}
     private:
-        entt::entity    fHandle;
-        EScene*         fScene;
+        friend class EScene;
+    };
+
+    class E_API EScene
+    {
     public:
-        EObject(EScene* scene, entt::entity handle);
+        using Entity = u32;
+    private:
+        EUnorderedMap<EComponentDescription::ComponentID, EComponentDescription> fRegisteredComponents;
 
-        template <typename T, typename ... Args>
-        T& AddComponent(Args&&... args)
+        class EComponentStorage
         {
-            E_ASSERT(fScene, "Invalid scene set for object. Cant add Component!");
-            E_ASSERT(fHandle != entt::null, "Invalid entity. Cant add Component!");
-            return fScene->fRegistry.emplace<T>(fHandle, std::forward<Args>(args)...);
-        }
+        private:
+            EComponentDescription fDsc;
 
-        template <typename T>
-        bool HasComponent() const
-        {
-            E_ASSERT(fScene, "Invalid scene set for object. Cant check Component Existance!");
-            E_ASSERT(fHandle != entt::null, "Invalid entity. Cant check Component Existance!");
-            return fScene->fRegistry.any_of<T>(fHandle);
-        }
+        };
 
-        template <typename T>
-        T& GetComponent()
-        {
-            E_ASSERT(fScene, "Invalid scene set for object. Cant get Component!");
-            E_ASSERT(fHandle != entt::null, "Invalid entity. Cant get Component!");
-            return fScene->fRegistry.get<T>(fHandle);
-        }
+        EUnorderedMap<Entity, EUnorderedMap<EComponentDescription::ComponentID, EComponentStorage>> fComponentStorage;
+    public:
 
-        static EObject Create(EScene* scene);
-        static void Delete(EObject object);
+        /**
+         * Register a new component.
+         * These can be instantiated with an object handle to the data
+         * @param description The component description
+         */
+        void RegisterComponent(EComponentDescription description);
+
+
+
     };
 
 }

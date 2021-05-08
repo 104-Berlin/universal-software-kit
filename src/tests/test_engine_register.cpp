@@ -4,19 +4,14 @@
 
 using namespace Engine;
 using namespace entt::literals;
-struct MyTestComponent
-{
-	int SomeInteger;
-};
+
+static EComponentDescription myTestComponent("TestComponent", {{EComponentType::INTEGER, "MyInteger"}});
+
 
 TEST(RegisterTest, Basics)
 {
 	EScene scene;
-	EObject object1 = EObject::Create(&scene);
+	scene.RegisterComponent(myTestComponent);
 
-	MyTestComponent& comp = object1.AddComponent<MyTestComponent>();
-	comp.SomeInteger = 32;
-
-	EXPECT_TRUE(object1.HasComponent<MyTestComponent>());
-	EXPECT_EQ(object1.GetComponent<MyTestComponent>().SomeInteger, 32);
+	
 }
