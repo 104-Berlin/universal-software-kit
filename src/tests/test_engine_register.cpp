@@ -98,6 +98,10 @@ TEST(RegisterTest, Basics)
 		EValueProperty<double>* doubleValue = nullptr;
 		EValueProperty<bool>* boolValue = nullptr;
 		EStructProperty* vectorProperty;
+		EXPECT_FALSE(storage.GetProperty("UNKNOWN", &stringValue));
+		EXPECT_FALSE(storage.GetProperty("UNKNOWN", &vectorProperty));
+		EXPECT_FALSE(storage.GetProperty("UNKNOWN", &boolValue));
+		EXPECT_FALSE(storage.GetProperty("UNKNOWN", &doubleValue));
 		if (storage.GetProperty("MyString", &stringValue) &&
 			storage.GetProperty("Vector", &vectorProperty) &&
 			storage.GetProperty("MyBool", &boolValue) &&

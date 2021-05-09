@@ -108,16 +108,7 @@ bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<
         return false;
     }
     EValueTypeDescription typeDsc;
-    if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
-    {
-        E_WARN("Proeprty with name not added. Reset the component!");
-        return false;
-    }
-    if (typeDsc.Type != EValueType::INTEGER)
-    {
-        E_ERROR("Wrong Type getting property " + propertyName);
-        return false;
-    }
+    E_ASSERT(fDsc.GetTypeDescription(propertyName, &typeDsc) && typeDsc.Type == EValueType::INTEGER, "Wrong type description found");
     *outValue = (EValueProperty<i32>*) fProperties[propertyName];
     return true;
 }
@@ -129,16 +120,7 @@ bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<
         return false;
     }
     EValueTypeDescription typeDsc;
-    if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
-    {
-        E_WARN("Proeprty with name not added. Reset the component!");
-        return false;
-    }
-    if (typeDsc.Type != EValueType::DOUBLE)
-    {
-        E_ERROR("Wrong Type getting property " + propertyName);
-        return false;
-    }
+    E_ASSERT(fDsc.GetTypeDescription(propertyName, &typeDsc) && typeDsc.Type == EValueType::DOUBLE, "Wrong type description found");
     *outValue = (EValueProperty<double>*) fProperties[propertyName];
     return true;
 }
@@ -150,16 +132,7 @@ bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<
         return false;
     }
     EValueTypeDescription typeDsc;
-    if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
-    {
-        E_WARN("Proeprty with name not added. Reset the component!");
-        return false;
-    }
-    if (typeDsc.Type != EValueType::BOOL)
-    {
-        E_ERROR("Wrong Type getting property " + propertyName);
-        return false;
-    }
+    E_ASSERT(fDsc.GetTypeDescription(propertyName, &typeDsc) && typeDsc.Type == EValueType::BOOL, "Wrong type description found");
     *outValue = (EValueProperty<bool>*) fProperties[propertyName];
     return true;
 }
@@ -171,16 +144,7 @@ bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<
         return false;
     }
     EValueTypeDescription typeDsc;
-    if (!fDsc.GetTypeDescription(propertyName, &typeDsc))
-    {
-        E_WARN("Proeprty with name not added. Reset the component!");
-        return false;
-    }
-    if (typeDsc.Type != EValueType::STRING)
-    {
-        E_ERROR("Wrong Type getting property " + propertyName);
-        return false;
-    }
+    E_ASSERT(fDsc.GetTypeDescription(propertyName, &typeDsc) && typeDsc.Type == EValueType::STRING, "Wrong type description found");
     *outValue = (EValueProperty<EString>*) fProperties[propertyName];
     return true;
 }
@@ -192,11 +156,7 @@ bool EComponentStorage::GetProperty(const EString& propertyName, EStructProperty
         return false;
     }
     EStructTypeDescription typeDsc;
-    if (!fDsc.GetStructDescription(propertyName, &typeDsc))
-    {
-        E_WARN("Proeprty with name not added. Reset the component!");
-        return false;
-    }
+    E_ASSERT(fDsc.GetStructDescription(propertyName, &typeDsc), "Wrong type description found");
     *outValue = (EStructProperty*) fProperties[propertyName];
     return true;
 }
