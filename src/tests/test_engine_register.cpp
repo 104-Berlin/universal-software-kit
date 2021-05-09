@@ -3,7 +3,6 @@
 #include <prefix_shared.h>
 
 using namespace Engine;
-using namespace entt::literals;
 
 struct Vector
 {
