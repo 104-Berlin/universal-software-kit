@@ -1,5 +1,16 @@
 #pragma once
 
+namespace convert {
+
+    template <typename T, typename Property>
+    void setter(Property* prop, const T& value)
+    {}
+
+    template <typename T, typename Property>
+    void getter(Property* prop, T* outValue)
+    {}
+}
+
 namespace Engine {
 
     enum class EValueType
@@ -22,7 +33,7 @@ namespace Engine {
     struct EStructTypeDescription
     {
         EString             Name;
-        TValueTypeList  Fields;
+        TValueTypeList      Fields;
     };
     typedef EVector<EStructTypeDescription> TStructTypeList;
 
@@ -53,6 +64,19 @@ namespace Engine {
         bool GetTypeDescription(const EString& name, EValueTypeDescription* outDesc)
         {
             for (const EValueTypeDescription& dsc : ValueTypeDesciptions)
+            {
+                if (dsc.Name == name)
+                {
+                    *outDesc = dsc;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool GetStructDescription(const EString& name, EStructTypeDescription* outDesc)
+        {
+            for (const EStructTypeDescription& dsc : StructTypeDescriptions)
             {
                 if (dsc.Name == name)
                 {
@@ -109,6 +133,29 @@ namespace Engine {
     public:
         EStructProperty(const EString& name, const EVector<EProperty*>& properties = {});
         ~EStructProperty();
+
+        template<typename T>
+        using convert_setterfn = void(*)(EStructProperty*, const T&);
+        template <typename T, convert_setterfn<T> Func = &convert::setter<T, EStructProperty>>
+        void SetValue(const T& value)
+        {
+            Func(this, value);
+        }
+
+        template<typename T>
+        using convert_getterfn = void(*)(const EStructProperty*, T*);
+        template <typename T, convert_getterfn<T> Func = &convert::getter<T, const EStructProperty>>
+        T GetValue() const
+        {
+            T result;
+            Func(this, &result);
+            return result;
+        }
+
+        bool HasProperty(const EString& propertyName) const;
+
+        EProperty* GetProperty(const EString& propertyName);
+        const EProperty* GetProperty(const EString& propertyName) const;
     };
 
 
@@ -133,6 +180,7 @@ namespace Engine {
         bool GetProperty(const EString& propertyName, EValueProperty<double>** outValue);
         bool GetProperty(const EString& propertyName, EValueProperty<bool>** outValue);
         bool GetProperty(const EString& propertyName, EValueProperty<EString>** outValue);
+        bool GetProperty(const EString& propertyName, EStructProperty** outValue);
     };
 
     class E_API EScene

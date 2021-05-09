@@ -5,9 +5,53 @@
 using namespace Engine;
 using namespace entt::literals;
 
+struct Vector
+{
+	float x;
+	float y;
+	float z;
+};
+
+namespace convert {
+	template <>
+	void setter(EStructProperty* property, const Vector& vec)
+	{
+		EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
+		EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
+		EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
+		if (xProp && yProp && zProp)
+		{
+			xProp->SetValue(vec.x);
+			yProp->SetValue(vec.y);
+			zProp->SetValue(vec.z);
+		}
+	}
+
+	template <>
+	void getter(const EStructProperty* property, Vector* outVec)
+	{
+		const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
+		const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
+		const EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
+		if (xProp && yProp && zProp)
+		{
+			outVec->x = (float)xProp->GetValue();
+			outVec->y = (float)yProp->GetValue();
+			outVec->z = (float)zProp->GetValue();
+		}
+	}
+}
+
+static TValueTypeList vector3{
+	{EValueType::DOUBLE,"X"},
+	{EValueType::DOUBLE,"Y"},
+	{EValueType::DOUBLE,"Z"}
+};
+
 static EComponentDescription myTestComponent("TestComponent", {
 								{EValueType::INTEGER, "MyInteger"},
-								{EValueType::STRING, "MyString"}});
+								{EValueType::STRING, "MyString"}},
+								{{"Vector", vector3}});
 
 bool TestStorage(EScene* scene, EScene::Entity entity, int valueToTest)
 {
@@ -44,6 +88,26 @@ TEST(RegisterTest, Basics)
 
 	EXPECT_TRUE(scene.IsAlive(entity));
 	EXPECT_TRUE(scene.HasComponent(entity, myTestComponent.ID));
+
+	// Set some things to the component
+	EComponentStorage storage = scene.GetComponent(entity, myTestComponent.ID);
+
+	Vector newVecValue{2, 3, 4};
+
+	EValueProperty<EString>* stringValue;
+	EStructProperty* vectorProperty;
+	if (storage.GetProperty("MyString", &stringValue) &&
+		storage.GetProperty("Vector", &vectorProperty))
+	{
+		stringValue->SetValue("Hello World");
+		
+		vectorProperty->SetValue<Vector>(newVecValue);
+
+		Vector v = vectorProperty->GetValue<Vector>();
+		EXPECT_EQ(v.x, newVecValue.x);
+		EXPECT_EQ(v.y, newVecValue.y);
+		EXPECT_EQ(v.z, newVecValue.z);
+	}
 
 	EXPECT_TRUE(TestStorage(&scene, entity, 0));
 	EXPECT_TRUE(TestStorage(&scene, entity, 20));

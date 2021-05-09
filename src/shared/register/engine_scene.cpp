@@ -31,6 +31,42 @@ EStructProperty::~EStructProperty()
     fProperties.clear();
 }
 
+bool EStructProperty::HasProperty(const EString& propertyName) const
+{
+    for (EProperty* prop : fProperties)
+    {
+        if (prop->GetPropertyName() == propertyName)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+EProperty* EStructProperty::GetProperty(const EString& propertyName) 
+{
+    for (EProperty* property : fProperties)
+    {
+        if (property->GetPropertyName() == propertyName)
+        {
+            return property;
+        }
+    }
+    return nullptr;
+}
+
+const EProperty* EStructProperty::GetProperty(const EString& propertyName) const
+{
+    for (const EProperty* property : fProperties)
+    {
+        if (property->GetPropertyName() == propertyName)
+        {
+            return property;
+        }
+    }
+    return nullptr;
+}
+
 EComponentStorage::EComponentStorage(EComponentDescription dsc, const EUnorderedMap<EString, EProperty*>& propInit) 
     : fDsc(dsc), fProperties(propInit)
 {
@@ -149,6 +185,22 @@ bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<
     return true;
 }
 
+bool EComponentStorage::GetProperty(const EString& propertyName, EStructProperty** outValue) 
+{
+    if (!HasProperty(propertyName))
+    {
+        return false;
+    }
+    EStructTypeDescription typeDsc;
+    if (!fDsc.GetStructDescription(propertyName, &typeDsc))
+    {
+        E_WARN("Proeprty with name not added. Reset the component!");
+        return false;
+    }
+    *outValue = (EStructProperty*) fProperties[propertyName];
+    return true;
+}
+
 
 EScene::EScene(const EString& name) 
     : fName(name)
@@ -235,14 +287,14 @@ void EScene::InsertComponent(Entity entity, EComponentDescription::ComponentID c
             {
                 switch (valueType.Type)
                 {
-                case EValueType::INTEGER: properties.insert({entry.Name, new EValueProperty<i32>(entry.Name)}); break;
-                case EValueType::DOUBLE: properties.insert({entry.Name, new EValueProperty<double>(entry.Name)}); break;
-                case EValueType::STRING: properties.insert({entry.Name, new EValueProperty<EString>(entry.Name)}); break;
-                case EValueType::BOOL: properties.insert({entry.Name, new EValueProperty<bool>(entry.Name)}); break;
+                case EValueType::INTEGER: structProps.push_back(new EValueProperty<i32>(valueType.Name)); break;
+                case EValueType::DOUBLE: structProps.push_back(new EValueProperty<double>(valueType.Name)); break;
+                case EValueType::STRING: structProps.push_back(new EValueProperty<EString>(valueType.Name)); break;
+                case EValueType::BOOL: structProps.push_back(new EValueProperty<bool>(valueType.Name)); break;
                 case EValueType::COMPONENT_REFERENCE: break;
                 }
             }
-            EStructProperty* newProperty = new EStructProperty(entry.Name);
+            EStructProperty* newProperty = new EStructProperty(entry.Name, structProps);
             properties.insert({entry.Name, newProperty});
         }
 
