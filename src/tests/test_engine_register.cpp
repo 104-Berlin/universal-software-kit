@@ -12,33 +12,31 @@ struct Vector
 	float z;
 };
 
-namespace convert {
-	template <>
-	void setter(EStructProperty* property, const Vector& vec)
+template <>
+void convert<EStructProperty, Vector>::setter(EStructProperty* property, const Vector& vec)
+{
+	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
+	EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
+	EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
+	if (xProp && yProp && zProp)
 	{
-		EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
-		EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
-		EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
-		if (xProp && yProp && zProp)
-		{
-			xProp->SetValue(vec.x);
-			yProp->SetValue(vec.y);
-			zProp->SetValue(vec.z);
-		}
+		xProp->SetValue(vec.x);
+		yProp->SetValue(vec.y);
+		zProp->SetValue(vec.z);
 	}
+}
 
-	template <>
-	void getter(const EStructProperty* property, Vector* outVec)
+template <>
+void convert<EStructProperty, Vector>::getter(const EStructProperty* property, Vector* outVec)
+{
+	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
+	const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
+	const EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
+	if (xProp && yProp && zProp)
 	{
-		const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
-		const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
-		const EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
-		if (xProp && yProp && zProp)
-		{
-			outVec->x = (float)xProp->GetValue();
-			outVec->y = (float)yProp->GetValue();
-			outVec->z = (float)zProp->GetValue();
-		}
+		outVec->x = (float)xProp->GetValue();
+		outVec->y = (float)yProp->GetValue();
+		outVec->z = (float)zProp->GetValue();
 	}
 }
 

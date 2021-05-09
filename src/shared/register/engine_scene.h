@@ -1,15 +1,19 @@
 #pragma once
 
-namespace convert {
+template <typename Property, typename Value>
+struct convert {
 
-    template <typename T, typename Property>
-    void setter(Property* prop, const T& value)
-    {}
 
-    template <typename T, typename Property>
-    void getter(Property* prop, T* outValue)
-    {}
-}
+    static void setter(Property* prop, const Value& value)
+    {
+        E_ASSERT(false, EString("Setter not implemented for type ") + typeid(Value).name());
+    }
+
+    static void getter(const Property* prop, Value* outValue)
+    {
+        E_ASSERT(false, EString("Getter not implemented for type ") + typeid(Value).name());
+    }
+};
 
 namespace Engine {
 
@@ -134,21 +138,17 @@ namespace Engine {
         EStructProperty(const EString& name, const EVector<EProperty*>& properties = {});
         ~EStructProperty();
 
-        template<typename T>
-        using convert_setterfn = void(*)(EStructProperty*, const T&);
-        template <typename T, convert_setterfn<T> Func = &convert::setter<T, EStructProperty>>
+        template <typename T>
         void SetValue(const T& value)
         {
-            Func(this, value);
+            convert<EStructProperty, T>::setter(this, value);
         }
 
-        template<typename T>
-        using convert_getterfn = void(*)(const EStructProperty*, T*);
-        template <typename T, convert_getterfn<T> Func = &convert::getter<T, const EStructProperty>>
+        template <typename T>
         T GetValue() const
         {
             T result;
-            Func(this, &result);
+            convert<EStructProperty, T>::getter(this, &result);
             return result;
         }
 
