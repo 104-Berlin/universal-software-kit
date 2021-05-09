@@ -107,14 +107,6 @@ TEST(RegisterTest, Basics)
 			stringValue->SetValue("Hello World");
 			vectorProperty->SetValue<Vector>(newVecValue);
 			boolValue->SetValue(true);
-			
-
-			Vector v = vectorProperty->GetValue<Vector>();
-			EXPECT_EQ(v.x, newVecValue.x);
-			EXPECT_EQ(v.y, newVecValue.y);
-			EXPECT_EQ(v.z, newVecValue.z);
-
-			EXPECT_STREQ(stringValue->GetValue().c_str(), "Hello World");
 		}
 	}
 
@@ -140,7 +132,8 @@ TEST(RegisterTest, Basics)
 			doubleValue->SetValue(22.2);
 			stringValue->SetValue("Hello World");
 			vectorProperty->SetValue<Vector>(newVecValue);
-			
+			EXPECT_TRUE(vectorProperty->HasProperty("X"));
+			EXPECT_FALSE(vectorProperty->HasProperty("WRONG"));
 
 			Vector v = vectorProperty->GetValue<Vector>();
 			EXPECT_EQ(v.x, newVecValue.x);
