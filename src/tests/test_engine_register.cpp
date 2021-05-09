@@ -45,12 +45,22 @@ static TValueTypeList vector3{
 	{EValueType::DOUBLE,"Z"}
 };
 
+static TValueTypeList someOtherStruct{
+	{EValueType::BOOL, "Some Bool"},
+	{EValueType::STRING, "Some Bool"},
+	{EValueType::INTEGER, "Some Bool"},
+};
+
 static EComponentDescription myTestComponent("TestComponent", {
 								{EValueType::INTEGER, "MyInteger"},
 								{EValueType::DOUBLE, "MyDouble"},
 								{EValueType::BOOL, "MyBool"},
 								{EValueType::STRING, "MyString"}},
 								{{"Vector", vector3}});
+
+static EComponentDescription someStructComponent("StructComponent",
+	{},
+	{{"Struct", someOtherStruct}});
 
 bool TestStorage(EScene* scene, EScene::Entity entity, int valueToTest)
 {
@@ -81,12 +91,20 @@ TEST(RegisterTest, Basics)
 {
 	EScene scene;
 	scene.RegisterComponent(myTestComponent);
+	scene.RegisterComponent(someStructComponent);
 
 	EScene::Entity entity = scene.CreateEntity();
 	scene.InsertComponent(entity, myTestComponent.ID);
+	scene.InsertComponent(entity, someStructComponent.ID);
 
 	EXPECT_TRUE(scene.IsAlive(entity));
 	EXPECT_TRUE(scene.HasComponent(entity, myTestComponent.ID));
+	
+
+	EXPECT_TRUE(scene.HasComponent(entity, someStructComponent.ID));
+	scene.RemoveComponent(entity, someStructComponent.ID);
+	EXPECT_FALSE(scene.HasComponent(entity, someStructComponent.ID));
+
 
 	{
 		// Set some things to the component

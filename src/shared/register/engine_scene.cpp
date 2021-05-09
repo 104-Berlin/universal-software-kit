@@ -222,7 +222,7 @@ bool EScene::IsAlive(Entity entity)
 void EScene::InsertComponent(Entity entity, EComponentDescription::ComponentID componentId) 
 {
     if (!IsAlive(entity)) { return; }
-    if (fRegisteredComponents.find(componentId) == fRegisteredComponents.end()) { return; }
+    E_ASSERT(fRegisteredComponents.find(componentId) != fRegisteredComponents.end(), "Component is not registered");
 
     if (!HasComponent(entity, componentId))
     {
