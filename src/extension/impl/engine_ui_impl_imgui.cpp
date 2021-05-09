@@ -20,6 +20,11 @@ void EUIPanel::ImplRenderEnd()
     ImGui::End();
 }
 
+bool EUIButton::ImplRender(const char* label) 
+{
+    return ImGui::Button(label);
+}
+
 EImGuiViewport::EImGuiViewport() 
 {
     fFrameBuffer = Graphics::Wrapper::CreateFrameBuffer();

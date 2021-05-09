@@ -1,54 +1,221 @@
 #pragma once
 
+template <typename Property, typename Value>
+struct convert {
+
+
+    static void setter(Property* prop, const Value& value)
+    {
+        E_ASSERT(false, EString("Setter not implemented for type ") + typeid(Value).name());
+    }
+
+    static void getter(const Property* prop, Value* outValue)
+    {
+        E_ASSERT(false, EString("Getter not implemented for type ") + typeid(Value).name());
+    }
+};
+
 namespace Engine {
+
+    enum class EValueType
+    {
+        INTEGER,
+        DOUBLE,
+        BOOL,
+        STRING,
+
+        COMPONENT_REFERENCE,
+    };
+
+    struct EValueTypeDescription
+    {
+        EValueType      Type;
+        EString         Name;
+    };
+    typedef EVector<EValueTypeDescription> TValueTypeList;
+
+    struct EStructTypeDescription
+    {
+        EString             Name;
+        TValueTypeList      Fields;
+    };
+    typedef EVector<EStructTypeDescription> TStructTypeList;
+
+    struct EComponentDescription
+    {
+        using ComponentID = EString;
+
+        TValueTypeList      ValueTypeDesciptions;
+        TStructTypeList     StructTypeDescriptions;
+        ComponentID         ID;
+
+        EComponentDescription(const ComponentID& id = "Unknown", std::initializer_list<EValueTypeDescription>&& types = {}, std::initializer_list<EStructTypeDescription>&& structDescriptions = {})
+            : ID(id), ValueTypeDesciptions(types), StructTypeDescriptions(structDescriptions)
+        {}
+
+        EComponentDescription(const EComponentDescription&) = default;
+
+        operator bool() const
+        {
+            return Valid();
+        }
+
+        bool Valid() const
+        {
+            return !ID.empty();
+        }
+
+        bool GetTypeDescription(const EString& name, EValueTypeDescription* outDesc)
+        {
+            for (const EValueTypeDescription& dsc : ValueTypeDesciptions)
+            {
+                if (dsc.Name == name)
+                {
+                    *outDesc = dsc;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool GetStructDescription(const EString& name, EStructTypeDescription* outDesc)
+        {
+            for (const EStructTypeDescription& dsc : StructTypeDescriptions)
+            {
+                if (dsc.Name == name)
+                {
+                    *outDesc = dsc;
+                    return true;
+                }
+            }
+            return false;
+        }
+    private:
+        friend class EScene;
+    };
+
+
+    class E_API EProperty
+    {
+        friend class EScene;
+    public:
+        EString fName;
+    public:
+        EProperty(const EString& name);
+        virtual ~EProperty() = default;
+
+        const EString& GetPropertyName() const;
+    };
+
+    template <typename ValueType>
+    class EValueProperty : public EProperty
+    {
+    private:
+        ValueType fValue;
+    public:
+        EValueProperty(const EString& name, const ValueType& initValue = ValueType())
+            : EProperty(name)
+        {
+            fValue = initValue;
+        }
+
+        void SetValue(const ValueType& value)
+        {
+            fValue = value;
+        }
+
+        ValueType GetValue() const 
+        {
+            return fValue;
+        }
+    };
+
+    class E_API EStructProperty : public EProperty
+    {
+    private:
+        EVector<EProperty*> fProperties;
+    public:
+        EStructProperty(const EString& name, const EVector<EProperty*>& properties = {});
+        ~EStructProperty();
+
+        template <typename T>
+        void SetValue(const T& value)
+        {
+            convert<EStructProperty, T>::setter(this, value);
+        }
+
+        template <typename T>
+        T GetValue() const
+        {
+            T result;
+            convert<EStructProperty, T>::getter(this, &result);
+            return result;
+        }
+
+        bool HasProperty(const EString& propertyName) const;
+
+        EProperty* GetProperty(const EString& propertyName);
+        const EProperty* GetProperty(const EString& propertyName) const;
+    };
+
+
+    class E_API EComponentStorage
+    {
+    private:
+        EComponentDescription   fDsc;
+        EUnorderedMap<EString, EProperty*>     fProperties;
+    public:
+        EComponentStorage(EComponentDescription dsc = EComponentDescription(), const EUnorderedMap<EString, EProperty*>& propInit = {});
+        ~EComponentStorage();
+
+        operator bool() const;
+        bool Valid() const;
+
+
+        void Reset();
+
+        bool HasProperty(const EString& propertyName);
+
+        bool GetProperty(const EString& propertyName, EValueProperty<i32>** outValue);
+        bool GetProperty(const EString& propertyName, EValueProperty<double>** outValue);
+        bool GetProperty(const EString& propertyName, EValueProperty<bool>** outValue);
+        bool GetProperty(const EString& propertyName, EValueProperty<EString>** outValue);
+        bool GetProperty(const EString& propertyName, EStructProperty** outValue);
+    };
 
     class E_API EScene
     {
-    private:
-        friend class EObject;
-        entt::registry fRegistry;
-        EResourceManager fResourceManager;
     public:
-        EScene();
-        ~EScene();
+        using Entity = u32;
+    private:
+        EString fName;
+        EResourceManager fResourceManager;
+
+        EUnorderedMap<EComponentDescription::ComponentID, EComponentDescription> fRegisteredComponents;        
+
+        EUnorderedMap<EComponentDescription::ComponentID, EUnorderedMap<Entity, EComponentStorage>> fComponentStorage;
+        EVector<Entity>     fAliveEntites;
+        EVector<Entity>     fDeadEntites;
+    public:
+        EScene(const EString& name = "Unknown");
+        /**
+         * Register a new component.
+         * These can be instantiated with an object handle to the data
+         * @param description The component description
+         */
+        void RegisterComponent(EComponentDescription description);
 
         EResourceManager& GetResourceManager();
-    };
 
-    class E_API EObject
-    {
-    private:
-        entt::entity    fHandle;
-        EScene*         fScene;
-    public:
-        EObject(EScene* scene, entt::entity handle);
+        Entity CreateEntity();
+        void DestroyEntity(Entity entity);
 
-        template <typename T, typename ... Args>
-        T& AddComponent(Args&&... args)
-        {
-            E_ASSERT(fScene, "Invalid scene set for object. Cant add Component!");
-            E_ASSERT(fHandle != entt::null, "Invalid entity. Cant add Component!");
-            return fScene->fRegistry.emplace<T>(fHandle, std::forward<Args>(args)...);
-        }
+        bool IsAlive(Entity entity);
 
-        template <typename T>
-        bool HasComponent() const
-        {
-            E_ASSERT(fScene, "Invalid scene set for object. Cant check Component Existance!");
-            E_ASSERT(fHandle != entt::null, "Invalid entity. Cant check Component Existance!");
-            return fScene->fRegistry.any_of<T>(fHandle);
-        }
-
-        template <typename T>
-        T& GetComponent()
-        {
-            E_ASSERT(fScene, "Invalid scene set for object. Cant get Component!");
-            E_ASSERT(fHandle != entt::null, "Invalid entity. Cant get Component!");
-            return fScene->fRegistry.get<T>(fHandle);
-        }
-
-        static EObject Create(EScene* scene);
-        static void Delete(EObject object);
+        void InsertComponent(Entity entity, EComponentDescription::ComponentID componentId);
+        void RemoveComponent(Entity entity, EComponentDescription::ComponentID componentId);
+        bool HasComponent(Entity entity, EComponentDescription::ComponentID componentId);
+        EComponentStorage GetComponent(Entity entity, EComponentDescription::ComponentID componentId);
     };
 
 }
