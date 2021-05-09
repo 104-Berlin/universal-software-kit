@@ -47,6 +47,8 @@ static TValueTypeList vector3{
 
 static EComponentDescription myTestComponent("TestComponent", {
 								{EValueType::INTEGER, "MyInteger"},
+								{EValueType::DOUBLE, "MyDouble"},
+								{EValueType::BOOL, "MyBool"},
 								{EValueType::STRING, "MyString"}},
 								{{"Vector", vector3}});
 
@@ -86,24 +88,34 @@ TEST(RegisterTest, Basics)
 	EXPECT_TRUE(scene.IsAlive(entity));
 	EXPECT_TRUE(scene.HasComponent(entity, myTestComponent.ID));
 
-	// Set some things to the component
-	EComponentStorage storage = scene.GetComponent(entity, myTestComponent.ID);
-
-	Vector newVecValue{2, 3, 4};
-
-	EValueProperty<EString>* stringValue;
-	EStructProperty* vectorProperty;
-	if (storage.GetProperty("MyString", &stringValue) &&
-		storage.GetProperty("Vector", &vectorProperty))
 	{
-		stringValue->SetValue("Hello World");
-		
-		vectorProperty->SetValue<Vector>(newVecValue);
+		// Set some things to the component
+		EComponentStorage storage = scene.GetComponent(entity, myTestComponent.ID);
 
-		Vector v = vectorProperty->GetValue<Vector>();
-		EXPECT_EQ(v.x, newVecValue.x);
-		EXPECT_EQ(v.y, newVecValue.y);
-		EXPECT_EQ(v.z, newVecValue.z);
+		Vector newVecValue{2, 3, 4};
+
+		EValueProperty<EString>* stringValue = nullptr;
+		EValueProperty<double>* doubleValue = nullptr;
+		EValueProperty<bool>* boolValue = nullptr;
+		EStructProperty* vectorProperty;
+		if (storage.GetProperty("MyString", &stringValue) &&
+			storage.GetProperty("Vector", &vectorProperty) &&
+			storage.GetProperty("MyBool", &boolValue) &&
+			storage.GetProperty("MyDouble", &doubleValue))
+		{
+			doubleValue->SetValue(22.2);
+			stringValue->SetValue("Hello World");
+			vectorProperty->SetValue<Vector>(newVecValue);
+			boolValue->SetValue(true);
+			
+
+			Vector v = vectorProperty->GetValue<Vector>();
+			EXPECT_EQ(v.x, newVecValue.x);
+			EXPECT_EQ(v.y, newVecValue.y);
+			EXPECT_EQ(v.z, newVecValue.z);
+
+			EXPECT_STREQ(stringValue->GetValue().c_str(), "Hello World");
+		}
 	}
 
 	EXPECT_TRUE(TestStorage(&scene, entity, 0));
@@ -111,6 +123,34 @@ TEST(RegisterTest, Basics)
 	EXPECT_TRUE(TestStorage(&scene, entity, 40));
 	EXPECT_FALSE(TestStorage(&scene, entity, 40));
 
+	{
+		EComponentStorage storage = scene.GetComponent(entity, myTestComponent.ID);
+
+		Vector newVecValue{2, 3, 4};
+
+		EValueProperty<EString>* stringValue = nullptr;
+		EValueProperty<double>* doubleValue = nullptr;
+		EValueProperty<bool>* boolValue = nullptr;
+		EStructProperty* vectorProperty;
+		if (storage.GetProperty("MyString", &stringValue) &&
+			storage.GetProperty("Vector", &vectorProperty) &&
+			storage.GetProperty("MyBool", &boolValue) &&
+			storage.GetProperty("MyDouble", &doubleValue))
+		{
+			doubleValue->SetValue(22.2);
+			stringValue->SetValue("Hello World");
+			vectorProperty->SetValue<Vector>(newVecValue);
+			
+
+			Vector v = vectorProperty->GetValue<Vector>();
+			EXPECT_EQ(v.x, newVecValue.x);
+			EXPECT_EQ(v.y, newVecValue.y);
+			EXPECT_EQ(v.z, newVecValue.z);
+
+			EXPECT_STREQ(stringValue->GetValue().c_str(), "Hello World");
+			EXPECT_TRUE(boolValue->GetValue());
+		}
+	}
 
 	scene.DestroyEntity(entity);
 
