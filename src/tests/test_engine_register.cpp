@@ -102,6 +102,13 @@ TEST(RegisterTest, Basics)
 	
 
 	EXPECT_TRUE(scene.HasComponent(entity, someStructComponent.ID));
+
+	EXPECT_EQ(scene.GetRegisteredComponents().size(), 2);
+	EXPECT_EQ(scene.GetAllEntities().size(), 1);
+	EXPECT_EQ(scene.GetAllComponents(entity).size(), 2);
+
+
+
 	scene.RemoveComponent(entity, someStructComponent.ID);
 	EXPECT_FALSE(scene.HasComponent(entity, someStructComponent.ID));
 
