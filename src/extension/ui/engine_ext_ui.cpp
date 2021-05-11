@@ -55,6 +55,7 @@ void EUIField::OnRenderEnd()
 
 void EUIField::UpdateEventDispatcher() 
 {
+    OnUpdateEventDispatcher();
     fEventDispatcher.Update();
 
     for (ERef<EUIField> child : fChildren)

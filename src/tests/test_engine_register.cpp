@@ -102,6 +102,13 @@ TEST(RegisterTest, Basics)
 	
 
 	EXPECT_TRUE(scene.HasComponent(entity, someStructComponent.ID));
+
+	EXPECT_EQ(scene.GetRegisteredComponents().size(), 2);
+	EXPECT_EQ(scene.GetAllEntities().size(), 1);
+	EXPECT_EQ(scene.GetAllComponents(entity).size(), 2);
+
+
+
 	scene.RemoveComponent(entity, someStructComponent.ID);
 	EXPECT_FALSE(scene.HasComponent(entity, someStructComponent.ID));
 
@@ -109,6 +116,8 @@ TEST(RegisterTest, Basics)
 	{
 		// Set some things to the component
 		EComponentStorage storage = scene.GetComponent(entity, myTestComponent.ID);
+
+		EXPECT_STREQ(storage.GetComponentDescription().ID.c_str(), myTestComponent.ID.c_str());
 
 		Vector newVecValue{2, 3, 4};
 

@@ -101,6 +101,11 @@ namespace Engine {
         void UpdateEventDispatcher();
 
         /**
+         * Gets called when the bevore own eventdispatcher gets updated
+         */
+        virtual void OnUpdateEventDispatcher() {}
+
+        /**
          * Returns the current label of the field
          * @return The current label
          */

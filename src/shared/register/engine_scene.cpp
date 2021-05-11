@@ -96,6 +96,11 @@ void EComponentStorage::Reset()
     }
 }
 
+EComponentDescription EComponentStorage::GetComponentDescription() const
+{
+    return fDsc;   
+}
+
 bool EComponentStorage::HasProperty(const EString& propertyName) 
 {
     return fProperties.find(propertyName) != fProperties.end();
@@ -174,6 +179,16 @@ void EScene::RegisterComponent(EComponentDescription description)
     fRegisteredComponents.insert({description.ID, description});
 }
 
+EVector<EComponentDescription> EScene::GetRegisteredComponents() const
+{
+    EVector<EComponentDescription> result;
+    for (auto& entry : fRegisteredComponents)
+    {
+        result.push_back(entry.second);
+    }
+    return result;
+}
+
 EResourceManager& EScene::GetResourceManager() 
 {
     return fResourceManager;
@@ -212,6 +227,11 @@ void EScene::DestroyEntity(Entity entity)
     }
     fAliveEntites.erase(it);
     fDeadEntites.push_back(entity);
+}
+
+EVector<EScene::Entity> EScene::GetAllEntities() const
+{
+    return fAliveEntites;
 }
 
 bool EScene::IsAlive(Entity entity) 
@@ -259,7 +279,7 @@ void EScene::InsertComponent(Entity entity, EComponentDescription::ComponentID c
         }
 
         EComponentStorage storage(componentDesc, properties);
-        fComponentStorage[componentId].insert({entity, storage});
+        fComponentStorage[componentId][entity] = storage;
     }
 }
 
@@ -273,7 +293,7 @@ void EScene::RemoveComponent(Entity entity, EComponentDescription::ComponentID c
 
 bool EScene::HasComponent(Entity entity, EComponentDescription::ComponentID componentId) 
 {
-    return fComponentStorage[componentId].find(entity) != fComponentStorage[componentId].end();
+    return fComponentStorage[componentId][entity].Valid();
 }
 
 EComponentStorage EScene::GetComponent(Entity entity, EComponentDescription::ComponentID componentId) 
@@ -282,4 +302,17 @@ EComponentStorage EScene::GetComponent(Entity entity, EComponentDescription::Com
     if (!HasComponent(entity, componentId)) { return EComponentStorage(); }
 
     return fComponentStorage[componentId][entity];
+}
+
+EVector<EComponentStorage> EScene::GetAllComponents(Entity entity) 
+{
+    EVector<EComponentStorage> result;
+    for (auto& entry : fComponentStorage)
+    {
+        if (entry.second[entity].Valid())
+        {
+            result.push_back(entry.second[entity]);
+        }
+    }
+    return result;
 }

@@ -5,4 +5,6 @@
 
 #include "engine_extension.h"
 
+
+#include "ui-fields/editor_ui_fields.h"
 #include "application/editor_application.h"
