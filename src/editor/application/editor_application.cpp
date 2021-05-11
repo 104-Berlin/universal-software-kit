@@ -4,10 +4,18 @@ using namespace Editor;
 using namespace Graphics;
 using namespace Engine;
 
+static EComponentDescription testCompDsc("TestComponent", {
+    {EValueType::BOOL, "MyBoolean"},
+    {EValueType::INTEGER, "MyInteger"},
+    {EValueType::STRING, "SomeString"}
+});
+
 EApplication::EApplication() 
     : fGraphicsContext(nullptr)
 {
-    fActiveScene = EMakeRef<Engine::EScene>("Unknown Scene 1");
+    fScenePointer = new Engine::EScene("Unknown Scene 1");
+    // TESTING CODE
+    fScenePointer->RegisterComponent(testCompDsc);
 }
 
 void EApplication::Start() 
@@ -79,6 +87,11 @@ void EApplication::RegisterDefaultPanels()
     });
     extensionPanel->AddChild(loadExtensionButton);
 
+
+    ERef<EUIPanel> universalSceneView = EMakeRef<EUIPanel>("Basic Scene View");
+    universalSceneView->AddChild(EMakeRef<EObjectView>(fScenePointer));
+
+    fDefaultPanels.push_back(universalSceneView);
     fDefaultPanels.push_back(resourcePanel);
     fDefaultPanels.push_back(extensionPanel);
 }

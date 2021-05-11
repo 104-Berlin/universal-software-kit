@@ -49,7 +49,7 @@ namespace Engine {
         TStructTypeList     StructTypeDescriptions;
         ComponentID         ID;
 
-        EComponentDescription(const ComponentID& id = "Unknown", std::initializer_list<EValueTypeDescription>&& types = {}, std::initializer_list<EStructTypeDescription>&& structDescriptions = {})
+        EComponentDescription(const ComponentID& id = "", std::initializer_list<EValueTypeDescription>&& types = {}, std::initializer_list<EStructTypeDescription>&& structDescriptions = {})
             : ID(id), ValueTypeDesciptions(types), StructTypeDescriptions(structDescriptions)
         {}
 
@@ -166,13 +166,15 @@ namespace Engine {
         EUnorderedMap<EString, EProperty*>     fProperties;
     public:
         EComponentStorage(EComponentDescription dsc = EComponentDescription(), const EUnorderedMap<EString, EProperty*>& propInit = {});
+        EComponentStorage(const EComponentStorage&) = default;
         ~EComponentStorage();
 
         operator bool() const;
         bool Valid() const;
 
-
         void Reset();
+
+        EComponentDescription GetComponentDescription() const;
 
         bool HasProperty(const EString& propertyName);
 
@@ -205,10 +207,13 @@ namespace Engine {
          */
         void RegisterComponent(EComponentDescription description);
 
+        EVector<EComponentDescription> GetRegisteredComponents() const;
+
         EResourceManager& GetResourceManager();
 
         Entity CreateEntity();
         void DestroyEntity(Entity entity);
+        EVector<Entity> GetAllEntities() const;
 
         bool IsAlive(Entity entity);
 
@@ -216,6 +221,7 @@ namespace Engine {
         void RemoveComponent(Entity entity, EComponentDescription::ComponentID componentId);
         bool HasComponent(Entity entity, EComponentDescription::ComponentID componentId);
         EComponentStorage GetComponent(Entity entity, EComponentDescription::ComponentID componentId);
+        EVector<EComponentStorage> GetAllComponents(Entity entity);
     };
 
 }
