@@ -117,6 +117,8 @@ TEST(RegisterTest, Basics)
 		// Set some things to the component
 		EComponentStorage storage = scene.GetComponent(entity, myTestComponent.ID);
 
+		EXPECT_STREQ(storage.GetComponentDescription().ID.c_str(), myTestComponent.ID.c_str());
+
 		Vector newVecValue{2, 3, 4};
 
 		EValueProperty<EString>* stringValue = nullptr;
