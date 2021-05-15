@@ -67,8 +67,14 @@ namespace Engine {
         /**
          * Adds a child to the list
          * @param child The UI Field thats gets added to the list
+         * @return The added child
          */
-        void AddChild(const ERef<EUIField>& child);
+        ERef<EUIField> AddChild(const ERef<EUIField>& child);
+
+        /**
+         * Removes all childre
+         */
+        void Clear();
 
         /**
          * Sets the custom update function
@@ -130,6 +136,11 @@ namespace Engine {
          * Wether the panel is open.
          */
         bool fOpen;
+
+        /**
+         * To remove an imgui thing
+         */
+        bool fWasJustClosed;
     public:
         EUIPanel(const EString& title);
 
@@ -182,5 +193,49 @@ namespace Engine {
 
         virtual bool OnRender() override;
     };
+
+
+    class E_API EUIMainMenuBar : public EUIField
+    {
+    private:
+        bool fOpen;
+    public:
+        EUIMainMenuBar();
+
+        virtual bool OnRender() override;
+        virtual void OnRenderEnd() override;
+        
+    };
+
+    class E_API EUIMenu : public EUIField
+    {
+    private:
+        bool    fOpen;
+    public:
+        EUIMenu(const EString& displayName = "MenuBar");
+
+        virtual bool OnRender() override;
+        virtual void OnRenderEnd() override;
+    };
+
+    class E_API EUIContextMenu : public EUIField
+    {
+    private:
+        bool        fOpen;
+    public:
+        EUIContextMenu(const EString& displayName = "ContextMenu");
+
+        virtual bool OnRender() override;
+        virtual void OnRenderEnd() override;
+    };
+
+    class E_API EUIMenuItem : public EUIField
+    {
+    public:
+        EUIMenuItem(const EString& label);
+
+        virtual bool OnRender() override;
+    };
+
 
 }

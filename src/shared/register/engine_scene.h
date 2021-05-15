@@ -120,27 +120,18 @@ namespace Engine {
         EString fName;
         EResourceManager fResourceManager;
 
-        EUnorderedMap<EComponentDescription::ComponentID, EComponentDescription> fRegisteredComponents;        
-
         EUnorderedMap<EComponentDescription::ComponentID, EUnorderedMap<Entity, EStructProperty*>> fComponentStorage;
         EVector<Entity>     fAliveEntites;
         EVector<Entity>     fDeadEntites;
     public:
         EScene(const EString& name = "Unknown");
-        /**
-         * Register a new component.
-         * These can be instantiated with an object handle to the data
-         * @param description The component description
-         */
-        void RegisterComponent(EComponentDescription description);
-
-        EVector<EComponentDescription> GetRegisteredComponents() const;
-
+        
         EResourceManager& GetResourceManager();
 
         Entity CreateEntity();
         void DestroyEntity(Entity entity);
         EVector<Entity> GetAllEntities() const;
+        void Clear();
 
         bool IsAlive(Entity entity);
 

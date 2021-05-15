@@ -14,9 +14,15 @@ EUIField::EUIField(const EString& label)
     
 }
 
-void EUIField::AddChild(const ERef<EUIField>& child) 
+ERef<EUIField> EUIField::AddChild(const ERef<EUIField>& child) 
 {
     fChildren.push_back(child);
+    return fChildren.back();
+}
+
+void EUIField::Clear() 
+{
+    fChildren.clear();
 }
 
 void EUIField::SetCustomUpdateFunction(UpdateFunction function) 
@@ -76,13 +82,24 @@ EUIPanel::EUIPanel(const EString& title)
 
 bool EUIPanel::OnRender() 
 {
-    ImGui::Begin(GetLabel().c_str(), &fOpen);
+    if (fOpen)
+    {
+        ImGui::Begin(GetLabel().c_str(), &fOpen);
+        if (!fOpen) 
+        {
+            fWasJustClosed = true;
+        }
+    }
     return fOpen;
 }
 
 void EUIPanel::OnRenderEnd() 
 {
-    ImGui::End();
+    if (fOpen || fWasJustClosed)
+    {
+        fWasJustClosed = false;
+        ImGui::End();
+    }
 }
 
 bool EUIPanel::IsOpen() const
@@ -145,6 +162,89 @@ bool EUIButton::OnRender()
     if (ImGui::Button(GetLabel().c_str()))
     {
         fEventDispatcher.Enqueue<EClickEvent>({0,0});
+    }
+    return true;
+}
+
+// ----------------------------------------
+// Main Menu Bar
+EUIMainMenuBar::EUIMainMenuBar() 
+    : EUIField("MainMenuBar")
+{
+
+}
+
+bool EUIMainMenuBar::OnRender() 
+{
+    return fOpen = ImGui::BeginMainMenuBar();
+}
+
+void EUIMainMenuBar::OnRenderEnd() 
+{
+    if (fOpen)
+    {
+        ImGui::EndMainMenuBar();
+    }
+}
+
+
+// ----------------------------------------
+// Menu
+EUIMenu::EUIMenu(const EString& displayName) 
+    : EUIField(displayName), fOpen(false)
+{
+    
+}
+
+bool EUIMenu::OnRender() 
+{
+    return fOpen = ImGui::BeginMenu(GetLabel().c_str());
+}
+
+void EUIMenu::OnRenderEnd() 
+{
+    if (fOpen)
+    {
+        ImGui::EndMenu();
+    }
+    
+}
+
+
+// ----------------------------------------
+// Context Menu
+EUIContextMenu::EUIContextMenu(const EString& displayName) 
+    : EUIField(displayName), fOpen(false)
+{
+    
+}
+
+bool EUIContextMenu::OnRender() 
+{
+    return fOpen = ImGui::BeginPopupContextWindow();
+}
+
+void EUIContextMenu::OnRenderEnd() 
+{
+    if (fOpen)
+    {
+        ImGui::EndPopup();
+    }
+}
+
+// ----------------------------------------
+// Menu Item
+EUIMenuItem::EUIMenuItem(const EString& label) 
+    : EUIField(label)
+{
+    
+}
+
+bool EUIMenuItem::OnRender() 
+{
+    if (ImGui::MenuItem(GetLabel().c_str()))
+    {
+        fEventDispatcher.Enqueue<EClickEvent>({static_cast<u32>(ImGui::GetCursorPosX()), static_cast<u32>(ImGui::GetCursorPosY())});
     }
     return true;
 }

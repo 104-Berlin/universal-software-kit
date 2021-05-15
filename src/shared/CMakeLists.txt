@@ -8,6 +8,8 @@ add_library(Shared SHARED   file/engine_file_collection.cpp
                             file/engine_shared_buffer.cpp
                             register/engine_scene.cpp
                             register/engine_type_register.cpp
+                            register/engine_serializer.cpp
+                            register/engine_deserializer.cpp
                             resource/engine_resource_manager.cpp
                             logging/engine_logging.cpp)
 

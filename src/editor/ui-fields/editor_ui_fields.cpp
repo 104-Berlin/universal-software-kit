@@ -110,7 +110,7 @@ void EObjectView::OnUpdateEventDispatcher()
 void EObjectView::RenderStruct(EStructProperty* storage) 
 {
     EStructDescription* description = static_cast<EStructDescription*>(storage->GetDescription());
-    if (ImGui::CollapsingHeader(storage->GetPropertyName().c_str()))
+    if (ImGui::CollapsingHeader(storage->GetPropertyName().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
     {
         for (auto& entry : description->GetFields())
         {

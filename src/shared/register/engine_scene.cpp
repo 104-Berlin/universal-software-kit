@@ -79,21 +79,6 @@ EScene::EScene(const EString& name)
     
 }
 
-void EScene::RegisterComponent(EComponentDescription description) 
-{
-    E_ASSERT(fRegisteredComponents.find(description.ID) == fRegisteredComponents.end(), "Component allready registered!");
-    fRegisteredComponents.insert({description.ID, description});
-}
-
-EVector<EComponentDescription> EScene::GetRegisteredComponents() const
-{
-    EVector<EComponentDescription> result;
-    for (auto& entry : fRegisteredComponents)
-    {
-        result.push_back(entry.second);
-    }
-    return result;
-}
 
 EResourceManager& EScene::GetResourceManager() 
 {
@@ -138,6 +123,20 @@ void EScene::DestroyEntity(Entity entity)
 EVector<EScene::Entity> EScene::GetAllEntities() const
 {
     return fAliveEntites;
+}
+
+void EScene::Clear() 
+{
+    for (auto& entry : fComponentStorage)
+    {
+        for (auto& storage : entry.second)
+        {
+            delete storage.second;
+        }
+    }
+    fComponentStorage.clear();
+    fAliveEntites.clear();
+    fDeadEntites.clear();
 }
 
 bool EScene::IsAlive(Entity entity) 
@@ -207,6 +206,7 @@ EProperty* EScene::CreatePropertyFromDescription(const EString& name, EValueDesc
     case EValueType::PRIMITIVE: return CreatePropertyPrimitive(name, description);
     case EValueType::STRUCT: return CreatePropertyStruct(name, static_cast<EStructDescription*>(description));
     }
+    return nullptr;
 }
 
 EProperty* EScene::CreatePropertyStruct(const EString& name, EStructDescription* description) 
