@@ -68,9 +68,9 @@ bool EObjectView::OnRender()
     ImGui::BeginChild("ComponentChild");
     if (fSelectedEntity)
     {
-        for (Engine::EComponentStorage storage : fScene->GetAllComponents(fSelectedEntity))
+        for (EStructProperty* storage : fScene->GetAllComponents(fSelectedEntity))
         {
-            RenderComponentStorage(storage);
+            RenderStruct(storage);
         }
 
         if (ImGui::Button("Add Component"))
@@ -79,14 +79,15 @@ bool EObjectView::OnRender()
         }
         if (ImGui::BeginPopup("add-component-popup"))
         {
-            for (EComponentDescription compDsc : fScene->GetRegisteredComponents())
+            for (EValueDescription* compDsc : ETypeRegister::get().GetAllDescriptions())
             {
-                bool hasComp = fScene->HasComponent(fSelectedEntity, compDsc.ID);
+                if (compDsc->GetType() != EValueType::STRUCT) { continue; }
+                bool hasComp = fScene->HasComponent(fSelectedEntity, compDsc->GetId());
                 if (!hasComp)
                 {
-                    if (ImGui::Selectable(compDsc.ID.c_str()))
+                    if (ImGui::Selectable(compDsc->GetId().c_str()))
                     {
-                        fScene->InsertComponent(fSelectedEntity, compDsc.ID);
+                        fScene->InsertComponent(fSelectedEntity, compDsc->GetId());
                     }
                 }
             }
@@ -106,64 +107,61 @@ void EObjectView::OnUpdateEventDispatcher()
     fAddObjectButton->UpdateEventDispatcher();
 }
 
-void EObjectView::RenderComponentStorage(Engine::EComponentStorage storage) 
+void EObjectView::RenderStruct(EStructProperty* storage) 
 {
-    EComponentDescription description = storage.GetComponentDescription();
-    for (auto& valueType : description.ValueTypeDesciptions)
+    EStructDescription* description = static_cast<EStructDescription*>(storage->GetDescription());
+    if (ImGui::CollapsingHeader(storage->GetPropertyName().c_str()))
     {
-        switch (valueType.Type)
+        for (auto& entry : description->GetFields())
         {
-        case EValueType::BOOL: RenderBool(valueType.Name, storage); break;
-        case EValueType::DOUBLE: RenderDouble(valueType.Name, storage); break;
-        case EValueType::INTEGER: RenderInteger(valueType.Name, storage); break;
-        case EValueType::STRING: RenderString(valueType.Name, storage); break;
-        case EValueType::COMPONENT_REFERENCE: break;
+            const EString& propertyName = entry.first;
+            EValueDescription* fieldDsc = entry.second;
+            EValueType fieldType = fieldDsc->GetType();
+            switch (fieldType)
+            {
+            case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage->GetProperty(propertyName))); break;
+            case EValueType::PRIMITIVE: RenderPrimitive(storage->GetProperty(propertyName)); break;
+            }    
         }
     }
 }
 
-void EObjectView::RenderBool(const EString& name, Engine::EComponentStorage storage) 
+void EObjectView::RenderPrimitive(Engine::EProperty* storage) 
 {
-    EValueProperty<bool>* boolProperty = nullptr;
-    if (storage.GetProperty(name, &boolProperty))
-    {
-        bool value = boolProperty->GetValue();
-        ImGui::Checkbox(name.c_str(), &value);
-        boolProperty->SetValue(value);        
-    }
+    EValueDescription* description = storage->GetDescription();
+    const EString& primitiveId = description->GetId();
+    if (primitiveId == E_TYPEID_STRING) { RenderString(static_cast<EValueProperty<EString>*>(storage)); } 
+    else if (primitiveId == E_TYPEID_INTEGER) { RenderInteger(static_cast<EValueProperty<i32>*>(storage)); }
+    else if (primitiveId == E_TYPEID_DOUBLE) { RenderDouble(static_cast<EValueProperty<double>*>(storage)); }
+    else if (primitiveId == E_TYPEID_BOOL) { RenderBool(static_cast<EValueProperty<bool>*>(storage)); }
 }
 
-void EObjectView::RenderDouble(const EString& name, Engine::EComponentStorage storage) 
+void EObjectView::RenderBool(Engine::EValueProperty<bool>* storage) 
 {
-    EValueProperty<double>* doubleProperty = nullptr;
-    if (storage.GetProperty(name, &doubleProperty))
-    {
-        double value = doubleProperty->GetValue();
-        ImGui::InputDouble(name.c_str(), &value);
-        doubleProperty->SetValue(value);
-    }
+    bool value = storage->GetValue();
+    ImGui::Checkbox(storage->GetPropertyName().c_str(), &value);
+    storage->SetValue(value);
 }
 
-void EObjectView::RenderInteger(const EString& name, Engine::EComponentStorage storage) 
+void EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage) 
 {
-    EValueProperty<i32>* integerProperty = nullptr;
-    if (storage.GetProperty(name, &integerProperty))
-    {
-        i32 value = integerProperty->GetValue();
-        ImGui::InputInt(name.c_str(), &value);
-        integerProperty->SetValue(value);
-    }
+    i32 value = storage->GetValue();
+    ImGui::InputInt(storage->GetPropertyName().c_str(), &value);
+    storage->SetValue(value);
 }
 
-void EObjectView::RenderString(const EString& name, Engine::EComponentStorage storage) 
+void EObjectView::RenderDouble(Engine::EValueProperty<double>* storage) 
 {
-    EValueProperty<EString>* stringProperty = nullptr;
-    if (storage.GetProperty(name, &stringProperty))
-    {
-        EString value = stringProperty->GetValue();
-        char buf[255];
-        strcpy(buf, value.c_str());
-        ImGui::InputText(name.c_str(), buf, 255);
-        stringProperty->SetValue(buf);
-    }
+    double value = storage->GetValue();
+    ImGui::InputDouble(storage->GetPropertyName().c_str(), &value);
+    storage->SetValue(value);
+}
+
+void EObjectView::RenderString(Engine::EValueProperty<EString>* storage) 
+{
+    EString value = storage->GetValue();
+    char buf[255];
+    strcpy(buf, value.c_str());
+    ImGui::InputText(storage->GetPropertyName().c_str(), buf, 255);
+    storage->SetValue(buf);
 }

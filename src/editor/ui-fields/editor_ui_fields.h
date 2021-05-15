@@ -26,12 +26,13 @@ namespace Editor {
 
         virtual void OnUpdateEventDispatcher() override;
     private:
-        void RenderComponentStorage(Engine::EComponentStorage storage);
+        void RenderStruct(Engine::EStructProperty* storage);
+        void RenderPrimitive(Engine::EProperty* storage);
 
-        void RenderBool(const EString& name, Engine::EComponentStorage storage);
-        void RenderDouble(const EString& name, Engine::EComponentStorage storage);
-        void RenderInteger(const EString& name, Engine::EComponentStorage storage);
-        void RenderString(const EString& name, Engine::EComponentStorage storage);
+        void RenderBool(Engine::EValueProperty<bool>* storage);
+        void RenderInteger(Engine::EValueProperty<i32>* storage);
+        void RenderDouble(Engine::EValueProperty<double>* storage);
+        void RenderString(Engine::EValueProperty<EString>* storage);
     };
 
 }

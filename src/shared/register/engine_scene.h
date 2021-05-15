@@ -17,40 +17,14 @@ struct convert {
 
 namespace Engine {
 
-    enum class EValueType
-    {
-        INTEGER,
-        DOUBLE,
-        BOOL,
-        STRING,
-
-        COMPONENT_REFERENCE,
-    };
-
-    struct EValueTypeDescription
-    {
-        EValueType      Type;
-        EString         Name;
-    };
-    typedef EVector<EValueTypeDescription> TValueTypeList;
-
-    struct EStructTypeDescription
-    {
-        EString             Name;
-        TValueTypeList      Fields;
-    };
-    typedef EVector<EStructTypeDescription> TStructTypeList;
-
     struct EComponentDescription
     {
         using ComponentID = EString;
 
-        TValueTypeList      ValueTypeDesciptions;
-        TStructTypeList     StructTypeDescriptions;
         ComponentID         ID;
 
-        EComponentDescription(const ComponentID& id = "", std::initializer_list<EValueTypeDescription>&& types = {}, std::initializer_list<EStructTypeDescription>&& structDescriptions = {})
-            : ID(id), ValueTypeDesciptions(types), StructTypeDescriptions(structDescriptions)
+        EComponentDescription(const ComponentID& id = "")
+            : ID(id)
         {}
 
         EComponentDescription(const EComponentDescription&) = default;
@@ -65,31 +39,6 @@ namespace Engine {
             return !ID.empty();
         }
 
-        bool GetTypeDescription(const EString& name, EValueTypeDescription* outDesc)
-        {
-            for (const EValueTypeDescription& dsc : ValueTypeDesciptions)
-            {
-                if (dsc.Name == name)
-                {
-                    *outDesc = dsc;
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        bool GetStructDescription(const EString& name, EStructTypeDescription* outDesc)
-        {
-            for (const EStructTypeDescription& dsc : StructTypeDescriptions)
-            {
-                if (dsc.Name == name)
-                {
-                    *outDesc = dsc;
-                    return true;
-                }
-            }
-            return false;
-        }
     private:
         friend class EScene;
     };
@@ -100,11 +49,14 @@ namespace Engine {
         friend class EScene;
     public:
         EString fName;
+        EValueDescription* fDescription;
     public:
-        EProperty(const EString& name);
+        EProperty(const EString& name, EValueDescription* description);
         virtual ~EProperty() = default;
 
         const EString& GetPropertyName() const;
+
+        EValueDescription* GetDescription() const;
     };
 
     template <typename ValueType>
@@ -113,8 +65,8 @@ namespace Engine {
     private:
         ValueType fValue;
     public:
-        EValueProperty(const EString& name, const ValueType& initValue = ValueType())
-            : EProperty(name)
+        EValueProperty(const EString& name, EValueDescription* description, const ValueType& initValue = ValueType())
+            : EProperty(name, description)
         {
             fValue = initValue;
         }
@@ -135,7 +87,7 @@ namespace Engine {
     private:
         EVector<EProperty*> fProperties;
     public:
-        EStructProperty(const EString& name, const EVector<EProperty*>& properties = {});
+        EStructProperty(const EString& name, EStructDescription* description, const EVector<EProperty*>& properties = {});
         ~EStructProperty();
 
         template <typename T>
@@ -156,34 +108,9 @@ namespace Engine {
 
         EProperty* GetProperty(const EString& propertyName);
         const EProperty* GetProperty(const EString& propertyName) const;
+
     };
 
-
-    class E_API EComponentStorage
-    {
-    private:
-        EComponentDescription   fDsc;
-        EUnorderedMap<EString, EProperty*>     fProperties;
-    public:
-        EComponentStorage(EComponentDescription dsc = EComponentDescription(), const EUnorderedMap<EString, EProperty*>& propInit = {});
-        EComponentStorage(const EComponentStorage&) = default;
-        ~EComponentStorage();
-
-        operator bool() const;
-        bool Valid() const;
-
-        void Reset();
-
-        EComponentDescription GetComponentDescription() const;
-
-        bool HasProperty(const EString& propertyName);
-
-        bool GetProperty(const EString& propertyName, EValueProperty<i32>** outValue);
-        bool GetProperty(const EString& propertyName, EValueProperty<double>** outValue);
-        bool GetProperty(const EString& propertyName, EValueProperty<bool>** outValue);
-        bool GetProperty(const EString& propertyName, EValueProperty<EString>** outValue);
-        bool GetProperty(const EString& propertyName, EStructProperty** outValue);
-    };
 
     class E_API EScene
     {
@@ -195,7 +122,7 @@ namespace Engine {
 
         EUnorderedMap<EComponentDescription::ComponentID, EComponentDescription> fRegisteredComponents;        
 
-        EUnorderedMap<EComponentDescription::ComponentID, EUnorderedMap<Entity, EComponentStorage>> fComponentStorage;
+        EUnorderedMap<EComponentDescription::ComponentID, EUnorderedMap<Entity, EStructProperty*>> fComponentStorage;
         EVector<Entity>     fAliveEntites;
         EVector<Entity>     fDeadEntites;
     public:
@@ -220,8 +147,13 @@ namespace Engine {
         void InsertComponent(Entity entity, EComponentDescription::ComponentID componentId);
         void RemoveComponent(Entity entity, EComponentDescription::ComponentID componentId);
         bool HasComponent(Entity entity, EComponentDescription::ComponentID componentId);
-        EComponentStorage GetComponent(Entity entity, EComponentDescription::ComponentID componentId);
-        EVector<EComponentStorage> GetAllComponents(Entity entity);
+        EStructProperty* GetComponent(Entity entity, EComponentDescription::ComponentID componentId);
+        EVector<EStructProperty*> GetAllComponents(Entity entity);
+
+    private:
+        EProperty* CreatePropertyFromDescription(const EString& name, EValueDescription* description);
+        EProperty* CreatePropertyStruct(const EString& name, EStructDescription* description);
+        EProperty* CreatePropertyPrimitive(const EString& name, EValueDescription* descrption);
     };
 
 }
