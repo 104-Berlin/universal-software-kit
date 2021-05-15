@@ -1,12 +1,11 @@
-#include "engine_extension.h"
+#include "editor_extension.h"
 
 using namespace Engine;
 
 void intern::InitUI()
 {
-#ifdef EXT_RENDERER_ENABLED
-    UIImpl::ImplImGui::ResetContext();
-#endif
+    Graphics::Wrapper::SetImGuiContext(Graphics::Wrapper::GetCurrentImGuiContext());
+    ImGui::SetCurrentContext(Graphics::Wrapper::GetCurrentImGuiContext());
 }
 
 EUIField::EUIField(const EString& label) 
@@ -77,17 +76,13 @@ EUIPanel::EUIPanel(const EString& title)
 
 bool EUIPanel::OnRender() 
 {
-#ifdef EXT_RENDERER_ENABLED
-    UIImpl::EUIPanel::ImplRender(GetLabel().c_str(), &fOpen);
-#endif
+    ImGui::Begin(GetLabel().c_str(), &fOpen);
     return fOpen;
 }
 
 void EUIPanel::OnRenderEnd() 
 {
-#ifdef EXT_RENDERER_ENABLED
-    UIImpl::EUIPanel::ImplRenderEnd();
-#endif
+    ImGui::End();
 }
 
 bool EUIPanel::IsOpen() const
@@ -108,21 +103,33 @@ void EUIPanel::Open()
 EUIViewport::EUIViewport() 
     : EUIField("VIEWPORT")
 {
-    
+    fFrameBuffer = Graphics::Wrapper::CreateFrameBuffer();
 }
 
-#ifdef EXT_RENDERER_ENABLED
+EUIViewport::~EUIViewport() 
+{
+    delete fFrameBuffer;   
+}
+
 void EUIViewport::SetRenderFunction(RenderFunction renderFunction) 
 {
     fRenderFuntion = renderFunction;
 }
-#endif
 
 bool EUIViewport::OnRender() 
 {
-#ifdef EXT_RENDERER_ENABLED
-    fImGuiViewport.Render(fRenderFuntion);
-#endif
+    ImVec2 contentRegion = ImGui::GetContentRegionAvail();
+
+    fFrameBuffer->Resize(contentRegion.x, contentRegion.y, Graphics::GFrameBufferFormat::RGBA8);
+    fFrameBuffer->Bind();
+    if (fRenderFuntion)
+    {
+        fRenderFuntion(Graphics::Wrapper::GetMainContext(), fFrameBuffer);
+    }
+    fFrameBuffer->Unbind();
+
+    ImGui::Image((ImTextureID)(unsigned long)fFrameBuffer->GetColorAttachment(), contentRegion, {0, 1}, {1, 0});
+
     return true;
 }
 
@@ -135,11 +142,9 @@ EUIButton::EUIButton(const EString& label)
 
 bool EUIButton::OnRender() 
 {
-#ifdef EXT_RENDERER_ENABLED
-    if (UIImpl::EUIButton::ImplRender(GetLabel().c_str()))
+    if (ImGui::Button(GetLabel().c_str()))
     {
         fEventDispatcher.Enqueue<EClickEvent>({0,0});
     }
-#endif
     return true;
 }

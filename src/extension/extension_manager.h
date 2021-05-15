@@ -4,7 +4,7 @@ namespace Engine {
 
     struct E_EXTAPI EExtInitInfo
     {
-        EUIRegister*    UIRegister = nullptr;
+        
     };
 
     class E_EXTAPI EExtension
@@ -33,6 +33,7 @@ namespace Engine {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
         EExtInitInfo                        fExtensionRegisters;
+        EScene*                             fLoadedScene;
     public:
         EExtensionManager();
         ~EExtensionManager();
@@ -59,6 +60,9 @@ namespace Engine {
          * @return Vector of all extensions
          */
         EVector<EExtension*> GetLoadedExtensions();
+
+
+        EScene* GetActiveScene() const;
     };
 
 }

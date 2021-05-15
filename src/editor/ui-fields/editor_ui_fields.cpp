@@ -16,7 +16,7 @@ bool EObjectView::OnRender()
 {
     if (!fScene) { return false; }
 
-    ImGui::BeginChild(4, {100, 0});
+    ImGui::BeginChild("Entity Child", {100, 0});
     for (EScene::Entity entity : fScene->GetAllEntities())
     {
         EString entityIdent = "Entity " + std::to_string(entity);
@@ -29,7 +29,7 @@ bool EObjectView::OnRender()
     fAddObjectButton->Render();
     ImGui::EndChild();
     ImGui::SameLine();
-    ImGui::BeginChild(5);
+    ImGui::BeginChild("ComponentChild");
     if (fSelectedEntity)
     {
         for (Engine::EComponentStorage storage : fScene->GetAllComponents(fSelectedEntity))
@@ -59,7 +59,7 @@ bool EObjectView::OnRender()
     }
     ImGui::EndChild();
 
-    ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
 
 
     return true;

@@ -4,7 +4,7 @@
 namespace Engine {
 
     namespace intern {
-        E_EXTAPI void InitUI();
+        E_EDEXAPI void InitUI();
     }
 
     /**
@@ -21,7 +21,7 @@ namespace Engine {
     /**
      * Most Basic UI Element
      */
-    class E_EXTAPI EUIField
+    class E_EDEXAPI EUIField
     {
         using UpdateFunction = std::function<void()>;
     protected:
@@ -123,7 +123,7 @@ namespace Engine {
         }
     };
 
-    class E_EXTAPI EUIPanel : public EUIField
+    class E_EDEXAPI EUIPanel : public EUIField
     {
     private:
         /**
@@ -150,14 +150,13 @@ namespace Engine {
         void Open();
     };
 
-    class E_EXTAPI EUIViewport : public EUIField
+    class E_EDEXAPI EUIViewport : public EUIField
     {
     public:
         EUIViewport();
-
+        ~EUIViewport();
 
         virtual bool OnRender() override;
-#ifdef EXT_RENDERER_ENABLED
     private:
         /**
          * Render function which will be called with the viewport size
@@ -165,10 +164,9 @@ namespace Engine {
         using RenderFunction = std::function<void(Graphics::GContext*, Graphics::GFrameBuffer*)>;
 
         RenderFunction fRenderFuntion;
-        UIImpl::EImGuiViewport fImGuiViewport;
+        Graphics::GFrameBuffer* fFrameBuffer;
     public:
         void SetRenderFunction(RenderFunction renderFunction);
-#endif
     };
 
     struct EClickEvent
@@ -177,7 +175,7 @@ namespace Engine {
         u32 MouseY;
     };
 
-    class E_EXTAPI EUIButton : public EUIField
+    class E_EDEXAPI EUIButton : public EUIField
     {
     public:
         EUIButton(const EString& label);

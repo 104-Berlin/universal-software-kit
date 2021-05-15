@@ -4,19 +4,10 @@ using namespace Editor;
 using namespace Graphics;
 using namespace Engine;
 
-static EComponentDescription testCompDsc("TestComponent", {
-    {EValueType::BOOL, "MyBoolean"},
-    {EValueType::INTEGER, "MyInteger"},
-    {EValueType::STRING, "SomeString"}
-});
 
 EApplication::EApplication() 
     : fGraphicsContext(nullptr)
-{
-    fScenePointer = new Engine::EScene("Unknown Scene 1");
-    // TESTING CODE
-    fScenePointer->RegisterComponent(testCompDsc);
-}
+{}
 
 void EApplication::Start() 
 {
@@ -49,23 +40,9 @@ void EApplication::Render()
 
 void EApplication::RenderImGui() 
 {
-    EVector<ERef<EUIPanel>> allPanels = fExtensionManager.GetRegisteres().UIRegister->GetAllItems();
-    // Fire off all events
-    for (ERef<EUIPanel> panel : allPanels)
-    {
-        panel->UpdateEventDispatcher();
-    }
-
     for (ERef<EUIPanel> panel : fDefaultPanels)
     {
         panel->UpdateEventDispatcher();
-    }
-
-
-    // Render them after words
-    for (ERef<EUIPanel> panel : allPanels)
-    {
-        panel->Render();
     }
 
     for (ERef<EUIPanel> panel : fDefaultPanels)
@@ -82,14 +59,18 @@ void EApplication::RegisterDefaultPanels()
 
     ERef<EUIPanel> extensionPanel = EMakeRef<EUIPanel>("Extension Panel");
     ERef<EUIField> loadExtensionButton = EMakeRef<EUIButton>("Load Extension");
-    loadExtensionButton->AddEventListener<EClickEvent>([](){
-        E_INFO("Clicking button");
+    loadExtensionButton->AddEventListener<EClickEvent>([this](){
+        EVector<EString> extensions = Wrapper::OpenFileDialog("Load Extension", {"uex"});
+        for (const EString& extension : extensions)
+        {
+            this->fExtensionManager.LoadExtension(extension);
+        }
     });
     extensionPanel->AddChild(loadExtensionButton);
 
 
     ERef<EUIPanel> universalSceneView = EMakeRef<EUIPanel>("Basic Scene View");
-    universalSceneView->AddChild(EMakeRef<EObjectView>(fScenePointer));
+    universalSceneView->AddChild(EMakeRef<EObjectView>(fExtensionManager.GetActiveScene()));
 
     fDefaultPanels.push_back(universalSceneView);
     fDefaultPanels.push_back(resourcePanel);

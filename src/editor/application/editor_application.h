@@ -9,7 +9,6 @@ namespace Editor {
 
         EVector<ERef<Engine::EUIPanel>> fDefaultPanels;
 
-        Engine::EScene*             fScenePointer;
         Engine::EExtensionManager   fExtensionManager;
     public:
         EApplication();

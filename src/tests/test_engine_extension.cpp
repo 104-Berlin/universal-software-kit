@@ -8,12 +8,6 @@ using namespace Engine;
 
 TEST(ExtensionTest, Basics)
 {
-    EUIRegister uiRegister;
-
-    ERef<EUIPanel> uiPanel = EMakeRef<EUIPanel>("Testing Panel");
-
-
-    uiRegister.RegisterItem(EXTENSION_NAME, uiPanel);
 }
 
 TEST(ExtensionTest, LoadExtension)

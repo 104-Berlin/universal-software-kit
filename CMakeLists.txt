@@ -39,12 +39,6 @@ add_subdirectory(src/extension)
 
 ###############################
 ######### DEPENDENCIES ########
-if ((WIN32 OR APPLE) AND ${BUILD_EDITOR})
-add_subdirectory(deps/usk-graphics)
-
-
-target_link_libraries(EExtImplRenderer GRenderer)
-endif()
 
 target_link_libraries(EExtension Shared)
 
@@ -71,11 +65,18 @@ endif()
 #########################
 ####### EDITOR ##########
 if (WIN32 OR APPLE)
-  add_executable(USKEditor src/editor/editor_entry.cpp
+  add_subdirectory(src/editor-extension)
+  add_subdirectory(deps/usk-graphics)
+
+  add_executable(USKEditor  src/editor/editor_entry.cpp
                             src/editor/ui-fields/editor_ui_fields.cpp
                             src/editor/application/editor_application.cpp)
   target_include_directories(USKEditor PUBLIC src/editor/)
-  target_link_libraries(USKEditor EExtension)
+  target_link_libraries(EEditorExtension EExtension)
+  target_link_libraries(EEditorExtension GRenderer)
+
+  target_link_libraries(USKEditor EEditorExtension)
+
 endif()
 
 
@@ -85,4 +86,5 @@ if (${BUILD_EXAMPLES})
 add_subdirectory(src/extension-examples)
 
 target_link_libraries(Example1 EExtension)
+target_link_libraries(Example2 EExtension)
 endif()
