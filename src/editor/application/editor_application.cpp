@@ -58,15 +58,8 @@ void EApplication::RegisterDefaultPanels()
 
 
     ERef<EUIPanel> extensionPanel = EMakeRef<EUIPanel>("Extension Panel");
-    ERef<EUIField> loadExtensionButton = EMakeRef<EUIButton>("Load Extension");
-    loadExtensionButton->AddEventListener<EClickEvent>([this](){
-        EVector<EString> extensions = Wrapper::OpenFileDialog("Load Extension", {"uex"});
-        for (const EString& extension : extensions)
-        {
-            this->fExtensionManager.LoadExtension(extension);
-        }
-    });
-    extensionPanel->AddChild(loadExtensionButton);
+    ERef<EExtensionView> extensionView = EMakeRef<EExtensionView>(&fExtensionManager);
+    extensionPanel->AddChild(extensionView);
 
 
     ERef<EUIPanel> universalSceneView = EMakeRef<EUIPanel>("Basic Scene View");

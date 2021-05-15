@@ -3,6 +3,42 @@
 using namespace Editor;
 using namespace Engine;
 
+EExtensionView::EExtensionView(Engine::EExtensionManager* extensionManager) 
+ : EUIField("ExtensionView"), fExtensionManager(extensionManager)
+{
+    
+}
+
+EExtensionView::~EExtensionView() 
+{
+    
+}
+
+bool EExtensionView::OnRender() 
+{
+    EVector<EExtension*> loadedExtensions = fExtensionManager->GetLoadedExtensions();
+    for (EExtension* ext : loadedExtensions)
+    {
+        const EString& name = ext->GetName();
+        ImGui::Text("%s", name.c_str());
+        ImGui::SameLine();
+        if (ImGui::Button("Reload"))
+        {
+            // Load the extension
+            E_INFO("reload not implemented for extensions!");
+        }
+    }
+    if (ImGui::Button("Load Extension"))
+    {
+        EVector<EString> loadingPaths = Graphics::Wrapper::OpenFileDialog("Load Extension", {"uex"});
+        for (const EString& extPath : loadingPaths)
+        {
+            fExtensionManager->LoadExtension(extPath);
+        }
+    }
+    return true;
+}
+
 EObjectView::EObjectView(Engine::EScene* scene)
     : EUIField("OBJECTVIEW"), fScene(scene), fSelectedEntity(0)
 {

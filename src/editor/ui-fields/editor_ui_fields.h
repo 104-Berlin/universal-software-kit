@@ -2,6 +2,17 @@
 
 namespace Editor {
 
+    class EExtensionView : public Engine::EUIField
+    {
+    private:
+        Engine::EExtensionManager* fExtensionManager;
+    public:
+        EExtensionView(Engine::EExtensionManager* extenionManager);
+        virtual ~EExtensionView();
+
+        virtual bool OnRender() override;
+    };
+
     class EObjectView : public Engine::EUIField
     {
     private:
