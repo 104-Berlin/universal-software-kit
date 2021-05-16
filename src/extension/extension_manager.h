@@ -19,6 +19,7 @@ namespace Engine {
         void    InitImGui();
 
         const EString& GetName() const;
+
     private:
         EString fExtensionName;
 #ifdef EWIN
@@ -28,12 +29,18 @@ namespace Engine {
 #endif
     };
 
+    struct EExtensionLoadedEvent
+    {
+        EExtension* Extension;
+    };
+
     class E_EXTAPI EExtensionManager
     {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
         EExtInitInfo                        fExtensionRegisters;
         EScene*                             fLoadedScene;
+        EEventDispatcher                    fEventDispatcher;
     public:
         EExtensionManager();
         ~EExtensionManager();
@@ -63,6 +70,13 @@ namespace Engine {
 
 
         EScene* GetActiveScene() const;
+
+
+        template <typename EventType, typename CB>
+        void AddEventListener(CB&& callback)
+        {
+            fEventDispatcher.Connect<EventType>(callback);
+        }
     };
 
 }

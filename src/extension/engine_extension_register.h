@@ -2,11 +2,17 @@
 
 namespace Engine {
 
+    struct ERegisterChangedEvent
+    {
+        EString ExtensionName;
+    };
+
     template <typename T>
     class EExtensionRegister
     {
     protected:
         EUnorderedMap<EString, EVector<T>> fRegisteredItems;
+        EEventDispatcher                   fEventDispatcher;
     public:
         virtual ~EExtensionRegister() = default;
         /**
@@ -17,6 +23,7 @@ namespace Engine {
         void RegisterItem(const EString& extensionName, const T& item)
         {
             fRegisteredItems[extensionName].push_back(item);
+            fEventDispatcher.Post<ERegisterChangedEvent>(ERegisterChangedEvent{ extensionName });
         }
 
         /**
@@ -26,6 +33,7 @@ namespace Engine {
         void ClearRegisteredItems(const EString& extensionName)
         {
             fRegisteredItems[extensionName].clear();
+            fEventDispatcher.Post<ERegisterChangedEvent>(ERegisterChangedEvent{ extensionName });
         }
 
         /**
@@ -56,6 +64,13 @@ namespace Engine {
                 currentIndx += entry.second.size();
             }
             return result;
+        }
+
+
+        template <typename EventType, typename CB>
+        void AddEventListener(CB&& callback)
+        {
+            fEventDispatcher.Connect<EventType>(callback);
         }
     };
     

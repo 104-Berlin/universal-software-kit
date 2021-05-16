@@ -195,7 +195,7 @@ namespace Engine {
     };
 
 
-    class E_API EUIMainMenuBar : public EUIField
+    class E_EDEXAPI EUIMainMenuBar : public EUIField
     {
     private:
         bool fOpen;
@@ -207,7 +207,7 @@ namespace Engine {
         
     };
 
-    class E_API EUIMenu : public EUIField
+    class E_EDEXAPI EUIMenu : public EUIField
     {
     private:
         bool    fOpen;
@@ -218,7 +218,7 @@ namespace Engine {
         virtual void OnRenderEnd() override;
     };
 
-    class E_API EUIContextMenu : public EUIField
+    class E_EDEXAPI EUIContextMenu : public EUIField
     {
     private:
         bool        fOpen;
@@ -229,7 +229,7 @@ namespace Engine {
         virtual void OnRenderEnd() override;
     };
 
-    class E_API EUIMenuItem : public EUIField
+    class E_EDEXAPI EUIMenuItem : public EUIField
     {
     public:
         EUIMenuItem(const EString& label);

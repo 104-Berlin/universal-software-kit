@@ -101,7 +101,9 @@ bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
         loadFunction(newExtension->GetName().c_str(), fLoadedScene);
     }
     fLoadedExtensions[newExtension->GetName()] = newExtension;
-    
+    EExtensionLoadedEvent evt;
+    evt.Extension = newExtension;
+    fEventDispatcher.Post<EExtensionLoadedEvent>(evt);
     return true;
 }
 

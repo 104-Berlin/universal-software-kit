@@ -85,6 +85,6 @@ endif()
 if (${BUILD_EXAMPLES})
 add_subdirectory(src/extension-examples)
 
-target_link_libraries(Example1 EExtension)
+target_link_libraries(Example1 EEditorExtension)
 target_link_libraries(Example2 EExtension)
 endif()

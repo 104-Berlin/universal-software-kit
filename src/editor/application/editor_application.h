@@ -7,10 +7,10 @@ namespace Editor {
     private:
         Graphics::GContext* fGraphicsContext;
 
-        EVector<ERef<Engine::EUIPanel>> fDefaultPanels;
         ERef<Engine::EUIMainMenuBar>            fMainMenu;
 
         Engine::EExtensionManager   fExtensionManager;
+        Engine::EUIRegister         fUIRegister;
     public:
         EApplication();
 

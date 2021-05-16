@@ -2,7 +2,7 @@
 
 using namespace Engine;
 
-enum ElectricalType
+enum class ElectricalType
 {
     GENERATOR,
     INPUT,

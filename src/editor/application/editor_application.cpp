@@ -7,7 +7,26 @@ using namespace Engine;
 
 EApplication::EApplication() 
     : fGraphicsContext(nullptr)
-{}
+{
+    fExtensionManager.AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent& event) {
+        auto entry = (void(*)(const char*, Engine::EAppInit))event.Extension->GetFunction("app_entry");
+        if (entry)
+        {
+            EAppInit init;
+            init.PanelRegister = &fUIRegister;
+            entry(event.Extension->GetName().c_str(), init);
+        }
+        auto initImGui = (void(*)())event.Extension->GetFunction("InitImGui");
+        if (initImGui)
+        {
+            initImGui();
+        }
+    });
+
+    fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
+        this->RegenerateMainMenuBar();
+    });
+}
 
 void EApplication::Start() 
 {
@@ -42,7 +61,7 @@ void EApplication::RegenerateMainMenuBar()
 
 
     ERef<EUIMenu> viewMenu = EMakeRef<EUIMenu>("View");
-    for (EWeakRef<EUIPanel> panel : fDefaultPanels)
+    for (EWeakRef<EUIPanel> panel : fUIRegister.GetAllItems())
     {
         EString panelLabel = panel.lock()->GetLabel();
         ERef<EUIMenuItem> menuItem = EMakeRef<EUIMenuItem>(panel.lock()->GetLabel());
@@ -95,12 +114,12 @@ void EApplication::Render()
 
 void EApplication::RenderImGui() 
 {
-    for (ERef<EUIPanel> panel : fDefaultPanels)
+    for (ERef<EUIPanel> panel : fUIRegister.GetAllItems())
     {
         panel->UpdateEventDispatcher();
     }
 
-    for (ERef<EUIPanel> panel : fDefaultPanels)
+    for (ERef<EUIPanel> panel : fUIRegister.GetAllItems())
     {
         panel->Render();
     }
@@ -130,10 +149,10 @@ void EApplication::RegisterDefaultPanels()
     ERef<EUIPanel> universalSceneView4 = EMakeRef<EUIPanel>("Basic Scene View 4");
     universalSceneView4->AddChild(EMakeRef<EObjectView>(fExtensionManager.GetActiveScene()));
 
-    fDefaultPanels.push_back(universalSceneView1);
-    fDefaultPanels.push_back(universalSceneView2);
-    fDefaultPanels.push_back(universalSceneView3);
-    fDefaultPanels.push_back(universalSceneView4);
-    fDefaultPanels.push_back(resourcePanel);
-    fDefaultPanels.push_back(extensionPanel);
+    fUIRegister.RegisterItem("intern", universalSceneView1);
+    fUIRegister.RegisterItem("intern", universalSceneView2);
+    fUIRegister.RegisterItem("intern", universalSceneView3);
+    fUIRegister.RegisterItem("intern", universalSceneView4);
+    fUIRegister.RegisterItem("intern", resourcePanel);
+    fUIRegister.RegisterItem("intern", extensionPanel);
 }

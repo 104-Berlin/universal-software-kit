@@ -38,6 +38,7 @@ void EUIField::Render()
     {
         fCustomUpdateFunction();
     }
+    ImGui::PushID(fID);
     if (OnRender())
     {
         for (ERef<EUIField> uiField : fChildren)
@@ -46,6 +47,7 @@ void EUIField::Render()
         }
     }
     OnRenderEnd();
+    ImGui::PopID();
 }
 
 bool EUIField::OnRender() 

@@ -139,21 +139,27 @@ void EObjectView::RenderPrimitive(Engine::EProperty* storage)
 void EObjectView::RenderBool(Engine::EValueProperty<bool>* storage) 
 {
     bool value = storage->GetValue();
+    ImGui::PushID(storage);
     ImGui::Checkbox(storage->GetPropertyName().c_str(), &value);
+    ImGui::PopID();
     storage->SetValue(value);
 }
 
 void EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage) 
 {
     i32 value = storage->GetValue();
+    ImGui::PushID(storage);
     ImGui::InputInt(storage->GetPropertyName().c_str(), &value);
+    ImGui::PopID();
     storage->SetValue(value);
 }
 
 void EObjectView::RenderDouble(Engine::EValueProperty<double>* storage) 
 {
     double value = storage->GetValue();
+    ImGui::PushID(storage);
     ImGui::InputDouble(storage->GetPropertyName().c_str(), &value);
+    ImGui::PopID();
     storage->SetValue(value);
 }
 
@@ -162,6 +168,8 @@ void EObjectView::RenderString(Engine::EValueProperty<EString>* storage)
     EString value = storage->GetValue();
     char buf[255];
     strcpy(buf, value.c_str());
+    ImGui::PushID(storage);
     ImGui::InputText(storage->GetPropertyName().c_str(), buf, 255);
+    ImGui::PopID();
     storage->SetValue(buf);
 }
