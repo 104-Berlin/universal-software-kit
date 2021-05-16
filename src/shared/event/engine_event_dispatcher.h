@@ -82,7 +82,7 @@ namespace Engine {
         }
 
         template <typename Event>
-        void Post(const Event& evt)
+        void Post(Event& evt)
         {
             for (std::function<void(void*)> fn : fObervers[EVENT_TYPE(Event)])
             {

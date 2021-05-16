@@ -71,12 +71,12 @@ const EString& EExtension::GetName() const
 
 EExtensionManager::EExtensionManager()
 {
-    fExtensionRegisters.UIRegister = new EUIRegister();
+    fLoadedScene = new EScene("New Scene");
 }
 
 EExtensionManager::~EExtensionManager() 
 {
-    delete fExtensionRegisters.UIRegister;
+    delete fLoadedScene;
 }
 
 bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
@@ -94,14 +94,16 @@ bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
     newExtension->InitImGui();
     // Run load function
     
-    auto loadFunction = (void(*)(const char*, EExtInitInfo*))newExtension->GetFunction("entry");
+    auto loadFunction = (void(*)(const char*, EScene*))newExtension->GetFunction("entry");
     if (loadFunction)
     {
         E_INFO("Running load function for plugin \"" + newExtension->GetName() + "\"");
-        loadFunction(newExtension->GetName().c_str(), &fExtensionRegisters);
+        loadFunction(newExtension->GetName().c_str(), fLoadedScene);
     }
     fLoadedExtensions[newExtension->GetName()] = newExtension;
-    
+    EExtensionLoadedEvent evt;
+    evt.Extension = newExtension;
+    fEventDispatcher.Post<EExtensionLoadedEvent>(evt);
     return true;
 }
 
@@ -123,4 +125,9 @@ EVector<EExtension*> EExtensionManager::GetLoadedExtensions()
         result.push_back(entry.second);
     }
     return result;
+}
+
+EScene* EExtensionManager::GetActiveScene() const
+{
+    return fLoadedScene;
 }

@@ -1,5 +1,4 @@
-#ifdef EXT_RENDERER_ENABLED
-#include "engine_extension.h"
+#include "editor_extension.h"
 
 /**
  * {{-0.5f,-0.5f,0.0f}},
@@ -192,9 +191,8 @@ void RenderViewport(Graphics::GContext* context, Graphics::GFrameBuffer* frameBu
     renderer.End();
 }
 
-EXT_ENTRY
+APP_ENTRY
 {
-    E_INFO(EString("Initiliazing ") + extensionName);
     ERef<Engine::EUIPanel> uiPanel = EMakeRef<Engine::EUIPanel>("First panel");
     ERef<Engine::EUIViewport> viewport = EMakeRef<Engine::EUIViewport>();
     viewport->SetRenderFunction(&RenderViewport);
@@ -210,9 +208,15 @@ EXT_ENTRY
     infoPanel->AddChild(EMakeRef<InfoPanel>());
 
 
-    extension->UIRegister->RegisterItem(extensionName, uiPanel);
-    extension->UIRegister->RegisterItem(extensionName, vertexChanginngPanel);
-    extension->UIRegister->RegisterItem(extensionName, infoPanel);
+    info.PanelRegister->RegisterItem(extensionName, uiPanel);
+    info.PanelRegister->RegisterItem(extensionName, vertexChanginngPanel);
+    info.PanelRegister->RegisterItem(extensionName, infoPanel);
+}
+
+EXT_ENTRY
+{
+    E_INFO(EString("Initiliazing ") + extensionName);
+    
 
     mesh = new Renderer::RMesh();
     mesh->SetData(vertices, indices);
@@ -220,11 +224,3 @@ EXT_ENTRY
     planeMesh = new Renderer::RMesh();
     planeMesh->SetData(planeVertices, planeIndices);
 }
-
-EXT_CLEANUP
-{
-    delete mesh;
-    delete planeMesh;
-}
-
-#endif

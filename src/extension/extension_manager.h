@@ -4,7 +4,7 @@ namespace Engine {
 
     struct E_EXTAPI EExtInitInfo
     {
-        EUIRegister*    UIRegister = nullptr;
+        
     };
 
     class E_EXTAPI EExtension
@@ -19,6 +19,7 @@ namespace Engine {
         void    InitImGui();
 
         const EString& GetName() const;
+
     private:
         EString fExtensionName;
 #ifdef EWIN
@@ -28,11 +29,18 @@ namespace Engine {
 #endif
     };
 
+    struct EExtensionLoadedEvent
+    {
+        EExtension* Extension;
+    };
+
     class E_EXTAPI EExtensionManager
     {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
         EExtInitInfo                        fExtensionRegisters;
+        EScene*                             fLoadedScene;
+        EEventDispatcher                    fEventDispatcher;
     public:
         EExtensionManager();
         ~EExtensionManager();
@@ -59,6 +67,16 @@ namespace Engine {
          * @return Vector of all extensions
          */
         EVector<EExtension*> GetLoadedExtensions();
+
+
+        EScene* GetActiveScene() const;
+
+
+        template <typename EventType, typename CB>
+        void AddEventListener(CB&& callback)
+        {
+            fEventDispatcher.Connect<EventType>(callback);
+        }
     };
 
 }

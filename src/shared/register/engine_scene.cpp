@@ -5,8 +5,8 @@ using namespace Engine;
 
 
 
-EProperty::EProperty(const EString& name) 
-    : fName(name)
+EProperty::EProperty(const EString& name, EValueDescription* description) 
+    : fName(name), fDescription(description)
 {
     
 }
@@ -16,8 +16,13 @@ const EString& EProperty::GetPropertyName() const
     return fName;
 }
 
-EStructProperty::EStructProperty(const EString& name, const EVector<EProperty*>& properties) 
-    : EProperty(name), fProperties(properties)
+EValueDescription* EProperty::GetDescription() const
+{
+    return fDescription;
+}
+
+EStructProperty::EStructProperty(const EString& name, EStructDescription* description, const EVector<EProperty*>& properties) 
+    : EProperty(name, description), fProperties(properties)
 {
     
 }
@@ -67,105 +72,6 @@ const EProperty* EStructProperty::GetProperty(const EString& propertyName) const
     return nullptr;
 }
 
-EComponentStorage::EComponentStorage(EComponentDescription dsc, const EUnorderedMap<EString, EProperty*>& propInit) 
-    : fDsc(dsc), fProperties(propInit)
-{
-
-}
-
-EComponentStorage::~EComponentStorage() 
-{
-    fProperties.clear();
-}
-
-EComponentStorage::operator bool() const
-{
-    return Valid();
-}
-
-bool EComponentStorage::Valid() const
-{
-    return fDsc.Valid();
-}
-
-void EComponentStorage::Reset() 
-{
-    for (auto& property : fProperties)
-    {
-        delete property.second;
-    }
-}
-
-EComponentDescription EComponentStorage::GetComponentDescription() const
-{
-    return fDsc;   
-}
-
-bool EComponentStorage::HasProperty(const EString& propertyName) 
-{
-    return fProperties.find(propertyName) != fProperties.end();
-}
-
-bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<i32>** outValue) 
-{
-    if (!HasProperty(propertyName))
-    {
-        return false;
-    }
-    EValueTypeDescription typeDsc;
-    E_ASSERT(fDsc.GetTypeDescription(propertyName, &typeDsc) && typeDsc.Type == EValueType::INTEGER, "Wrong type description found");
-    *outValue = (EValueProperty<i32>*) fProperties[propertyName];
-    return true;
-}
-
-bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<double>** outValue) 
-{
-    if (!HasProperty(propertyName))
-    {
-        return false;
-    }
-    EValueTypeDescription typeDsc;
-    E_ASSERT(fDsc.GetTypeDescription(propertyName, &typeDsc) && typeDsc.Type == EValueType::DOUBLE, "Wrong type description found");
-    *outValue = (EValueProperty<double>*) fProperties[propertyName];
-    return true;
-}
-
-bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<bool>** outValue) 
-{
-    if (!HasProperty(propertyName))
-    {
-        return false;
-    }
-    EValueTypeDescription typeDsc;
-    E_ASSERT(fDsc.GetTypeDescription(propertyName, &typeDsc) && typeDsc.Type == EValueType::BOOL, "Wrong type description found");
-    *outValue = (EValueProperty<bool>*) fProperties[propertyName];
-    return true;
-}
-
-bool EComponentStorage::GetProperty(const EString& propertyName, EValueProperty<EString>** outValue) 
-{
-    if (!HasProperty(propertyName))
-    {
-        return false;
-    }
-    EValueTypeDescription typeDsc;
-    E_ASSERT(fDsc.GetTypeDescription(propertyName, &typeDsc) && typeDsc.Type == EValueType::STRING, "Wrong type description found");
-    *outValue = (EValueProperty<EString>*) fProperties[propertyName];
-    return true;
-}
-
-bool EComponentStorage::GetProperty(const EString& propertyName, EStructProperty** outValue) 
-{
-    if (!HasProperty(propertyName))
-    {
-        return false;
-    }
-    EStructTypeDescription typeDsc;
-    E_ASSERT(fDsc.GetStructDescription(propertyName, &typeDsc), "Wrong type description found");
-    *outValue = (EStructProperty*) fProperties[propertyName];
-    return true;
-}
-
 
 EScene::EScene(const EString& name) 
     : fName(name)
@@ -173,21 +79,6 @@ EScene::EScene(const EString& name)
     
 }
 
-void EScene::RegisterComponent(EComponentDescription description) 
-{
-    E_ASSERT(fRegisteredComponents.find(description.ID) == fRegisteredComponents.end(), "Component allready registered!");
-    fRegisteredComponents.insert({description.ID, description});
-}
-
-EVector<EComponentDescription> EScene::GetRegisteredComponents() const
-{
-    EVector<EComponentDescription> result;
-    for (auto& entry : fRegisteredComponents)
-    {
-        result.push_back(entry.second);
-    }
-    return result;
-}
 
 EResourceManager& EScene::GetResourceManager() 
 {
@@ -222,7 +113,7 @@ void EScene::DestroyEntity(Entity entity)
     }
     for (auto& entry : fComponentStorage)
     {
-        entry.second[entity].Reset();
+        delete entry.second[entity];
         entry.second.erase(entity);
     }
     fAliveEntites.erase(it);
@@ -234,6 +125,20 @@ EVector<EScene::Entity> EScene::GetAllEntities() const
     return fAliveEntites;
 }
 
+void EScene::Clear() 
+{
+    for (auto& entry : fComponentStorage)
+    {
+        for (auto& storage : entry.second)
+        {
+            delete storage.second;
+        }
+    }
+    fComponentStorage.clear();
+    fAliveEntites.clear();
+    fDeadEntites.clear();
+}
+
 bool EScene::IsAlive(Entity entity) 
 {
     return std::find(fAliveEntites.begin(), fAliveEntites.end(), entity) != fAliveEntites.end();
@@ -242,43 +147,19 @@ bool EScene::IsAlive(Entity entity)
 void EScene::InsertComponent(Entity entity, EComponentDescription::ComponentID componentId) 
 {
     if (!IsAlive(entity)) { return; }
-    E_ASSERT(fRegisteredComponents.find(componentId) != fRegisteredComponents.end(), "Component is not registered");
+    EValueDescription* description = ETypeRegister::get().FindById(componentId);
+    E_ASSERT(description, "Component is not registered");
+    E_ASSERT(description->GetType() == EValueType::STRUCT, "Component can only be inserted as struct");
 
     if (!HasComponent(entity, componentId))
     {
         EUnorderedMap<EString, EProperty*> properties;
-        const EComponentDescription& componentDesc = fRegisteredComponents[componentId];
-        for (const auto& entry : componentDesc.ValueTypeDesciptions)
-        {
-            switch (entry.Type)
-            {
-            case EValueType::INTEGER: properties.insert({entry.Name, new EValueProperty<i32>(entry.Name)}); break;
-            case EValueType::DOUBLE: properties.insert({entry.Name, new EValueProperty<double>(entry.Name)}); break;
-            case EValueType::STRING: properties.insert({entry.Name, new EValueProperty<EString>(entry.Name)}); break;
-            case EValueType::BOOL: properties.insert({entry.Name, new EValueProperty<bool>(entry.Name)}); break;
-            case EValueType::COMPONENT_REFERENCE: break;
-            }
-        }
 
-        for (const auto& entry : componentDesc.StructTypeDescriptions)
-        {
-            EVector<EProperty*> structProps;
-            for (const auto& valueType : entry.Fields)
-            {
-                switch (valueType.Type)
-                {
-                case EValueType::INTEGER: structProps.push_back(new EValueProperty<i32>(valueType.Name)); break;
-                case EValueType::DOUBLE: structProps.push_back(new EValueProperty<double>(valueType.Name)); break;
-                case EValueType::STRING: structProps.push_back(new EValueProperty<EString>(valueType.Name)); break;
-                case EValueType::BOOL: structProps.push_back(new EValueProperty<bool>(valueType.Name)); break;
-                case EValueType::COMPONENT_REFERENCE: break;
-                }
-            }
-            EStructProperty* newProperty = new EStructProperty(entry.Name, structProps);
-            properties.insert({entry.Name, newProperty});
-        }
+        EStructDescription* structDescription = static_cast<EStructDescription*>(description);
 
-        EComponentStorage storage(componentDesc, properties);
+        EStructProperty* storage = static_cast<EStructProperty*>(CreatePropertyFromDescription(componentId, structDescription));
+
+
         fComponentStorage[componentId][entity] = storage;
     }
 }
@@ -287,32 +168,67 @@ void EScene::RemoveComponent(Entity entity, EComponentDescription::ComponentID c
 {
     if (!IsAlive(entity)) { return; }
     if (!HasComponent(entity, componentId)) { return; }
-    fComponentStorage[componentId][entity].Reset();
+    delete fComponentStorage[componentId][entity];
     fComponentStorage[componentId].erase(entity);
 }
 
 bool EScene::HasComponent(Entity entity, EComponentDescription::ComponentID componentId) 
 {
-    return fComponentStorage[componentId][entity].Valid();
+    return fComponentStorage[componentId][entity];
 }
 
-EComponentStorage EScene::GetComponent(Entity entity, EComponentDescription::ComponentID componentId) 
+EStructProperty* EScene::GetComponent(Entity entity, EComponentDescription::ComponentID componentId) 
 {
-    if (!IsAlive(entity)) { return EComponentStorage(); }
-    if (!HasComponent(entity, componentId)) { return EComponentStorage(); }
+    if (!IsAlive(entity)) { return nullptr; }
+    if (!HasComponent(entity, componentId)) { return nullptr; }
 
     return fComponentStorage[componentId][entity];
 }
 
-EVector<EComponentStorage> EScene::GetAllComponents(Entity entity) 
+EVector<EStructProperty*> EScene::GetAllComponents(Entity entity) 
 {
-    EVector<EComponentStorage> result;
+    EVector<EStructProperty*> result;
     for (auto& entry : fComponentStorage)
     {
-        if (entry.second[entity].Valid())
+        if (entry.second[entity])
         {
             result.push_back(entry.second[entity]);
         }
     }
     return result;
+}
+
+EProperty* EScene::CreatePropertyFromDescription(const EString& name, EValueDescription* description) 
+{
+    EValueType type = description->GetType();
+    switch (type)
+    {
+    case EValueType::PRIMITIVE: return CreatePropertyPrimitive(name, description);
+    case EValueType::STRUCT: return CreatePropertyStruct(name, static_cast<EStructDescription*>(description));
+    }
+    return nullptr;
+}
+
+EProperty* EScene::CreatePropertyStruct(const EString& name, EStructDescription* description) 
+{
+    EVector<EProperty*> fields;
+    for (auto& entry : description->GetFields())
+    {
+        EProperty* newField = CreatePropertyFromDescription(entry.first, entry.second);
+        if (newField)
+        {
+            fields.push_back(newField);
+        }
+    }
+    return new EStructProperty(name, description, fields);
+}
+
+EProperty* EScene::CreatePropertyPrimitive(const EString& name, EValueDescription* description) 
+{
+    const EString& primitiveId = description->GetId();
+    if (primitiveId == E_TYPEID_STRING) { return new EValueProperty<EString>(name, description); } 
+    else if (primitiveId == E_TYPEID_INTEGER) { return new EValueProperty<i32>(name, description); }
+    else if (primitiveId == E_TYPEID_DOUBLE) { return new EValueProperty<double>(name, description); }
+    else if (primitiveId == E_TYPEID_BOOL) { return new EValueProperty<bool>(name, description); }
+    return nullptr;
 }

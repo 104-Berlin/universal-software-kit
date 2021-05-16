@@ -28,4 +28,8 @@
 
 
 
+#include "register/engine_type_register.h"
 #include "register/engine_scene.h"
+#include "register/engine_serializer.h"
+#include "register/engine_deserializer.h"
+

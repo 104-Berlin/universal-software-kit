@@ -3,7 +3,7 @@
 #include "graphics_wrapper.h"
 #include "graphics_renderer.h"
 
-#include "engine_extension.h"
+#include "editor_extension.h"
 
 
 #include "ui-fields/editor_ui_fields.h"

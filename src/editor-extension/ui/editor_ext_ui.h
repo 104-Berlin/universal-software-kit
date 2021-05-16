@@ -4,7 +4,7 @@
 namespace Engine {
 
     namespace intern {
-        E_EXTAPI void InitUI();
+        E_EDEXAPI void InitUI();
     }
 
     /**
@@ -21,7 +21,7 @@ namespace Engine {
     /**
      * Most Basic UI Element
      */
-    class E_EXTAPI EUIField
+    class E_EDEXAPI EUIField
     {
         using UpdateFunction = std::function<void()>;
     protected:
@@ -67,8 +67,14 @@ namespace Engine {
         /**
          * Adds a child to the list
          * @param child The UI Field thats gets added to the list
+         * @return The added child
          */
-        void AddChild(const ERef<EUIField>& child);
+        ERef<EUIField> AddChild(const ERef<EUIField>& child);
+
+        /**
+         * Removes all childre
+         */
+        void Clear();
 
         /**
          * Sets the custom update function
@@ -123,13 +129,18 @@ namespace Engine {
         }
     };
 
-    class E_EXTAPI EUIPanel : public EUIField
+    class E_EDEXAPI EUIPanel : public EUIField
     {
     private:
         /**
          * Wether the panel is open.
          */
         bool fOpen;
+
+        /**
+         * To remove an imgui thing
+         */
+        bool fWasJustClosed;
     public:
         EUIPanel(const EString& title);
 
@@ -150,14 +161,13 @@ namespace Engine {
         void Open();
     };
 
-    class E_EXTAPI EUIViewport : public EUIField
+    class E_EDEXAPI EUIViewport : public EUIField
     {
     public:
         EUIViewport();
-
+        ~EUIViewport();
 
         virtual bool OnRender() override;
-#ifdef EXT_RENDERER_ENABLED
     private:
         /**
          * Render function which will be called with the viewport size
@@ -165,10 +175,9 @@ namespace Engine {
         using RenderFunction = std::function<void(Graphics::GContext*, Graphics::GFrameBuffer*)>;
 
         RenderFunction fRenderFuntion;
-        UIImpl::EImGuiViewport fImGuiViewport;
+        Graphics::GFrameBuffer* fFrameBuffer;
     public:
         void SetRenderFunction(RenderFunction renderFunction);
-#endif
     };
 
     struct EClickEvent
@@ -177,12 +186,56 @@ namespace Engine {
         u32 MouseY;
     };
 
-    class E_EXTAPI EUIButton : public EUIField
+    class E_EDEXAPI EUIButton : public EUIField
     {
     public:
         EUIButton(const EString& label);
 
         virtual bool OnRender() override;
     };
+
+
+    class E_EDEXAPI EUIMainMenuBar : public EUIField
+    {
+    private:
+        bool fOpen;
+    public:
+        EUIMainMenuBar();
+
+        virtual bool OnRender() override;
+        virtual void OnRenderEnd() override;
+        
+    };
+
+    class E_EDEXAPI EUIMenu : public EUIField
+    {
+    private:
+        bool    fOpen;
+    public:
+        EUIMenu(const EString& displayName = "MenuBar");
+
+        virtual bool OnRender() override;
+        virtual void OnRenderEnd() override;
+    };
+
+    class E_EDEXAPI EUIContextMenu : public EUIField
+    {
+    private:
+        bool        fOpen;
+    public:
+        EUIContextMenu(const EString& displayName = "ContextMenu");
+
+        virtual bool OnRender() override;
+        virtual void OnRenderEnd() override;
+    };
+
+    class E_EDEXAPI EUIMenuItem : public EUIField
+    {
+    public:
+        EUIMenuItem(const EString& label);
+
+        virtual bool OnRender() override;
+    };
+
 
 }
