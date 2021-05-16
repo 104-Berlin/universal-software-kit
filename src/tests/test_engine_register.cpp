@@ -147,4 +147,13 @@ TEST(RegisterTest, Basics)
 
 	EXPECT_FALSE(scene.HasComponent(entity, myTestComponent->GetId()));
 	EXPECT_FALSE(scene.IsAlive(entity));
+
+	scene.CreateEntity();
+	scene.CreateEntity();
+	scene.CreateEntity();
+	scene.CreateEntity();
+
+	EXPECT_EQ(scene.GetAllEntities().size(), 4);
+	scene.Clear();
+	EXPECT_EQ(scene.GetAllEntities().size(), 0);
 }
