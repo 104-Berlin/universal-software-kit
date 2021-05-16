@@ -43,6 +43,7 @@ namespace Engine {
         virtual ~EEnumDescription();
 
         EEnumDescription& AddOption(const EString& option);
+        const EVector<EString>& GetOptions() const;
     };
 
     class E_API EArrayDescription : public EValueDescription

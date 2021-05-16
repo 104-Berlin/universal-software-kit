@@ -127,6 +127,8 @@ void EApplication::RenderImGui()
     fMainMenu->UpdateEventDispatcher();
 
     fMainMenu->Render();
+
+    ImGui::ShowDemoWindow();
 }
 
 void EApplication::RegisterDefaultPanels() 

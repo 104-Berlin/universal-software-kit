@@ -72,6 +72,46 @@ const EProperty* EStructProperty::GetProperty(const EString& propertyName) const
     return nullptr;
 }
 
+EEnumProperty::EEnumProperty(const EString& name, EEnumDescription* description, const EString& initValue) 
+    : EProperty(name, description), fValue(initValue)
+{
+    const EVector<EString>& options = description->GetOptions();
+    if (options.size() > 0)
+    {
+        if (fValue.empty())
+        {
+            fValue = options[0];
+        }
+        else
+        {
+            EVector<EString>::const_iterator foundOption = std::find(options.begin(), options.end(), fValue);
+            if (foundOption == options.end())
+            {
+                fValue = options[0];
+            }
+        }
+    }
+    else
+    {
+        fValue = "";
+    }
+}
+
+EEnumProperty::~EEnumProperty() 
+{
+    
+}
+
+void EEnumProperty::SetCurrentValue(const EString& value) 
+{
+    fValue = value;
+}
+
+const EString& EEnumProperty::GetCurrentValue() const
+{
+    return fValue;
+}
+
 
 EScene::EScene(const EString& name) 
     : fName(name)
@@ -205,6 +245,7 @@ EProperty* EScene::CreatePropertyFromDescription(const EString& name, EValueDesc
     {
     case EValueType::PRIMITIVE: return CreatePropertyPrimitive(name, description);
     case EValueType::STRUCT: return CreatePropertyStruct(name, static_cast<EStructDescription*>(description));
+    case EValueType::ENUM: return CreatePropertyEnum(name, static_cast<EEnumDescription*>(description));
     }
     return nullptr;
 }
@@ -231,4 +272,10 @@ EProperty* EScene::CreatePropertyPrimitive(const EString& name, EValueDescriptio
     else if (primitiveId == E_TYPEID_DOUBLE) { return new EValueProperty<double>(name, description); }
     else if (primitiveId == E_TYPEID_BOOL) { return new EValueProperty<bool>(name, description); }
     return nullptr;
+}
+
+EProperty* EScene::CreatePropertyEnum(const EString& name, EEnumDescription* descrption) 
+{
+    EEnumProperty* result = new EEnumProperty(name, descrption);
+    return result;
 }

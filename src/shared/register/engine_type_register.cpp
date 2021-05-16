@@ -112,6 +112,11 @@ EEnumDescription& EEnumDescription::AddOption(const EString& option)
     return *this;
 }
 
+const EVector<EString>& EEnumDescription::GetOptions() const
+{
+    return fOptions;
+}
+
 EArrayDescription::EArrayDescription(const EString& name, EValueDescription* arrayType) 
     : EValueDescription(EValueType::ARRAY, name), fType(arrayType)
 {
