@@ -14,6 +14,10 @@ option(USE_COV "Use the covarage option when not using MSVC" FALSE)
 option(BUILD_EDITOR "Build the editor for mac or windows" TRUE)
 option(BUILD_EXAMPLES "Build exmaples" TRUE)
 
+if (NOT WIN32 AND NOT APPLE)
+set(BUILD_EDITOR FALSE)
+endif()
+
 if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC AND USE_COV)
 add_compile_options(--coverage)
 link_libraries(--coverage)
