@@ -62,9 +62,20 @@ if (${BUILD_TEST})
 endif()
 
 
+
+#########################
+######## EXAMPLES #######
+if (${BUILD_EXAMPLES})
+add_subdirectory(src/extension-examples)
+
+target_link_libraries(Example2 EExtension)
+endif()
+
+
+
 #########################
 ####### EDITOR ##########
-if (WIN32 OR APPLE)
+if ((WIN32 OR APPLE) AND ${BUILD_EDITOR})
   add_subdirectory(src/editor-extension)
   add_subdirectory(deps/usk-graphics)
 
@@ -76,15 +87,8 @@ if (WIN32 OR APPLE)
   target_link_libraries(EEditorExtension GRenderer)
 
   target_link_libraries(USKEditor EEditorExtension)
-
+  if (${BUILD_EXAMPLES})
+    target_link_libraries(Example1 EEditorExtension)
+  endif()
 endif()
 
-
-#########################
-######## EXAMPLES #######
-if (${BUILD_EXAMPLES})
-add_subdirectory(src/extension-examples)
-
-target_link_libraries(Example1 EEditorExtension)
-target_link_libraries(Example2 EExtension)
-endif()
