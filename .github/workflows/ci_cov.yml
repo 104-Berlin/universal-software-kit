@@ -15,9 +15,7 @@ jobs:
          os: [macos-latest, windows-latest]
          include:
            - os: windows-latest
-             unit_test_exec: |
-                              cd Debug
-                              .\UnitTest.exe
+             unit_test_exec: cd Debug && .\UnitTest.exe
            - os: macos-latest
              unit_test_exec: ./UnitTest
 
