@@ -21,6 +21,58 @@ EValueDescription* EProperty::GetDescription() const
     return fDescription;
 }
 
+
+
+EProperty* EProperty::CreateFromDescription(const EString& name, EValueDescription* description) 
+{
+    EValueType type = description->GetType();
+    switch (type)
+    {
+    case EValueType::PRIMITIVE: return CreatePropertyPrimitive(name, description);
+    case EValueType::STRUCT: return CreatePropertyStruct(name, static_cast<EStructDescription*>(description));
+    case EValueType::ENUM: return CreatePropertyEnum(name, static_cast<EEnumDescription*>(description));
+    case EValueType::ARRAY: return CreatePropertyArray(name, static_cast<EArrayDescription*>(description));
+    }
+    return nullptr;
+}
+
+EProperty* EProperty::CreatePropertyStruct(const EString& name, EStructDescription* description) 
+{
+    EVector<EProperty*> fields;
+    for (auto& entry : description->GetFields())
+    {
+        EProperty* newField = CreateFromDescription(entry.first, entry.second);
+        if (newField)
+        {
+            fields.push_back(newField);
+        }
+    }
+    return new EStructProperty(name, description, fields);
+}
+
+EProperty* EProperty::CreatePropertyPrimitive(const EString& name, EValueDescription* description) 
+{
+    const EString& primitiveId = description->GetId();
+    if (primitiveId == E_TYPEID_STRING) { return new EValueProperty<EString>(name, description); } 
+    else if (primitiveId == E_TYPEID_INTEGER) { return new EValueProperty<i32>(name, description); }
+    else if (primitiveId == E_TYPEID_DOUBLE) { return new EValueProperty<double>(name, description); }
+    else if (primitiveId == E_TYPEID_BOOL) { return new EValueProperty<bool>(name, description); }
+    return nullptr;
+}
+
+EProperty* EProperty::CreatePropertyEnum(const EString& name, EEnumDescription* descrption) 
+{
+    EEnumProperty* result = new EEnumProperty(name, descrption);
+    return result;
+}
+
+EProperty* EProperty::CreatePropertyArray(const EString& name, EArrayDescription* description) 
+{
+    EArrayProperty* result = new EArrayProperty(name, description);
+    return result;
+}
+
+
 EStructProperty::EStructProperty(const EString& name, EStructDescription* description, const EVector<EProperty*>& properties) 
     : EProperty(name, description), fProperties(properties)
 {
@@ -112,6 +164,61 @@ const EString& EEnumProperty::GetCurrentValue() const
     return fValue;
 }
 
+EArrayProperty::EArrayProperty(const EString& name, EArrayDescription* description) 
+    : EProperty(name, description)
+{
+    
+}
+
+EArrayProperty::~EArrayProperty() 
+{
+    Clear();
+}
+
+EProperty* EArrayProperty::AddElement() 
+{
+    EArrayDescription* arrayDsc = static_cast<EArrayDescription*>(fDescription);
+    EString elementName = std::to_string(fElements.size());
+    EProperty* result = EProperty::CreateFromDescription(elementName, arrayDsc->GetElementType());
+    fElements.push_back(result);
+    return result;
+}
+
+EProperty* EArrayProperty::GetElement(size_t index) 
+{
+    if (index >= fElements.size()) 
+    {
+        E_ERROR("ERROR: Index out of bounds exception! Cant access element at index " + std::to_string(index) + " for array \"" + GetPropertyName() + "\"");
+        return nullptr;
+    }
+    return fElements[index];
+}
+
+void EArrayProperty::RemoveElement(size_t index) 
+{
+    if (index >= fElements.size()) 
+    {
+        E_ERROR("ERROR: Index out of bounds exception! Cant delete element at index " + std::to_string(index) + " for array \"" + GetPropertyName() + "\"");
+        return;
+    }
+    delete fElements[index];
+    fElements.erase(fElements.begin() + index);
+}
+
+const EVector<EProperty*>& EArrayProperty::GetElements() const
+{
+    return fElements;
+}
+
+void EArrayProperty::Clear() 
+{
+    for (EProperty* property : fElements)
+    {
+        delete property;
+    }
+    fElements.clear();
+}
+
 
 EScene::EScene(const EString& name) 
     : fName(name)
@@ -197,7 +304,7 @@ void EScene::InsertComponent(Entity entity, EComponentDescription::ComponentID c
 
         EStructDescription* structDescription = static_cast<EStructDescription*>(description);
 
-        EStructProperty* storage = static_cast<EStructProperty*>(CreatePropertyFromDescription(componentId, structDescription));
+        EStructProperty* storage = static_cast<EStructProperty*>(EProperty::CreateFromDescription(componentId, structDescription));
 
 
         fComponentStorage[componentId][entity] = storage;
@@ -235,47 +342,5 @@ EVector<EStructProperty*> EScene::GetAllComponents(Entity entity)
             result.push_back(entry.second[entity]);
         }
     }
-    return result;
-}
-
-EProperty* EScene::CreatePropertyFromDescription(const EString& name, EValueDescription* description) 
-{
-    EValueType type = description->GetType();
-    switch (type)
-    {
-    case EValueType::PRIMITIVE: return CreatePropertyPrimitive(name, description);
-    case EValueType::STRUCT: return CreatePropertyStruct(name, static_cast<EStructDescription*>(description));
-    case EValueType::ENUM: return CreatePropertyEnum(name, static_cast<EEnumDescription*>(description));
-    }
-    return nullptr;
-}
-
-EProperty* EScene::CreatePropertyStruct(const EString& name, EStructDescription* description) 
-{
-    EVector<EProperty*> fields;
-    for (auto& entry : description->GetFields())
-    {
-        EProperty* newField = CreatePropertyFromDescription(entry.first, entry.second);
-        if (newField)
-        {
-            fields.push_back(newField);
-        }
-    }
-    return new EStructProperty(name, description, fields);
-}
-
-EProperty* EScene::CreatePropertyPrimitive(const EString& name, EValueDescription* description) 
-{
-    const EString& primitiveId = description->GetId();
-    if (primitiveId == E_TYPEID_STRING) { return new EValueProperty<EString>(name, description); } 
-    else if (primitiveId == E_TYPEID_INTEGER) { return new EValueProperty<i32>(name, description); }
-    else if (primitiveId == E_TYPEID_DOUBLE) { return new EValueProperty<double>(name, description); }
-    else if (primitiveId == E_TYPEID_BOOL) { return new EValueProperty<bool>(name, description); }
-    return nullptr;
-}
-
-EProperty* EScene::CreatePropertyEnum(const EString& name, EEnumDescription* descrption) 
-{
-    EEnumProperty* result = new EEnumProperty(name, descrption);
     return result;
 }

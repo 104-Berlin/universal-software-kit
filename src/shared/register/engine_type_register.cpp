@@ -117,8 +117,8 @@ const EVector<EString>& EEnumDescription::GetOptions() const
     return fOptions;
 }
 
-EArrayDescription::EArrayDescription(const EString& name, EValueDescription* arrayType) 
-    : EValueDescription(EValueType::ARRAY, name), fType(arrayType)
+EArrayDescription::EArrayDescription(EValueDescription* arrayType) 
+    : EValueDescription(EValueType::ARRAY, arrayType->GetId() + "List"), fType(arrayType)
 {
     E_ASSERT(arrayType, "ERROR: Array need type descpription!");
 }
@@ -126,6 +126,11 @@ EArrayDescription::EArrayDescription(const EString& name, EValueDescription* arr
 EArrayDescription::~EArrayDescription() 
 {
     
+}
+
+EValueDescription* EArrayDescription::GetElementType() const
+{
+    return fType;
 }
 
 ETypeRegister::ETypeRegister() 
