@@ -28,6 +28,7 @@ namespace Editor {
     private:
         void RenderStruct(Engine::EStructProperty* storage);
         void RenderPrimitive(Engine::EProperty* storage);
+        void RenderEnum(Engine::EEnumProperty* storage);
 
         void RenderBool(Engine::EValueProperty<bool>* storage);
         void RenderInteger(Engine::EValueProperty<i32>* storage);

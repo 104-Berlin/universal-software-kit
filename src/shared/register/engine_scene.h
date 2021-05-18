@@ -111,6 +111,18 @@ namespace Engine {
 
     };
 
+    class E_API EEnumProperty : public EProperty
+    {
+    private:
+        EString fValue;
+    public:
+        EEnumProperty(const EString& name, EEnumDescription* description, const EString& initValue = "");
+        ~EEnumProperty();
+
+        void SetCurrentValue(const EString& value);
+        const EString& GetCurrentValue() const;
+    };
+
 
     class E_API EScene
     {
@@ -145,6 +157,7 @@ namespace Engine {
         EProperty* CreatePropertyFromDescription(const EString& name, EValueDescription* description);
         EProperty* CreatePropertyStruct(const EString& name, EStructDescription* description);
         EProperty* CreatePropertyPrimitive(const EString& name, EValueDescription* descrption);
+        EProperty* CreatePropertyEnum(const EString& name, EEnumDescription* descrption);
     };
 
 }

@@ -60,6 +60,14 @@ EJson WriteStructToJs(EStructProperty* property)
     return result;
 }
 
+EJson WriteEnumToJs(EEnumProperty* property)
+{
+    EJson result = EJson::object();
+
+    result["CurrentValue"] = property->GetCurrentValue();
+
+    return result;
+}
 
 EJson ESerializer::WritePropertyToJs(EProperty* property) 
 {
@@ -70,6 +78,7 @@ EJson ESerializer::WritePropertyToJs(EProperty* property)
     {
     case EValueType::PRIMITIVE: return WritePrimitiveToJs(property); break;
     case EValueType::STRUCT: return WriteStructToJs(static_cast<EStructProperty*>(property)); break;
+    case EValueType::ENUM: return WriteEnumToJs(static_cast<EEnumProperty*>(property)); break;
     }
     return 0;
 }

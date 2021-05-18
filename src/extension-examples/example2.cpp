@@ -36,10 +36,17 @@ struct ElectricalComponent
 
 EXT_ENTRY
 {
+    EEnumDescription* electricalTypeDsc = new EEnumDescription("ElectricalType");
+    electricalTypeDsc->AddOption("GENERATOR");
+    electricalTypeDsc->AddOption("INPUT");
+    electricalTypeDsc->AddOption("OUTPUT");
+    electricalTypeDsc->AddOption("CONSUMER");
+
     EStructDescription* electricalInfoDsc = new EStructDescription("ElectricalInfo");
     electricalInfoDsc->AddField("Capacity", DoubleDescription());
     electricalInfoDsc->AddField("IDontKnow", DoubleDescription());
 
     EStructDescription* electricalDescription = new EStructDescription("Electrical");
     electricalDescription->AddField("Info", electricalInfoDsc);
+    electricalDescription->AddField("Type", electricalTypeDsc);
 }

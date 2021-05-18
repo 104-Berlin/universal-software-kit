@@ -121,6 +121,7 @@ void EObjectView::RenderStruct(EStructProperty* storage)
             {
             case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage->GetProperty(propertyName))); break;
             case EValueType::PRIMITIVE: RenderPrimitive(storage->GetProperty(propertyName)); break;
+            case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage->GetProperty(propertyName)));
             }    
         }
     }
@@ -134,6 +135,36 @@ void EObjectView::RenderPrimitive(Engine::EProperty* storage)
     else if (primitiveId == E_TYPEID_INTEGER) { RenderInteger(static_cast<EValueProperty<i32>*>(storage)); }
     else if (primitiveId == E_TYPEID_DOUBLE) { RenderDouble(static_cast<EValueProperty<double>*>(storage)); }
     else if (primitiveId == E_TYPEID_BOOL) { RenderBool(static_cast<EValueProperty<bool>*>(storage)); }
+}
+
+char* convert_str_to_chr(const std::string & s)
+{
+   char *pc = new char[s.size()+1];
+   std::strcpy(pc, s.c_str());
+   return pc; 
+}
+
+void EObjectView::RenderEnum(Engine::EEnumProperty* storage) 
+{
+    EEnumDescription* description = static_cast<EEnumDescription*>(storage->GetDescription());
+    int currentItem = -1;
+    for (EString option : description->GetOptions())
+    {
+        currentItem++;
+        if (option == storage->GetCurrentValue())
+        {
+            break;
+        }
+    }
+    std::vector<char*> opt;
+    std::transform(description->GetOptions().begin(), description->GetOptions().end(), std::back_inserter(opt), convert_str_to_chr);
+
+    ImGui::Combo(storage->GetPropertyName().c_str(), &currentItem, opt.data(), description->GetOptions().size());
+
+    for ( size_t i = 0 ; i < opt.size() ; i++ )
+            delete [] opt[i];
+
+    storage->SetCurrentValue(description->GetOptions()[currentItem]);
 }
 
 void EObjectView::RenderBool(Engine::EValueProperty<bool>* storage) 

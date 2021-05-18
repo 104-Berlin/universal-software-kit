@@ -59,6 +59,15 @@ void ReadPrimitiveFromJson(const EJson& json, EProperty* property)
     }
 }
 
+
+void ReadEnumFromJson(const EJson& json, EEnumProperty* property)
+{
+    if (json["CurrentValue"].is_string())
+    {
+        property->SetCurrentValue(json["CurrentValue"].get<EString>());
+    }
+}
+
 void ReadStructFromJson(const EJson& json, EStructProperty* property)
 {
     EStructDescription* description = static_cast<EStructDescription*>(property->GetDescription());
@@ -71,6 +80,7 @@ void ReadStructFromJson(const EJson& json, EStructProperty* property)
         {
         case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json[entry.first], property->GetProperty(entry.first)); break;
         case EValueType::STRUCT: ReadStructFromJson(json[entry.first], static_cast<EStructProperty*>(property->GetProperty(entry.first))); break;
+        case EValueType::ENUM: ReadEnumFromJson(json[entry.first], static_cast<EEnumProperty*>(property->GetProperty(entry.first))); break;
         }
     }
 }
@@ -83,5 +93,6 @@ void EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
     {
     case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json, property); break;
     case EValueType::STRUCT: ReadStructFromJson(json[property->GetPropertyName()], static_cast<EStructProperty*>(property)); break;
+    case EValueType::ENUM: ReadEnumFromJson(json[property->GetPropertyName()], static_cast<EEnumProperty*>(property)); break;
     }
 }
