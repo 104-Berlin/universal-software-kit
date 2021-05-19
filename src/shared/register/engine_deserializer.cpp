@@ -18,7 +18,8 @@ void EDeserializer::ReadSceneFromJson(const EJson& json, EScene* saveToScene)
                 if (description)
                 {
                     saveToScene->InsertComponent(entity, description->GetId());
-                    ReadPropertyFromJson(entityObject, saveToScene->GetComponent(entity, description->GetId()));
+                    EStructProperty* component = saveToScene->GetComponent(entity, description->GetId());
+                    ReadPropertyFromJson(entityObject[component->GetPropertyName()], component);
                 }
             }
         }
@@ -68,6 +69,16 @@ void ReadEnumFromJson(const EJson& json, EEnumProperty* property)
     }
 }
 
+void ReadArrayFromJson(const EJson& json, EArrayProperty* property)
+{
+    property->Clear();
+    for (const EJson& entry : json)
+    {
+        EProperty* newElement = property->AddElement();
+        EDeserializer::ReadPropertyFromJson(entry, newElement);
+    }
+}
+
 void ReadStructFromJson(const EJson& json, EStructProperty* property)
 {
     EStructDescription* description = static_cast<EStructDescription*>(property->GetDescription());
@@ -76,12 +87,7 @@ void ReadStructFromJson(const EJson& json, EStructProperty* property)
     {
         EValueType fieldType = entry.second->GetType();
 
-        switch (fieldType)
-        {
-        case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json[entry.first], property->GetProperty(entry.first)); break;
-        case EValueType::STRUCT: ReadStructFromJson(json[entry.first], static_cast<EStructProperty*>(property->GetProperty(entry.first))); break;
-        case EValueType::ENUM: ReadEnumFromJson(json[entry.first], static_cast<EEnumProperty*>(property->GetProperty(entry.first))); break;
-        }
+        EDeserializer::ReadPropertyFromJson(json[entry.first], property->GetProperty(entry.first));
     }
 }
 
@@ -92,7 +98,8 @@ void EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
     switch (currentType)
     {
     case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json, property); break;
-    case EValueType::STRUCT: ReadStructFromJson(json[property->GetPropertyName()], static_cast<EStructProperty*>(property)); break;
-    case EValueType::ENUM: ReadEnumFromJson(json[property->GetPropertyName()], static_cast<EEnumProperty*>(property)); break;
+    case EValueType::STRUCT: ReadStructFromJson(json, static_cast<EStructProperty*>(property)); break;
+    case EValueType::ENUM: ReadEnumFromJson(json, static_cast<EEnumProperty*>(property)); break;
+    case EValueType::ARRAY: ReadArrayFromJson(json, static_cast<EArrayProperty*>(property)); break;
     }
 }

@@ -50,8 +50,10 @@ namespace Engine {
     {
         EValueDescription* fType;
     public:
-        EArrayDescription(const EString& name, EValueDescription* arrayType);
+        EArrayDescription(EValueDescription* arrayType);
         virtual ~EArrayDescription();
+
+        EValueDescription* GetElementType() const;
     };
 
 

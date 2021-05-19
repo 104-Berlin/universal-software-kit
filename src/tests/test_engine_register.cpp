@@ -56,6 +56,8 @@ TEST(RegisterTest, Basics)
 	someEnum->AddOption("Two");
 	someEnum->AddOption("Three");
 
+	new EArrayDescription(vector);
+
 	EStructDescription* myTestComponent = new EStructDescription("MyTestComponent");
 	myTestComponent->AddField("MyString", StringDescription());
 	myTestComponent->AddField("MyInteger", IntegerDescription());
@@ -63,6 +65,7 @@ TEST(RegisterTest, Basics)
 	myTestComponent->AddField("MyDouble", DoubleDescription());
 	myTestComponent->AddField("Vector", vector);
 	myTestComponent->AddField("Enum", someEnum);
+	myTestComponent->AddField("VectorArray", ETypeRegister::get().FindById("VectorList"));
 	
 	EScene scene;
 
@@ -98,22 +101,28 @@ TEST(RegisterTest, Basics)
 		EValueProperty<bool>* boolValue = static_cast<EValueProperty<bool>*>(storage->GetProperty("MyBool"));
 		EStructProperty* vectorProperty = static_cast<EStructProperty*>(storage->GetProperty("Vector"));
 		EEnumProperty* enumProperty = static_cast<EEnumProperty*>(storage->GetProperty("Enum"));
+		EArrayProperty* arrayProperty = static_cast<EArrayProperty*>(storage->GetProperty("VectorArray"));
 		EXPECT_EQ(storage->GetProperty("UNKNOWN"), nullptr);
 		EXPECT_NE(stringValue, nullptr);
 		EXPECT_NE(doubleValue, nullptr);
 		EXPECT_NE(boolValue, nullptr);
 		EXPECT_NE(vectorProperty, nullptr);
 		EXPECT_NE(enumProperty, nullptr);
+		EXPECT_NE(arrayProperty, nullptr);
 		if (stringValue &&
 			vectorProperty &&
 			boolValue &&
-			doubleValue)
+			doubleValue &&
+			arrayProperty)
 		{
 			doubleValue->SetValue(22.2);
 			stringValue->SetValue("Hello World");
 			vectorProperty->SetValue<Vector>(newVecValue);
 			boolValue->SetValue(true);
 			enumProperty->SetCurrentValue("Second");
+
+			arrayProperty->AddElement();
+			arrayProperty->AddElement();
 		}
 	}
 
@@ -127,17 +136,20 @@ TEST(RegisterTest, Basics)
 		EValueProperty<bool>* boolValue = static_cast<EValueProperty<bool>*>(storage->GetProperty("MyBool"));
 		EStructProperty* vectorProperty = static_cast<EStructProperty*>(storage->GetProperty("Vector"));
 		EEnumProperty* enumProperty = static_cast<EEnumProperty*>(storage->GetProperty("Enum"));
+		EArrayProperty* arrayProperty = static_cast<EArrayProperty*>(storage->GetProperty("VectorArray"));
 
 		EXPECT_NE(stringValue, nullptr);
 		EXPECT_NE(doubleValue, nullptr);
 		EXPECT_NE(boolValue, nullptr);
 		EXPECT_NE(vectorProperty, nullptr);
 		EXPECT_NE(enumProperty, nullptr);
+		EXPECT_NE(arrayProperty, nullptr);
 
 		if (stringValue &&
 			vectorProperty &&
 			boolValue &&
-			doubleValue)
+			doubleValue &&
+			arrayProperty)
 		{
 			vectorProperty->SetValue<Vector>(newVecValue);
 			EXPECT_TRUE(vectorProperty->HasProperty("X"));
@@ -152,6 +164,14 @@ TEST(RegisterTest, Basics)
 			EXPECT_TRUE(boolValue->GetValue());
 
 			EXPECT_STREQ(enumProperty->GetCurrentValue().c_str(), "Second");
+
+			EXPECT_EQ(arrayProperty->GetElements().size(), 2);
+			EXPECT_NE(arrayProperty->GetElement(0), nullptr);
+			EXPECT_EQ(arrayProperty->GetElement(3), nullptr);
+			arrayProperty->RemoveElement(1);
+			EXPECT_EQ(arrayProperty->GetElements().size(), 1);
+			arrayProperty->Clear();
+			EXPECT_EQ(arrayProperty->GetElements().size(), 0);
 		}
 	}
 

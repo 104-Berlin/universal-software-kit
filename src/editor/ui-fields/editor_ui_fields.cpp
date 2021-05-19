@@ -70,7 +70,7 @@ bool EObjectView::OnRender()
     {
         for (EStructProperty* storage : fScene->GetAllComponents(fSelectedEntity))
         {
-            RenderStruct(storage);
+            RenderProperty(storage);
         }
 
         if (ImGui::Button("Add Component"))
@@ -107,6 +107,19 @@ void EObjectView::OnUpdateEventDispatcher()
     fAddObjectButton->UpdateEventDispatcher();
 }
 
+void EObjectView::RenderProperty(Engine::EProperty* storage) 
+{
+    EValueDescription* propertyDsc = storage->GetDescription();
+    EValueType type = propertyDsc->GetType();
+    switch (type)
+    {
+    case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage)); break;
+    case EValueType::PRIMITIVE: RenderPrimitive(storage); break;
+    case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage)); break;
+    case EValueType::ARRAY: RenderArray(static_cast<EArrayProperty*>(storage)); break;
+    }
+}
+
 void EObjectView::RenderStruct(EStructProperty* storage) 
 {
     EStructDescription* description = static_cast<EStructDescription*>(storage->GetDescription());
@@ -115,14 +128,7 @@ void EObjectView::RenderStruct(EStructProperty* storage)
         for (auto& entry : description->GetFields())
         {
             const EString& propertyName = entry.first;
-            EValueDescription* fieldDsc = entry.second;
-            EValueType fieldType = fieldDsc->GetType();
-            switch (fieldType)
-            {
-            case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage->GetProperty(propertyName))); break;
-            case EValueType::PRIMITIVE: RenderPrimitive(storage->GetProperty(propertyName)); break;
-            case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage->GetProperty(propertyName)));
-            }    
+            RenderProperty(storage->GetProperty(propertyName));
         }
     }
 }
@@ -165,6 +171,21 @@ void EObjectView::RenderEnum(Engine::EEnumProperty* storage)
             delete [] opt[i];
 
     storage->SetCurrentValue(description->GetOptions()[currentItem]);
+}
+
+void EObjectView::RenderArray(Engine::EArrayProperty* storage) 
+{
+    EArrayDescription* arrayDsc = static_cast<EArrayDescription*>(storage->GetDescription());
+
+    for (EProperty* element : storage->GetElements())
+    {
+        RenderProperty(element);
+    }
+
+    if (ImGui::Button("Add Element"))
+    {
+        storage->AddElement();
+    }
 }
 
 void EObjectView::RenderBool(Engine::EValueProperty<bool>* storage) 

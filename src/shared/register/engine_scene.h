@@ -57,6 +57,15 @@ namespace Engine {
         const EString& GetPropertyName() const;
 
         EValueDescription* GetDescription() const;
+
+
+        
+        static EProperty* CreateFromDescription(const EString& name, EValueDescription* description);
+    private:
+        static EProperty* CreatePropertyStruct(const EString& name, EStructDescription* description);
+        static EProperty* CreatePropertyPrimitive(const EString& name, EValueDescription* descrption);
+        static EProperty* CreatePropertyEnum(const EString& name, EEnumDescription* descrption);
+        static EProperty* CreatePropertyArray(const EString& name, EArrayDescription* description);
     };
 
     template <typename ValueType>
@@ -123,6 +132,21 @@ namespace Engine {
         const EString& GetCurrentValue() const;
     };
 
+    class E_API EArrayProperty : public EProperty
+    {
+    private:
+        EVector<EProperty*> fElements;
+    public:
+        EArrayProperty(const EString& name, EArrayDescription* description);
+        ~EArrayProperty();
+
+        EProperty* AddElement();
+        EProperty* GetElement(size_t index);
+        void RemoveElement(size_t index);
+        const EVector<EProperty*>& GetElements() const;
+        void Clear();
+    };
+
 
     class E_API EScene
     {
@@ -152,12 +176,6 @@ namespace Engine {
         bool HasComponent(Entity entity, EComponentDescription::ComponentID componentId);
         EStructProperty* GetComponent(Entity entity, EComponentDescription::ComponentID componentId);
         EVector<EStructProperty*> GetAllComponents(Entity entity);
-
-    private:
-        EProperty* CreatePropertyFromDescription(const EString& name, EValueDescription* description);
-        EProperty* CreatePropertyStruct(const EString& name, EStructDescription* description);
-        EProperty* CreatePropertyPrimitive(const EString& name, EValueDescription* descrption);
-        EProperty* CreatePropertyEnum(const EString& name, EEnumDescription* descrption);
     };
 
 }
