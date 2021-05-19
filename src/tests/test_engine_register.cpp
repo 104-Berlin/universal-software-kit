@@ -168,6 +168,8 @@ TEST(RegisterTest, Basics)
 			EXPECT_EQ(arrayProperty->GetElements().size(), 2);
 			EXPECT_NE(arrayProperty->GetElement(0), nullptr);
 			EXPECT_EQ(arrayProperty->GetElement(3), nullptr);
+			arrayProperty->RemoveElement(1);
+			EXPECT_EQ(arrayProperty->GetElements().size(), 1);
 			arrayProperty->Clear();
 			EXPECT_EQ(arrayProperty->GetElements().size(), 0);
 		}
