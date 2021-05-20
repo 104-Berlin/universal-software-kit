@@ -39,6 +39,18 @@ bool EExtensionView::OnRender()
     return true;
 }
 
+EResourceView::EResourceView(Engine::EResourceManager* resourceManager) 
+    : EUIField("RESOURCE_MANAGER"), fResourceManager(resourceManager)
+{
+    
+}
+
+bool EResourceView::OnRender() 
+{
+    
+    return true;
+}
+
 EObjectView::EObjectView(Engine::EScene* scene)
     : EUIField("OBJECTVIEW"), fScene(scene), fSelectedEntity(0)
 {

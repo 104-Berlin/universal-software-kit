@@ -35,7 +35,6 @@ std::vector<unsigned int> indices = {
 };
 
 static Renderer::RMesh* mesh = nullptr;
-static Renderer::RMesh* planeMesh = nullptr;
 
 static float matrix[16] =
 { 1.f, 0.f, 0.f, 0.f,
@@ -221,6 +220,7 @@ EXT_ENTRY
     mesh = new Renderer::RMesh();
     mesh->SetData(vertices, indices);
 
-    planeMesh = new Renderer::RMesh();
-    planeMesh->SetData(planeVertices, planeIndices);
+    Renderer::RMesh planeMesh;
+    planeMesh.SetData(planeVertices, planeIndices);
+    scene->GetResourceManager().AddOrUpdateResource<Renderer::RMesh>(Engine::Path::Join(extensionName, "PlaneMesh"), planeMesh);
 }

@@ -2,10 +2,16 @@
 
 namespace Engine {
 
+    struct EResourceData
+    {
+        void*(*ImportFunction)(ESharedBuffer);
+        ESharedBuffer(*ExportFunction)();
+    };
+
     class E_API EResourceManager
     {
     private:
-        EUnorderedMap<size_t, EUnorderedMap<EString, ESharedBuffer>> fLoadedResources;
+        EUnorderedMap<size_t, EUnorderedMap<EString, EResourceBase*>> fLoadedResources;
     public:
         EResourceManager();
 
@@ -31,6 +37,12 @@ namespace Engine {
                 return resultData.Data<ResourceType>();
             }
             return nullptr;
+        }
+
+        template <typename T>
+        void RegisterResource(const EString& name, EResourceData)
+        {
+
         }
     };
 
