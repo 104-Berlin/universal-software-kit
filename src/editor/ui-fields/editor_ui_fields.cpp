@@ -79,15 +79,15 @@ bool EObjectView::OnRender()
         }
         if (ImGui::BeginPopup("add-component-popup"))
         {
-            for (EValueDescription* compDsc : ETypeRegister::get().GetAllDescriptions())
+            for (EValueDescription* compDsc : ETypeRegister::get().GetAllItems())
             {
                 if (compDsc->GetType() != EValueType::STRUCT) { continue; }
-                bool hasComp = fScene->HasComponent(fSelectedEntity, compDsc->GetId());
+                bool hasComp = fScene->HasComponent(fSelectedEntity, compDsc);
                 if (!hasComp)
                 {
                     if (ImGui::Selectable(compDsc->GetId().c_str()))
                     {
-                        fScene->InsertComponent(fSelectedEntity, compDsc->GetId());
+                        fScene->InsertComponent(fSelectedEntity, compDsc);
                     }
                 }
             }

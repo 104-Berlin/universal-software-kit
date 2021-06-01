@@ -54,7 +54,7 @@ void EApplication::RegenerateMainMenuBar()
             EJson sceneJson = EJson::parse(sceneFile.GetFileAsString());
             if (!sceneJson.is_null())
             {
-                EDeserializer::ReadSceneFromJson(sceneJson, fExtensionManager.GetActiveScene());
+                EDeserializer::ReadSceneFromJson(sceneJson, fExtensionManager.GetActiveScene(), ETypeRegister::get().GetAllItems());
             }
         }
     });

@@ -2,8 +2,6 @@
 
 template <typename Property, typename Value>
 struct convert {
-
-
     static void setter(Property* prop, const Value& value)
     {
         E_ASSERT(false, EString("Setter not implemented for type ") + typeid(Value).name());
@@ -15,34 +13,10 @@ struct convert {
     }
 };
 
+// See tests/test_engine_register.cpp
+// There is an example for a vector struct right at the top
+
 namespace Engine {
-
-    struct EComponentDescription
-    {
-        using ComponentID = EString;
-
-        ComponentID         ID;
-
-        EComponentDescription(const ComponentID& id = "")
-            : ID(id)
-        {}
-
-        EComponentDescription(const EComponentDescription&) = default;
-
-        operator bool() const
-        {
-            return Valid();
-        }
-
-        bool Valid() const
-        {
-            return !ID.empty();
-        }
-
-    private:
-        friend class EScene;
-    };
-
 
     class E_API EProperty
     {
@@ -156,7 +130,7 @@ namespace Engine {
         EString fName;
         EResourceManager fResourceManager;
 
-        EUnorderedMap<EComponentDescription::ComponentID, EUnorderedMap<Entity, EStructProperty*>> fComponentStorage;
+        EUnorderedMap<EValueDescription*, EUnorderedMap<Entity, EStructProperty*>> fComponentStorage;
         EVector<Entity>     fAliveEntites;
         EVector<Entity>     fDeadEntites;
     public:
@@ -171,10 +145,10 @@ namespace Engine {
 
         bool IsAlive(Entity entity);
 
-        void InsertComponent(Entity entity, EComponentDescription::ComponentID componentId);
-        void RemoveComponent(Entity entity, EComponentDescription::ComponentID componentId);
-        bool HasComponent(Entity entity, EComponentDescription::ComponentID componentId);
-        EStructProperty* GetComponent(Entity entity, EComponentDescription::ComponentID componentId);
+        void InsertComponent(Entity entity, EValueDescription* componentId);
+        void RemoveComponent(Entity entity, EValueDescription* componentId);
+        bool HasComponent(Entity entity, EValueDescription* componentId);
+        EStructProperty* GetComponent(Entity entity, EValueDescription* componentId);
         EVector<EStructProperty*> GetAllComponents(Entity entity);
     };
 

@@ -291,41 +291,43 @@ bool EScene::IsAlive(Entity entity)
     return std::find(fAliveEntites.begin(), fAliveEntites.end(), entity) != fAliveEntites.end();
 }
 
-void EScene::InsertComponent(Entity entity, EComponentDescription::ComponentID componentId) 
+void EScene::InsertComponent(Entity entity, EValueDescription* description) 
 {
+    E_ASSERT(description, "ERROR: Invalid value descrition!");
     if (!IsAlive(entity)) { return; }
-    EValueDescription* description = ETypeRegister::get().FindById(componentId);
-    E_ASSERT(description, "Component is not registered");
     E_ASSERT(description->GetType() == EValueType::STRUCT, "Component can only be inserted as struct");
 
-    if (!HasComponent(entity, componentId))
+    if (!HasComponent(entity, description))
     {
         EUnorderedMap<EString, EProperty*> properties;
 
         EStructDescription* structDescription = static_cast<EStructDescription*>(description);
 
-        EStructProperty* storage = static_cast<EStructProperty*>(EProperty::CreateFromDescription(componentId, structDescription));
+        EStructProperty* storage = static_cast<EStructProperty*>(EProperty::CreateFromDescription(description->GetId(), structDescription));
 
 
-        fComponentStorage[componentId][entity] = storage;
+        fComponentStorage[description][entity] = storage;
     }
 }
 
-void EScene::RemoveComponent(Entity entity, EComponentDescription::ComponentID componentId) 
+void EScene::RemoveComponent(Entity entity, EValueDescription* componentId) 
 {
+    E_ASSERT(componentId, "ERROR: Invalid value descrition!");
     if (!IsAlive(entity)) { return; }
     if (!HasComponent(entity, componentId)) { return; }
     delete fComponentStorage[componentId][entity];
     fComponentStorage[componentId].erase(entity);
 }
 
-bool EScene::HasComponent(Entity entity, EComponentDescription::ComponentID componentId) 
+bool EScene::HasComponent(Entity entity, EValueDescription* componentId) 
 {
+    E_ASSERT(componentId, "ERROR: Invalid value descrition!");
     return fComponentStorage[componentId][entity];
 }
 
-EStructProperty* EScene::GetComponent(Entity entity, EComponentDescription::ComponentID componentId) 
+EStructProperty* EScene::GetComponent(Entity entity, EValueDescription* componentId) 
 {
+    E_ASSERT(componentId, "ERROR: Invalid value descrition!");
     if (!IsAlive(entity)) { return nullptr; }
     if (!HasComponent(entity, componentId)) { return nullptr; }
 

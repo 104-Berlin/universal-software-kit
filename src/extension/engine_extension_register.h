@@ -14,7 +14,18 @@ namespace Engine {
         EUnorderedMap<EString, EVector<T>> fRegisteredItems;
         EEventDispatcher                   fEventDispatcher;
     public:
-        virtual ~EExtensionRegister() = default;
+        virtual ~EExtensionRegister()
+        {
+            if constexpr (std::is_pointer_v<T>){
+                for (auto& entry : fRegisteredItems)
+                {
+                    for(T pointer : entry.second)
+                    {
+                        delete pointer;
+                    }
+                }
+            }
+        }
         /**
          * Register a new Item from the plugin
          * @param extensionName The name of the extension.
@@ -76,7 +87,13 @@ namespace Engine {
         {
             fEventDispatcher.Connect<EventType>(callback);
         }
-    };
-    
 
+        static EExtensionRegister<T>& get()
+        {
+            static EExtensionRegister<T> result;
+            return result;
+        }
+    };
+
+    using ETypeRegister = EExtensionRegister<EValueDescription*>;
 }

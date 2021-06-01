@@ -3,8 +3,19 @@
 
 using namespace Engine;
 
-void EDeserializer::ReadSceneFromJson(const EJson& json, EScene* saveToScene) 
+void EDeserializer::ReadSceneFromJson(const EJson& json, EScene* saveToScene, const EVector<EValueDescription*>& registeredTypes) 
 {
+    auto findType = [&registeredTypes](const EString& id) -> EValueDescription* {
+        for (EValueDescription* dsc : registeredTypes)
+        {
+            if (dsc->GetId() == id)
+            {
+                return dsc;
+            }
+        }
+        return nullptr;
+    };
+
     saveToScene->Clear();
     
     if (!json["Objects"].is_null())
@@ -14,11 +25,12 @@ void EDeserializer::ReadSceneFromJson(const EJson& json, EScene* saveToScene)
             EScene::Entity entity = saveToScene->CreateEntity();
             for (const auto& it : entityObject.items())
             {
-                EValueDescription* description = ETypeRegister::get().FindById(it.key());
+                EString id = it.key();
+                EValueDescription* description = findType(id);
                 if (description)
                 {
-                    saveToScene->InsertComponent(entity, description->GetId());
-                    EStructProperty* component = saveToScene->GetComponent(entity, description->GetId());
+                    saveToScene->InsertComponent(entity, description);
+                    EStructProperty* component = saveToScene->GetComponent(entity, description);
                     ReadPropertyFromJson(entityObject[component->GetPropertyName()], component);
                 }
             }

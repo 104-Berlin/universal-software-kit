@@ -34,33 +34,12 @@ using namespace Engine;
 EValueDescription::EValueDescription(EValueType type, EString id) 
     : fType(type), fID(id)
 {
-    ETypeRegister::get().RegisterDescription(this);
+
 }
 
 EValueDescription::~EValueDescription() 
 {
     
-}
-
-void ETypeRegister::RegisterDescription(EValueDescription* description) 
-{
-    E_ASSERT(description, "Cant register undefined description");
-    fRegisteredDescriptions[description->GetId()] = description;
-}
-
-EValueDescription* ETypeRegister::FindById(const EString& id) 
-{
-    return fRegisteredDescriptions[id];
-}
-
-EVector<EValueDescription*> ETypeRegister::GetAllDescriptions() 
-{
-    EVector<EValueDescription*> result;
-    for (const auto& entry : fRegisteredDescriptions)
-    {
-        result.push_back(entry.second);
-    }
-    return result;
 }
 
 EValueType EValueDescription::GetType() const
@@ -131,19 +110,6 @@ EArrayDescription::~EArrayDescription()
 EValueDescription* EArrayDescription::GetElementType() const
 {
     return fType;
-}
-
-ETypeRegister::ETypeRegister() 
-{
-    
-}
-
-ETypeRegister::~ETypeRegister() 
-{
-    for (auto& entry : fRegisteredDescriptions)
-    {
-        delete entry.second;
-    }
 }
 
 // static runner to init primitive types

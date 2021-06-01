@@ -46,9 +46,9 @@ EXT_ENTRY
     electricalInfoDsc->AddField("Capacity", DoubleDescription());
     electricalInfoDsc->AddField("IDontKnow", DoubleDescription());
 
-    EArrayDescription* someArrayDsc = new EArrayDescription(electricalInfoDsc);
-
     EStructDescription* electricalDescription = new EStructDescription("Electrical");
     electricalDescription->AddField("Type", electricalTypeDsc);
-    electricalDescription->AddField("InfoArray", someArrayDsc);
+    electricalDescription->AddField("InfoArray", new EArrayDescription(electricalInfoDsc));
+
+    ETypeRegister::get().RegisterItem(extensionName, electricalDescription);
 }

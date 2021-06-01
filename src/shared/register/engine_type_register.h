@@ -68,30 +68,4 @@ namespace Engine {
     E_API EValueDescription* IntegerDescription();
     E_API EValueDescription* DoubleDescription();
     E_API EValueDescription* BoolDescription();
-
-
-    // Singleton for all registered types
-    class E_API ETypeRegister
-    {
-    private:
-        ETypeRegister();
-        ETypeRegister(const ETypeRegister&) = default;
-        ETypeRegister& operator=(const ETypeRegister&) = default;
-    public:
-        ~ETypeRegister();
-
-        static ETypeRegister& get()
-        {
-            static ETypeRegister instance;
-            return instance;
-        }
-
-        void RegisterDescription(EValueDescription* description);
-        EValueDescription* FindById(const EString& id);
-
-        EVector<EValueDescription*> GetAllDescriptions();
-    private:
-        EUnorderedMap<EString, EValueDescription*> fRegisteredDescriptions;
-    };
-
 }
