@@ -29,11 +29,11 @@ TEST(ExtensionTest, LoadExtension)
         EXPECT_TRUE(activeScene->HasComponent(entity, electricalDsc));
 
         EStructProperty* property = activeScene->GetComponent(entity, electricalDsc);
-        EProperty* capactity = property->GetProperty("Capacity");
-        EXPECT_NE(capactity, nullptr);
-        ERef<EValueDescription> capDesc = capactity->GetDescription();
-        EXPECT_EQ(capDesc->GetType(), EValueType::PRIMITIVE);
-        EXPECT_STREQ(capDesc->GetId().c_str(), "double");
+        EProperty* typeProp = property->GetProperty("Type");
+        EXPECT_NE(typeProp, nullptr);
+        ERef<EValueDescription> typeDsc = typeProp->GetDescription();
+        EXPECT_EQ(typeDsc->GetType(), EValueType::ENUM);
+        EXPECT_STREQ(typeDsc->GetId().c_str(), "ElectricalType");
     }
 
 }
