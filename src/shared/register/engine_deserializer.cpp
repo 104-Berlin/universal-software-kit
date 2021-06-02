@@ -3,10 +3,10 @@
 
 using namespace Engine;
 
-void EDeserializer::ReadSceneFromJson(const EJson& json, EScene* saveToScene, const EVector<EValueDescription*>& registeredTypes) 
+void EDeserializer::ReadSceneFromJson(const EJson& json, EScene* saveToScene, const EVector<ERef<EValueDescription>>& registeredTypes) 
 {
-    auto findType = [&registeredTypes](const EString& id) -> EValueDescription* {
-        for (EValueDescription* dsc : registeredTypes)
+    auto findType = [&registeredTypes](const EString& id) -> ERef<EValueDescription> {
+        for (ERef<EValueDescription> dsc : registeredTypes)
         {
             if (dsc->GetId() == id)
             {
@@ -26,7 +26,7 @@ void EDeserializer::ReadSceneFromJson(const EJson& json, EScene* saveToScene, co
             for (const auto& it : entityObject.items())
             {
                 EString id = it.key();
-                EValueDescription* description = findType(id);
+                ERef<EValueDescription> description = findType(id);
                 if (description)
                 {
                     saveToScene->InsertComponent(entity, description);
@@ -93,7 +93,7 @@ void ReadArrayFromJson(const EJson& json, EArrayProperty* property)
 
 void ReadStructFromJson(const EJson& json, EStructProperty* property)
 {
-    EStructDescription* description = static_cast<EStructDescription*>(property->GetDescription());
+    ERef<EStructDescription> description = std::dynamic_pointer_cast<EStructDescription>(property->GetDescription());
     
     for (auto& entry : description->GetFields())
     {
@@ -105,7 +105,7 @@ void ReadStructFromJson(const EJson& json, EStructProperty* property)
 
 void EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property) 
 {
-    EValueDescription* currentDsc = property->GetDescription();
+    ERef<EValueDescription> currentDsc = property->GetDescription();
     EValueType currentType = currentDsc->GetType();
     switch (currentType)
     {

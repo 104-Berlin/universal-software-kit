@@ -81,6 +81,14 @@ namespace Engine {
             return result;
         }
 
+        /**
+         * Gets the items from a special extension. use "USK" for the default types
+         * @return List of items registered by the extension
+         */
+        const EVector<T>& GetItems(const EString& extensionName)
+        {
+            return fRegisteredItems[extensionName];
+        }
 
         template <typename EventType, typename CB>
         void AddEventListener(CB&& callback)
@@ -95,5 +103,5 @@ namespace Engine {
         }
     };
 
-    using ETypeRegister = EExtensionRegister<EValueDescription*>;
+    using ETypeRegister = EExtensionRegister<ERef<EValueDescription>>;
 }

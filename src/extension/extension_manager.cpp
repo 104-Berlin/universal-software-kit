@@ -107,11 +107,6 @@ bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
     return true;
 }
 
-const EExtInitInfo& EExtensionManager::GetRegisteres() const
-{
-    return fExtensionRegisters;
-}
-
 EExtension* EExtensionManager::GetExtension(const EString& extensionName)
 {
     return fLoadedExtensions[extensionName];
@@ -130,4 +125,17 @@ EVector<EExtension*> EExtensionManager::GetLoadedExtensions()
 EScene* EExtensionManager::GetActiveScene() const
 {
     return fLoadedScene;
+}
+
+ERef<EValueDescription> EExtensionManager::GetValueDescriptionById(const EString& extensionName, const EString& typeId) 
+{
+    const EVector<ERef<EValueDescription>>& registeredTypes = ETypeRegister::get().GetItems(extensionName);
+    for (ERef<EValueDescription> dsc : registeredTypes)
+    {
+        if (dsc->GetId() == typeId)
+        {
+            return dsc;
+        }
+    }
+    return nullptr;
 }

@@ -2,11 +2,6 @@
 
 namespace Engine {
 
-    struct E_EXTAPI EExtInitInfo
-    {
-        
-    };
-
     class E_EXTAPI EExtension
     {
         friend class EExtensionManager;
@@ -38,7 +33,6 @@ namespace Engine {
     {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
-        EExtInitInfo                        fExtensionRegisters;
         EScene*                             fLoadedScene;
         EEventDispatcher                    fEventDispatcher;
     public:
@@ -53,8 +47,6 @@ namespace Engine {
          */
         bool LoadExtension(const EString& pathToExtension);
 
-        const EExtInitInfo& GetRegisteres() const;
-
         /**
          * Get an extension by name
          * @param extensionName Name of the extension
@@ -68,8 +60,15 @@ namespace Engine {
          */
         EVector<EExtension*> GetLoadedExtensions();
 
-
+        /**
+         * @return The active scene
+         */
         EScene* GetActiveScene() const;
+
+        /**
+         * Gets a value description by name
+         */
+        ERef<EValueDescription> GetValueDescriptionById(const EString& extensionName, const EString& typeId);
 
 
         template <typename EventType, typename CB>

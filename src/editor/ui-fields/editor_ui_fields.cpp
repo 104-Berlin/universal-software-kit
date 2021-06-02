@@ -79,7 +79,7 @@ bool EObjectView::OnRender()
         }
         if (ImGui::BeginPopup("add-component-popup"))
         {
-            for (EValueDescription* compDsc : ETypeRegister::get().GetAllItems())
+            for (ERef<EValueDescription> compDsc : ETypeRegister::get().GetAllItems())
             {
                 if (compDsc->GetType() != EValueType::STRUCT) { continue; }
                 bool hasComp = fScene->HasComponent(fSelectedEntity, compDsc);
@@ -109,7 +109,7 @@ void EObjectView::OnUpdateEventDispatcher()
 
 void EObjectView::RenderProperty(Engine::EProperty* storage) 
 {
-    EValueDescription* propertyDsc = storage->GetDescription();
+    ERef<EValueDescription> propertyDsc = storage->GetDescription();
     EValueType type = propertyDsc->GetType();
     switch (type)
     {
@@ -122,7 +122,7 @@ void EObjectView::RenderProperty(Engine::EProperty* storage)
 
 void EObjectView::RenderStruct(EStructProperty* storage) 
 {
-    EStructDescription* description = static_cast<EStructDescription*>(storage->GetDescription());
+    ERef<EStructDescription> description = std::dynamic_pointer_cast<EStructDescription>(storage->GetDescription());
     if (ImGui::CollapsingHeader(storage->GetPropertyName().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
     {
         for (auto& entry : description->GetFields())
@@ -135,7 +135,7 @@ void EObjectView::RenderStruct(EStructProperty* storage)
 
 void EObjectView::RenderPrimitive(Engine::EProperty* storage) 
 {
-    EValueDescription* description = storage->GetDescription();
+    ERef<EValueDescription> description = storage->GetDescription();
     const EString& primitiveId = description->GetId();
     if (primitiveId == E_TYPEID_STRING) { RenderString(static_cast<EValueProperty<EString>*>(storage)); } 
     else if (primitiveId == E_TYPEID_INTEGER) { RenderInteger(static_cast<EValueProperty<i32>*>(storage)); }
@@ -152,7 +152,7 @@ char* convert_str_to_chr(const std::string & s)
 
 void EObjectView::RenderEnum(Engine::EEnumProperty* storage) 
 {
-    EEnumDescription* description = static_cast<EEnumDescription*>(storage->GetDescription());
+    ERef<EEnumDescription> description = std::dynamic_pointer_cast<EEnumDescription>(storage->GetDescription());
     int currentItem = -1;
     for (EString option : description->GetOptions())
     {
@@ -175,7 +175,7 @@ void EObjectView::RenderEnum(Engine::EEnumProperty* storage)
 
 void EObjectView::RenderArray(Engine::EArrayProperty* storage) 
 {
-    EArrayDescription* arrayDsc = static_cast<EArrayDescription*>(storage->GetDescription());
+    ERef<EArrayDescription> arrayDsc = std::dynamic_pointer_cast<EArrayDescription>(storage->GetDescription());
 
     for (EProperty* element : storage->GetElements())
     {

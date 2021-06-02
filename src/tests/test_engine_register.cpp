@@ -43,19 +43,19 @@ void convert<EStructProperty, Vector>::getter(const EStructProperty* property, V
 
 TEST(RegisterTest, Basics)
 {
-	EStructDescription* vector = new EStructDescription("Vector");
+	ERef<EStructDescription> vector = EMakeRef<EStructDescription>("Vector");
 	vector->AddField("X", DoubleDescription());
 	vector->AddField("Y", DoubleDescription());
 	vector->AddField("Z", DoubleDescription());
 
-	EEnumDescription* someEnum = new EEnumDescription("SomeEnum");
+	ERef<EEnumDescription> someEnum = EMakeRef<EEnumDescription>("SomeEnum");
 	someEnum->AddOption("One");
 	someEnum->AddOption("Two");
 	someEnum->AddOption("Three");
 
-	EArrayDescription* vectorList = new EArrayDescription(vector);
+	ERef<EArrayDescription> vectorList = EMakeRef<EArrayDescription>(vector);
 
-	EStructDescription* myTestComponent = new EStructDescription("MyTestComponent");
+	ERef<EStructDescription> myTestComponent = EMakeRef<EStructDescription>("MyTestComponent");
 	myTestComponent->AddField("MyString", StringDescription());
 	myTestComponent->AddField("MyInteger", IntegerDescription());
 	myTestComponent->AddField("MyBool", BoolDescription());
