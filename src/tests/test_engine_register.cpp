@@ -2,9 +2,6 @@
 #include <engine.h>
 #include <prefix_shared.h>
 
-
-
-
 using namespace Engine;
 struct Vector
 {
@@ -46,51 +43,51 @@ void convert<EStructProperty, Vector>::getter(const EStructProperty* property, V
 
 TEST(RegisterTest, Basics)
 {
-	EStructDescription* vector = new EStructDescription("Vector");
+	ERef<EStructDescription> vector = EMakeRef<EStructDescription>("Vector");
 	vector->AddField("X", DoubleDescription());
 	vector->AddField("Y", DoubleDescription());
 	vector->AddField("Z", DoubleDescription());
 
-	EEnumDescription* someEnum = new EEnumDescription("SomeEnum");
+	ERef<EEnumDescription> someEnum = EMakeRef<EEnumDescription>("SomeEnum");
 	someEnum->AddOption("One");
 	someEnum->AddOption("Two");
 	someEnum->AddOption("Three");
 
-	new EArrayDescription(vector);
+	ERef<EArrayDescription> vectorList = EMakeRef<EArrayDescription>(vector);
 
-	EStructDescription* myTestComponent = new EStructDescription("MyTestComponent");
+	ERef<EStructDescription> myTestComponent = EMakeRef<EStructDescription>("MyTestComponent");
 	myTestComponent->AddField("MyString", StringDescription());
 	myTestComponent->AddField("MyInteger", IntegerDescription());
 	myTestComponent->AddField("MyBool", BoolDescription());
 	myTestComponent->AddField("MyDouble", DoubleDescription());
 	myTestComponent->AddField("Vector", vector);
 	myTestComponent->AddField("Enum", someEnum);
-	myTestComponent->AddField("VectorArray", ETypeRegister::get().FindById("VectorList"));
+	myTestComponent->AddField("VectorArray", vectorList);
 	
 	EScene scene;
 
 	EScene::Entity entity = scene.CreateEntity();
-	scene.InsertComponent(entity, myTestComponent->GetId());
-	scene.InsertComponent(entity, vector->GetId());
+	scene.InsertComponent(entity, myTestComponent);
+	scene.InsertComponent(entity, vector);
 
 	EXPECT_TRUE(scene.IsAlive(entity));
-	EXPECT_TRUE(scene.HasComponent(entity, vector->GetId()));
+	EXPECT_TRUE(scene.HasComponent(entity, vector));
 	
 
-	EXPECT_TRUE(scene.HasComponent(entity, vector->GetId()));
+	EXPECT_TRUE(scene.HasComponent(entity, vector));
 
 	EXPECT_EQ(scene.GetAllEntities().size(), 1);
 	EXPECT_EQ(scene.GetAllComponents(entity).size(), 2);
 
 
 
-	scene.RemoveComponent(entity, vector->GetId());
-	EXPECT_FALSE(scene.HasComponent(entity, vector->GetId()));
+	scene.RemoveComponent(entity, vector);
+	EXPECT_FALSE(scene.HasComponent(entity, vector));
 
 
 	{
 		// Set some things to the component
-		EStructProperty* storage = scene.GetComponent(entity, myTestComponent->GetId());
+		EStructProperty* storage = scene.GetComponent(entity, myTestComponent);
 
 		EXPECT_EQ(storage->GetDescription(), myTestComponent);
 
@@ -127,7 +124,7 @@ TEST(RegisterTest, Basics)
 	}
 
 	{
-		EStructProperty* storage = scene.GetComponent(entity, myTestComponent->GetId());
+		EStructProperty* storage = scene.GetComponent(entity, myTestComponent);
 
 		Vector newVecValue{2, 3, 4};
 
@@ -177,7 +174,7 @@ TEST(RegisterTest, Basics)
 
 	scene.DestroyEntity(entity);
 
-	EXPECT_FALSE(scene.HasComponent(entity, myTestComponent->GetId()));
+	EXPECT_FALSE(scene.HasComponent(entity, myTestComponent));
 	EXPECT_FALSE(scene.IsAlive(entity));
 
 	scene.CreateEntity();

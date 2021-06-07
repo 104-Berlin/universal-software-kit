@@ -15,17 +15,25 @@ TEST(ExtensionTest, LoadExtension)
     EExtensionManager extensionManager;
     extensionManager.LoadExtension("Example2.uex");
 
-    EScene* activeScene = extensionManager.GetActiveScene();
+    ERef<EValueDescription> electricalDsc = extensionManager.GetValueDescriptionById("Example2", "Electrical");
 
-    EScene::Entity entity = activeScene->CreateEntity();
-    activeScene->InsertComponent(entity, "ElectricalInfo");
+    EXPECT_NE(electricalDsc, nullptr);
 
-    EXPECT_TRUE(activeScene->HasComponent(entity, "ElectricalInfo"));
+    if (electricalDsc)
+    {
+        EScene* activeScene = extensionManager.GetActiveScene();
 
-    EStructProperty* property = activeScene->GetComponent(entity, "ElectricalInfo");
-    EProperty* capactity = property->GetProperty("Capacity");
-    EXPECT_NE(capactity, nullptr);
-    EValueDescription* capDesc = capactity->GetDescription();
-    EXPECT_EQ(capDesc->GetType(), EValueType::PRIMITIVE);
-    EXPECT_STREQ(capDesc->GetId().c_str(), "double");
+        EScene::Entity entity = activeScene->CreateEntity();
+        activeScene->InsertComponent(entity, electricalDsc);
+
+        EXPECT_TRUE(activeScene->HasComponent(entity, electricalDsc));
+
+        EStructProperty* property = activeScene->GetComponent(entity, electricalDsc);
+        EProperty* typeProp = property->GetProperty("Type");
+        EXPECT_NE(typeProp, nullptr);
+        ERef<EValueDescription> typeDsc = typeProp->GetDescription();
+        EXPECT_EQ(typeDsc->GetType(), EValueType::ENUM);
+        EXPECT_STREQ(typeDsc->GetId().c_str(), "ElectricalType");
+    }
+
 }

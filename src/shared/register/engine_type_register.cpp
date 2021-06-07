@@ -2,28 +2,28 @@
 #include "prefix_shared.h"
 
 
-Engine::EValueDescription* Engine::StringDescription() 
+ERef<Engine::EValueDescription> Engine::StringDescription() 
 {
-        static EValueDescription* result = new EValueDescription(EValueType::PRIMITIVE, E_TYPEID_STRING);
+        static ERef<EValueDescription> result = EMakeRef<EValueDescription>(EValueType::PRIMITIVE, E_TYPEID_STRING);
         return result;
 
 }
 
-Engine::EValueDescription* Engine::IntegerDescription() 
+ERef<Engine::EValueDescription> Engine::IntegerDescription() 
 {
-    static EValueDescription* result = new EValueDescription(EValueType::PRIMITIVE, E_TYPEID_INTEGER);
+    static ERef<EValueDescription> result = EMakeRef<EValueDescription>(EValueType::PRIMITIVE, E_TYPEID_INTEGER);
     return result;
 }
 
-Engine::EValueDescription* Engine::DoubleDescription() 
+ERef<Engine::EValueDescription> Engine::DoubleDescription() 
 {
-    static EValueDescription* result = new EValueDescription(EValueType::PRIMITIVE, E_TYPEID_DOUBLE);
+    static ERef<EValueDescription> result = EMakeRef<EValueDescription>(EValueType::PRIMITIVE, E_TYPEID_DOUBLE);
     return result;
 }
 
-Engine::EValueDescription* Engine::BoolDescription() 
+ERef<Engine::EValueDescription> Engine::BoolDescription() 
 {
-    static EValueDescription* result = new EValueDescription(EValueType::PRIMITIVE, E_TYPEID_BOOL);
+    static ERef<EValueDescription> result = EMakeRef<EValueDescription>(EValueType::PRIMITIVE, E_TYPEID_BOOL);
     return result;
 }
 
@@ -34,33 +34,12 @@ using namespace Engine;
 EValueDescription::EValueDescription(EValueType type, EString id) 
     : fType(type), fID(id)
 {
-    ETypeRegister::get().RegisterDescription(this);
+
 }
 
 EValueDescription::~EValueDescription() 
 {
     
-}
-
-void ETypeRegister::RegisterDescription(EValueDescription* description) 
-{
-    E_ASSERT(description, "Cant register undefined description");
-    fRegisteredDescriptions[description->GetId()] = description;
-}
-
-EValueDescription* ETypeRegister::FindById(const EString& id) 
-{
-    return fRegisteredDescriptions[id];
-}
-
-EVector<EValueDescription*> ETypeRegister::GetAllDescriptions() 
-{
-    EVector<EValueDescription*> result;
-    for (const auto& entry : fRegisteredDescriptions)
-    {
-        result.push_back(entry.second);
-    }
-    return result;
 }
 
 EValueType EValueDescription::GetType() const
@@ -84,13 +63,13 @@ EStructDescription::~EStructDescription()
     
 }
 
-EStructDescription& EStructDescription::AddField(const EString& name, EValueDescription* description) 
+EStructDescription& EStructDescription::AddField(const EString& name, ERef<EValueDescription> description) 
 {
     fFields[name] = description;
     return *this;
 }
 
-const EUnorderedMap<EString, EValueDescription*>& EStructDescription::GetFields() const
+const EUnorderedMap<EString, ERef<EValueDescription>>& EStructDescription::GetFields() const
 {
     return fFields;    
 }
@@ -117,7 +96,7 @@ const EVector<EString>& EEnumDescription::GetOptions() const
     return fOptions;
 }
 
-EArrayDescription::EArrayDescription(EValueDescription* arrayType) 
+EArrayDescription::EArrayDescription(ERef<EValueDescription> arrayType) 
     : EValueDescription(EValueType::ARRAY, arrayType->GetId() + "List"), fType(arrayType)
 {
     E_ASSERT(arrayType, "ERROR: Array need type descpription!");
@@ -128,22 +107,9 @@ EArrayDescription::~EArrayDescription()
     
 }
 
-EValueDescription* EArrayDescription::GetElementType() const
+ERef<EValueDescription> EArrayDescription::GetElementType() const
 {
     return fType;
-}
-
-ETypeRegister::ETypeRegister() 
-{
-    
-}
-
-ETypeRegister::~ETypeRegister() 
-{
-    for (auto& entry : fRegisteredDescriptions)
-    {
-        delete entry.second;
-    }
 }
 
 // static runner to init primitive types

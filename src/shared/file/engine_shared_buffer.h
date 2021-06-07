@@ -43,7 +43,14 @@ namespace Engine {
                 }
                 else
                 {
-                    memset(fData, 0, size_in_bytes);
+                    if (size_in_bytes / sizeof(T) == 1)
+                    {
+                        *fData = T();
+                    }
+                    else
+                    {
+                        memset(fData, 0, size_in_bytes);
+                    }
                 }
             }
 
