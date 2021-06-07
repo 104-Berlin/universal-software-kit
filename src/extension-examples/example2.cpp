@@ -36,19 +36,19 @@ struct ElectricalComponent
 
 EXT_ENTRY
 {
-    EEnumDescription* electricalTypeDsc = new EEnumDescription("ElectricalType");
+    ERef<EEnumDescription> electricalTypeDsc = EMakeRef<EEnumDescription>("ElectricalType");
     electricalTypeDsc->AddOption("GENERATOR");
     electricalTypeDsc->AddOption("INPUT");
     electricalTypeDsc->AddOption("OUTPUT");
     electricalTypeDsc->AddOption("CONSUMER");
 
-    EStructDescription* electricalInfoDsc = new EStructDescription("ElectricalInfo");
+    ERef<EStructDescription> electricalInfoDsc = EMakeRef<EStructDescription>("ElectricalInfo");
     electricalInfoDsc->AddField("Capacity", DoubleDescription());
     electricalInfoDsc->AddField("IDontKnow", DoubleDescription());
 
-    EArrayDescription* someArrayDsc = new EArrayDescription(electricalInfoDsc);
-
-    EStructDescription* electricalDescription = new EStructDescription("Electrical");
+    ERef<EStructDescription> electricalDescription = EMakeRef<EStructDescription>("Electrical");
     electricalDescription->AddField("Type", electricalTypeDsc);
-    electricalDescription->AddField("InfoArray", someArrayDsc);
+    electricalDescription->AddField("InfoArray", EMakeRef<EArrayDescription>(electricalInfoDsc));
+
+    info.GetTypeRegister().RegisterItem(extensionName, electricalDescription);
 }

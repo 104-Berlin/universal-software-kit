@@ -25,14 +25,14 @@ namespace Engine {
 
     class E_API EStructDescription : public EValueDescription
     {
-        EUnorderedMap<EString, EValueDescription*> fFields;
+        EUnorderedMap<EString, ERef<EValueDescription>> fFields;
     public:
         EStructDescription(const EString& name);
         virtual ~EStructDescription();
 
-        EStructDescription& AddField(const EString& name, EValueDescription* description);
+        EStructDescription& AddField(const EString& name, ERef<EValueDescription> description);
 
-        const EUnorderedMap<EString, EValueDescription*>& GetFields() const;
+        const EUnorderedMap<EString, ERef< EValueDescription>>& GetFields() const;
     };
 
     class E_API EEnumDescription : public EValueDescription
@@ -48,12 +48,12 @@ namespace Engine {
 
     class E_API EArrayDescription : public EValueDescription
     {
-        EValueDescription* fType;
+        ERef<EValueDescription> fType;
     public:
-        EArrayDescription(EValueDescription* arrayType);
+        EArrayDescription(ERef<EValueDescription> arrayType);
         virtual ~EArrayDescription();
 
-        EValueDescription* GetElementType() const;
+        ERef<EValueDescription> GetElementType() const;
     };
 
 
@@ -64,34 +64,8 @@ namespace Engine {
 
 
     
-    E_API EValueDescription* StringDescription();
-    E_API EValueDescription* IntegerDescription();
-    E_API EValueDescription* DoubleDescription();
-    E_API EValueDescription* BoolDescription();
-
-
-    // Singleton for all registered types
-    class E_API ETypeRegister
-    {
-    private:
-        ETypeRegister();
-        ETypeRegister(const ETypeRegister&) = default;
-        ETypeRegister& operator=(const ETypeRegister&) = default;
-    public:
-        ~ETypeRegister();
-
-        static ETypeRegister& get()
-        {
-            static ETypeRegister instance;
-            return instance;
-        }
-
-        void RegisterDescription(EValueDescription* description);
-        EValueDescription* FindById(const EString& id);
-
-        EVector<EValueDescription*> GetAllDescriptions();
-    private:
-        EUnorderedMap<EString, EValueDescription*> fRegisteredDescriptions;
-    };
-
+    E_API ERef<EValueDescription> StringDescription();
+    E_API ERef<EValueDescription> IntegerDescription();
+    E_API ERef<EValueDescription> DoubleDescription();
+    E_API ERef<EValueDescription> BoolDescription();
 }

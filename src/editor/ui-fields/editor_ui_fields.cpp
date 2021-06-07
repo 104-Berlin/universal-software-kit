@@ -51,21 +51,21 @@ bool EResourceView::OnRender()
     return true;
 }
 
-EObjectView::EObjectView(Engine::EScene* scene)
-    : EUIField("OBJECTVIEW"), fScene(scene), fSelectedEntity(0)
+EObjectView::EObjectView(EExtensionManager* extensionManager)
+    : EUIField("OBJECTVIEW"), fExtensionManager(extensionManager), fSelectedEntity(0)
 {
     fAddObjectButton = EMakeRef<EUIButton>("Add Object");
     fAddObjectButton->AddEventListener<Engine::EClickEvent>([this](){
-        fScene->CreateEntity();
+        fExtensionManager->GetActiveScene()->CreateEntity();
     });
 }
 
 bool EObjectView::OnRender() 
 {
-    if (!fScene) { return false; }
+    if (!fExtensionManager->GetActiveScene()) { return false; }
 
     ImGui::BeginChild("Entity Child", {100, 0});
-    for (EScene::Entity entity : fScene->GetAllEntities())
+    for (EScene::Entity entity : fExtensionManager->GetActiveScene()->GetAllEntities())
     {
         EString entityIdent = "Entity " + std::to_string(entity);
         bool selected = fSelectedEntity == entity;
@@ -80,7 +80,7 @@ bool EObjectView::OnRender()
     ImGui::BeginChild("ComponentChild");
     if (fSelectedEntity)
     {
-        for (EStructProperty* storage : fScene->GetAllComponents(fSelectedEntity))
+        for (EStructProperty* storage : fExtensionManager->GetActiveScene()->GetAllComponents(fSelectedEntity))
         {
             RenderProperty(storage);
         }
@@ -91,15 +91,15 @@ bool EObjectView::OnRender()
         }
         if (ImGui::BeginPopup("add-component-popup"))
         {
-            for (EValueDescription* compDsc : ETypeRegister::get().GetAllDescriptions())
+            for (ERef<EValueDescription> compDsc : fExtensionManager->GetTypeRegister().GetAllItems())
             {
                 if (compDsc->GetType() != EValueType::STRUCT) { continue; }
-                bool hasComp = fScene->HasComponent(fSelectedEntity, compDsc->GetId());
+                bool hasComp = fExtensionManager->GetActiveScene()->HasComponent(fSelectedEntity, compDsc);
                 if (!hasComp)
                 {
                     if (ImGui::Selectable(compDsc->GetId().c_str()))
                     {
-                        fScene->InsertComponent(fSelectedEntity, compDsc->GetId());
+                        fExtensionManager->GetActiveScene()->InsertComponent(fSelectedEntity, compDsc);
                     }
                 }
             }
@@ -121,7 +121,7 @@ void EObjectView::OnUpdateEventDispatcher()
 
 void EObjectView::RenderProperty(Engine::EProperty* storage) 
 {
-    EValueDescription* propertyDsc = storage->GetDescription();
+    ERef<EValueDescription> propertyDsc = storage->GetDescription();
     EValueType type = propertyDsc->GetType();
     switch (type)
     {
@@ -134,7 +134,7 @@ void EObjectView::RenderProperty(Engine::EProperty* storage)
 
 void EObjectView::RenderStruct(EStructProperty* storage) 
 {
-    EStructDescription* description = static_cast<EStructDescription*>(storage->GetDescription());
+    ERef<EStructDescription> description = std::dynamic_pointer_cast<EStructDescription>(storage->GetDescription());
     if (ImGui::CollapsingHeader(storage->GetPropertyName().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
     {
         for (auto& entry : description->GetFields())
@@ -147,7 +147,7 @@ void EObjectView::RenderStruct(EStructProperty* storage)
 
 void EObjectView::RenderPrimitive(Engine::EProperty* storage) 
 {
-    EValueDescription* description = storage->GetDescription();
+    ERef<EValueDescription> description = storage->GetDescription();
     const EString& primitiveId = description->GetId();
     if (primitiveId == E_TYPEID_STRING) { RenderString(static_cast<EValueProperty<EString>*>(storage)); } 
     else if (primitiveId == E_TYPEID_INTEGER) { RenderInteger(static_cast<EValueProperty<i32>*>(storage)); }
@@ -164,7 +164,7 @@ char* convert_str_to_chr(const std::string & s)
 
 void EObjectView::RenderEnum(Engine::EEnumProperty* storage) 
 {
-    EEnumDescription* description = static_cast<EEnumDescription*>(storage->GetDescription());
+    ERef<EEnumDescription> description = std::dynamic_pointer_cast<EEnumDescription>(storage->GetDescription());
     int currentItem = -1;
     for (EString option : description->GetOptions())
     {
@@ -187,7 +187,7 @@ void EObjectView::RenderEnum(Engine::EEnumProperty* storage)
 
 void EObjectView::RenderArray(Engine::EArrayProperty* storage) 
 {
-    EArrayDescription* arrayDsc = static_cast<EArrayDescription*>(storage->GetDescription());
+    ERef<EArrayDescription> arrayDsc = std::dynamic_pointer_cast<EArrayDescription>(storage->GetDescription());
 
     for (EProperty* element : storage->GetElements())
     {

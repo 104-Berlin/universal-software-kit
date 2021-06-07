@@ -2,8 +2,6 @@
 
 template <typename Property, typename Value>
 struct convert {
-
-
     static void setter(Property* prop, const Value& value)
     {
         E_ASSERT(false, EString("Setter not implemented for type ") + typeid(Value).name());
@@ -15,57 +13,33 @@ struct convert {
     }
 };
 
+// See tests/test_engine_register.cpp
+// There is an example for a vector struct right at the top
+
 namespace Engine {
-
-    struct EComponentDescription
-    {
-        using ComponentID = EString;
-
-        ComponentID         ID;
-
-        EComponentDescription(const ComponentID& id = "")
-            : ID(id)
-        {}
-
-        EComponentDescription(const EComponentDescription&) = default;
-
-        operator bool() const
-        {
-            return Valid();
-        }
-
-        bool Valid() const
-        {
-            return !ID.empty();
-        }
-
-    private:
-        friend class EScene;
-    };
-
 
     class E_API EProperty
     {
         friend class EScene;
     public:
         EString fName;
-        EValueDescription* fDescription;
+        ERef<EValueDescription> fDescription;
     public:
-        EProperty(const EString& name, EValueDescription* description);
+        EProperty(const EString& name, ERef<EValueDescription> description);
         virtual ~EProperty() = default;
 
         const EString& GetPropertyName() const;
 
-        EValueDescription* GetDescription() const;
+        ERef<EValueDescription> GetDescription() const;
 
 
         
-        static EProperty* CreateFromDescription(const EString& name, EValueDescription* description);
+        static EProperty* CreateFromDescription(const EString& name, ERef<EValueDescription> description);
     private:
-        static EProperty* CreatePropertyStruct(const EString& name, EStructDescription* description);
-        static EProperty* CreatePropertyPrimitive(const EString& name, EValueDescription* descrption);
-        static EProperty* CreatePropertyEnum(const EString& name, EEnumDescription* descrption);
-        static EProperty* CreatePropertyArray(const EString& name, EArrayDescription* description);
+        static EProperty* CreatePropertyStruct(const EString& name, ERef<EStructDescription> description);
+        static EProperty* CreatePropertyPrimitive(const EString& name, ERef<EValueDescription> descrption);
+        static EProperty* CreatePropertyEnum(const EString& name, ERef<EEnumDescription> descrption);
+        static EProperty* CreatePropertyArray(const EString& name, ERef<EArrayDescription> description);
     };
 
     template <typename ValueType>
@@ -74,7 +48,7 @@ namespace Engine {
     private:
         ValueType fValue;
     public:
-        EValueProperty(const EString& name, EValueDescription* description, const ValueType& initValue = ValueType())
+        EValueProperty(const EString& name, ERef<EValueDescription> description, const ValueType& initValue = ValueType())
             : EProperty(name, description)
         {
             fValue = initValue;
@@ -96,7 +70,7 @@ namespace Engine {
     private:
         EVector<EProperty*> fProperties;
     public:
-        EStructProperty(const EString& name, EStructDescription* description, const EVector<EProperty*>& properties = {});
+        EStructProperty(const EString& name, ERef<EStructDescription> description, const EVector<EProperty*>& properties = {});
         ~EStructProperty();
 
         template <typename T>
@@ -125,7 +99,7 @@ namespace Engine {
     private:
         EString fValue;
     public:
-        EEnumProperty(const EString& name, EEnumDescription* description, const EString& initValue = "");
+        EEnumProperty(const EString& name, ERef<EEnumDescription> description, const EString& initValue = "");
         ~EEnumProperty();
 
         void SetCurrentValue(const EString& value);
@@ -137,7 +111,7 @@ namespace Engine {
     private:
         EVector<EProperty*> fElements;
     public:
-        EArrayProperty(const EString& name, EArrayDescription* description);
+        EArrayProperty(const EString& name, ERef<EArrayDescription> description);
         ~EArrayProperty();
 
         EProperty* AddElement();
@@ -156,7 +130,7 @@ namespace Engine {
         EString fName;
         EResourceManager fResourceManager;
 
-        EUnorderedMap<EComponentDescription::ComponentID, EUnorderedMap<Entity, EStructProperty*>> fComponentStorage;
+        EUnorderedMap<ERef<EValueDescription>, EUnorderedMap<Entity, EStructProperty*>> fComponentStorage;
         EVector<Entity>     fAliveEntites;
         EVector<Entity>     fDeadEntites;
     public:
@@ -171,10 +145,10 @@ namespace Engine {
 
         bool IsAlive(Entity entity);
 
-        void InsertComponent(Entity entity, EComponentDescription::ComponentID componentId);
-        void RemoveComponent(Entity entity, EComponentDescription::ComponentID componentId);
-        bool HasComponent(Entity entity, EComponentDescription::ComponentID componentId);
-        EStructProperty* GetComponent(Entity entity, EComponentDescription::ComponentID componentId);
+        void InsertComponent(Entity entity, ERef<EValueDescription> componentId);
+        void RemoveComponent(Entity entity, ERef<EValueDescription> componentId);
+        bool HasComponent(Entity entity, ERef<EValueDescription> componentId);
+        EStructProperty* GetComponent(Entity entity, ERef<EValueDescription> componentId);
         EVector<EStructProperty*> GetAllComponents(Entity entity);
     };
 

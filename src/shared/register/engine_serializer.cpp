@@ -51,7 +51,7 @@ EJson WritePrimitiveToJs(EProperty* property)
 
 EJson WriteStructToJs(EStructProperty* property)
 {
-    EStructDescription* structDsc = static_cast<EStructDescription*>(property->GetDescription());
+    ERef<EStructDescription> structDsc = std::dynamic_pointer_cast<EStructDescription>(property->GetDescription());
     EJson result = EJson::object();
     for (auto& entry : structDsc->GetFields())
     {
@@ -81,7 +81,7 @@ EJson WriteArrayToJs(EArrayProperty* property)
 
 EJson ESerializer::WritePropertyToJs(EProperty* property) 
 {
-    EValueDescription* description = property->GetDescription();
+    ERef<EValueDescription> description = property->GetDescription();
     EValueType type = description->GetType();
 
     switch (type)

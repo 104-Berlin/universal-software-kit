@@ -94,22 +94,17 @@ bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
     newExtension->InitImGui();
     // Run load function
     
-    auto loadFunction = (void(*)(const char*, EScene*))newExtension->GetFunction("entry");
+    auto loadFunction = (void(*)(const char*, EExtensionManager&))newExtension->GetFunction("entry");
     if (loadFunction)
     {
         E_INFO("Running load function for plugin \"" + newExtension->GetName() + "\"");
-        loadFunction(newExtension->GetName().c_str(), fLoadedScene);
+        loadFunction(newExtension->GetName().c_str(), *this);
     }
     fLoadedExtensions[newExtension->GetName()] = newExtension;
     EExtensionLoadedEvent evt;
     evt.Extension = newExtension;
     fEventDispatcher.Post<EExtensionLoadedEvent>(evt);
     return true;
-}
-
-const EExtInitInfo& EExtensionManager::GetRegisteres() const
-{
-    return fExtensionRegisters;
 }
 
 EExtension* EExtensionManager::GetExtension(const EString& extensionName)
@@ -130,4 +125,27 @@ EVector<EExtension*> EExtensionManager::GetLoadedExtensions()
 EScene* EExtensionManager::GetActiveScene() const
 {
     return fLoadedScene;
+}
+
+ERef<EValueDescription> EExtensionManager::GetValueDescriptionById(const EString& extensionName, const EString& typeId) 
+{
+    const EVector<ERef<EValueDescription>>& registeredTypes = fTypeRegister.GetItems(extensionName);
+    for (ERef<EValueDescription> dsc : registeredTypes)
+    {
+        if (dsc->GetId() == typeId)
+        {
+            return dsc;
+        }
+    }
+    return nullptr;
+}
+
+ETypeRegister& EExtensionManager::GetTypeRegister() 
+{
+    return fTypeRegister;
+}
+
+const ETypeRegister& EExtensionManager::GetTypeRegister() const
+{
+    return fTypeRegister;
 }

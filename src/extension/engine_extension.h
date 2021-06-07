@@ -25,7 +25,7 @@
 #endif
 
 
-#define EXT_ENTRY EXTENSION_EXPORT_FUN void entry(const char* extensionName, Engine::EScene* scene)
+#define EXT_ENTRY EXTENSION_EXPORT_FUN void entry(const char* extensionName, Engine::EExtensionManager& info)
 
 #include "engine.h"
 #include "prefix_shared.h"
