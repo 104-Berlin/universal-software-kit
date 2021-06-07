@@ -34,6 +34,7 @@ namespace Engine {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
         EScene*                             fLoadedScene;
+        ETypeRegister                       fTypeRegister;
         EEventDispatcher                    fEventDispatcher;
     public:
         EExtensionManager();
@@ -70,6 +71,9 @@ namespace Engine {
          */
         ERef<EValueDescription> GetValueDescriptionById(const EString& extensionName, const EString& typeId);
 
+
+        ETypeRegister& GetTypeRegister();
+        const ETypeRegister& GetTypeRegister() const;
 
         template <typename EventType, typename CB>
         void AddEventListener(CB&& callback)

@@ -50,5 +50,5 @@ EXT_ENTRY
     electricalDescription->AddField("Type", electricalTypeDsc);
     electricalDescription->AddField("InfoArray", EMakeRef<EArrayDescription>(electricalInfoDsc));
 
-    ETypeRegister::get().RegisterItem(extensionName, electricalDescription);
+    info.GetTypeRegister().RegisterItem(extensionName, electricalDescription);
 }

@@ -17,10 +17,10 @@ namespace Editor {
     {
     private:
         Engine::EScene::Entity fSelectedEntity;
-        Engine::EScene* fScene;
+        Engine::EExtensionManager* fExtensionManager;
         ERef<Engine::EUIButton> fAddObjectButton;
     public:
-        EObjectView(Engine::EScene* scene);
+        EObjectView(Engine::EExtensionManager* extensionManager);
 
         virtual bool OnRender() override;
 

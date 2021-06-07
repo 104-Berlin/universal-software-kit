@@ -39,21 +39,21 @@ bool EExtensionView::OnRender()
     return true;
 }
 
-EObjectView::EObjectView(Engine::EScene* scene)
-    : EUIField("OBJECTVIEW"), fScene(scene), fSelectedEntity(0)
+EObjectView::EObjectView(EExtensionManager* extensionManager)
+    : EUIField("OBJECTVIEW"), fExtensionManager(extensionManager), fSelectedEntity(0)
 {
     fAddObjectButton = EMakeRef<EUIButton>("Add Object");
     fAddObjectButton->AddEventListener<Engine::EClickEvent>([this](){
-        fScene->CreateEntity();
+        fExtensionManager->GetActiveScene()->CreateEntity();
     });
 }
 
 bool EObjectView::OnRender() 
 {
-    if (!fScene) { return false; }
+    if (!fExtensionManager->GetActiveScene()) { return false; }
 
     ImGui::BeginChild("Entity Child", {100, 0});
-    for (EScene::Entity entity : fScene->GetAllEntities())
+    for (EScene::Entity entity : fExtensionManager->GetActiveScene()->GetAllEntities())
     {
         EString entityIdent = "Entity " + std::to_string(entity);
         bool selected = fSelectedEntity == entity;
@@ -68,7 +68,7 @@ bool EObjectView::OnRender()
     ImGui::BeginChild("ComponentChild");
     if (fSelectedEntity)
     {
-        for (EStructProperty* storage : fScene->GetAllComponents(fSelectedEntity))
+        for (EStructProperty* storage : fExtensionManager->GetActiveScene()->GetAllComponents(fSelectedEntity))
         {
             RenderProperty(storage);
         }
@@ -79,15 +79,15 @@ bool EObjectView::OnRender()
         }
         if (ImGui::BeginPopup("add-component-popup"))
         {
-            for (ERef<EValueDescription> compDsc : ETypeRegister::get().GetAllItems())
+            for (ERef<EValueDescription> compDsc : fExtensionManager->GetTypeRegister().GetAllItems())
             {
                 if (compDsc->GetType() != EValueType::STRUCT) { continue; }
-                bool hasComp = fScene->HasComponent(fSelectedEntity, compDsc);
+                bool hasComp = fExtensionManager->GetActiveScene()->HasComponent(fSelectedEntity, compDsc);
                 if (!hasComp)
                 {
                     if (ImGui::Selectable(compDsc->GetId().c_str()))
                     {
-                        fScene->InsertComponent(fSelectedEntity, compDsc);
+                        fExtensionManager->GetActiveScene()->InsertComponent(fSelectedEntity, compDsc);
                     }
                 }
             }

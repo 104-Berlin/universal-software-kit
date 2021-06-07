@@ -95,12 +95,6 @@ namespace Engine {
         {
             fEventDispatcher.Connect<EventType>(callback);
         }
-
-        static EExtensionRegister<T>& get()
-        {
-            static EExtensionRegister<T> result;
-            return result;
-        }
     };
 
     using ETypeRegister = EExtensionRegister<ERef<EValueDescription>>;

@@ -54,7 +54,7 @@ void EApplication::RegenerateMainMenuBar()
             EJson sceneJson = EJson::parse(sceneFile.GetFileAsString());
             if (!sceneJson.is_null())
             {
-                EDeserializer::ReadSceneFromJson(sceneJson, fExtensionManager.GetActiveScene(), ETypeRegister::get().GetAllItems());
+                EDeserializer::ReadSceneFromJson(sceneJson, fExtensionManager.GetActiveScene(), fExtensionManager.GetTypeRegister().GetAllItems());
             }
         }
     });
@@ -143,13 +143,13 @@ void EApplication::RegisterDefaultPanels()
 
 
     ERef<EUIPanel> universalSceneView1 = EMakeRef<EUIPanel>("Basic Scene View 1");
-    universalSceneView1->AddChild(EMakeRef<EObjectView>(fExtensionManager.GetActiveScene()));
+    universalSceneView1->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
     ERef<EUIPanel> universalSceneView2 = EMakeRef<EUIPanel>("Basic Scene View 2");
-    universalSceneView2->AddChild(EMakeRef<EObjectView>(fExtensionManager.GetActiveScene()));
+    universalSceneView2->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
     ERef<EUIPanel> universalSceneView3 = EMakeRef<EUIPanel>("Basic Scene View 3");
-    universalSceneView3->AddChild(EMakeRef<EObjectView>(fExtensionManager.GetActiveScene()));
+    universalSceneView3->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
     ERef<EUIPanel> universalSceneView4 = EMakeRef<EUIPanel>("Basic Scene View 4");
-    universalSceneView4->AddChild(EMakeRef<EObjectView>(fExtensionManager.GetActiveScene()));
+    universalSceneView4->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
 
     fUIRegister.RegisterItem("intern", universalSceneView1);
     fUIRegister.RegisterItem("intern", universalSceneView2);
