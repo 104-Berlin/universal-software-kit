@@ -28,7 +28,7 @@ namespace Engine {
     public:
         EValueDescription(EValueType type = EValueType::UNKNOWN, t_ID id = "");
         EValueDescription(const EValueDescription&) = default;
-        virtual ~EValueDescription();
+        ~EValueDescription();
 
         EValueType GetType() const;
         const t_ID& GetId() const;
