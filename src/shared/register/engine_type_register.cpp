@@ -23,6 +23,7 @@ EValueDescription::EValueDescription(const EValueDescription& other)
 EValueDescription& EValueDescription::operator=(const EValueDescription& other)
 {
     EValueDescription(other);
+    return *this;
 }
 
 
