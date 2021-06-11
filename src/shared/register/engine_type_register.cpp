@@ -15,14 +15,23 @@ EValueDescription::EValueDescription(const EValueDescription& other)
     fStructFields.clear();
     for (auto& entry : other.fStructFields)
     {
-        fStructFields.insert(entry);
+        fStructFields[entry.first] = new EValueDescription(*entry.second);
     }
 }
 
 
 EValueDescription& EValueDescription::operator=(const EValueDescription& other)
 {
-    EValueDescription(other);
+    fType = other.fType;
+    fID = other.fID;
+    fIsArray = other.fIsArray;
+    fEnumOptions = other.fEnumOptions;
+
+    fStructFields.clear();
+    for (auto& entry : other.fStructFields)
+    {
+        fStructFields[entry.first] = new EValueDescription(*entry.second);
+    }
     return *this;
 }
 

@@ -118,6 +118,7 @@ void EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
         case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json, property); break;
         case EValueType::STRUCT: ReadStructFromJson(json, static_cast<EStructProperty*>(property)); break;
         case EValueType::ENUM: ReadEnumFromJson(json, static_cast<EEnumProperty*>(property)); break;
+        case EValueType::UNKNOWN: break;
         }
     }
 }

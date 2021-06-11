@@ -122,6 +122,7 @@ void EObjectView::RenderProperty(Engine::EProperty* storage)
         case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage)); break;
         case EValueType::PRIMITIVE: RenderPrimitive(storage); break;
         case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage)); break;
+        case EValueType::UNKNOWN: break;
         }
     }
 }

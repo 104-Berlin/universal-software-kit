@@ -37,6 +37,7 @@ EProperty* EProperty::CreateFromDescription(const EString& name, EValueDescripti
         case EValueType::PRIMITIVE: return CreatePropertyPrimitive(name, description);
         case EValueType::STRUCT: return CreatePropertyStruct(name, description);
         case EValueType::ENUM: return CreatePropertyEnum(name, description);
+        case EValueType::UNKNOWN: return nullptr;
         }
     }
     return nullptr;

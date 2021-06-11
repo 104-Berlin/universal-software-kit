@@ -92,9 +92,10 @@ EJson ESerializer::WritePropertyToJs(EProperty* property)
     {
         switch (type)
         {
-        case EValueType::PRIMITIVE: return WritePrimitiveToJs(property); break;
-        case EValueType::STRUCT: return WriteStructToJs(static_cast<EStructProperty*>(property)); break;
-        case EValueType::ENUM: return WriteEnumToJs(static_cast<EEnumProperty*>(property)); break;
+        case EValueType::PRIMITIVE: return WritePrimitiveToJs(property);
+        case EValueType::STRUCT: return WriteStructToJs(static_cast<EStructProperty*>(property));
+        case EValueType::ENUM: return WriteEnumToJs(static_cast<EEnumProperty*>(property));
+        case EValueType::UNKNOWN: return 0;
         }
     }
 
