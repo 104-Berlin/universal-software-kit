@@ -20,7 +20,7 @@ namespace Engine {
         t_ID        fID;
 
         // For struct
-        EUnorderedMap<EString, class EValueDescription> fStructFields;
+        EUnorderedMap<EString, class E_API EValueDescription> fStructFields;
         // For enum
         EVector<EString> fEnumOptions;
         // For array
