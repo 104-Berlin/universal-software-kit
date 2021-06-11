@@ -9,9 +9,22 @@ EValueDescription::EValueDescription(EValueType type, EValueDescription::t_ID id
 
 }
 
+EValueDescription::EValueDescription(const EValueDescription& other)
+    : fType(other.fType), fID(other.fID), fIsArray(other.fIsArray), fEnumOptions(other.fEnumOptions)
+{
+    fStructFields.clear();
+    for (auto& entry : other.fStructFields)
+    {
+        fStructFields.insert(entry);
+    }
+}
+
 EValueDescription::~EValueDescription() 
 {
-    
+    for (auto& entry : fStructFields)
+    {
+        delete entry.second;
+    }
 }
 
 EValueType EValueDescription::GetType() const
@@ -55,11 +68,11 @@ EValueDescription& EValueDescription::AddStructField(const EString& name, EValue
         E_WARN("WARN: Can't add a field to a non struct");
         return *this;
     }
-    fStructFields[name] = description;
+    fStructFields[name] = new EValueDescription(description);
     return *this;
 }
 
-const EUnorderedMap<EString, EValueDescription>& EValueDescription::GetStructFields() const
+const EUnorderedMap<EString, EValueDescription*>& EValueDescription::GetStructFields() const
 {
     return fStructFields;    
 }

@@ -19,15 +19,15 @@ namespace Engine {
         EValueType  fType;
         t_ID        fID;
 
-        // For struct
-        EUnorderedMap<EString, class E_API EValueDescription> fStructFields;
         // For enum
         EVector<EString> fEnumOptions;
         // For array
         bool fIsArray;
+        // For struct
+        EUnorderedMap<EString, EValueDescription*> fStructFields;
     public:
         EValueDescription(EValueType type = EValueType::UNKNOWN, t_ID id = "");
-        EValueDescription(const EValueDescription&) = default;
+        EValueDescription(const EValueDescription&);
         ~EValueDescription();
 
         EValueType GetType() const;
@@ -37,7 +37,7 @@ namespace Engine {
 
         // For structs
         EValueDescription& AddStructField(const EString& name, EValueDescription description);
-        const EUnorderedMap<EString, EValueDescription>& GetStructFields() const;
+        const EUnorderedMap<EString, EValueDescription*>& GetStructFields() const;
 
         // For enums
         EValueDescription& AddEnumOption(const EString& option);

@@ -97,7 +97,7 @@ void ReadStructFromJson(const EJson& json, EStructProperty* property)
     
     for (auto& entry : description.GetStructFields())
     {
-        EValueType fieldType = entry.second.GetType();
+        EValueType fieldType = entry.second->GetType();
 
         EDeserializer::ReadPropertyFromJson(json[entry.first], property->GetProperty(entry.first));
     }
