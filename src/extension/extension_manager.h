@@ -69,7 +69,7 @@ namespace Engine {
         /**
          * Gets a value description by name
          */
-        ERef<EValueDescription> GetValueDescriptionById(const EString& extensionName, const EString& typeId);
+        EValueDescription GetValueDescriptionById(const EString& extensionName, const EString& typeId);
 
 
         ETypeRegister& GetTypeRegister();

@@ -5,7 +5,7 @@ using namespace Engine;
 
 
 
-EProperty::EProperty(const EString& name, ERef<EValueDescription> description) 
+EProperty::EProperty(const EString& name, EValueDescription description) 
     : fName(name), fDescription(description)
 {
     
@@ -16,30 +16,31 @@ const EString& EProperty::GetPropertyName() const
     return fName;
 }
 
-ERef<EValueDescription> EProperty::GetDescription() const
+EValueDescription EProperty::GetDescription() const
 {
     return fDescription;
 }
 
 
 
-EProperty* EProperty::CreateFromDescription(const EString& name, ERef<EValueDescription> description) 
+EProperty* EProperty::CreateFromDescription(const EString& name, EValueDescription description) 
 {
-    EValueType type = description->GetType();
+    EValueType type = description.GetType();
     switch (type)
     {
     case EValueType::PRIMITIVE: return CreatePropertyPrimitive(name, description);
-    case EValueType::STRUCT: return CreatePropertyStruct(name, std::dynamic_pointer_cast<EStructDescription>(description));
-    case EValueType::ENUM: return CreatePropertyEnum(name, std::dynamic_pointer_cast<EEnumDescription>(description));
-    case EValueType::ARRAY: return CreatePropertyArray(name, std::dynamic_pointer_cast<EArrayDescription>(description));
+    case EValueType::STRUCT: return CreatePropertyStruct(name, description);
+    case EValueType::ENUM: return CreatePropertyEnum(name, description);
+    //case EValueType::ARRAY: return CreatePropertyArray(name, std::dynamic_pointer_cast<EArrayDescription>(description));
     }
     return nullptr;
 }
 
-EProperty* EProperty::CreatePropertyStruct(const EString& name, ERef<EStructDescription> description) 
+EProperty* EProperty::CreatePropertyStruct(const EString& name, EValueDescription description)
 {
+    E_ASSERT(description.GetType() == EValueType::STRUCT, "Didnt provide struct description for creating property!");
     EVector<EProperty*> fields;
-    for (auto& entry : description->GetFields())
+    for (auto& entry : description.GetStructFields())
     {
         EProperty* newField = CreateFromDescription(entry.first, entry.second);
         if (newField)
@@ -50,9 +51,10 @@ EProperty* EProperty::CreatePropertyStruct(const EString& name, ERef<EStructDesc
     return new EStructProperty(name, description, fields);
 }
 
-EProperty* EProperty::CreatePropertyPrimitive(const EString& name, ERef<EValueDescription> description) 
+EProperty* EProperty::CreatePropertyPrimitive(const EString& name, EValueDescription description)
 {
-    const EString& primitiveId = description->GetId();
+    E_ASSERT(description.GetType() == EValueType::PRIMITIVE, "Didnt provide primitive description for creating property!");
+    const EString& primitiveId = description.GetId();
     if (primitiveId == E_TYPEID_STRING) { return new EValueProperty<EString>(name, description); } 
     else if (primitiveId == E_TYPEID_INTEGER) { return new EValueProperty<i32>(name, description); }
     else if (primitiveId == E_TYPEID_DOUBLE) { return new EValueProperty<double>(name, description); }
@@ -60,20 +62,22 @@ EProperty* EProperty::CreatePropertyPrimitive(const EString& name, ERef<EValueDe
     return nullptr;
 }
 
-EProperty* EProperty::CreatePropertyEnum(const EString& name, ERef<EEnumDescription> descrption) 
+EProperty* EProperty::CreatePropertyEnum(const EString& name, EValueDescription description)
 {
-    EEnumProperty* result = new EEnumProperty(name, descrption);
+    E_ASSERT(description.GetType() == EValueType::ENUM, "Didnt provide enum description for creating property!");
+    EEnumProperty* result = new EEnumProperty(name, description);
     return result;
 }
 
-EProperty* EProperty::CreatePropertyArray(const EString& name, ERef<EArrayDescription> description) 
+EProperty* EProperty::CreatePropertyArray(const EString& name, EValueDescription description)
 {
+    E_ASSERT(description.IsArray(), "Didnt provide enum description for creating property!");
     EArrayProperty* result = new EArrayProperty(name, description);
     return result;
 }
 
 
-EStructProperty::EStructProperty(const EString& name, ERef<EStructDescription> description, const EVector<EProperty*>& properties) 
+EStructProperty::EStructProperty(const EString& name, EValueDescription description, const EVector<EProperty*>& properties)
     : EProperty(name, description), fProperties(properties)
 {
     
@@ -124,10 +128,10 @@ const EProperty* EStructProperty::GetProperty(const EString& propertyName) const
     return nullptr;
 }
 
-EEnumProperty::EEnumProperty(const EString& name, ERef<EEnumDescription> description, const EString& initValue) 
+EEnumProperty::EEnumProperty(const EString& name, EValueDescription description, const EString& initValue)
     : EProperty(name, description), fValue(initValue)
 {
-    const EVector<EString>& options = description->GetOptions();
+    const EVector<EString>& options = description.GetEnumOptions();
     if (options.size() > 0)
     {
         if (fValue.empty())
@@ -164,7 +168,7 @@ const EString& EEnumProperty::GetCurrentValue() const
     return fValue;
 }
 
-EArrayProperty::EArrayProperty(const EString& name, ERef<EArrayDescription> description) 
+EArrayProperty::EArrayProperty(const EString& name, EValueDescription description)
     : EProperty(name, description)
 {
     
@@ -177,9 +181,8 @@ EArrayProperty::~EArrayProperty()
 
 EProperty* EArrayProperty::AddElement() 
 {
-    ERef<EArrayDescription> arrayDsc = std::dynamic_pointer_cast<EArrayDescription>(fDescription);
     EString elementName = std::to_string(fElements.size());
-    EProperty* result = EProperty::CreateFromDescription(elementName, arrayDsc->GetElementType());
+    EProperty* result = EProperty::CreateFromDescription(elementName, fDescription.GetType());
     fElements.push_back(result);
     return result;
 }
@@ -291,47 +294,45 @@ bool EScene::IsAlive(Entity entity)
     return std::find(fAliveEntites.begin(), fAliveEntites.end(), entity) != fAliveEntites.end();
 }
 
-void EScene::InsertComponent(Entity entity, ERef<EValueDescription> description) 
+void EScene::InsertComponent(Entity entity, EValueDescription description) 
 {
-    E_ASSERT(description, "ERROR: Invalid value descrition!");
+    E_ASSERT(description.Valid(), "ERROR: Invalid value descrition!");
+    E_ASSERT(description.GetType() == EValueType::STRUCT, "Component can only be inserted as struct");
     if (!IsAlive(entity)) { return; }
-    E_ASSERT(description->GetType() == EValueType::STRUCT, "Component can only be inserted as struct");
 
     if (!HasComponent(entity, description))
     {
         EUnorderedMap<EString, EProperty*> properties;
 
-        ERef<EStructDescription> structDescription = std::dynamic_pointer_cast<EStructDescription>(description);
-
-        EStructProperty* storage = static_cast<EStructProperty*>(EProperty::CreateFromDescription(description->GetId(), structDescription));
+        EStructProperty* storage = static_cast<EStructProperty*>(EProperty::CreateFromDescription(description.GetId(), description));
 
 
-        fComponentStorage[description][entity] = storage;
+        fComponentStorage[description.GetId()][entity] = storage;
     }
 }
 
-void EScene::RemoveComponent(Entity entity, ERef<EValueDescription> componentId) 
+void EScene::RemoveComponent(Entity entity, EValueDescription componentId)
 {
-    E_ASSERT(componentId, "ERROR: Invalid value descrition!");
+    E_ASSERT(componentId.Valid(), "ERROR: Invalid value descrition!");
     if (!IsAlive(entity)) { return; }
     if (!HasComponent(entity, componentId)) { return; }
-    delete fComponentStorage[componentId][entity];
-    fComponentStorage[componentId].erase(entity);
+    delete fComponentStorage[componentId.GetId()][entity];
+    fComponentStorage[componentId.GetId()].erase(entity);
 }
 
-bool EScene::HasComponent(Entity entity, ERef<EValueDescription> componentId) 
+bool EScene::HasComponent(Entity entity, EValueDescription componentId) 
 {
-    E_ASSERT(componentId, "ERROR: Invalid value descrition!");
-    return fComponentStorage[componentId][entity];
+    E_ASSERT(componentId.Valid(), "ERROR: Invalid value descrition!");
+    return fComponentStorage[componentId.GetId()][entity];
 }
 
-EStructProperty* EScene::GetComponent(Entity entity, ERef<EValueDescription> componentId) 
+EStructProperty* EScene::GetComponent(Entity entity, EValueDescription componentId) 
 {
-    E_ASSERT(componentId, "ERROR: Invalid value descrition!");
+    E_ASSERT(componentId.Valid(), "ERROR: Invalid value descrition!");
     if (!IsAlive(entity)) { return nullptr; }
     if (!HasComponent(entity, componentId)) { return nullptr; }
 
-    return fComponentStorage[componentId][entity];
+    return fComponentStorage[componentId.GetId()][entity];
 }
 
 EVector<EStructProperty*> EScene::GetAllComponents(Entity entity) 

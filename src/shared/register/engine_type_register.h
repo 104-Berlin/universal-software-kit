@@ -4,56 +4,48 @@ namespace Engine {
 
     enum class EValueType
     {
+        UNKNOWN,
+
         STRUCT,
         ENUM,
-        PRIMITIVE,
-        ARRAY
+        PRIMITIVE
     };
 
     class E_API EValueDescription
     {
-        EValueType fType;
-        EString    fID;
     public:
-        EValueDescription(EValueType type, EString id);
+        using t_ID = EString;
+    private:
+        EValueType  fType;
+        t_ID        fID;
+
+        // For struct
+        EUnorderedMap<EString, EValueDescription> fStructFields;
+        // For enum
+        EVector<EString> fEnumOptions;
+        // For array
+        bool fIsArray;
+    public:
+        EValueDescription(EValueType type = EValueType::UNKNOWN, t_ID id = "");
+        EValueDescription(const EValueDescription&) = default;
         virtual ~EValueDescription();
 
         EValueType GetType() const;
-        const EString& GetId() const;
-        
-    };
+        const t_ID& GetId() const;
 
-    class E_API EStructDescription : public EValueDescription
-    {
-        EUnorderedMap<EString, ERef<EValueDescription>> fFields;
-    public:
-        EStructDescription(const EString& name);
-        virtual ~EStructDescription();
+        bool Valid() const;
 
-        EStructDescription& AddField(const EString& name, ERef<EValueDescription> description);
+        // For structs
+        EValueDescription& AddStructField(const EString& name, EValueDescription description);
+        const EUnorderedMap<EString, EValueDescription>& GetStructFields() const;
 
-        const EUnorderedMap<EString, ERef< EValueDescription>>& GetFields() const;
-    };
+        // For enums
+        EValueDescription& AddEnumOption(const EString& option);
+        const EVector<EString>& GetEnumOptions() const;
 
-    class E_API EEnumDescription : public EValueDescription
-    {
-        EVector<EString> fOptions;
-    public:
-        EEnumDescription(const EString& name);
-        virtual ~EEnumDescription();
-
-        EEnumDescription& AddOption(const EString& option);
-        const EVector<EString>& GetOptions() const;
-    };
-
-    class E_API EArrayDescription : public EValueDescription
-    {
-        ERef<EValueDescription> fType;
-    public:
-        EArrayDescription(ERef<EValueDescription> arrayType);
-        virtual ~EArrayDescription();
-
-        ERef<EValueDescription> GetElementType() const;
+        // Array
+        bool IsArray() const;
+        EValueDescription GetAsArray() const;
     };
 
 
@@ -64,8 +56,8 @@ namespace Engine {
 
 
     
-    E_API ERef<EValueDescription> StringDescription();
-    E_API ERef<EValueDescription> IntegerDescription();
-    E_API ERef<EValueDescription> DoubleDescription();
-    E_API ERef<EValueDescription> BoolDescription();
+    static EValueDescription StringDescription(EValueType::PRIMITIVE, E_TYPEID_STRING);
+    static EValueDescription IntegerDescription(EValueType::PRIMITIVE, E_TYPEID_INTEGER);
+    static EValueDescription DoubleDescription(EValueType::PRIMITIVE, E_TYPEID_DOUBLE);
+    static EValueDescription BoolDescription(EValueType::PRIMITIVE, E_TYPEID_BOOL);
 }

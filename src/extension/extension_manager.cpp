@@ -127,17 +127,17 @@ EScene* EExtensionManager::GetActiveScene() const
     return fLoadedScene;
 }
 
-ERef<EValueDescription> EExtensionManager::GetValueDescriptionById(const EString& extensionName, const EString& typeId) 
+EValueDescription EExtensionManager::GetValueDescriptionById(const EString& extensionName, const EString& typeId) 
 {
-    const EVector<ERef<EValueDescription>>& registeredTypes = fTypeRegister.GetItems(extensionName);
-    for (ERef<EValueDescription> dsc : registeredTypes)
+    const EVector<EValueDescription>& registeredTypes = fTypeRegister.GetItems(extensionName);
+    for (EValueDescription dsc : registeredTypes)
     {
-        if (dsc->GetId() == typeId)
+        if (dsc.GetId() == typeId)
         {
             return dsc;
         }
     }
-    return nullptr;
+    return EValueDescription();
 }
 
 ETypeRegister& EExtensionManager::GetTypeRegister() 
