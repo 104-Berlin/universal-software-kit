@@ -107,11 +107,17 @@ void EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
 {
     EValueDescription currentDsc = property->GetDescription();
     EValueType currentType = currentDsc.GetType();
-    switch (currentType)
+    if (currentDsc.IsArray())
     {
-    case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json, property); break;
-    case EValueType::STRUCT: ReadStructFromJson(json, static_cast<EStructProperty*>(property)); break;
-    case EValueType::ENUM: ReadEnumFromJson(json, static_cast<EEnumProperty*>(property)); break;
-    //case EValueType::ARRAY: ReadArrayFromJson(json, static_cast<EArrayProperty*>(property)); break;
+        ReadArrayFromJson(json, static_cast<EArrayProperty*>(property));
+    }
+    else
+    {
+        switch (currentType)
+        {
+        case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json, property); break;
+        case EValueType::STRUCT: ReadStructFromJson(json, static_cast<EStructProperty*>(property)); break;
+        case EValueType::ENUM: ReadEnumFromJson(json, static_cast<EEnumProperty*>(property)); break;
+        }
     }
 }

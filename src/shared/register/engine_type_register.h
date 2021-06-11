@@ -46,6 +46,7 @@ namespace Engine {
         // Array
         bool IsArray() const;
         EValueDescription GetAsArray() const;
+        EValueDescription GetAsPrimitive() const;
     };
 
 

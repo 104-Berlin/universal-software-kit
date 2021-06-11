@@ -84,12 +84,19 @@ EJson ESerializer::WritePropertyToJs(EProperty* property)
     EValueDescription description = property->GetDescription();
     EValueType type = description.GetType();
 
-    switch (type)
+    if (description.IsArray())
     {
-    case EValueType::PRIMITIVE: return WritePrimitiveToJs(property); break;
-    case EValueType::STRUCT: return WriteStructToJs(static_cast<EStructProperty*>(property)); break;
-    case EValueType::ENUM: return WriteEnumToJs(static_cast<EEnumProperty*>(property)); break;
-    //case EValueType::ARRAY: return WriteArrayToJs(static_cast<EArrayProperty*>(property)); break;
+        return WriteArrayToJs(static_cast<EArrayProperty*>(property));
     }
+    else
+    {
+        switch (type)
+        {
+        case EValueType::PRIMITIVE: return WritePrimitiveToJs(property); break;
+        case EValueType::STRUCT: return WriteStructToJs(static_cast<EStructProperty*>(property)); break;
+        case EValueType::ENUM: return WriteEnumToJs(static_cast<EEnumProperty*>(property)); break;
+        }
+    }
+
     return 0;
 }

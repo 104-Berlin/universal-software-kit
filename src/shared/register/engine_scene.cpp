@@ -26,12 +26,18 @@ EValueDescription EProperty::GetDescription() const
 EProperty* EProperty::CreateFromDescription(const EString& name, EValueDescription description) 
 {
     EValueType type = description.GetType();
-    switch (type)
+    if (description.IsArray())
     {
-    case EValueType::PRIMITIVE: return CreatePropertyPrimitive(name, description);
-    case EValueType::STRUCT: return CreatePropertyStruct(name, description);
-    case EValueType::ENUM: return CreatePropertyEnum(name, description);
-    //case EValueType::ARRAY: return CreatePropertyArray(name, std::dynamic_pointer_cast<EArrayDescription>(description));
+        return CreatePropertyArray(name, description);
+    }
+    else
+    {
+        switch (type)
+        {
+        case EValueType::PRIMITIVE: return CreatePropertyPrimitive(name, description);
+        case EValueType::STRUCT: return CreatePropertyStruct(name, description);
+        case EValueType::ENUM: return CreatePropertyEnum(name, description);
+        }
     }
     return nullptr;
 }
@@ -182,7 +188,7 @@ EArrayProperty::~EArrayProperty()
 EProperty* EArrayProperty::AddElement() 
 {
     EString elementName = std::to_string(fElements.size());
-    EProperty* result = EProperty::CreateFromDescription(elementName, fDescription.GetType());
+    EProperty* result = EProperty::CreateFromDescription(elementName, fDescription.GetAsPrimitive());
     fElements.push_back(result);
     return result;
 }

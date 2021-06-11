@@ -4,7 +4,7 @@
 using namespace Engine;
 
 EValueDescription::EValueDescription(EValueType type, EValueDescription::t_ID id) 
-    : fType(type), fID(id)
+    : fType(type), fID(id), fIsArray(false)
 {
 
 }
@@ -38,6 +38,13 @@ EValueDescription EValueDescription::GetAsArray() const
 {
     EValueDescription result(*this);
     result.fIsArray = true;
+    return result;
+}
+
+EValueDescription EValueDescription::GetAsPrimitive() const
+{
+    EValueDescription result(*this);
+    result.fIsArray = false;
     return result;
 }
 
