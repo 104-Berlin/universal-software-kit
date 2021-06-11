@@ -19,6 +19,13 @@ EValueDescription::EValueDescription(const EValueDescription& other)
     }
 }
 
+
+EValueDescription& EValueDescription::operator=(const EValueDescription& other)
+{
+    EValueDescription(other);
+}
+
+
 EValueDescription::~EValueDescription() 
 {
     for (auto& entry : fStructFields)

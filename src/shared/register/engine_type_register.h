@@ -28,6 +28,8 @@ namespace Engine {
     public:
         EValueDescription(EValueType type = EValueType::UNKNOWN, t_ID id = "");
         EValueDescription(const EValueDescription&);
+        EValueDescription(EValueDescription&);
+        EValueDescription& operator=(const EValueDescription& other);
         ~EValueDescription();
 
         EValueType GetType() const;
