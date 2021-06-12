@@ -79,13 +79,13 @@ bool EObjectView::OnRender()
         }
         if (ImGui::BeginPopup("add-component-popup"))
         {
-            for (ERef<EValueDescription> compDsc : fExtensionManager->GetTypeRegister().GetAllItems())
+            for (EValueDescription compDsc : fExtensionManager->GetTypeRegister().GetAllItems())
             {
-                if (compDsc->GetType() != EValueType::STRUCT) { continue; }
+                if (compDsc.GetType() != EValueType::STRUCT) { continue; }
                 bool hasComp = fExtensionManager->GetActiveScene()->HasComponent(fSelectedEntity, compDsc);
                 if (!hasComp)
                 {
-                    if (ImGui::Selectable(compDsc->GetId().c_str()))
+                    if (ImGui::Selectable(compDsc.GetId().c_str()))
                     {
                         fExtensionManager->GetActiveScene()->InsertComponent(fSelectedEntity, compDsc);
                     }
@@ -109,23 +109,30 @@ void EObjectView::OnUpdateEventDispatcher()
 
 void EObjectView::RenderProperty(Engine::EProperty* storage) 
 {
-    ERef<EValueDescription> propertyDsc = storage->GetDescription();
-    EValueType type = propertyDsc->GetType();
-    switch (type)
+    EValueDescription propertyDsc = storage->GetDescription();
+    EValueType type = propertyDsc.GetType();
+    if (propertyDsc.IsArray())
     {
-    case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage)); break;
-    case EValueType::PRIMITIVE: RenderPrimitive(storage); break;
-    case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage)); break;
-    case EValueType::ARRAY: RenderArray(static_cast<EArrayProperty*>(storage)); break;
+        RenderArray(static_cast<EArrayProperty*>(storage));
+    }
+    else
+    {
+        switch (type)
+        {
+        case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage)); break;
+        case EValueType::PRIMITIVE: RenderPrimitive(storage); break;
+        case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage)); break;
+        case EValueType::UNKNOWN: break;
+        }
     }
 }
 
 void EObjectView::RenderStruct(EStructProperty* storage) 
 {
-    ERef<EStructDescription> description = std::dynamic_pointer_cast<EStructDescription>(storage->GetDescription());
+    EValueDescription description = storage->GetDescription();
     if (ImGui::CollapsingHeader(storage->GetPropertyName().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
     {
-        for (auto& entry : description->GetFields())
+        for (auto& entry : description.GetStructFields())
         {
             const EString& propertyName = entry.first;
             RenderProperty(storage->GetProperty(propertyName));
@@ -135,8 +142,8 @@ void EObjectView::RenderStruct(EStructProperty* storage)
 
 void EObjectView::RenderPrimitive(Engine::EProperty* storage) 
 {
-    ERef<EValueDescription> description = storage->GetDescription();
-    const EString& primitiveId = description->GetId();
+    EValueDescription description = storage->GetDescription();
+    const EString& primitiveId = description.GetId();
     if (primitiveId == E_TYPEID_STRING) { RenderString(static_cast<EValueProperty<EString>*>(storage)); } 
     else if (primitiveId == E_TYPEID_INTEGER) { RenderInteger(static_cast<EValueProperty<i32>*>(storage)); }
     else if (primitiveId == E_TYPEID_DOUBLE) { RenderDouble(static_cast<EValueProperty<double>*>(storage)); }
@@ -152,9 +159,9 @@ char* convert_str_to_chr(const std::string & s)
 
 void EObjectView::RenderEnum(Engine::EEnumProperty* storage) 
 {
-    ERef<EEnumDescription> description = std::dynamic_pointer_cast<EEnumDescription>(storage->GetDescription());
+    EValueDescription description = storage->GetDescription();
     int currentItem = -1;
-    for (EString option : description->GetOptions())
+    for (EString option : description.GetEnumOptions())
     {
         currentItem++;
         if (option == storage->GetCurrentValue())
@@ -163,20 +170,18 @@ void EObjectView::RenderEnum(Engine::EEnumProperty* storage)
         }
     }
     std::vector<char*> opt;
-    std::transform(description->GetOptions().begin(), description->GetOptions().end(), std::back_inserter(opt), convert_str_to_chr);
+    std::transform(description.GetEnumOptions().begin(), description.GetEnumOptions().end(), std::back_inserter(opt), convert_str_to_chr);
 
-    ImGui::Combo(storage->GetPropertyName().c_str(), &currentItem, opt.data(), description->GetOptions().size());
+    ImGui::Combo(storage->GetPropertyName().c_str(), &currentItem, opt.data(), description.GetEnumOptions().size());
 
     for ( size_t i = 0 ; i < opt.size() ; i++ )
             delete [] opt[i];
 
-    storage->SetCurrentValue(description->GetOptions()[currentItem]);
+    storage->SetCurrentValue(description.GetEnumOptions()[currentItem]);
 }
 
 void EObjectView::RenderArray(Engine::EArrayProperty* storage) 
 {
-    ERef<EArrayDescription> arrayDsc = std::dynamic_pointer_cast<EArrayDescription>(storage->GetDescription());
-
     for (EProperty* element : storage->GetElements())
     {
         RenderProperty(element);

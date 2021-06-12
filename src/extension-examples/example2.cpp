@@ -36,19 +36,24 @@ struct ElectricalComponent
 
 EXT_ENTRY
 {
-    ERef<EEnumDescription> electricalTypeDsc = EMakeRef<EEnumDescription>("ElectricalType");
-    electricalTypeDsc->AddOption("GENERATOR");
-    electricalTypeDsc->AddOption("INPUT");
-    electricalTypeDsc->AddOption("OUTPUT");
-    electricalTypeDsc->AddOption("CONSUMER");
+    EValueDescription _electricalTypeDsc = EValueDescription(EValueType::ENUM, "ElectricalType");
+    _electricalTypeDsc
+        .AddEnumOption("GENERATOR")
+        .AddEnumOption("INPUT")
+        .AddEnumOption("OUTPUT")
+        .AddEnumOption("CONSUMER");
 
-    ERef<EStructDescription> electricalInfoDsc = EMakeRef<EStructDescription>("ElectricalInfo");
-    electricalInfoDsc->AddField("Capacity", DoubleDescription());
-    electricalInfoDsc->AddField("IDontKnow", DoubleDescription());
+    EValueDescription _electricalInfoDsc = EValueDescription(EValueType::STRUCT, "ElectricalInfo");
+    _electricalInfoDsc
+        .AddStructField("Capacity", DoubleDescription)
+        .AddStructField("IDontKnow", DoubleDescription);
 
-    ERef<EStructDescription> electricalDescription = EMakeRef<EStructDescription>("Electrical");
-    electricalDescription->AddField("Type", electricalTypeDsc);
-    electricalDescription->AddField("InfoArray", EMakeRef<EArrayDescription>(electricalInfoDsc));
+    EValueDescription _electricalDescription = EValueDescription(EValueType::STRUCT, "Electrical");
+    _electricalDescription
+        .AddStructField("Type", _electricalTypeDsc)
+        .AddStructField("Type2", _electricalTypeDsc)
+        .AddStructField("InfoArray", _electricalInfoDsc.GetAsArray());
 
-    info.GetTypeRegister().RegisterItem(extensionName, electricalDescription);
+
+    info.GetTypeRegister().RegisterItem(extensionName, _electricalDescription);
 }

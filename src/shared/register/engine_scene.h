@@ -23,23 +23,23 @@ namespace Engine {
         friend class EScene;
     public:
         EString fName;
-        ERef<EValueDescription> fDescription;
+        EValueDescription fDescription;
     public:
-        EProperty(const EString& name, ERef<EValueDescription> description);
+        EProperty(const EString& name, EValueDescription description);
         virtual ~EProperty() = default;
 
         const EString& GetPropertyName() const;
 
-        ERef<EValueDescription> GetDescription() const;
+        EValueDescription GetDescription() const;
 
 
         
-        static EProperty* CreateFromDescription(const EString& name, ERef<EValueDescription> description);
+        static EProperty* CreateFromDescription(const EString& name, EValueDescription description);
     private:
-        static EProperty* CreatePropertyStruct(const EString& name, ERef<EStructDescription> description);
-        static EProperty* CreatePropertyPrimitive(const EString& name, ERef<EValueDescription> descrption);
-        static EProperty* CreatePropertyEnum(const EString& name, ERef<EEnumDescription> descrption);
-        static EProperty* CreatePropertyArray(const EString& name, ERef<EArrayDescription> description);
+        static EProperty* CreatePropertyStruct(const EString& name, EValueDescription description);
+        static EProperty* CreatePropertyPrimitive(const EString& name, EValueDescription descrption);
+        static EProperty* CreatePropertyEnum(const EString& name, EValueDescription descrption);
+        static EProperty* CreatePropertyArray(const EString& name, EValueDescription description);
     };
 
     template <typename ValueType>
@@ -48,7 +48,7 @@ namespace Engine {
     private:
         ValueType fValue;
     public:
-        EValueProperty(const EString& name, ERef<EValueDescription> description, const ValueType& initValue = ValueType())
+        EValueProperty(const EString& name, EValueDescription description, const ValueType& initValue = ValueType())
             : EProperty(name, description)
         {
             fValue = initValue;
@@ -70,7 +70,7 @@ namespace Engine {
     private:
         EVector<EProperty*> fProperties;
     public:
-        EStructProperty(const EString& name, ERef<EStructDescription> description, const EVector<EProperty*>& properties = {});
+        EStructProperty(const EString& name, EValueDescription description, const EVector<EProperty*>& properties = {});
         ~EStructProperty();
 
         template <typename T>
@@ -99,7 +99,7 @@ namespace Engine {
     private:
         EString fValue;
     public:
-        EEnumProperty(const EString& name, ERef<EEnumDescription> description, const EString& initValue = "");
+        EEnumProperty(const EString& name, EValueDescription description, const EString& initValue = "");
         ~EEnumProperty();
 
         void SetCurrentValue(const EString& value);
@@ -111,7 +111,7 @@ namespace Engine {
     private:
         EVector<EProperty*> fElements;
     public:
-        EArrayProperty(const EString& name, ERef<EArrayDescription> description);
+        EArrayProperty(const EString& name, EValueDescription description);
         ~EArrayProperty();
 
         EProperty* AddElement();
@@ -130,7 +130,7 @@ namespace Engine {
         EString fName;
         EResourceManager fResourceManager;
 
-        EUnorderedMap<ERef<EValueDescription>, EUnorderedMap<Entity, EStructProperty*>> fComponentStorage;
+        EUnorderedMap<EValueDescription::t_ID, EUnorderedMap<Entity, EStructProperty*>> fComponentStorage;
         EVector<Entity>     fAliveEntites;
         EVector<Entity>     fDeadEntites;
     public:
@@ -145,10 +145,10 @@ namespace Engine {
 
         bool IsAlive(Entity entity);
 
-        void InsertComponent(Entity entity, ERef<EValueDescription> componentId);
-        void RemoveComponent(Entity entity, ERef<EValueDescription> componentId);
-        bool HasComponent(Entity entity, ERef<EValueDescription> componentId);
-        EStructProperty* GetComponent(Entity entity, ERef<EValueDescription> componentId);
+        void InsertComponent(Entity entity, EValueDescription componentId);
+        void RemoveComponent(Entity entity, EValueDescription componentId);
+        bool HasComponent(Entity entity, EValueDescription componentId);
+        EStructProperty* GetComponent(Entity entity, EValueDescription componentId);
         EVector<EStructProperty*> GetAllComponents(Entity entity);
     };
 

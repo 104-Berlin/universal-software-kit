@@ -3,17 +3,17 @@
 
 using namespace Engine;
 
-void EDeserializer::ReadSceneFromJson(const EJson& json, EScene* saveToScene, const EVector<ERef<EValueDescription>>& registeredTypes) 
+void EDeserializer::ReadSceneFromJson(const EJson& json, EScene* saveToScene, const EVector<EValueDescription>& registeredTypes) 
 {
-    auto findType = [&registeredTypes](const EString& id) -> ERef<EValueDescription> {
-        for (ERef<EValueDescription> dsc : registeredTypes)
+    auto findType = [&registeredTypes](const EString& id) -> EValueDescription {
+        for (EValueDescription dsc : registeredTypes)
         {
-            if (dsc->GetId() == id)
+            if (dsc.GetId() == id)
             {
                 return dsc;
             }
         }
-        return nullptr;
+        return EValueDescription();
     };
 
     saveToScene->Clear();
@@ -26,8 +26,8 @@ void EDeserializer::ReadSceneFromJson(const EJson& json, EScene* saveToScene, co
             for (const auto& it : entityObject.items())
             {
                 EString id = it.key();
-                ERef<EValueDescription> description = findType(id);
-                if (description)
+                EValueDescription description = findType(id);
+                if (description.Valid())
                 {
                     saveToScene->InsertComponent(entity, description);
                     EStructProperty* component = saveToScene->GetComponent(entity, description);
@@ -40,7 +40,7 @@ void EDeserializer::ReadSceneFromJson(const EJson& json, EScene* saveToScene, co
 
 void ReadPrimitiveFromJson(const EJson& json, EProperty* property)
 {
-    EString primitiveType = property->GetDescription()->GetId();
+    EString primitiveType = property->GetDescription().GetId();
 
     if (primitiveType == E_TYPEID_BOOL)
     {
@@ -93,9 +93,9 @@ void ReadArrayFromJson(const EJson& json, EArrayProperty* property)
 
 void ReadStructFromJson(const EJson& json, EStructProperty* property)
 {
-    ERef<EStructDescription> description = std::dynamic_pointer_cast<EStructDescription>(property->GetDescription());
+    EValueDescription description = property->GetDescription();
     
-    for (auto& entry : description->GetFields())
+    for (auto& entry : description.GetStructFields())
     {
         EValueType fieldType = entry.second->GetType();
 
@@ -105,13 +105,20 @@ void ReadStructFromJson(const EJson& json, EStructProperty* property)
 
 void EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property) 
 {
-    ERef<EValueDescription> currentDsc = property->GetDescription();
-    EValueType currentType = currentDsc->GetType();
-    switch (currentType)
+    EValueDescription currentDsc = property->GetDescription();
+    EValueType currentType = currentDsc.GetType();
+    if (currentDsc.IsArray())
     {
-    case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json, property); break;
-    case EValueType::STRUCT: ReadStructFromJson(json, static_cast<EStructProperty*>(property)); break;
-    case EValueType::ENUM: ReadEnumFromJson(json, static_cast<EEnumProperty*>(property)); break;
-    case EValueType::ARRAY: ReadArrayFromJson(json, static_cast<EArrayProperty*>(property)); break;
+        ReadArrayFromJson(json, static_cast<EArrayProperty*>(property));
+    }
+    else
+    {
+        switch (currentType)
+        {
+        case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json, property); break;
+        case EValueType::STRUCT: ReadStructFromJson(json, static_cast<EStructProperty*>(property)); break;
+        case EValueType::ENUM: ReadEnumFromJson(json, static_cast<EEnumProperty*>(property)); break;
+        case EValueType::UNKNOWN: break;
+        }
     }
 }
