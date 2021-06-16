@@ -4,3 +4,6 @@
 [submodule "deps/usk-graphics"]
 	path = deps/usk-graphics
 	url = https://github.com/104-Berlin/usk-graphics.git
+[submodule "deps/chai"]
+	path = deps/chai
+	url = https://github.com/ChaiScript/ChaiScript.git

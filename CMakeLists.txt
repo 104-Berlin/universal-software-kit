@@ -40,6 +40,7 @@ include_directories(src/)
 
 add_subdirectory(src/shared)
 add_subdirectory(src/extension)
+add_subdirectory(src/scripting)
 
 
 #########################

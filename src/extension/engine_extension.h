@@ -30,6 +30,8 @@
 #include "engine.h"
 #include "prefix_shared.h"
 
+#include "prefix_scripting.h"
+
 #include "engine_extension_register.h"
 
 #include "extension_manager.h"

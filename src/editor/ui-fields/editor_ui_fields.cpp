@@ -230,3 +230,21 @@ void EObjectView::RenderString(Engine::EValueProperty<EString>* storage)
     ImGui::PopID();
     storage->SetValue(buf);
 }
+
+ECommandLine::ECommandLine(EChaiContext* context) 
+    : EUIField("CommandLine"), fChaiContext(context)
+{
+    
+}
+
+bool ECommandLine::OnRender() 
+{
+    ImGui::Begin("CommandLine");
+    char buffer[255];
+    if (ImGui::InputText("##COMMAND_LINE_INPUT", buffer, 255, ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        fChaiContext->Execute(buffer);
+    }
+    ImGui::End();
+    return true;
+}
