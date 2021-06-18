@@ -130,8 +130,6 @@ void EApplication::RenderImGui()
 
     fCommandLine.UpdateEventDispatcher();
     fCommandLine.Render();
-
-    ImGui::ShowDemoWindow();
 }
 
 void EApplication::RegisterDefaultPanels() 
