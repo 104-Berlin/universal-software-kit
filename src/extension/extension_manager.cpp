@@ -149,3 +149,13 @@ const ETypeRegister& EExtensionManager::GetTypeRegister() const
 {
     return fTypeRegister;
 }
+
+EChaiContext& EExtensionManager::GetChaiContext() 
+{
+    return fChaiScriptContext;
+}
+
+const EChaiContext& EExtensionManager::GetChaiContext() const
+{
+    return fChaiScriptContext;
+}

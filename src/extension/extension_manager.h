@@ -36,6 +36,7 @@ namespace Engine {
         EScene*                             fLoadedScene;
         ETypeRegister                       fTypeRegister;
         EEventDispatcher                    fEventDispatcher;
+        EChaiContext                        fChaiScriptContext;
     public:
         EExtensionManager();
         ~EExtensionManager();
@@ -74,6 +75,9 @@ namespace Engine {
 
         ETypeRegister& GetTypeRegister();
         const ETypeRegister& GetTypeRegister() const;
+
+        EChaiContext& GetChaiContext();
+        const EChaiContext& GetChaiContext() const;
 
         template <typename EventType, typename CB>
         void AddEventListener(CB&& callback)

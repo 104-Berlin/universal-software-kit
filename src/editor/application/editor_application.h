@@ -11,6 +11,7 @@ namespace Editor {
 
         Engine::EExtensionManager   fExtensionManager;
         Engine::EUIRegister         fUIRegister;
+        ECommandLine                fCommandLine;
     public:
         EApplication();
 

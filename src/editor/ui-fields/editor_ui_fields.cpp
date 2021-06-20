@@ -96,8 +96,6 @@ bool EObjectView::OnRender()
     }
     ImGui::EndChild();
 
-    //ImGui::ShowDemoWindow();
-
 
     return true;
 }
@@ -229,4 +227,42 @@ void EObjectView::RenderString(Engine::EValueProperty<EString>* storage)
     ImGui::InputText(storage->GetPropertyName().c_str(), buf, 255);
     ImGui::PopID();
     storage->SetValue(buf);
+}
+
+ECommandLine::ECommandLine(EChaiContext* context) 
+    : EUIField("CommandLine"), fChaiContext(context)
+{
+    
+}
+
+bool ECommandLine::OnRender() 
+{
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + viewport->Size.y - 32));
+	ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, 32));
+	ImGui::SetNextWindowViewport(viewport->ID);
+
+    ImGuiWindowFlags window_flags = 0
+		| ImGuiWindowFlags_NoDocking 
+		| ImGuiWindowFlags_NoTitleBar 
+		| ImGuiWindowFlags_NoResize 
+		| ImGuiWindowFlags_NoMove 
+		| ImGuiWindowFlags_NoScrollbar 
+		| ImGuiWindowFlags_NoSavedSettings
+		;
+
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
+    ImGui::Begin("CommandLine", NULL, window_flags);
+    ImGui::PopStyleVar();
+    ImGui::PushItemWidth(-1);
+    char buffer[255];
+    memset(buffer, 0, 255);
+    if (ImGui::InputText("##COMMAND_LINE_INPUT", buffer, 255, ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        fChaiContext->Execute(buffer);
+    }
+    ImGui::PopItemWidth();
+    ImGui::End();
+    return true;
 }

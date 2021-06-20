@@ -6,7 +6,7 @@ using namespace Engine;
 
 
 EApplication::EApplication() 
-    : fGraphicsContext(nullptr)
+    : fGraphicsContext(nullptr), fCommandLine(&fExtensionManager.GetChaiContext())
 {
     fExtensionManager.AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent& event) {
         auto entry = (void(*)(const char*, Engine::EAppInit))event.Extension->GetFunction("app_entry");
@@ -125,10 +125,11 @@ void EApplication::RenderImGui()
     }
 
     fMainMenu->UpdateEventDispatcher();
-
     fMainMenu->Render();
 
-    ImGui::ShowDemoWindow();
+
+    fCommandLine.UpdateEventDispatcher();
+    fCommandLine.Render();
 }
 
 void EApplication::RegisterDefaultPanels() 
@@ -151,10 +152,10 @@ void EApplication::RegisterDefaultPanels()
     ERef<EUIPanel> universalSceneView4 = EMakeRef<EUIPanel>("Basic Scene View 4");
     universalSceneView4->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
 
-    fUIRegister.RegisterItem("intern", universalSceneView1);
-    fUIRegister.RegisterItem("intern", universalSceneView2);
-    fUIRegister.RegisterItem("intern", universalSceneView3);
-    fUIRegister.RegisterItem("intern", universalSceneView4);
-    fUIRegister.RegisterItem("intern", resourcePanel);
-    fUIRegister.RegisterItem("intern", extensionPanel);
+    fUIRegister.RegisterItem("Core", universalSceneView1);
+    fUIRegister.RegisterItem("Core", universalSceneView2);
+    fUIRegister.RegisterItem("Core", universalSceneView3);
+    fUIRegister.RegisterItem("Core", universalSceneView4);
+    fUIRegister.RegisterItem("Core", resourcePanel);
+    fUIRegister.RegisterItem("Core", extensionPanel);
 }
