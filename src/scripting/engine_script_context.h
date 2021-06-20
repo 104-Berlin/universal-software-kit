@@ -4,7 +4,7 @@ namespace Engine {
 
 #define E_NOT_IMPLEMENTED { E_WARN("Register type is not implemented for " + fName); }
 
-    class E_API EScriptContext
+    class E_SAPI EScriptContext
     {
     private:
         EString fName;

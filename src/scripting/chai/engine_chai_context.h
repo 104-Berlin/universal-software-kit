@@ -2,7 +2,7 @@
 
 namespace Engine {
 
-    class E_API EChaiContext : public EScriptContext
+    class E_SAPI EChaiContext : public EScriptContext
     {
     private:
         chaiscript::ChaiScript fContext;

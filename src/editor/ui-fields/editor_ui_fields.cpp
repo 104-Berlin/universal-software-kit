@@ -257,6 +257,7 @@ bool ECommandLine::OnRender()
     ImGui::PopStyleVar();
     ImGui::PushItemWidth(-1);
     char buffer[255];
+    memset(buffer, 0, 255);
     if (ImGui::InputText("##COMMAND_LINE_INPUT", buffer, 255, ImGuiInputTextFlags_EnterReturnsTrue))
     {
         fChaiContext->Execute(buffer);
