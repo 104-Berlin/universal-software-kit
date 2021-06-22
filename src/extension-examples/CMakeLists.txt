@@ -6,7 +6,12 @@ add_library(Example1 MODULE example1.cpp)
 set_target_properties(Example1 PROPERTIES SUFFIX ".uex")
 set_target_properties(Example1 PROPERTIES PREFIX "")
 
+add_library(TECHDRAW MODULE technical_drawing.cpp)
+set_target_properties(TECHDRAW PROPERTIES SUFFIX ".uex")
+set_target_properties(TECHDRAW PROPERTIES PREFIX "")
+
 target_link_libraries(Example1 EEditorExtension)
+target_link_libraries(TECHDRAW EEditorExtension)
 endif()
 
 
