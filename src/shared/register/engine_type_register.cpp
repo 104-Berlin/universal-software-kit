@@ -78,6 +78,16 @@ EValueDescription EValueDescription::GetAsPrimitive() const
     return result;
 }
 
+EValueDescription EValueDescription::CreateStruct(const t_ID& id, std::initializer_list<std::pair<EString, EValueDescription>> childs) 
+{
+    EValueDescription result(EValueType::STRUCT, id);
+    for (const std::pair<EString, EValueDescription>& entry : childs)
+    {
+        result.AddStructField(entry.first, entry.second);
+    }
+    return result;
+}
+
 EValueDescription& EValueDescription::AddStructField(const EString& name, EValueDescription description) 
 {
     if (fType != EValueType::STRUCT) 
