@@ -1,5 +1,7 @@
 #include "editor_extension.h"
 
+#include "imgui_internal.h"
+
 using namespace Engine;
 
 void intern::InitUI()
@@ -9,7 +11,7 @@ void intern::InitUI()
 }
 
 EUIField::EUIField(const EString& label) 
-    : fLabel(label), fID(next_ui_id()), fVisible(true), fDirty(false)
+    : fLabel(label), fID(next_ui_id()), fVisible(true), fDirty(false), fLastMousePos(0.0f, 0.0f)
 {
     
 }
@@ -57,6 +59,60 @@ bool EUIField::OnRender()
 
 void EUIField::OnRenderEnd() 
 {
+    if (ImGui::IsItemHovered())
+    {
+        ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
+        ImGuiWindow* window = g.CurrentWindow;
+
+        ImRect itemRect = window->DC.LastItemRect;
+
+
+        EVec2 mousePos(ImGui::GetMousePos().x, ImGui::GetMousePos().y);
+        mousePos -= EVec2(itemRect.Min.x, itemRect.Min.y);
+
+        ImVec2 md0 = ImGui::GetMouseDragDelta(0, 0.0f);
+        EVec2 mouseDrag0(md0.x, md0.y);
+        ImGui::ResetMouseDragDelta(0);
+        ImVec2 md1 = ImGui::GetMouseDragDelta(1, 0.0f);
+        EVec2 mouseDrag1(md1.x, md1.y);
+        ImGui::ResetMouseDragDelta(1);
+        ImVec2 md2 = ImGui::GetMouseDragDelta(2, 0.0f);
+        EVec2 mouseDrag2(md2.x, md2.y);
+        ImGui::ResetMouseDragDelta(2);
+
+
+        EVec2 mouseDelta = mousePos - fLastMousePos;
+        fLastMousePos = mousePos;
+        if (glm::length(mouseDelta) > 0.0f)
+        {
+            fEventDispatcher.Enqueue<EMouseMoveEvent>({mousePos, mouseDelta});
+        }
+
+        if (ImGui::IsMouseClicked(0))
+        {
+            fEventDispatcher.Enqueue<EMouseClickEvent>(EMouseClickEvent{mousePos, 0});
+        }
+        if (ImGui::IsMouseClicked(1))
+        {
+            fEventDispatcher.Enqueue<EMouseClickEvent>(EMouseClickEvent{mousePos, 1});
+        }
+        if (ImGui::IsMouseClicked(2))
+        {
+            fEventDispatcher.Enqueue<EMouseClickEvent>(EMouseClickEvent{mousePos, 2});
+        }
+        if (glm::length(mouseDrag0) > 0.0f)
+        {
+            fEventDispatcher.Enqueue<EMouseDragEvent>({mousePos, mouseDrag0, 0});
+        }
+        if (glm::length(mouseDrag1) > 0.0f)
+        {
+            fEventDispatcher.Enqueue<EMouseDragEvent>({mousePos, mouseDrag1, 1});
+        }
+        if (glm::length(mouseDrag2) > 0.0f)
+        {
+            fEventDispatcher.Enqueue<EMouseDragEvent>({mousePos, mouseDrag2, 2});
+        }
+    }
     
 }
 
