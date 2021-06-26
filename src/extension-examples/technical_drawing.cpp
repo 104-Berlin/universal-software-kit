@@ -12,15 +12,12 @@ struct ExtensionData
 {
     RCamera Camera = RCamera(ECameraMode::ORTHOGRAPHIC);
     EStructProperty* CurrentEditPoint = nullptr;
-
-    EVector<RLine> drawingLines;
 };
 
 static ExtensionData data{};
 
 void RenderSimpleViewport(GContext* context, GFrameBuffer* frameBuffer)
 {
-    data.drawingLines.clear();
     context->Clear();
     RRenderer3D renderer(context);
     renderer.Begin(frameBuffer, &(data.Camera));
@@ -32,8 +29,7 @@ void RenderSimpleViewport(GContext* context, GFrameBuffer* frameBuffer)
         RLine line;
         line.SetStart(beginPoint->GetValue<EVec3>());
         line.SetEnd(endPoint->GetValue<EVec3>());
-        data.drawingLines.push_back(line);
-        renderer.Submit(&data.drawingLines.back());
+        renderer.Submit(&line);
     }
     renderer.End();
 }
@@ -52,6 +48,7 @@ void ViewportClicked(EMouseClickEvent e)
     EStructProperty* vector = static_cast<EStructProperty*>(arrayProp->AddElement());
     vector->SetValue(EVec3(e.Position.x, e.Position.y, 0.0f));
     data.CurrentEditPoint = static_cast<EStructProperty*>(arrayProp->AddElement());
+    data.CurrentEditPoint->SetValue(EVec3(e.Position.x, e.Position.y, 0.0f));
 }
 
 void ViewportDrag(EMouseDragEvent e)
