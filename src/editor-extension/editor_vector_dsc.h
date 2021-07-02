@@ -4,6 +4,8 @@ static Engine::EValueDescription dsc_Vec2 = Engine::EValueDescription::CreateStr
 static Engine::EValueDescription dsc_Vec3 = Engine::EValueDescription::CreateStruct("Vec3", {{"X", Engine::DoubleDescription}, {"Y", Engine::DoubleDescription}, {"Z", Engine::DoubleDescription}});
 static Engine::EValueDescription dsc_Vec4 = Engine::EValueDescription::CreateStruct("Vec4", {{"X", Engine::DoubleDescription}, {"Y", Engine::DoubleDescription}, {"Z", Engine::DoubleDescription}, {"W", Engine::DoubleDescription}});
 
+#ifdef EWIN
+
 namespace convert
 {
     extern template E_EDEXAPI bool setter<EVec2>(Engine::EStructProperty*, const EVec2&);
@@ -13,3 +15,5 @@ namespace convert
     extern template E_EDEXAPI bool setter<EVec4>(Engine::EStructProperty*, const EVec4&);
     extern template E_EDEXAPI bool getter<EVec4>(const Engine::EStructProperty*, EVec4*);
 }
+
+#endif
