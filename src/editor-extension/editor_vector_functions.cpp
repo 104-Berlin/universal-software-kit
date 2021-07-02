@@ -1,7 +1,7 @@
 #include "editor_extension.h"
 
 template <>
-bool convert<Engine::EStructProperty, EVec2>::setter(Engine::EStructProperty* property, const EVec2& vec)
+bool convert::setter<EVec2>(Engine::EStructProperty* property, const EVec2& vec)
 {
     using namespace Engine;
 	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
@@ -16,7 +16,7 @@ bool convert<Engine::EStructProperty, EVec2>::setter(Engine::EStructProperty* pr
 }
 
 template <>
-bool convert<Engine::EStructProperty, EVec2>::getter(const Engine::EStructProperty* property, EVec2* outVec)
+bool convert::getter<EVec2>(const Engine::EStructProperty* property, EVec2* outVec)
 {
     using namespace Engine;
 	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
@@ -30,10 +30,8 @@ bool convert<Engine::EStructProperty, EVec2>::getter(const Engine::EStructProper
 	return false;
 }
 
-
-
 template <>
-bool convert<Engine::EStructProperty, EVec3>::setter(Engine::EStructProperty* property, const EVec3& vec)
+bool convert::setter<EVec3>(Engine::EStructProperty* property, const EVec3& vec)
 {
     using namespace Engine;
 	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
@@ -50,7 +48,7 @@ bool convert<Engine::EStructProperty, EVec3>::setter(Engine::EStructProperty* pr
 }
 
 template <>
-bool convert<Engine::EStructProperty, EVec3>::getter(const Engine::EStructProperty* property, EVec3* outVec)
+bool convert::getter<EVec3>(const Engine::EStructProperty* property, EVec3* outVec)
 {
     using namespace Engine;
 	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
@@ -67,9 +65,8 @@ bool convert<Engine::EStructProperty, EVec3>::getter(const Engine::EStructProper
 }
 
 
-
 template <>
-bool convert<Engine::EStructProperty, EVec4>::setter(Engine::EStructProperty* property, const EVec4& vec)
+bool convert::setter<EVec4>(Engine::EStructProperty* property, const EVec4& vec)
 {
     using namespace Engine;
 	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
@@ -86,7 +83,7 @@ bool convert<Engine::EStructProperty, EVec4>::setter(Engine::EStructProperty* pr
 }
 
 template <>
-bool convert<Engine::EStructProperty, EVec4>::getter(const Engine::EStructProperty* property, EVec4* outVec)
+bool convert::getter<EVec4>(const Engine::EStructProperty* property, EVec4* outVec)
 {
     using namespace Engine;
 	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");

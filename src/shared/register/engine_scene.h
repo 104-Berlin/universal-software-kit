@@ -1,14 +1,21 @@
 #pragma once
 
-template <typename Property, typename Value>
-struct convert {
-    static bool setter(Property* prop, const Value& value)
+namespace Engine {
+    class EStructProperty;
+}
+
+namespace convert {
+
+    template <typename Value>
+    bool setter(Engine::EStructProperty* prop, const Value& value)
     {
         E_ASSERT(false, EString("Setter not implemented for type ") + typeid(Value).name());
         return false;
     }
 
-    static bool getter(const Property* prop, Value* outValue)
+
+    template <typename Value>
+    bool getter(const Engine::EStructProperty* prop, Value* outValue)
     {
         E_ASSERT(false, EString("Getter not implemented for type ") + typeid(Value).name());
         return false;
@@ -78,14 +85,14 @@ namespace Engine {
         template <typename T>
         void SetValue(const T& value)
         {
-            convert<EStructProperty, T>::setter(this, value);
+            convert::setter<T>(this, value);
         }
 
         template <typename T>
         T GetValue() const
         {
             T result;
-            convert<EStructProperty, T>::getter(this, &result);
+            convert::getter<T>(this, &result);
             return result;
         }
 
