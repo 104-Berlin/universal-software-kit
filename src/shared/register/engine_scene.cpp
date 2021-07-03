@@ -347,7 +347,7 @@ EVector<EStructProperty*> EScene::GetAllComponents(Entity entity)
     EVector<EStructProperty*> result;
     for (auto& entry : fComponentStorage)
     {
-        if (entry.second[entity])
+        if (entry.second.find(entity) != entry.second.end())
         {
             result.push_back(entry.second[entity]);
         }
