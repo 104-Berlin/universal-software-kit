@@ -29,5 +29,13 @@
 #include "graphics_wrapper.h"
 #include "graphics_renderer.h"
 
+typedef glm::vec2 EVec2;
+typedef glm::vec3 EVec3;
+typedef glm::vec4 EVec4;
+
+typedef glm::mat4 EMat4;
+
+#include "editor_vector_dsc.h"
+
 #include "ui/editor_ext_ui.h"
 #include "ui/editor_ui_register.h"

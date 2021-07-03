@@ -104,7 +104,7 @@ void EApplication::Init(Graphics::GContext* context)
 
 void EApplication::CleanUp() 
 {
-    
+    fUIRegister.ClearAllItems();
 }
 
 void EApplication::Render() 

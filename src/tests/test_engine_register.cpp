@@ -11,7 +11,7 @@ struct Vector
 };
 
 template <>
-void convert<EStructProperty, Vector>::setter(EStructProperty* property, const Vector& vec)
+bool convert::setter<Vector>(EStructProperty* property, const Vector& vec)
 {
 	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
 	EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
@@ -21,11 +21,13 @@ void convert<EStructProperty, Vector>::setter(EStructProperty* property, const V
 		xProp->SetValue(vec.x);
 		yProp->SetValue(vec.y);
 		zProp->SetValue(vec.z);
+		return true;
 	}
+	return false;
 }
 
 template <>
-void convert<EStructProperty, Vector>::getter(const EStructProperty* property, Vector* outVec)
+bool convert::getter<Vector>(const EStructProperty* property, Vector* outVec)
 {
 	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
 	const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
@@ -35,7 +37,9 @@ void convert<EStructProperty, Vector>::getter(const EStructProperty* property, V
 		outVec->x = (float)xProp->GetValue();
 		outVec->y = (float)yProp->GetValue();
 		outVec->z = (float)zProp->GetValue();
+		return true;
 	}
+	return false;
 }
 
 

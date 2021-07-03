@@ -11,12 +11,11 @@ namespace Engine {
         struct EventStorage
         {
             /* data */
-            EventType   Type;
-            void*       EventData;
-            std::function<void()> CleanUp;
+            EventType       Type;
+            ESharedBuffer   EventData;
 
             EventStorage()
-                : Type(0), EventData(0)
+                : Type(0), EventData()
             {}
 
             ~EventStorage()
@@ -35,21 +34,10 @@ namespace Engine {
             }
 
             template <typename Event>
-            static void Init(const Event& evt, EventStorage& storage)
+            void Init(const Event& evt)
             {
-                storage.Type = EVENT_TYPE(Event);
-                if (storage.EventData)
-                {
-                    delete ((Event*)storage.EventData);
-                }
-                storage.EventData = new Event();
-                *((Event*)storage.EventData) = evt;
-                storage.CleanUp = [&storage](){
-                    if (storage.EventData)
-                    {
-                        delete ((Event*)storage.EventData);
-                    }
-                };
+                Type = EVENT_TYPE(Event);
+                EventData.InitWith<Event>(&evt, sizeof(Event));
             }
 
         };
@@ -77,8 +65,9 @@ namespace Engine {
         template <typename Event>
         void Enqueue(const Event& evt)
         {
-            fPostedEvents.push_back(EventStorage());  
-            EventStorage::Init<Event>(evt, fPostedEvents.back());
+            EventStorage storage;
+            storage.Init<Event>(evt);
+            fPostedEvents.push_back(storage);  
         }
 
         template <typename Event>
@@ -96,9 +85,8 @@ namespace Engine {
             {
                 for (std::function<void(void*)> fn : fObervers[entry.Type])
                 {                    
-                    fn(entry.EventData);
+                    fn(entry.EventData.Data());
                 }
-                entry.CleanUp();
             }
             fPostedEvents.clear();
         }
@@ -106,10 +94,6 @@ namespace Engine {
         void CleanUp()
         {
             fObervers.clear();
-            for (EventStorage& storage : fPostedEvents)
-            {
-                storage.CleanUp();
-            }
             fPostedEvents.clear();
         }
     private:

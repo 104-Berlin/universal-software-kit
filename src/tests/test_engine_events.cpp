@@ -25,12 +25,13 @@ TEST(EventTests, Basics)
 
 
     eventDispatcher.Enqueue(eventData);
+    eventDispatcher.Enqueue(eventData);
     eventDispatcher.Update();
 
     // Check if event got fired with correct value
-    EXPECT_EQ(testingValue, 10);
+    EXPECT_EQ(testingValue, 20);
 
     // Should not call anything
     eventDispatcher.Update();
-    EXPECT_EQ(testingValue, 10);
+    EXPECT_EQ(testingValue, 20);
 }

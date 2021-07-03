@@ -48,6 +48,10 @@ namespace Engine {
         bool IsArray() const;
         EValueDescription GetAsArray() const;
         EValueDescription GetAsPrimitive() const;
+
+
+
+        static EValueDescription CreateStruct(const t_ID& id, std::initializer_list<std::pair<EString, EValueDescription>> childs);
     };
 
 

@@ -354,3 +354,8 @@ EVector<EStructProperty*> EScene::GetAllComponents(Entity entity)
     }
     return result;
 }
+
+EUnorderedMap<EScene::Entity, EStructProperty*>& EScene::View(const EValueDescription& description) 
+{
+    return fComponentStorage[description.GetId()];
+}
