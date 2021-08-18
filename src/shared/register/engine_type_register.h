@@ -52,6 +52,9 @@ namespace Engine {
 
 
         static EValueDescription CreateStruct(const t_ID& id, std::initializer_list<std::pair<EString, EValueDescription>> childs);
+
+        bool operator==(const EValueDescription& other);
+        bool operator!=(const EValueDescription& other);
     };
 
 

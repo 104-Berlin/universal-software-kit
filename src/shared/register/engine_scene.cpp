@@ -230,19 +230,19 @@ void EArrayProperty::Clear()
 }
 
 
-EScene::EScene(const EString& name) 
+ERegister::ERegister(const EString& name) 
     : fName(name)
 {
     
 }
 
 
-EResourceManager& EScene::GetResourceManager() 
+EResourceManager& ERegister::GetResourceManager() 
 {
     return fResourceManager;
 }
 
-EScene::Entity EScene::CreateEntity() 
+ERegister::Entity ERegister::CreateEntity() 
 {
     static Entity currentEntity = 1;
     
@@ -261,7 +261,7 @@ EScene::Entity EScene::CreateEntity()
     return newEntity;
 }
 
-void EScene::DestroyEntity(Entity entity) 
+void ERegister::DestroyEntity(Entity entity) 
 {
     EVector<Entity>::iterator it = std::find(fAliveEntites.begin(), fAliveEntites.end(), entity);
     if (it == fAliveEntites.end())
@@ -277,12 +277,12 @@ void EScene::DestroyEntity(Entity entity)
     fDeadEntites.push_back(entity);
 }
 
-EVector<EScene::Entity> EScene::GetAllEntities() const
+EVector<ERegister::Entity> ERegister::GetAllEntities() const
 {
     return fAliveEntites;
 }
 
-void EScene::Clear() 
+void ERegister::Clear() 
 {
     for (auto& entry : fComponentStorage)
     {
@@ -296,12 +296,12 @@ void EScene::Clear()
     fDeadEntites.clear();
 }
 
-bool EScene::IsAlive(Entity entity) 
+bool ERegister::IsAlive(Entity entity) 
 {
     return std::find(fAliveEntites.begin(), fAliveEntites.end(), entity) != fAliveEntites.end();
 }
 
-void EScene::InsertComponent(Entity entity, EValueDescription description) 
+void ERegister::InsertComponent(Entity entity, EValueDescription description) 
 {
     E_ASSERT(description.Valid(), "ERROR: Invalid value descrition!");
     E_ASSERT(description.GetType() == EValueType::STRUCT, "Component can only be inserted as struct");
@@ -312,13 +312,14 @@ void EScene::InsertComponent(Entity entity, EValueDescription description)
         EUnorderedMap<EString, EProperty*> properties;
 
         EStructProperty* storage = static_cast<EStructProperty*>(EProperty::CreateFromDescription(description.GetId(), description));
-
-
+        
+        fEventDispatcher.Post<EComponentCreateEvent>({entity, storage});
+        
         fComponentStorage[description.GetId()][entity] = storage;
     }
 }
 
-void EScene::RemoveComponent(Entity entity, EValueDescription componentId)
+void ERegister::RemoveComponent(Entity entity, EValueDescription componentId)
 {
     E_ASSERT(componentId.Valid(), "ERROR: Invalid value descrition!");
     if (!IsAlive(entity)) { return; }
@@ -327,13 +328,13 @@ void EScene::RemoveComponent(Entity entity, EValueDescription componentId)
     fComponentStorage[componentId.GetId()].erase(entity);
 }
 
-bool EScene::HasComponent(Entity entity, EValueDescription componentId) 
+bool ERegister::HasComponent(Entity entity, EValueDescription componentId) 
 {
     E_ASSERT(componentId.Valid(), "ERROR: Invalid value descrition!");
     return fComponentStorage[componentId.GetId()][entity];
 }
 
-EStructProperty* EScene::GetComponent(Entity entity, EValueDescription componentId) 
+EStructProperty* ERegister::GetComponent(Entity entity, EValueDescription componentId) 
 {
     E_ASSERT(componentId.Valid(), "ERROR: Invalid value descrition!");
     if (!IsAlive(entity)) { return nullptr; }
@@ -342,7 +343,7 @@ EStructProperty* EScene::GetComponent(Entity entity, EValueDescription component
     return fComponentStorage[componentId.GetId()][entity];
 }
 
-EVector<EStructProperty*> EScene::GetAllComponents(Entity entity) 
+EVector<EStructProperty*> ERegister::GetAllComponents(Entity entity) 
 {
     EVector<EStructProperty*> result;
     for (auto& entry : fComponentStorage)
@@ -355,7 +356,7 @@ EVector<EStructProperty*> EScene::GetAllComponents(Entity entity)
     return result;
 }
 
-EUnorderedMap<EScene::Entity, EStructProperty*>& EScene::View(const EValueDescription& description) 
+EUnorderedMap<ERegister::Entity, EStructProperty*>& ERegister::View(const EValueDescription& description) 
 {
     return fComponentStorage[description.GetId()];
 }

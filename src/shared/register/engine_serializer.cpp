@@ -6,12 +6,12 @@ using namespace Engine;
 EJson WriteStructToJs(EStructProperty* property);
 
 
-EJson ESerializer::WriteSceneToJson(EScene* scene) 
+EJson ESerializer::WriteSceneToJson(ERegister* scene) 
 {
     EJson result = EJson::object();
 
     EJson entityArray = EJson::array();
-    for (EScene::Entity entity : scene->GetAllEntities())
+    for (ERegister::Entity entity : scene->GetAllEntities())
     {
         EJson entityObject = EJson::object();
         for (EStructProperty* component : scene->GetAllComponents(entity))

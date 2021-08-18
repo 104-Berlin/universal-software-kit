@@ -33,7 +33,7 @@ namespace Engine {
     {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
-        EScene*                             fLoadedScene;
+        ERegister*                             fLoadedScene;
         ETypeRegister                       fTypeRegister;
         EEventDispatcher                    fEventDispatcher;
         EChaiContext                        fChaiScriptContext;
@@ -65,7 +65,7 @@ namespace Engine {
         /**
          * @return The active scene
          */
-        EScene* GetActiveScene() const;
+        ERegister* GetActiveScene() const;
 
         /**
          * Gets a value description by name

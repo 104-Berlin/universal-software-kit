@@ -21,9 +21,9 @@ TEST(ExtensionTest, LoadExtension)
 
     if (electricalDsc.Valid())
     {
-        EScene* activeScene = extensionManager.GetActiveScene();
+        ERegister* activeScene = extensionManager.GetActiveScene();
 
-        EScene::Entity entity = activeScene->CreateEntity();
+        ERegister::Entity entity = activeScene->CreateEntity();
         activeScene->InsertComponent(entity, electricalDsc);
 
         EXPECT_TRUE(activeScene->HasComponent(entity, electricalDsc));

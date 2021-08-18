@@ -18,6 +18,7 @@ namespace Engine {
     }
 
 
+namespace events {
     struct EMouseMoveEvent
     {
         EVec2 Position;
@@ -30,12 +31,14 @@ namespace Engine {
         u32     MouseButton;
     };
 
-     struct EMouseDragEvent
+    struct EMouseDragEvent
     {
         EVec2   Position;
         EVec2   MouseDelta;
         u32     MouseButton;
     };
+
+}
 
     /**
      * Most Basic UI Element
@@ -204,11 +207,14 @@ namespace Engine {
         void SetRenderFunction(RenderFunction renderFunction);
     };
 
+
+namespace events {
     struct EClickEvent
     {
         u32 MouseX;
         u32 MouseY;
     };
+}
 
     class E_EDEXAPI EUIButton : public EUIField
     {

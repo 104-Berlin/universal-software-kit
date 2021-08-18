@@ -43,7 +43,7 @@ EObjectView::EObjectView(EExtensionManager* extensionManager)
     : EUIField("OBJECTVIEW"), fExtensionManager(extensionManager), fSelectedEntity(0)
 {
     fAddObjectButton = EMakeRef<EUIButton>("Add Object");
-    fAddObjectButton->AddEventListener<Engine::EClickEvent>([this](){
+    fAddObjectButton->AddEventListener<Engine::events::EClickEvent>([this](){
         fExtensionManager->GetActiveScene()->CreateEntity();
     });
 }
@@ -53,7 +53,7 @@ bool EObjectView::OnRender()
     if (!fExtensionManager->GetActiveScene()) { return false; }
 
     ImGui::BeginChild("Entity Child", {100, 0});
-    for (EScene::Entity entity : fExtensionManager->GetActiveScene()->GetAllEntities())
+    for (ERegister::Entity entity : fExtensionManager->GetActiveScene()->GetAllEntities())
     {
         EString entityIdent = "Entity " + std::to_string(entity);
         bool selected = fSelectedEntity == entity;

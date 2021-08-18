@@ -12,7 +12,7 @@
     {{2.0f, 0.5f,-0.5f}},
     */
 
-std::vector<Renderer::RMesh::Vertex> planeVertices = {
+std::vector<Graphics::GMesh::Vertex> planeVertices = {
     {{-1000.0f, -10.0f, -1000.0f}},
     {{ 1000.0f, -10.0f, -1000.0f}},
     {{ 1000.0f, -10.0f,  1000.0f}},
@@ -23,7 +23,7 @@ std::vector<unsigned int> planeIndices = {
     0, 1, 2, 2, 3, 0
 };
 
-std::vector<Renderer::RMesh::Vertex> vertices = {
+std::vector<Graphics::GMesh::Vertex> vertices = {
     {{-0.5f,-0.5f, 1.0f}},
     {{ 0.5f,-0.5f, 1.0f}},
     {{ 0.5f, 0.5f, 1.0f}},
@@ -34,8 +34,8 @@ std::vector<unsigned int> indices = {
     0, 1, 2
 };
 
-static Renderer::RMesh* mesh = nullptr;
-static Renderer::RMesh* planeMesh = nullptr;
+static Graphics::GMesh* mesh = nullptr;
+static Graphics::GMesh* planeMesh = nullptr;
 
 static float matrix[16] =
 { 1.f, 0.f, 0.f, 0.f,
@@ -64,7 +64,7 @@ static Renderer::RCamera ViewportCamera(Renderer::ECameraMode::PERSPECTIVE);
 class TestUiField : public Engine::EUIField
 {
 public:
-    std::vector<Renderer::RMesh::Vertex> fVertices;
+    std::vector<Graphics::GMesh::Vertex> fVertices;
     std::vector<unsigned int> fIndices;
 public:
     TestUiField()
@@ -76,7 +76,7 @@ public:
     virtual bool OnRender()
     {
         size_t vertexId = 0;
-        for (Renderer::RMesh::Vertex& vertex : fVertices)
+        for (Graphics::GMesh::Vertex& vertex : fVertices)
         {
             ImGui::PushID(vertexId);
             ImGui::InputFloat3("Position", &vertex.Position.x);
@@ -186,8 +186,8 @@ void RenderViewport(Graphics::GContext* context, Graphics::GFrameBuffer* frameBu
 
     Renderer::RRenderer3D renderer(context);
     renderer.Begin(frameBuffer, &ViewportCamera);
-    renderer.Submit(planeMesh);
-    renderer.Submit(mesh);
+    //renderer.Submit(planeMesh);
+    //renderer.Submit(mesh);
     renderer.End();
 }
 
@@ -218,9 +218,9 @@ EXT_ENTRY
     E_INFO(EString("Initiliazing ") + extensionName);
     
 
-    mesh = new Renderer::RMesh();
+    mesh = new Graphics::GMesh();
     mesh->SetData(vertices, indices);
 
-    planeMesh = new Renderer::RMesh();
+    planeMesh = new Graphics::GMesh();
     planeMesh->SetData(planeVertices, planeIndices);
 }

@@ -85,32 +85,32 @@ void EUIField::OnRenderEnd()
         fLastMousePos = mousePos;
         if (glm::length(mouseDelta) > 0.0f)
         {
-            fEventDispatcher.Enqueue<EMouseMoveEvent>({mousePos, mouseDelta});
+            fEventDispatcher.Enqueue<events::EMouseMoveEvent>({mousePos, mouseDelta});
         }
 
         if (ImGui::IsMouseClicked(0))
         {
-            fEventDispatcher.Enqueue<EMouseClickEvent>(EMouseClickEvent{mousePos, 0});
+            fEventDispatcher.Enqueue<events::EMouseClickEvent>(events::EMouseClickEvent{mousePos, 0});
         }
         if (ImGui::IsMouseClicked(1))
         {
-            fEventDispatcher.Enqueue<EMouseClickEvent>(EMouseClickEvent{mousePos, 1});
+            fEventDispatcher.Enqueue<events::EMouseClickEvent>(events::EMouseClickEvent{mousePos, 1});
         }
         if (ImGui::IsMouseClicked(2))
         {
-            fEventDispatcher.Enqueue<EMouseClickEvent>(EMouseClickEvent{mousePos, 2});
+            fEventDispatcher.Enqueue<events::EMouseClickEvent>(events::EMouseClickEvent{mousePos, 2});
         }
         if (glm::length(mouseDrag0) > 0.0f)
         {
-            fEventDispatcher.Enqueue<EMouseDragEvent>({mousePos, mouseDrag0, 0});
+            fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag0, 0});
         }
         if (glm::length(mouseDrag1) > 0.0f)
         {
-            fEventDispatcher.Enqueue<EMouseDragEvent>({mousePos, mouseDrag1, 1});
+            fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag1, 1});
         }
         if (glm::length(mouseDrag2) > 0.0f)
         {
-            fEventDispatcher.Enqueue<EMouseDragEvent>({mousePos, mouseDrag2, 2});
+            fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag2, 2});
         }
     }
     
@@ -219,7 +219,7 @@ bool EUIButton::OnRender()
 {
     if (ImGui::Button(GetLabel().c_str()))
     {
-        fEventDispatcher.Enqueue<EClickEvent>({0,0});
+        fEventDispatcher.Enqueue<events::EClickEvent>({0,0});
     }
     return true;
 }
@@ -302,7 +302,7 @@ bool EUIMenuItem::OnRender()
 {
     if (ImGui::MenuItem(GetLabel().c_str()))
     {
-        fEventDispatcher.Enqueue<EClickEvent>({static_cast<u32>(ImGui::GetCursorPosX()), static_cast<u32>(ImGui::GetCursorPosY())});
+        fEventDispatcher.Enqueue<events::EClickEvent>({static_cast<u32>(ImGui::GetCursorPosX()), static_cast<u32>(ImGui::GetCursorPosY())});
     }
     return true;
 }
