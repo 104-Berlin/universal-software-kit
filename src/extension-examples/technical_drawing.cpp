@@ -71,6 +71,11 @@ APP_ENTRY
     drawingViewport->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
     someDrawingPanel->AddChild(drawingViewport);
 
+    activeScene->AddComponentCreateEventListener(TechnicalMeshDsc, [drawingViewport](EStructProperty* mesh){
+        // Create mesh in 3D Scene
+        drawingViewport->GetScene().Add(new GMesh());
+    });
+
 
     info.PanelRegister->RegisterItem(extensionName, someDrawingPanel);
 }

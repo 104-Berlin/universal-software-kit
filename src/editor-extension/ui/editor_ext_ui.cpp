@@ -191,6 +191,16 @@ void EUIViewport::SetRenderFunction(RenderFunction renderFunction)
     fRenderFuntion = renderFunction;
 }
 
+Graphics::GScene& EUIViewport::GetScene() 
+{
+    return fScene;
+}
+
+const Graphics::GScene& EUIViewport::GetScene() const
+{
+    return fScene;
+}
+
 bool EUIViewport::OnRender() 
 {
     ImVec2 contentRegion = ImGui::GetContentRegionAvail();

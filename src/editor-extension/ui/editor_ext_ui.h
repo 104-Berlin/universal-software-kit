@@ -203,8 +203,12 @@ namespace events {
 
         RenderFunction fRenderFuntion;
         Graphics::GFrameBuffer* fFrameBuffer;
+        Graphics::GScene fScene;
     public:
         void SetRenderFunction(RenderFunction renderFunction);
+
+        Graphics::GScene& GetScene();
+        const Graphics::GScene& GetScene() const;
     };
 
 
