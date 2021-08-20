@@ -88,17 +88,18 @@ void EUIField::OnRenderEnd()
             fEventDispatcher.Enqueue<events::EMouseMoveEvent>({mousePos, mouseDelta});
         }
 
+        
         if (ImGui::IsMouseClicked(0))
         {
-            fEventDispatcher.Enqueue<events::EMouseClickEvent>(events::EMouseClickEvent{mousePos, 0});
+            fEventDispatcher.Enqueue<events::EMouseDownEvent>(events::EMouseDownEvent{mousePos, 0});
         }
         if (ImGui::IsMouseClicked(1))
         {
-            fEventDispatcher.Enqueue<events::EMouseClickEvent>(events::EMouseClickEvent{mousePos, 1});
+            fEventDispatcher.Enqueue<events::EMouseDownEvent>(events::EMouseDownEvent{mousePos, 1});
         }
         if (ImGui::IsMouseClicked(2))
         {
-            fEventDispatcher.Enqueue<events::EMouseClickEvent>(events::EMouseClickEvent{mousePos, 2});
+            fEventDispatcher.Enqueue<events::EMouseDownEvent>(events::EMouseDownEvent{mousePos, 2});
         }
         if (glm::length(mouseDrag0) > 0.0f)
         {
@@ -229,7 +230,25 @@ bool EUIButton::OnRender()
 {
     if (ImGui::Button(GetLabel().c_str()))
     {
-        fEventDispatcher.Enqueue<events::EClickEvent>({0,0});
+        fEventDispatcher.Enqueue<events::EButtonEvent>(events::EButtonEvent());
+    }
+    return true;
+}
+
+EUITextField::EUITextField(const EString& label, const EString& content)
+    : EUIField(label), fContent(content)
+{
+    
+}
+
+bool EUITextField::OnRender() 
+{
+    char text[255];
+    memcpy(text, fContent.c_str(), 255);
+    if (ImGui::InputText(GetLabel().c_str(), text, 255, ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        fContent = text;
+        fEventDispatcher.Enqueue<ETextChangeEvent>({fContent});
     }
     return true;
 }
@@ -312,7 +331,7 @@ bool EUIMenuItem::OnRender()
 {
     if (ImGui::MenuItem(GetLabel().c_str()))
     {
-        fEventDispatcher.Enqueue<events::EClickEvent>({static_cast<u32>(ImGui::GetCursorPosX()), static_cast<u32>(ImGui::GetCursorPosY())});
+        fEventDispatcher.Enqueue<events::EButtonEvent>(events::EButtonEvent());
     }
     return true;
 }

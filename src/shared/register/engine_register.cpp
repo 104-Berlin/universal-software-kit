@@ -331,7 +331,7 @@ void ERegister::RemoveComponent(Entity entity, EValueDescription componentId)
 bool ERegister::HasComponent(Entity entity, EValueDescription componentId) 
 {
     E_ASSERT(componentId.Valid(), "ERROR: Invalid value descrition!");
-    return fComponentStorage[componentId.GetId()][entity];
+    return fComponentStorage[componentId.GetId()].find(entity) != fComponentStorage[componentId.GetId()].end();
 }
 
 EStructProperty* ERegister::GetComponent(Entity entity, EValueDescription componentId) 

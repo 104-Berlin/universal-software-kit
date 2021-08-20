@@ -39,14 +39,14 @@ void EApplication::RegenerateMainMenuBar()
 
     ERef<EUIMenu> fileMenu = EMakeRef<EUIMenu>("File");
     ERef<EUIField> saveScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Save"));
-    saveScene->AddEventListener<events::EClickEvent>([this](){
+    saveScene->AddEventListener<events::EButtonEvent>([this](){
         EString saveToPath = Wrapper::SaveFileDialog("Save To", {"esc"});
         EJson json = ESerializer::WriteSceneToJson(fExtensionManager.GetActiveScene());
         EFile file(saveToPath);
         file.SetFileAsString(json.dump());
     });
     ERef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open"));
-    openScene->AddEventListener<events::EClickEvent>([this](){
+    openScene->AddEventListener<events::EButtonEvent>([this](){
         EVector<EString> openScene = Wrapper::OpenFileDialog("Open", {"esc"});
         if (openScene.size() > 0)
         {
@@ -65,7 +65,7 @@ void EApplication::RegenerateMainMenuBar()
     {
         EString panelLabel = panel.lock()->GetLabel();
         ERef<EUIMenuItem> menuItem = EMakeRef<EUIMenuItem>(panel.lock()->GetLabel());
-        menuItem->AddEventListener<events::EClickEvent>([panel](){
+        menuItem->AddEventListener<events::EButtonEvent>([panel](){
             if (!panel.expired())
             {
                 if (panel.lock()->IsOpen())

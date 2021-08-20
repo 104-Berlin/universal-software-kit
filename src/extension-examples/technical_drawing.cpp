@@ -38,7 +38,7 @@ void ViewportMouseMove(events::EMouseMoveEvent e)
 {
 }
 
-void ViewportClicked(events::EMouseClickEvent e)
+void ViewportClicked(events::EMouseDownEvent e)
 {
     ERegister::Entity newEntity = activeScene->CreateEntity();
     activeScene->InsertComponent(newEntity, TechnicalMeshDsc);
@@ -66,7 +66,7 @@ APP_ENTRY
     ERef<EUIViewport> drawingViewport = EMakeRef<EUIViewport>();
     
     drawingViewport->SetRenderFunction(&RenderSimpleViewport);
-    drawingViewport->AddEventListener<events::EMouseClickEvent>(&ViewportClicked);
+    drawingViewport->AddEventListener<events::EMouseDownEvent>(&ViewportClicked);
     drawingViewport->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
     drawingViewport->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
     someDrawingPanel->AddChild(drawingViewport);

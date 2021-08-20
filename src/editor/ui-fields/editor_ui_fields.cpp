@@ -43,7 +43,7 @@ EObjectView::EObjectView(EExtensionManager* extensionManager)
     : EUIField("OBJECTVIEW"), fExtensionManager(extensionManager), fSelectedEntity(0)
 {
     fAddObjectButton = EMakeRef<EUIButton>("Add Object");
-    fAddObjectButton->AddEventListener<Engine::events::EClickEvent>([this](){
+    fAddObjectButton->AddEventListener<Engine::events::EButtonEvent>([this](){
         fExtensionManager->GetActiveScene()->CreateEntity();
     });
 }
