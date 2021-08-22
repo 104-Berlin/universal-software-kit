@@ -16,24 +16,6 @@ struct ExtensionData
 
 static ExtensionData data{};
 
-void RenderSimpleViewport(GContext* context, GFrameBuffer* frameBuffer)
-{
-    context->Clear();
-    RRenderer3D renderer(context);
-    renderer.Begin(frameBuffer, &(data.Camera));
-    for (const auto& entry : activeScene->View(TechnicalMeshDsc))
-    {
-        EArrayProperty* pointArray = static_cast<EArrayProperty*>(entry.second->GetProperty("Positions"));
-        EStructProperty* beginPoint = static_cast<EStructProperty*>(pointArray->GetElement(0));
-        EStructProperty* endPoint = static_cast<EStructProperty*>(pointArray->GetElement(1));
-        GLine line;
-        line.SetStart(beginPoint->GetValue<EVec3>());
-        line.SetEnd(endPoint->GetValue<EVec3>());
-        //renderer.Submit(&line);
-    }
-    renderer.End();
-}
-
 void ViewportMouseMove(events::EMouseMoveEvent e)
 {
 }
@@ -65,7 +47,6 @@ APP_ENTRY
     ERef<EUIPanel> someDrawingPanel = EMakeRef<EUIPanel>("Drawing Canvas");
     ERef<EUIViewport> drawingViewport = EMakeRef<EUIViewport>();
     
-    drawingViewport->SetRenderFunction(&RenderSimpleViewport);
     drawingViewport->AddEventListener<events::EMouseDownEvent>(&ViewportClicked);
     drawingViewport->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
     drawingViewport->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
