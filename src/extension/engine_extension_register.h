@@ -52,6 +52,14 @@ namespace Engine {
         }
 
         /**
+         * Clears all the Items
+         */
+        void ClearAllItems()
+        {
+            fRegisteredItems.clear();
+        }
+
+        /**
          * @return The total count of all alements by all extensions
          */
         u32 GetItemCount() const
@@ -97,5 +105,5 @@ namespace Engine {
         }
     };
 
-    using ETypeRegister = EExtensionRegister<ERef<EValueDescription>>;
+    using ETypeRegister = EExtensionRegister<EValueDescription>;
 }

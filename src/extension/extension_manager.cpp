@@ -71,7 +71,7 @@ const EString& EExtension::GetName() const
 
 EExtensionManager::EExtensionManager()
 {
-    fLoadedScene = new EScene("New Scene");
+    fLoadedScene = new ERegister("New Scene");
 }
 
 EExtensionManager::~EExtensionManager() 
@@ -122,22 +122,22 @@ EVector<EExtension*> EExtensionManager::GetLoadedExtensions()
     return result;
 }
 
-EScene* EExtensionManager::GetActiveScene() const
+ERegister* EExtensionManager::GetActiveScene() const
 {
     return fLoadedScene;
 }
 
-ERef<EValueDescription> EExtensionManager::GetValueDescriptionById(const EString& extensionName, const EString& typeId) 
+EValueDescription EExtensionManager::GetValueDescriptionById(const EString& extensionName, const EString& typeId) 
 {
-    const EVector<ERef<EValueDescription>>& registeredTypes = fTypeRegister.GetItems(extensionName);
-    for (ERef<EValueDescription> dsc : registeredTypes)
+    const EVector<EValueDescription>& registeredTypes = fTypeRegister.GetItems(extensionName);
+    for (EValueDescription dsc : registeredTypes)
     {
-        if (dsc->GetId() == typeId)
+        if (dsc.GetId() == typeId)
         {
             return dsc;
         }
     }
-    return nullptr;
+    return EValueDescription();
 }
 
 ETypeRegister& EExtensionManager::GetTypeRegister() 
@@ -148,4 +148,14 @@ ETypeRegister& EExtensionManager::GetTypeRegister()
 const ETypeRegister& EExtensionManager::GetTypeRegister() const
 {
     return fTypeRegister;
+}
+
+EChaiContext& EExtensionManager::GetChaiContext() 
+{
+    return fChaiScriptContext;
+}
+
+const EChaiContext& EExtensionManager::GetChaiContext() const
+{
+    return fChaiScriptContext;
 }

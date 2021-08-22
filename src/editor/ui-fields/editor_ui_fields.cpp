@@ -55,7 +55,7 @@ EObjectView::EObjectView(EExtensionManager* extensionManager)
     : EUIField("OBJECTVIEW"), fExtensionManager(extensionManager), fSelectedEntity(0)
 {
     fAddObjectButton = EMakeRef<EUIButton>("Add Object");
-    fAddObjectButton->AddEventListener<Engine::EClickEvent>([this](){
+    fAddObjectButton->AddEventListener<Engine::events::EButtonEvent>([this](){
         fExtensionManager->GetActiveScene()->CreateEntity();
     });
 }
@@ -65,7 +65,7 @@ bool EObjectView::OnRender()
     if (!fExtensionManager->GetActiveScene()) { return false; }
 
     ImGui::BeginChild("Entity Child", {100, 0});
-    for (EScene::Entity entity : fExtensionManager->GetActiveScene()->GetAllEntities())
+    for (ERegister::Entity entity : fExtensionManager->GetActiveScene()->GetAllEntities())
     {
         EString entityIdent = "Entity " + std::to_string(entity);
         bool selected = fSelectedEntity == entity;
@@ -91,13 +91,13 @@ bool EObjectView::OnRender()
         }
         if (ImGui::BeginPopup("add-component-popup"))
         {
-            for (ERef<EValueDescription> compDsc : fExtensionManager->GetTypeRegister().GetAllItems())
+            for (EValueDescription compDsc : fExtensionManager->GetTypeRegister().GetAllItems())
             {
-                if (compDsc->GetType() != EValueType::STRUCT) { continue; }
+                if (compDsc.GetType() != EValueType::STRUCT) { continue; }
                 bool hasComp = fExtensionManager->GetActiveScene()->HasComponent(fSelectedEntity, compDsc);
                 if (!hasComp)
                 {
-                    if (ImGui::Selectable(compDsc->GetId().c_str()))
+                    if (ImGui::Selectable(compDsc.GetId().c_str()))
                     {
                         fExtensionManager->GetActiveScene()->InsertComponent(fSelectedEntity, compDsc);
                     }
@@ -107,8 +107,6 @@ bool EObjectView::OnRender()
         }
     }
     ImGui::EndChild();
-
-    //ImGui::ShowDemoWindow();
 
 
     return true;
@@ -121,23 +119,30 @@ void EObjectView::OnUpdateEventDispatcher()
 
 void EObjectView::RenderProperty(Engine::EProperty* storage) 
 {
-    ERef<EValueDescription> propertyDsc = storage->GetDescription();
-    EValueType type = propertyDsc->GetType();
-    switch (type)
+    EValueDescription propertyDsc = storage->GetDescription();
+    EValueType type = propertyDsc.GetType();
+    if (propertyDsc.IsArray())
     {
-    case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage)); break;
-    case EValueType::PRIMITIVE: RenderPrimitive(storage); break;
-    case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage)); break;
-    case EValueType::ARRAY: RenderArray(static_cast<EArrayProperty*>(storage)); break;
+        RenderArray(static_cast<EArrayProperty*>(storage));
+    }
+    else
+    {
+        switch (type)
+        {
+        case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage)); break;
+        case EValueType::PRIMITIVE: RenderPrimitive(storage); break;
+        case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage)); break;
+        case EValueType::UNKNOWN: break;
+        }
     }
 }
 
 void EObjectView::RenderStruct(EStructProperty* storage) 
 {
-    ERef<EStructDescription> description = std::dynamic_pointer_cast<EStructDescription>(storage->GetDescription());
+    EValueDescription description = storage->GetDescription();
     if (ImGui::CollapsingHeader(storage->GetPropertyName().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
     {
-        for (auto& entry : description->GetFields())
+        for (auto& entry : description.GetStructFields())
         {
             const EString& propertyName = entry.first;
             RenderProperty(storage->GetProperty(propertyName));
@@ -147,8 +152,8 @@ void EObjectView::RenderStruct(EStructProperty* storage)
 
 void EObjectView::RenderPrimitive(Engine::EProperty* storage) 
 {
-    ERef<EValueDescription> description = storage->GetDescription();
-    const EString& primitiveId = description->GetId();
+    EValueDescription description = storage->GetDescription();
+    const EString& primitiveId = description.GetId();
     if (primitiveId == E_TYPEID_STRING) { RenderString(static_cast<EValueProperty<EString>*>(storage)); } 
     else if (primitiveId == E_TYPEID_INTEGER) { RenderInteger(static_cast<EValueProperty<i32>*>(storage)); }
     else if (primitiveId == E_TYPEID_DOUBLE) { RenderDouble(static_cast<EValueProperty<double>*>(storage)); }
@@ -164,9 +169,9 @@ char* convert_str_to_chr(const std::string & s)
 
 void EObjectView::RenderEnum(Engine::EEnumProperty* storage) 
 {
-    ERef<EEnumDescription> description = std::dynamic_pointer_cast<EEnumDescription>(storage->GetDescription());
+    EValueDescription description = storage->GetDescription();
     int currentItem = -1;
-    for (EString option : description->GetOptions())
+    for (EString option : description.GetEnumOptions())
     {
         currentItem++;
         if (option == storage->GetCurrentValue())
@@ -175,20 +180,18 @@ void EObjectView::RenderEnum(Engine::EEnumProperty* storage)
         }
     }
     std::vector<char*> opt;
-    std::transform(description->GetOptions().begin(), description->GetOptions().end(), std::back_inserter(opt), convert_str_to_chr);
+    std::transform(description.GetEnumOptions().begin(), description.GetEnumOptions().end(), std::back_inserter(opt), convert_str_to_chr);
 
-    ImGui::Combo(storage->GetPropertyName().c_str(), &currentItem, opt.data(), description->GetOptions().size());
+    ImGui::Combo(storage->GetPropertyName().c_str(), &currentItem, opt.data(), description.GetEnumOptions().size());
 
     for ( size_t i = 0 ; i < opt.size() ; i++ )
             delete [] opt[i];
 
-    storage->SetCurrentValue(description->GetOptions()[currentItem]);
+    storage->SetCurrentValue(description.GetEnumOptions()[currentItem]);
 }
 
 void EObjectView::RenderArray(Engine::EArrayProperty* storage) 
 {
-    ERef<EArrayDescription> arrayDsc = std::dynamic_pointer_cast<EArrayDescription>(storage->GetDescription());
-
     for (EProperty* element : storage->GetElements())
     {
         RenderProperty(element);
@@ -236,4 +239,42 @@ void EObjectView::RenderString(Engine::EValueProperty<EString>* storage)
     ImGui::InputText(storage->GetPropertyName().c_str(), buf, 255);
     ImGui::PopID();
     storage->SetValue(buf);
+}
+
+ECommandLine::ECommandLine(EChaiContext* context) 
+    : EUIField("CommandLine"), fChaiContext(context)
+{
+    
+}
+
+bool ECommandLine::OnRender() 
+{
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + viewport->Size.y - 32));
+	ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, 32));
+	ImGui::SetNextWindowViewport(viewport->ID);
+
+    ImGuiWindowFlags window_flags = 0
+		| ImGuiWindowFlags_NoDocking 
+		| ImGuiWindowFlags_NoTitleBar 
+		| ImGuiWindowFlags_NoResize 
+		| ImGuiWindowFlags_NoMove 
+		| ImGuiWindowFlags_NoScrollbar 
+		| ImGuiWindowFlags_NoSavedSettings
+		;
+
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
+    ImGui::Begin("CommandLine", NULL, window_flags);
+    ImGui::PopStyleVar();
+    ImGui::PushItemWidth(-1);
+    char buffer[255];
+    memset(buffer, 0, 255);
+    if (ImGui::InputText("##COMMAND_LINE_INPUT", buffer, 255, ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        fChaiContext->Execute(buffer);
+    }
+    ImGui::PopItemWidth();
+    ImGui::End();
+    return true;
 }

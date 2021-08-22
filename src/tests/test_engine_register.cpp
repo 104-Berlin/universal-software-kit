@@ -11,7 +11,7 @@ struct Vector
 };
 
 template <>
-void convert<EStructProperty, Vector>::setter(EStructProperty* property, const Vector& vec)
+bool convert::setter<Vector>(EStructProperty* property, const Vector& vec)
 {
 	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
 	EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
@@ -21,11 +21,13 @@ void convert<EStructProperty, Vector>::setter(EStructProperty* property, const V
 		xProp->SetValue(vec.x);
 		yProp->SetValue(vec.y);
 		zProp->SetValue(vec.z);
+		return true;
 	}
+	return false;
 }
 
 template <>
-void convert<EStructProperty, Vector>::getter(const EStructProperty* property, Vector* outVec)
+bool convert::getter<Vector>(const EStructProperty* property, Vector* outVec)
 {
 	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
 	const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
@@ -35,7 +37,9 @@ void convert<EStructProperty, Vector>::getter(const EStructProperty* property, V
 		outVec->x = (float)xProp->GetValue();
 		outVec->y = (float)yProp->GetValue();
 		outVec->z = (float)zProp->GetValue();
+		return true;
 	}
+	return false;
 }
 
 
@@ -43,31 +47,42 @@ void convert<EStructProperty, Vector>::getter(const EStructProperty* property, V
 
 TEST(RegisterTest, Basics)
 {
-	ERef<EStructDescription> vector = EMakeRef<EStructDescription>("Vector");
-	vector->AddField("X", DoubleDescription());
-	vector->AddField("Y", DoubleDescription());
-	vector->AddField("Z", DoubleDescription());
+	EValueDescription vector = EValueDescription(EValueType::STRUCT, "Vector");
+	vector
+		.AddStructField("X", DoubleDescription)
+		.AddStructField("Y", DoubleDescription)
+		.AddStructField("Z", DoubleDescription);
 
-	ERef<EEnumDescription> someEnum = EMakeRef<EEnumDescription>("SomeEnum");
-	someEnum->AddOption("One");
-	someEnum->AddOption("Two");
-	someEnum->AddOption("Three");
+	EValueDescription someEnum = EValueDescription(EValueType::ENUM, "SomeEnum");
+	someEnum
+		.AddEnumOption("One")
+		.AddEnumOption("Two")
+		.AddEnumOption("Three");
 
-	ERef<EArrayDescription> vectorList = EMakeRef<EArrayDescription>(vector);
+	EValueDescription vectorList = vector.GetAsArray();
 
-	ERef<EStructDescription> myTestComponent = EMakeRef<EStructDescription>("MyTestComponent");
-	myTestComponent->AddField("MyString", StringDescription());
-	myTestComponent->AddField("MyInteger", IntegerDescription());
-	myTestComponent->AddField("MyBool", BoolDescription());
-	myTestComponent->AddField("MyDouble", DoubleDescription());
-	myTestComponent->AddField("Vector", vector);
-	myTestComponent->AddField("Enum", someEnum);
-	myTestComponent->AddField("VectorArray", vectorList);
+	EValueDescription myTestComponent = EValueDescription(EValueType::STRUCT, "MyTestComponent");
+	myTestComponent
+		.AddStructField("MyString", StringDescription)
+		.AddStructField("MyInteger", IntegerDescription)
+		.AddStructField("MyBool", BoolDescription)
+		.AddStructField("MyDouble", DoubleDescription)
+		.AddStructField("Vector", vector)
+		.AddStructField("Enum", someEnum)
+		.AddStructField("VectorArray", vectorList);
 	
-	EScene scene;
+	ERegister scene;
 
-	EScene::Entity entity = scene.CreateEntity();
+	bool componentCreated = false;
+
+	scene.AddComponentCreateEventListener(myTestComponent, [&componentCreated](EStructProperty* component){
+		componentCreated = true;
+	});
+
+	ERegister::Entity entity = scene.CreateEntity();
+	EXPECT_FALSE(componentCreated);
 	scene.InsertComponent(entity, myTestComponent);
+	EXPECT_TRUE(componentCreated);
 	scene.InsertComponent(entity, vector);
 
 	EXPECT_TRUE(scene.IsAlive(entity));
@@ -89,7 +104,7 @@ TEST(RegisterTest, Basics)
 		// Set some things to the component
 		EStructProperty* storage = scene.GetComponent(entity, myTestComponent);
 
-		EXPECT_EQ(storage->GetDescription(), myTestComponent);
+		EXPECT_STREQ(storage->GetDescription().GetId().c_str(), myTestComponent.GetId().c_str());
 
 		Vector newVecValue{2, 3, 4};
 

@@ -33,9 +33,10 @@ namespace Engine {
     {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
-        EScene*                             fLoadedScene;
+        ERegister*                             fLoadedScene;
         ETypeRegister                       fTypeRegister;
         EEventDispatcher                    fEventDispatcher;
+        EChaiContext                        fChaiScriptContext;
     public:
         EExtensionManager();
         ~EExtensionManager();
@@ -64,16 +65,19 @@ namespace Engine {
         /**
          * @return The active scene
          */
-        EScene* GetActiveScene() const;
+        ERegister* GetActiveScene() const;
 
         /**
          * Gets a value description by name
          */
-        ERef<EValueDescription> GetValueDescriptionById(const EString& extensionName, const EString& typeId);
+        EValueDescription GetValueDescriptionById(const EString& extensionName, const EString& typeId);
 
 
         ETypeRegister& GetTypeRegister();
         const ETypeRegister& GetTypeRegister() const;
+
+        EChaiContext& GetChaiContext();
+        const EChaiContext& GetChaiContext() const;
 
         template <typename EventType, typename CB>
         void AddEventListener(CB&& callback)

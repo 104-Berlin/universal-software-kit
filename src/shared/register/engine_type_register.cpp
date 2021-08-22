@@ -1,45 +1,47 @@
 #include "engine.h"
 #include "prefix_shared.h"
 
-
-ERef<Engine::EValueDescription> Engine::StringDescription() 
-{
-        static ERef<EValueDescription> result = EMakeRef<EValueDescription>(EValueType::PRIMITIVE, E_TYPEID_STRING);
-        return result;
-
-}
-
-ERef<Engine::EValueDescription> Engine::IntegerDescription() 
-{
-    static ERef<EValueDescription> result = EMakeRef<EValueDescription>(EValueType::PRIMITIVE, E_TYPEID_INTEGER);
-    return result;
-}
-
-ERef<Engine::EValueDescription> Engine::DoubleDescription() 
-{
-    static ERef<EValueDescription> result = EMakeRef<EValueDescription>(EValueType::PRIMITIVE, E_TYPEID_DOUBLE);
-    return result;
-}
-
-ERef<Engine::EValueDescription> Engine::BoolDescription() 
-{
-    static ERef<EValueDescription> result = EMakeRef<EValueDescription>(EValueType::PRIMITIVE, E_TYPEID_BOOL);
-    return result;
-}
-
-
-
 using namespace Engine;
 
-EValueDescription::EValueDescription(EValueType type, EString id) 
-    : fType(type), fID(id)
+EValueDescription::EValueDescription(EValueType type, EValueDescription::t_ID id) 
+    : fType(type), fID(id), fIsArray(false)
 {
 
 }
+
+EValueDescription::EValueDescription(const EValueDescription& other)
+    : fType(other.fType), fID(other.fID), fIsArray(other.fIsArray), fEnumOptions(other.fEnumOptions)
+{
+    fStructFields.clear();
+    for (auto& entry : other.fStructFields)
+    {
+        fStructFields[entry.first] = new EValueDescription(*entry.second);
+    }
+}
+
+
+EValueDescription& EValueDescription::operator=(const EValueDescription& other)
+{
+    fType = other.fType;
+    fID = other.fID;
+    fIsArray = other.fIsArray;
+    fEnumOptions = other.fEnumOptions;
+
+    fStructFields.clear();
+    for (auto& entry : other.fStructFields)
+    {
+        fStructFields[entry.first] = new EValueDescription(*entry.second);
+    }
+    return *this;
+}
+
 
 EValueDescription::~EValueDescription() 
 {
-    
+    for (auto& entry : fStructFields)
+    {
+        delete entry.second;
+    }
 }
 
 EValueType EValueDescription::GetType() const
@@ -47,84 +49,83 @@ EValueType EValueDescription::GetType() const
     return fType;   
 }
 
-const EString& EValueDescription::GetId() const
+const EValueDescription::t_ID& EValueDescription::GetId() const
 {
     return fID;
 }
 
-EStructDescription::EStructDescription(const EString& name) 
-    : EValueDescription(EValueType::STRUCT, name)
+bool EValueDescription::Valid() const
 {
-    
+    return fType != EValueType::UNKNOWN && !fID.empty();
 }
 
-EStructDescription::~EStructDescription() 
+bool EValueDescription::IsArray() const
 {
-    
+    return fIsArray;
 }
 
-EStructDescription& EStructDescription::AddField(const EString& name, ERef<EValueDescription> description) 
+EValueDescription EValueDescription::GetAsArray() const
 {
-    fFields[name] = description;
-    return *this;
+    EValueDescription result(*this);
+    result.fIsArray = true;
+    return result;
 }
 
-const EUnorderedMap<EString, ERef<EValueDescription>>& EStructDescription::GetFields() const
+EValueDescription EValueDescription::GetAsPrimitive() const
 {
-    return fFields;    
+    EValueDescription result(*this);
+    result.fIsArray = false;
+    return result;
 }
 
-EEnumDescription::EEnumDescription(const EString& name) 
-    : EValueDescription(EValueType::ENUM, name)
+EValueDescription EValueDescription::CreateStruct(const t_ID& id, std::initializer_list<std::pair<EString, EValueDescription>> childs) 
 {
-    
-}
-
-EEnumDescription::~EEnumDescription() 
-{
-    
-}
-
-EEnumDescription& EEnumDescription::AddOption(const EString& option) 
-{
-    fOptions.push_back(option);
-    return *this;
-}
-
-const EVector<EString>& EEnumDescription::GetOptions() const
-{
-    return fOptions;
-}
-
-EArrayDescription::EArrayDescription(ERef<EValueDescription> arrayType) 
-    : EValueDescription(EValueType::ARRAY, arrayType->GetId() + "List"), fType(arrayType)
-{
-    E_ASSERT(arrayType, "ERROR: Array need type descpription!");
-}
-
-EArrayDescription::~EArrayDescription() 
-{
-    
-}
-
-ERef<EValueDescription> EArrayDescription::GetElementType() const
-{
-    return fType;
-}
-
-// static runner to init primitive types
-template <typename T>
-struct static_runner
-{
-    static_runner(T&& t)
+    EValueDescription result(EValueType::STRUCT, id);
+    for (const std::pair<EString, EValueDescription>& entry : childs)
     {
-        t();
+        result.AddStructField(entry.first, entry.second);
     }
-};
+    return result;
+}
 
-static static_runner runnder([](){
-    StringDescription();
-    IntegerDescription();
-    DoubleDescription();
-    BoolDescription();
-});
+bool EValueDescription::operator==(const EValueDescription& other) 
+{
+    return fID == other.fID && fIsArray == other.fIsArray && fType == other.fType;
+}
+
+bool EValueDescription::operator!=(const EValueDescription& other) 
+{
+    return !((*this) == other);
+}
+
+EValueDescription& EValueDescription::AddStructField(const EString& name, EValueDescription description) 
+{
+    if (fType != EValueType::STRUCT) 
+    {
+        E_WARN("WARN: Can't add a field to a non struct");
+        return *this;
+    }
+    fStructFields[name] = new EValueDescription(description);
+    return *this;
+}
+
+const EUnorderedMap<EString, EValueDescription*>& EValueDescription::GetStructFields() const
+{
+    return fStructFields;    
+}
+
+EValueDescription& EValueDescription::AddEnumOption(const EString& option) 
+{
+    if (fType != EValueType::ENUM)
+    {
+        E_WARN("WARN: Can't add enum-option to non enum!");
+        return *this;
+    }
+    fEnumOptions.push_back(option);
+    return *this;
+}
+
+const EVector<EString>& EValueDescription::GetEnumOptions() const
+{
+    return fEnumOptions;
+}

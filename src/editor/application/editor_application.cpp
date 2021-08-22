@@ -6,7 +6,7 @@ using namespace Engine;
 
 
 EApplication::EApplication() 
-    : fGraphicsContext(nullptr)
+    : fGraphicsContext(nullptr), fCommandLine(&fExtensionManager.GetChaiContext())
 {
     fExtensionManager.AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent& event) {
         auto entry = (void(*)(const char*, Engine::EAppInit))event.Extension->GetFunction("app_entry");
@@ -39,14 +39,14 @@ void EApplication::RegenerateMainMenuBar()
 
     ERef<EUIMenu> fileMenu = EMakeRef<EUIMenu>("File");
     ERef<EUIField> saveScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Save"));
-    saveScene->AddEventListener<EClickEvent>([this](){
+    saveScene->AddEventListener<events::EButtonEvent>([this](){
         EString saveToPath = Wrapper::SaveFileDialog("Save To", {"esc"});
         EJson json = ESerializer::WriteSceneToJson(fExtensionManager.GetActiveScene());
         EFile file(saveToPath);
         file.SetFileAsString(json.dump());
     });
     ERef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open"));
-    openScene->AddEventListener<EClickEvent>([this](){
+    openScene->AddEventListener<events::EButtonEvent>([this](){
         EVector<EString> openScene = Wrapper::OpenFileDialog("Open", {"esc"});
         if (openScene.size() > 0)
         {
@@ -65,7 +65,7 @@ void EApplication::RegenerateMainMenuBar()
     {
         EString panelLabel = panel.lock()->GetLabel();
         ERef<EUIMenuItem> menuItem = EMakeRef<EUIMenuItem>(panel.lock()->GetLabel());
-        menuItem->AddEventListener<EClickEvent>([panel](){
+        menuItem->AddEventListener<events::EButtonEvent>([panel](){
             if (!panel.expired())
             {
                 if (panel.lock()->IsOpen())
@@ -104,7 +104,7 @@ void EApplication::Init(Graphics::GContext* context)
 
 void EApplication::CleanUp() 
 {
-    
+    fUIRegister.ClearAllItems();
 }
 
 void EApplication::Render() 
@@ -125,10 +125,11 @@ void EApplication::RenderImGui()
     }
 
     fMainMenu->UpdateEventDispatcher();
-
     fMainMenu->Render();
 
-    ImGui::ShowDemoWindow();
+
+    fCommandLine.UpdateEventDispatcher();
+    fCommandLine.Render();
 }
 
 void EApplication::RegisterDefaultPanels() 
@@ -151,10 +152,10 @@ void EApplication::RegisterDefaultPanels()
     ERef<EUIPanel> universalSceneView4 = EMakeRef<EUIPanel>("Basic Scene View 4");
     universalSceneView4->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
 
-    fUIRegister.RegisterItem("intern", universalSceneView1);
-    fUIRegister.RegisterItem("intern", universalSceneView2);
-    fUIRegister.RegisterItem("intern", universalSceneView3);
-    fUIRegister.RegisterItem("intern", universalSceneView4);
-    fUIRegister.RegisterItem("intern", resourcePanel);
-    fUIRegister.RegisterItem("intern", extensionPanel);
+    fUIRegister.RegisterItem("Core", universalSceneView1);
+    fUIRegister.RegisterItem("Core", universalSceneView2);
+    fUIRegister.RegisterItem("Core", universalSceneView3);
+    fUIRegister.RegisterItem("Core", universalSceneView4);
+    fUIRegister.RegisterItem("Core", resourcePanel);
+    fUIRegister.RegisterItem("Core", extensionPanel);
 }

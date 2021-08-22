@@ -26,7 +26,7 @@ namespace Editor {
     class EObjectView : public Engine::EUIField
     {
     private:
-        Engine::EScene::Entity fSelectedEntity;
+        Engine::ERegister::Entity fSelectedEntity;
         Engine::EExtensionManager* fExtensionManager;
         ERef<Engine::EUIButton> fAddObjectButton;
     public:
@@ -47,6 +47,16 @@ namespace Editor {
         void RenderInteger(Engine::EValueProperty<i32>* storage);
         void RenderDouble(Engine::EValueProperty<double>* storage);
         void RenderString(Engine::EValueProperty<EString>* storage);
+    };
+
+    class ECommandLine : public Engine::EUIField
+    {
+    private:
+        Engine::EChaiContext* fChaiContext;
+    public:
+        ECommandLine(Engine::EChaiContext* context);
+
+        virtual bool OnRender() override;
     };
 
 }

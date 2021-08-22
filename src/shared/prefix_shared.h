@@ -11,7 +11,7 @@
     #define E_API
 #endif
 
-
+#include "../deps/chai/include/chaiscript/chaiscript.hpp"
 
 #include "macros/engine_basic_macros.h"
 
@@ -29,7 +29,6 @@
 
 
 #include "register/engine_type_register.h"
-#include "register/engine_scene.h"
+#include "register/engine_register.h"
 #include "register/engine_serializer.h"
 #include "register/engine_deserializer.h"
-

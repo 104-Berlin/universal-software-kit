@@ -15,15 +15,15 @@ TEST(ExtensionTest, LoadExtension)
     EExtensionManager extensionManager;
     extensionManager.LoadExtension("Example2.uex");
 
-    ERef<EValueDescription> electricalDsc = extensionManager.GetValueDescriptionById("Example2", "Electrical");
+    EValueDescription electricalDsc = extensionManager.GetValueDescriptionById("Example2", "Electrical");
 
-    EXPECT_NE(electricalDsc, nullptr);
+    EXPECT_TRUE(electricalDsc.Valid());
 
-    if (electricalDsc)
+    if (electricalDsc.Valid())
     {
-        EScene* activeScene = extensionManager.GetActiveScene();
+        ERegister* activeScene = extensionManager.GetActiveScene();
 
-        EScene::Entity entity = activeScene->CreateEntity();
+        ERegister::Entity entity = activeScene->CreateEntity();
         activeScene->InsertComponent(entity, electricalDsc);
 
         EXPECT_TRUE(activeScene->HasComponent(entity, electricalDsc));
@@ -31,9 +31,9 @@ TEST(ExtensionTest, LoadExtension)
         EStructProperty* property = activeScene->GetComponent(entity, electricalDsc);
         EProperty* typeProp = property->GetProperty("Type");
         EXPECT_NE(typeProp, nullptr);
-        ERef<EValueDescription> typeDsc = typeProp->GetDescription();
-        EXPECT_EQ(typeDsc->GetType(), EValueType::ENUM);
-        EXPECT_STREQ(typeDsc->GetId().c_str(), "ElectricalType");
+        EValueDescription typeDsc = typeProp->GetDescription();
+        EXPECT_EQ(typeDsc.GetType(), EValueType::ENUM);
+        EXPECT_STREQ(typeDsc.GetId().c_str(), "ElectricalType");
     }
 
 }
