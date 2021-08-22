@@ -18,24 +18,27 @@ namespace Engine {
     }
 
 
+namespace events {
     struct EMouseMoveEvent
     {
         EVec2 Position;
         EVec2 MouseDelta;
     };
 
-    struct EMouseClickEvent
+    struct EMouseDownEvent
     {
         EVec2   Position;
         u32     MouseButton;
     };
 
-     struct EMouseDragEvent
+    struct EMouseDragEvent
     {
         EVec2   Position;
         EVec2   MouseDelta;
         u32     MouseButton;
     };
+
+}
 
     /**
      * Most Basic UI Element
@@ -200,20 +203,42 @@ namespace Engine {
 
         RenderFunction fRenderFuntion;
         Graphics::GFrameBuffer* fFrameBuffer;
+        Graphics::GScene fScene;
     public:
         void SetRenderFunction(RenderFunction renderFunction);
+
+        Graphics::GScene& GetScene();
+        const Graphics::GScene& GetScene() const;
     };
 
-    struct EClickEvent
+
+namespace events {
+    struct EButtonEvent
     {
-        u32 MouseX;
-        u32 MouseY;
+        char a;
+        EButtonEvent() {}
     };
+}
 
     class E_EDEXAPI EUIButton : public EUIField
     {
     public:
         EUIButton(const EString& label);
+
+        virtual bool OnRender() override;
+    };
+
+    struct ETextChangeEvent
+    {
+        EString Value;
+    };
+
+    class E_EDEXAPI EUITextField : public EUIField
+    {
+    private:
+        EString fContent;
+    public:
+        EUITextField(const EString& label, const EString& content = "");
 
         virtual bool OnRender() override;
     };

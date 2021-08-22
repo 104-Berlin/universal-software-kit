@@ -71,10 +71,18 @@ TEST(RegisterTest, Basics)
 		.AddStructField("Enum", someEnum)
 		.AddStructField("VectorArray", vectorList);
 	
-	EScene scene;
+	ERegister scene;
 
-	EScene::Entity entity = scene.CreateEntity();
+	bool componentCreated = false;
+
+	scene.AddComponentCreateEventListener(myTestComponent, [&componentCreated](EStructProperty* component){
+		componentCreated = true;
+	});
+
+	ERegister::Entity entity = scene.CreateEntity();
+	EXPECT_FALSE(componentCreated);
 	scene.InsertComponent(entity, myTestComponent);
+	EXPECT_TRUE(componentCreated);
 	scene.InsertComponent(entity, vector);
 
 	EXPECT_TRUE(scene.IsAlive(entity));

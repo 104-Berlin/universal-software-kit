@@ -3,7 +3,7 @@
 
 using namespace Engine;
 
-void EDeserializer::ReadSceneFromJson(const EJson& json, EScene* saveToScene, const EVector<EValueDescription>& registeredTypes) 
+void EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes) 
 {
     auto findType = [&registeredTypes](const EString& id) -> EValueDescription {
         for (EValueDescription dsc : registeredTypes)
@@ -22,7 +22,7 @@ void EDeserializer::ReadSceneFromJson(const EJson& json, EScene* saveToScene, co
     {
         for (const EJson& entityObject : json["Objects"])
         {
-            EScene::Entity entity = saveToScene->CreateEntity();
+            ERegister::Entity entity = saveToScene->CreateEntity();
             for (const auto& it : entityObject.items())
             {
                 EString id = it.key();

@@ -88,6 +88,16 @@ EValueDescription EValueDescription::CreateStruct(const t_ID& id, std::initializ
     return result;
 }
 
+bool EValueDescription::operator==(const EValueDescription& other) 
+{
+    return fID == other.fID && fIsArray == other.fIsArray && fType == other.fType;
+}
+
+bool EValueDescription::operator!=(const EValueDescription& other) 
+{
+    return !((*this) == other);
+}
+
 EValueDescription& EValueDescription::AddStructField(const EString& name, EValueDescription description) 
 {
     if (fType != EValueType::STRUCT) 

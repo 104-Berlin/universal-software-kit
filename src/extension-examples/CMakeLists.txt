@@ -10,8 +10,14 @@ add_library(TECHDRAW MODULE technical_drawing.cpp)
 set_target_properties(TECHDRAW PROPERTIES SUFFIX ".uex")
 set_target_properties(TECHDRAW PROPERTIES PREFIX "")
 
+
+add_library(UISHOW MODULE ui_show.cpp)
+set_target_properties(UISHOW PROPERTIES SUFFIX ".uex")
+set_target_properties(UISHOW PROPERTIES PREFIX "")
+
 target_link_libraries(Example1 EEditorExtension)
 target_link_libraries(TECHDRAW EEditorExtension)
+target_link_libraries(UISHOW EEditorExtension)
 endif()
 
 

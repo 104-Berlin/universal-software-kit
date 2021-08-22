@@ -71,7 +71,7 @@ const EString& EExtension::GetName() const
 
 EExtensionManager::EExtensionManager()
 {
-    fLoadedScene = new EScene("New Scene");
+    fLoadedScene = new ERegister("New Scene");
 }
 
 EExtensionManager::~EExtensionManager() 
@@ -122,7 +122,7 @@ EVector<EExtension*> EExtensionManager::GetLoadedExtensions()
     return result;
 }
 
-EScene* EExtensionManager::GetActiveScene() const
+ERegister* EExtensionManager::GetActiveScene() const
 {
     return fLoadedScene;
 }

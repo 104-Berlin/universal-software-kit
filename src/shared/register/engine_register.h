@@ -27,12 +27,23 @@ namespace convert {
 
 namespace Engine {
 
+    namespace events {
+
+        template <typename T>
+        struct EValueChangeEvent {
+            T NewValue;
+        };
+
+    }
+
     class E_API EProperty
     {
-        friend class EScene;
+        friend class ERegister;
     public:
         EString fName;
         EValueDescription fDescription;
+    protected:
+        EEventDispatcher fEventDispatcher;
     public:
         EProperty(const EString& name, EValueDescription description);
         virtual ~EProperty() = default;
@@ -41,8 +52,13 @@ namespace Engine {
 
         EValueDescription GetDescription() const;
 
+        template <typename Event, typename Callback>
+        void AddEventListener(Callback&& cb)
+        {
+            fEventDispatcher.Connect<Event>(cb);
+        }
 
-        
+
         static EProperty* CreateFromDescription(const EString& name, EValueDescription description);
     private:
         static EProperty* CreatePropertyStruct(const EString& name, EValueDescription description);
@@ -66,6 +82,7 @@ namespace Engine {
         void SetValue(const ValueType& value)
         {
             fValue = value;
+            fEventDispatcher.Post<events::EValueChangeEvent<ValueType>>({value});
         }
 
         ValueType GetValue() const 
@@ -86,6 +103,7 @@ namespace Engine {
         void SetValue(const T& value)
         {
             convert::setter<T>(this, value);
+            fEventDispatcher.Post<events::EValueChangeEvent<T>>({value});
         }
 
         template <typename T>
@@ -131,19 +149,25 @@ namespace Engine {
     };
 
 
-    class E_API EScene
+    class E_API ERegister
     {
     public:
         using Entity = u32;
     private:
+        struct EComponentCreateEvent {
+            Entity EntityID;
+            EStructProperty* Property;
+        };
+    private:
         EString fName;
         EResourceManager fResourceManager;
+        EEventDispatcher fEventDispatcher;
 
         EUnorderedMap<EValueDescription::t_ID, EUnorderedMap<Entity, EStructProperty*>> fComponentStorage;
         EVector<Entity>     fAliveEntites;
         EVector<Entity>     fDeadEntites;
     public:
-        EScene(const EString& name = "Unknown");
+        ERegister(const EString& name = "Unknown");
         
         EResourceManager& GetResourceManager();
 
@@ -160,6 +184,36 @@ namespace Engine {
         EStructProperty* GetComponent(Entity entity, EValueDescription componentId);
         EVector<EStructProperty*> GetAllComponents(Entity entity);
         EUnorderedMap<Entity, EStructProperty*>& View(const EValueDescription& description);
+
+        template <typename Callback>
+        void AddComponentCreateEventListener(const EValueDescription& description, Callback&& cb)
+        {
+            fEventDispatcher.Connect<EComponentCreateEvent>([cb, description](EComponentCreateEvent evt){
+                if (evt.Property->GetDescription() == description)
+                {
+                    cb(evt.Property);
+                }
+            });
+        }
+
+
     };
+
+
+
+    namespace events {
+
+        
+
+        struct EComponentChangeEvent {
+            ERegister::Entity Entity;
+            EStructProperty* Property;
+        };
+
+        struct EComponentDeleteEvent {
+            ERegister::Entity Entity;
+        };
+
+    }
 
 }

@@ -16,7 +16,7 @@ namespace Editor {
     class EObjectView : public Engine::EUIField
     {
     private:
-        Engine::EScene::Entity fSelectedEntity;
+        Engine::ERegister::Entity fSelectedEntity;
         Engine::EExtensionManager* fExtensionManager;
         ERef<Engine::EUIButton> fAddObjectButton;
     public:
