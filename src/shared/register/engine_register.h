@@ -155,7 +155,7 @@ namespace Engine {
         using Entity = u32;
     private:
         struct EComponentCreateEvent {
-            Entity Entity;
+            Entity EntityID;
             EStructProperty* Property;
         };
     private:
