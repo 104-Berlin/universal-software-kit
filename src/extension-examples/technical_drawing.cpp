@@ -4,9 +4,24 @@ using namespace Engine;
 using namespace Graphics;
 using namespace Renderer;
 
+std::vector<Graphics::GMesh::Vertex> planeVertices = {
+    {{-50.0f,-50.0f, -1.0f}},
+    {{ 50.0f,-50.0f, -1.0f}},
+    {{ 50.0f, 50.0f, -1.0f}},
+    {{-50.0f, 50.0f, -1.0f}},
+};
+
+std::vector<u32> planeIndices = {
+    0, 1, 2, 2, 3, 0
+};
+
 ERegister* activeScene = nullptr;
 
 static EValueDescription TechnicalMeshDsc = EValueDescription::CreateStruct("TechnicalDrawing", {{"Positions", dsc_Vec3.GetAsArray()}});
+
+static EValueDescription PlaneDescription = EValueDescription::CreateStruct("Plane", {{"Position", dsc_Vec3},
+                                                                                      {"Rotation", dsc_Vec3},
+                                                                                      {"Scale", dsc_Vec3}});
 
 struct ExtensionData
 {
@@ -45,17 +60,43 @@ void ViewportDrag(events::EMouseDragEvent e)
 APP_ENTRY
 {
     ERef<EUIPanel> someDrawingPanel = EMakeRef<EUIPanel>("Drawing Canvas");
-    ERef<EUIViewport> drawingViewport = EMakeRef<EUIViewport>();
+    EWeakRef<EUIViewport> drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()));
     
-    drawingViewport->AddEventListener<events::EMouseDownEvent>(&ViewportClicked);
-    drawingViewport->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
-    drawingViewport->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
-    someDrawingPanel->AddChild(drawingViewport);
+    drawingViewport.lock()->AddEventListener<events::EMouseDownEvent>(&ViewportClicked);
+    drawingViewport.lock()->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
+    drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
+    
 
-    activeScene->AddComponentCreateEventListener(TechnicalMeshDsc, [drawingViewport](EStructProperty* mesh){
+    activeScene->AddComponentCreateEventListener(PlaneDescription, [drawingViewport](EStructProperty* mesh, ERegister::Entity entity){
         // Create mesh in 3D Scene
-        drawingViewport->GetScene().Add(new GMesh());
+        if (drawingViewport.expired()) { return; }
+        GMesh* gMesh = new GMesh();
+        gMesh->SetData(planeVertices, planeIndices);
+        drawingViewport.lock()->GetScene().Add(gMesh);
+        EProperty* pos = mesh->GetProperty("Position");
+        EProperty* rot = mesh->GetProperty("Rotation");
+        EProperty* sca = mesh->GetProperty("Scale");
+        if (pos)
+        {
+            pos->AddEventListener<events::EValueChangeEvent<EVec3>>([gMesh](const events::EValueChangeEvent<EVec3>& event){
+                gMesh->SetPosition(event.NewValue);
+            });
+        }
+        if (rot)
+        {
+            rot->AddEventListener<events::EValueChangeEvent<EVec3>>([gMesh](const events::EValueChangeEvent<EVec3>& event){
+                glm::quat rot(event.NewValue);
+                gMesh->SetRotation(rot);
+            });
+        }
+        if (sca)
+        {
+            sca->AddEventListener<events::EValueChangeEvent<EVec3>>([gMesh](const events::EValueChangeEvent<EVec3>& event){
+                gMesh->SetScale(event.NewValue);
+            });
+        }
     });
+
 
 
     info.PanelRegister->RegisterItem(extensionName, someDrawingPanel);
@@ -66,4 +107,5 @@ EXT_ENTRY
     activeScene = info.GetActiveScene();
 
     info.GetTypeRegister().RegisterItem(extensionName, TechnicalMeshDsc);
+    info.GetTypeRegister().RegisterItem(extensionName, PlaneDescription);
 }

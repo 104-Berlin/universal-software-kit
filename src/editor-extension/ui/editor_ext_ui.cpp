@@ -176,20 +176,21 @@ void EUIPanel::Open()
     fOpen = true;
 }
 
-EUIViewport::EUIViewport() 
-    : EUIField("VIEWPORT")
+EUIViewport::EUIViewport(const Renderer::RCamera& camera) 
+    :   EUIField("VIEWPORT"), 
+        fFrameBuffer(Graphics::Wrapper::CreateFrameBuffer(100, 100)), 
+        fRenderer(Graphics::Wrapper::GetMainContext(), fFrameBuffer),
+        fCamera(camera)
 {
-    fFrameBuffer = Graphics::Wrapper::CreateFrameBuffer();
+    
 }
 
 EUIViewport::~EUIViewport() 
 {
-    delete fFrameBuffer;   
-}
-
-void EUIViewport::SetRenderFunction(RenderFunction renderFunction) 
-{
-    fRenderFuntion = renderFunction;
+    if (fFrameBuffer)
+    {
+        delete fFrameBuffer;
+    }
 }
 
 Graphics::GScene& EUIViewport::GetScene() 
@@ -202,17 +203,22 @@ const Graphics::GScene& EUIViewport::GetScene() const
     return fScene;
 }
 
+const Renderer::RCamera& EUIViewport::GetCamera() const
+{
+    return fCamera;
+}
+
+Renderer::RCamera& EUIViewport::GetCamera() 
+{
+    return fCamera;
+}
+
 bool EUIViewport::OnRender() 
 {
     ImVec2 contentRegion = ImGui::GetContentRegionAvail();
 
     fFrameBuffer->Resize(contentRegion.x, contentRegion.y, Graphics::GFrameBufferFormat::RGBA8);
-    fFrameBuffer->Bind();
-    if (fRenderFuntion)
-    {
-        fRenderFuntion(Graphics::Wrapper::GetMainContext(), fFrameBuffer);
-    }
-    fFrameBuffer->Unbind();
+    fRenderer.Render(&fScene, &fCamera);
 
     ImGui::Image((ImTextureID)(unsigned long)fFrameBuffer->GetColorAttachment(), contentRegion, {0, 1}, {1, 0});
 

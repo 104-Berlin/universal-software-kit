@@ -44,6 +44,7 @@ namespace Engine {
         EValueDescription fDescription;
     protected:
         EEventDispatcher fEventDispatcher;
+        EProperty*       fInStructProperty;
     public:
         EProperty(const EString& name, EValueDescription description);
         virtual ~EProperty() = default;
@@ -81,6 +82,8 @@ namespace Engine {
 
         void SetValue(const ValueType& value)
         {
+            if (value == fValue) { return; }
+            E_INFO("Value changed");
             fValue = value;
             fEventDispatcher.Post<events::EValueChangeEvent<ValueType>>({value});
         }
@@ -191,7 +194,7 @@ namespace Engine {
             fEventDispatcher.Connect<EComponentCreateEvent>([cb, description](EComponentCreateEvent evt){
                 if (evt.Property->GetDescription() == description)
                 {
-                    cb(evt.Property);
+                    cb(evt.Property, evt.EntityID);
                 }
             });
         }

@@ -24,10 +24,10 @@ std::vector<unsigned int> planeIndices = {
 };
 
 std::vector<Graphics::GMesh::Vertex> vertices = {
-    {{-0.5f,-0.5f, 1.0f}},
-    {{ 0.5f,-0.5f, 1.0f}},
-    {{ 0.5f, 0.5f, 1.0f}},
-    {{-0.5f, 0.5f, 1.0f}},
+    {{-50.0f,-50.0f, -1.0f}},
+    {{ 50.0f,-50.0f, -1.0f}},
+    {{ 50.0f, 50.0f, -1.0f}},
+    {{-50.0f, 50.0f, -1.0f}},
 };
 
 std::vector<unsigned int> indices = {
@@ -60,6 +60,8 @@ static float cameraRotationDevider = 360.0f;
 static float cameraSpeedDevider = 10.0f;
 
 static Renderer::RCamera ViewportCamera(Renderer::ECameraMode::PERSPECTIVE);
+
+static EWeakRef<Engine::EUIViewport> viewport;
 
 class TestUiField : public Engine::EUIField
 {
@@ -139,13 +141,14 @@ public:
 
     virtual bool OnRender() override
     {
-        glm::vec3 currentCamPos = ViewportCamera.GetPosition();
+        if (viewport.expired()) { return false; }
+        glm::vec3 currentCamPos = viewport.lock()->GetCamera().GetPosition();
         ImGui::DragFloat3("Camera Position", &currentCamPos.x);
-        ViewportCamera.SetPosition(currentCamPos);
+        viewport.lock()->GetCamera().SetPosition(currentCamPos);
 
-        ImGui::Text("Camera Forward: (%f, %f, %f)", ViewportCamera.GetForward().x, ViewportCamera.GetForward().y, ViewportCamera.GetForward().z);
-        ImGui::Text("Camera UP: (%f, %f, %f)", ViewportCamera.GetUp().x, ViewportCamera.GetUp().y, ViewportCamera.GetUp().z);
-        ImGui::Text("Camera Right: (%f, %f, %f)", ViewportCamera.GetRight().x, ViewportCamera.GetRight().y, ViewportCamera.GetRight().z);
+        ImGui::Text("Camera Forward: (%f, %f, %f)", viewport.lock()->GetCamera().GetForward().x, viewport.lock()->GetCamera().GetForward().y, viewport.lock()->GetCamera().GetForward().z);
+        ImGui::Text("Camera UP: (%f, %f, %f)", viewport.lock()->GetCamera().GetUp().x, viewport.lock()->GetCamera().GetUp().y, viewport.lock()->GetCamera().GetUp().z);
+        ImGui::Text("Camera Right: (%f, %f, %f)", viewport.lock()->GetCamera().GetRight().x, viewport.lock()->GetCamera().GetRight().y, viewport.lock()->GetCamera().GetRight().z);
 
         ImGui::Spacing();
         ImGui::DragFloat("Camera rotation devider", &cameraRotationDevider);
@@ -160,9 +163,10 @@ static ERef<TestUiField> testUiField = nullptr;
 APP_ENTRY
 {
     ERef<Engine::EUIPanel> uiPanel = EMakeRef<Engine::EUIPanel>("First panel");
-    ERef<Engine::EUIViewport> viewport = EMakeRef<Engine::EUIViewport>();
-    uiPanel->AddChild(viewport);
-
+    viewport = std::dynamic_pointer_cast<Engine::EUIViewport>(uiPanel->AddChild(EMakeRef<Engine::EUIViewport>()));
+    mesh = new Graphics::GMesh();
+    mesh->SetData(vertices, indices);
+    viewport.lock()->GetScene().Add(mesh);
 
 
     ERef<Engine::EUIPanel> vertexChanginngPanel = EMakeRef<Engine::EUIPanel>("Change The vertices");

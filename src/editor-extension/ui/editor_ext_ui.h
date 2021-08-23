@@ -191,24 +191,22 @@ namespace events {
     class E_EDEXAPI EUIViewport : public EUIField
     {
     public:
-        EUIViewport();
-        ~EUIViewport();
+        EUIViewport(const Renderer::RCamera& = Renderer::RCamera(Renderer::ECameraMode::ORTHOGRAPHIC));
+        virtual ~EUIViewport();
 
         virtual bool OnRender() override;
     private:
-        /**
-         * Render function which will be called with the viewport size
-         */
-        using RenderFunction = std::function<void(Graphics::GContext*, Graphics::GFrameBuffer*)>;
-
-        RenderFunction fRenderFuntion;
         Graphics::GFrameBuffer* fFrameBuffer;
+
+        Renderer::RRenderer3D fRenderer;
+        Renderer::RCamera fCamera;
         Graphics::GScene fScene;
     public:
-        void SetRenderFunction(RenderFunction renderFunction);
-
         Graphics::GScene& GetScene();
         const Graphics::GScene& GetScene() const;
+
+        const Renderer::RCamera& GetCamera() const;
+        Renderer::RCamera& GetCamera();
     };
 
 

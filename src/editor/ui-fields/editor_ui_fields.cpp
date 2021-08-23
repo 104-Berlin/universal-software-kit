@@ -47,7 +47,10 @@ EResourceView::EResourceView(Engine::EResourceManager* resourceManager)
 
 bool EResourceView::OnRender() 
 {
-    
+    for (const EResourceData& data : fResourceManager->GetAllResource())
+    {
+        ImGui::Selectable(data.Path.c_str());
+    }
     return true;
 }
 

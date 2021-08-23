@@ -45,7 +45,7 @@ void EApplication::RegenerateMainMenuBar()
         EFile file(saveToPath);
         file.SetFileAsString(json.dump());
     });
-    ERef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open"));
+    ERef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open..."));
     openScene->AddEventListener<events::EButtonEvent>([this](){
         EVector<EString> openScene = Wrapper::OpenFileDialog("Open", {"esc"});
         if (openScene.size() > 0)
@@ -56,6 +56,21 @@ void EApplication::RegenerateMainMenuBar()
             {
                 EDeserializer::ReadSceneFromJson(sceneJson, fExtensionManager.GetActiveScene(), fExtensionManager.GetTypeRegister().GetAllItems());
             }
+        }
+    });
+    ERef<EUIField> importResource = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Import..."));
+    importResource->AddEventListener<events::EButtonEvent>([this](){
+        EVector<EString> resourcesToOpen = Wrapper::OpenFileDialog("Import");
+        for (const EString& resourcePath : resourcesToOpen)
+        {
+            EFile resourceFile(resourcePath);
+
+            resourceFile.LoadToMemory();
+            ESharedBuffer fileBuffer = resourceFile.GetBuffer();
+            
+            byte* data = (byte*) malloc(fileBuffer.GetSizeInByte());
+            memcpy(data, fileBuffer.Data(), fileBuffer.GetSizeInByte());
+            fExtensionManager.GetActiveScene()->GetResourceManager().RegisterResource(resourceFile.GetFileExtension(), resourcePath,data, fileBuffer.GetSizeInByte());
         }
     });
 
@@ -135,6 +150,7 @@ void EApplication::RenderImGui()
 void EApplication::RegisterDefaultPanels() 
 {
     ERef<EUIPanel> resourcePanel = EMakeRef<EUIPanel>("Resource Panel");
+    resourcePanel->AddChild(EMakeRef<EResourceView>(&fExtensionManager.GetActiveScene()->GetResourceManager()));
 
 
 
