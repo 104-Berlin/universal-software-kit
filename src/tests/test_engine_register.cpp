@@ -75,7 +75,7 @@ TEST(RegisterTest, Basics)
 
 	bool componentCreated = false;
 
-	scene.AddComponentCreateEventListener(myTestComponent, [&componentCreated](EStructProperty* component){
+	scene.AddComponentCreateEventListener(myTestComponent, [&componentCreated](EStructProperty* component, ERegister::Entity entity){
 		componentCreated = true;
 	});
 
