@@ -51,9 +51,10 @@ namespace Engine {
             fValue = value;
         }
 
-        ValueType GetValue() const 
+        bool GetValue(ValueType& outValue) const 
         {
-            return fValue;
+            outValue = fValue;
+            return true;
         }
 
     protected:
@@ -79,11 +80,15 @@ namespace Engine {
         }
 
         template <typename T>
-        T GetValue() const
+        bool GetValue(T& outValue) const
         {
             T result;
-            convert::getter<T>(this, &result);
-            return result;
+            if (convert::getter<T>(this, &result))
+            {
+                outValue = result;
+                return true;
+            }
+            return false;
         }
 
         bool HasProperty(const EString& propertyName) const;
@@ -126,7 +131,52 @@ namespace Engine {
         const EVector<EProperty*>& GetElements() const;
         void Clear();
 
+        template <typename T>
+        bool GetValue(EVector<T>& outVector) const
+        {
+            auto& insert_element = [&outVector, this](auto property){
+                T value;
+                if (property->GetValue<T>(value))
+                {
+                    outVector.push_back(value);
+                    return true;
+                }                        
+                E_ERROR("Getting array property as vector has some type conflicts!");
+                E_ERROR("Trying to get array of " + fDescription.fID + " as Vector<" + typeid(T).name() + ">");
 
+                return false;
+            };
+
+            for (EProperty* prop : fElements)
+            {
+                switch (fDescription.fType)
+                {
+                    case EValueType::STRUCT: 
+                    {
+                        if (insert_element(static_cast<EStructProperty*>(prop));)
+                        {
+                            return false;
+                        }
+                        break;
+                    }
+                    case EValueType::PRIMITIVE:
+                    {
+                        if (!insert_element(static_cast<EValueProperty<T>*>(prop)))
+                        {
+                            return false;
+                        }
+                        break;
+                    } 
+                    case EValueType::ENUM:
+                    {
+                        E_WARN("Array of enums is not supported. Use the enum inside an struct please!");
+                        return false;
+                        break;
+                    }
+                    case EValueType::UNKNOWN: return false;
+                }
+            }
+        }
     protected:
         virtual EProperty* OnClone() override;
     };

@@ -208,7 +208,8 @@ void EObjectView::RenderArray(Engine::EArrayProperty* storage)
 
 void EObjectView::RenderBool(Engine::EValueProperty<bool>* storage) 
 {
-    bool value = storage->GetValue();
+    bool value;
+    storage->GetValue(value);
     ImGui::PushID(storage);
     ImGui::Checkbox(storage->GetPropertyName().c_str(), &value);
     ImGui::PopID();
@@ -217,7 +218,8 @@ void EObjectView::RenderBool(Engine::EValueProperty<bool>* storage)
 
 void EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage) 
 {
-    i32 value = storage->GetValue();
+    i32 value;
+    storage->GetValue(value);
     ImGui::PushID(storage);
     ImGui::InputInt(storage->GetPropertyName().c_str(), &value);
     ImGui::PopID();
@@ -226,7 +228,8 @@ void EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage)
 
 void EObjectView::RenderDouble(Engine::EValueProperty<double>* storage) 
 {
-    double value = storage->GetValue();
+    double value;
+    storage->GetValue(value);
     ImGui::PushID(storage);
     ImGui::InputDouble(storage->GetPropertyName().c_str(), &value);
     ImGui::PopID();
@@ -235,7 +238,8 @@ void EObjectView::RenderDouble(Engine::EValueProperty<double>* storage)
 
 void EObjectView::RenderString(Engine::EValueProperty<EString>* storage) 
 {
-    EString value = storage->GetValue();
+    EString value;
+    storage->GetValue(value);
     char buf[255];
     strcpy(buf, value.c_str());
     ImGui::PushID(storage);

@@ -14,7 +14,7 @@
 #include "../deps/chai/include/chaiscript/chaiscript.hpp"
 
 #include "macros/engine_basic_macros.h"
-
+#include "macros/engine_storage_macro.h"
 
 #include "file/engine_shared_buffer.h"
 #include "file/engine_folder.h"
