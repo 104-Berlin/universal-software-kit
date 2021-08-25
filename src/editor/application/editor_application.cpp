@@ -8,7 +8,7 @@ using namespace Engine;
 EApplication::EApplication() 
     : fGraphicsContext(nullptr), fCommandLine(&fExtensionManager.GetChaiContext())
 {
-    fExtensionManager.AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent& event) {
+    /*fExtensionManager.AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent& event) {
         auto entry = (void(*)(const char*, Engine::EAppInit))event.Extension->GetFunction("app_entry");
         if (entry)
         {
@@ -21,11 +21,11 @@ EApplication::EApplication()
         {
             initImGui();
         }
-    });
+    });*/
 
-    fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
+    /*fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
         this->RegenerateMainMenuBar();
-    });
+    });*/
 }
 
 void EApplication::Start() 

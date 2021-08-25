@@ -78,22 +78,22 @@ APP_ENTRY
         EProperty* sca = mesh->GetProperty("Scale");
         if (pos)
         {
-            pos->AddEventListener<events::EValueChangeEvent<EVec3>>([gMesh](const events::EValueChangeEvent<EVec3>& event){
+            /*pos->AddEventListener<events::EValueChangeEvent<EVec3>>([gMesh](const events::EValueChangeEvent<EVec3>& event){
                 gMesh->SetPosition(event.NewValue);
-            });
+            });*/
         }
         if (rot)
         {
-            rot->AddEventListener<events::EValueChangeEvent<EVec3>>([gMesh](const events::EValueChangeEvent<EVec3>& event){
+            /*rot->AddEventListener<events::EValueChangeEvent<EVec3>>([gMesh](const events::EValueChangeEvent<EVec3>& event){
                 glm::quat rot(event.NewValue);
                 gMesh->SetRotation(rot);
-            });
+            });*/
         }
         if (sca)
         {
-            sca->AddEventListener<events::EValueChangeEvent<EVec3>>([gMesh](const events::EValueChangeEvent<EVec3>& event){
+            /*sca->AddEventListener<events::EValueChangeEvent<EVec3>>([gMesh](const events::EValueChangeEvent<EVec3>& event){
                 gMesh->SetScale(event.NewValue);
-            });
+            });*/
         }
     });
 

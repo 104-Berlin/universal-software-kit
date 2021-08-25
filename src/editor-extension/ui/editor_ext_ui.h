@@ -152,7 +152,7 @@ namespace events {
         template <typename EventType, typename CB>
         void AddEventListener(CB&& callbackFunction)
         {
-            fEventDispatcher.Connect<EventType>(callbackFunction);
+            //fEventDispatcher.Connect<EventType>(callbackFunction);
         }
     };
 

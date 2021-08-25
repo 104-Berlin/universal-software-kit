@@ -36,7 +36,7 @@ namespace Engine {
             fRegisteredItems[extensionName].push_back(item);
             ERegisterChangedEvent event;
             event.ExtensionName = extensionName;
-            fEventDispatcher.Post<ERegisterChangedEvent>(event);
+            //fEventDispatcher.Post<ERegisterChangedEvent>(event);
         }
 
         /**
@@ -48,7 +48,7 @@ namespace Engine {
             fRegisteredItems[extensionName].clear();
             ERegisterChangedEvent event;
             event.ExtensionName = extensionName;
-            fEventDispatcher.Post<ERegisterChangedEvent>(event);
+            //fEventDispatcher.Post<ERegisterChangedEvent>(event);
         }
 
         /**
