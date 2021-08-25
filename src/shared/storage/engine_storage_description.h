@@ -69,4 +69,52 @@ namespace Engine {
     static EValueDescription IntegerDescription(EValueType::PRIMITIVE, E_TYPEID_INTEGER);
     static EValueDescription DoubleDescription(EValueType::PRIMITIVE, E_TYPEID_DOUBLE);
     static EValueDescription BoolDescription(EValueType::PRIMITIVE, E_TYPEID_BOOL);
+
+    template <typename T, typename B = void>
+    EValueDescription GetDescription()
+    {
+        return EValueDescription();
+    }
+
+    template <>
+    EValueDescription GetDescription<EString>()
+    {
+        return StringDescription;
+    }
+
+    template <>
+    EValueDescription GetDescription<int>()
+    {
+        return IntegerDescription;
+    }
+
+    template <>
+    EValueDescription GetDescription<i32>()
+    {
+        return IntegerDescription;
+    }
+
+    template <>
+    EValueDescription GetDescription<float>()
+    {
+        return DoubleDescription;
+    }
+
+    template <>
+    EValueDescription GetDescription<double>()
+    {
+        return DoubleDescription;
+    }
+
+    template <>
+    EValueDescription GetDescription<bool>()
+    {
+        return BoolDescription;
+    }
+
+    template <typename T>
+    EValueDescription GetDescription<T, EVector<T>>()
+    {
+        return GetDescription<T>().GetAsArray();
+    }
 }
