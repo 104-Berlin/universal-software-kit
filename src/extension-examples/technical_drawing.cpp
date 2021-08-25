@@ -108,4 +108,16 @@ EXT_ENTRY
 
     info.GetTypeRegister().RegisterItem(extensionName, TechnicalMeshDsc);
     info.GetTypeRegister().RegisterItem(extensionName, PlaneDescription);
+
+    ERegister::Entity entity = activeScene->CreateEntity();
+    activeScene->InsertComponent(entity, dsc_Vec3);
+
+    EStructProperty* vecProp = static_cast<EStructProperty*>(activeScene->GetComponent(entity, dsc_Vec3));
+    if (vecProp)
+    {
+        vecProp->SetValue<EVec3>({5, 0, 1});
+        EVec3 vec = vecProp->GetValue<EVec3>();
+
+        E_INFO("VECTOR: (" + std::to_string(vec.x) + ", " + std::to_string(vec.y) + " ," + std::to_string(vec.z) + ")");
+    }
 }
