@@ -70,12 +70,24 @@ namespace Engine {
     static EValueDescription DoubleDescription(EValueType::PRIMITIVE, E_TYPEID_DOUBLE);
     static EValueDescription BoolDescription(EValueType::PRIMITIVE, E_TYPEID_BOOL);
 
-    template <typename T, typename B = void>
+
+    
+    
+    // For Arrays
+    template <typename T, std::enable_if_t<std::is_base_of<std::vector<typename T::value_type>, T>::value, bool> = true>
     EValueDescription GetDescription()
     {
-        return EValueDescription();
+        return GetDescription<T::value_type>().GetAsArray();
     }
 
+    // For Structs
+    template <typename T>
+    EValueDescription GetDescription()
+    {
+        return T::_dsc;
+    }
+
+    // For Primitives
     template <>
     EValueDescription GetDescription<EString>()
     {
@@ -88,11 +100,6 @@ namespace Engine {
         return IntegerDescription;
     }
 
-    template <>
-    EValueDescription GetDescription<i32>()
-    {
-        return IntegerDescription;
-    }
 
     template <>
     EValueDescription GetDescription<float>()
@@ -112,9 +119,4 @@ namespace Engine {
         return BoolDescription;
     }
 
-    template <typename T>
-    EValueDescription GetDescription<T, EVector<T>>()
-    {
-        return GetDescription<T>().GetAsArray();
-    }
 }

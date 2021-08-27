@@ -51,10 +51,9 @@ namespace Engine {
             fValue = value;
         }
 
-        bool GetValue(ValueType& outValue) const 
+        ValueType GetValue() const 
         {
-            outValue = fValue;
-            return true;
+            return fValue;
         }
 
     protected:

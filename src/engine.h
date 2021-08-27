@@ -17,6 +17,7 @@
 #include <set>
 #include <exception>
 #include <cstddef>
+#include <type_traits>
 
 #ifdef M_PI
 #undef M_PI
