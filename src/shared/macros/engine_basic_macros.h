@@ -53,10 +53,10 @@
                                         E_LOOP_ARGS_7(cb, __VA_ARGS__)
 #define E_LOOP_ARGS_9(cb, entry, ...) cb(entry)\
                                         E_LOOP_ARGS_8(cb, __VA_ARGS__)
-#define E_LOOP_ARGS_10(cb, entry, ...) cb(entry)\
+#define E_LOOP_ARGS_10(cb, entry, ...) _b(entry)\
                                         E_LOOP_ARGS_9(cb, __VA_ARGS__)
 
 
 
 
-#define E_LOOP_ARGS(callback, ...) E_CONCATENATE(E_LOOP_ARGS, E_ARG_COUNT(__VA_ARGS__))(callback, __VA_ARGS__)
+#define E_LOOP_ARGS(callback, ...) E_CONCATENATE(E_LOOP_ARGS_, E_ARG_COUNT(__VA_ARGS__))(callback, __VA_ARGS__)

@@ -129,3 +129,36 @@ const EVector<EString>& EValueDescription::GetEnumOptions() const
 {
     return fEnumOptions;
 }
+
+
+// For Primitives
+template <>
+EValueDescription getdsc::GetDescription<EString>()
+{
+    return StringDescription;
+}
+
+template <>
+EValueDescription getdsc::GetDescription<int>()
+{
+    return IntegerDescription;
+}
+
+
+template <>
+EValueDescription getdsc::GetDescription<float>()
+{
+    return DoubleDescription;
+}
+
+template <>
+EValueDescription getdsc::GetDescription<double>()
+{
+    return DoubleDescription;
+}
+
+template <>
+EValueDescription getdsc::GetDescription<bool>()
+{
+    return BoolDescription;
+}

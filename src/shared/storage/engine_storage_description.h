@@ -72,51 +72,21 @@ namespace Engine {
 
 
     
-    
-    // For Arrays
-    template <typename T, std::enable_if_t<std::is_base_of<std::vector<typename T::value_type>, T>::value, bool> = true>
-    EValueDescription GetDescription()
-    {
-        return GetDescription<T::value_type>().GetAsArray();
+    namespace getdsc {
+
+        // For Arrays
+        template <typename T, std::enable_if_t<std::is_base_of<std::vector<typename T::value_type>, T>::value, bool> = true>
+        EValueDescription GetDescription()
+        {
+            return GetDescription<T::value_type>().GetAsArray();
+        }
+
+        // For Structs
+        template <typename T>
+        EValueDescription GetDescription()
+        {
+            return T::_dsc;
+        }
+
     }
-
-    // For Structs
-    template <typename T>
-    EValueDescription GetDescription()
-    {
-        return T::_dsc;
-    }
-
-    // For Primitives
-    template <>
-    EValueDescription GetDescription<EString>()
-    {
-        return StringDescription;
-    }
-
-    template <>
-    EValueDescription GetDescription<int>()
-    {
-        return IntegerDescription;
-    }
-
-
-    template <>
-    EValueDescription GetDescription<float>()
-    {
-        return DoubleDescription;
-    }
-
-    template <>
-    EValueDescription GetDescription<double>()
-    {
-        return DoubleDescription;
-    }
-
-    template <>
-    EValueDescription GetDescription<bool>()
-    {
-        return BoolDescription;
-    }
-
 }

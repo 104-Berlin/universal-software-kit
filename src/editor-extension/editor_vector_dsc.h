@@ -17,3 +17,9 @@ namespace convert
 }
 
 #endif
+
+
+E_STORAGE_TYPE(MyType, 
+    (int, SomeInteger),
+    (EString, MyString)
+)
