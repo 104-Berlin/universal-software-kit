@@ -131,7 +131,11 @@ const EVector<EString>& EValueDescription::GetEnumOptions() const
 }
 
 
+
+// For Structs
+
 // For Primitives
+
 template <>
 EValueDescription getdsc::GetDescription<EString>()
 {

@@ -180,4 +180,23 @@ namespace Engine {
         virtual EProperty* OnClone() override;
     };
 
+
+    namespace prop {
+
+        // For Arrays
+        template <typename T, std::enable_if_t<std::is_base_of<std::vector<typename T::value_type>, T>::value, bool> = true>
+        EValueDescription GetDescription()
+        {
+            return GetDescription<T::value_type>().GetAsArray();
+        }
+
+
+        template <typename T>
+        void SetValueToProperty(EProperty* prop, const T& value)
+        {
+
+        }
+
+    }
+
 }

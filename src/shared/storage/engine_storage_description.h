@@ -74,19 +74,29 @@ namespace Engine {
     
     namespace getdsc {
 
-        // For Arrays
-        template <typename T, std::enable_if_t<std::is_base_of<std::vector<typename T::value_type>, T>::value, bool> = true>
-        EValueDescription GetDescription()
-        {
-            return GetDescription<T::value_type>().GetAsArray();
-        }
+        template<typename T> struct is_vector : public std::false_type {};
 
-        // For Structs
+    template<typename T, typename A>
+    struct is_vector<std::vector<T, A>> : public std::true_type {};
+
         template <typename T>
         EValueDescription GetDescription()
         {
-            return T::_dsc;
+            if constexpr (is_vector<T>::value)
+            {
+                return GetDescription<T::value_type>().GetAsArray();
+            }
+            else
+            {
+                return T::_dsc;
+            }
         }
 
+
+        extern template E_API EValueDescription getdsc::GetDescription<EString>();
+        extern template E_API EValueDescription getdsc::GetDescription<int>();
+        extern template E_API EValueDescription getdsc::GetDescription<float>();
+        extern template E_API EValueDescription getdsc::GetDescription<double>();
+        extern template E_API EValueDescription getdsc::GetDescription<bool>();
     }
 }

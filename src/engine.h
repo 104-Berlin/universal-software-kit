@@ -55,8 +55,8 @@ typedef uint_fast8_t byte;
 
 typedef std::string EString;
 
-template <typename T>
-using EVector = std::vector<T>;
+template <typename ...T>
+using EVector = std::vector<T...>;
 
 template <typename T>
 using ESet = std::set<T>;

@@ -36,27 +36,58 @@
 
 
 
-#define E_LOOP_ARGS_1(cb, entry, ...) cb(entry)
-#define E_LOOP_ARGS_2(cb, entry, ...) cb(entry)\
-                                        E_LOOP_ARGS_1(cb, __VA_ARGS__)
-#define E_LOOP_ARGS_3(cb, entry, ...) cb(entry)\
-                                        E_LOOP_ARGS_2(cb, __VA_ARGS__)
-#define E_LOOP_ARGS_4(cb, entry, ...) cb(entry)\
-                                        E_LOOP_ARGS_3(cb, __VA_ARGS__)
-#define E_LOOP_ARGS_5(cb, entry, ...) cb(entry)\
-                                        E_LOOP_ARGS_4(cb, __VA_ARGS__)
-#define E_LOOP_ARGS_6(cb, entry, ...) cb(entry)\
-                                        E_LOOP_ARGS_5(cb, __VA_ARGS__)
-#define E_LOOP_ARGS_7(cb, entry, ...) cb(entry)\
-                                        E_LOOP_ARGS_6(cb, __VA_ARGS__)
-#define E_LOOP_ARGS_8(cb, entry, ...) cb(entry)\
-                                        E_LOOP_ARGS_7(cb, __VA_ARGS__)
-#define E_LOOP_ARGS_9(cb, entry, ...) cb(entry)\
-                                        E_LOOP_ARGS_8(cb, __VA_ARGS__)
-#define E_LOOP_ARGS_10(cb, entry, ...) _b(entry)\
-                                        E_LOOP_ARGS_9(cb, __VA_ARGS__)
+#define E_LOOP_ARGS_1(cb, entry) EXPAND ( cb (entry) )
+
+#define E_LOOP_ARGS_2(cb, entry, last) EXPAND (cb (entry) )\
+                                        EXPAND ( E_LOOP_ARGS_1 (cb, last) )
+#define E_LOOP_ARGS_3(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_2  (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_4(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_3 (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_5(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_4 (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_6(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_5 (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_7(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_6 (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_8(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_7 (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_9(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_8 (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_10(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_9 (cb, __VA_ARGS__) )
 
 
 
 
-#define E_LOOP_ARGS(callback, ...) E_CONCATENATE(E_LOOP_ARGS_, E_ARG_COUNT(__VA_ARGS__))(callback, __VA_ARGS__)
+#define E_LOOP_ARGS(callback, ...) EXPAND ( E_CONCATENATE(E_LOOP_ARGS_, E_ARG_COUNT(__VA_ARGS__))(callback, __VA_ARGS__) )
+
+
+
+
+
+#define E_LOOP_ARGS_L_1(cb, entry) EXPAND ( EXPAND ( E_CONCATENATE(cb, _LAST) ) (entry) )
+
+#define E_LOOP_ARGS_L_2(cb, entry, last) EXPAND (cb (entry) )\
+                                        EXPAND ( E_LOOP_ARGS_L_1 (cb, last) )
+#define E_LOOP_ARGS_L_3(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_L_2  (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_L_4(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_L_3 (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_L_5(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_L_4 (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_L_6(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_L_5 (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_L_7(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_L_6 (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_L_8(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_L_7 (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_L_9(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_L_8 (cb, __VA_ARGS__) )
+#define E_LOOP_ARGS_L_10(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND (E_LOOP_ARGS_L_9 (cb, __VA_ARGS__) )
+
+
+
+
+#define E_LOOP_ARGS_L(callback, ...) EXPAND ( E_CONCATENATE(E_LOOP_ARGS_L_, E_ARG_COUNT(__VA_ARGS__))(callback, __VA_ARGS__) )
