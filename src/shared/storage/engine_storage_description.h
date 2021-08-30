@@ -63,40 +63,57 @@ namespace Engine {
     #define E_TYPEID_DOUBLE "double"
     #define E_TYPEID_BOOL "bool"
 
-
-    
-    static EValueDescription StringDescription(EValueType::PRIMITIVE, E_TYPEID_STRING);
-    static EValueDescription IntegerDescription(EValueType::PRIMITIVE, E_TYPEID_INTEGER);
-    static EValueDescription DoubleDescription(EValueType::PRIMITIVE, E_TYPEID_DOUBLE);
-    static EValueDescription BoolDescription(EValueType::PRIMITIVE, E_TYPEID_BOOL);
+    #define StringDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_STRING)
+    #define IntegerDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_INTEGER)
+    #define DoubleDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_DOUBLE)
+    #define BoolDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_BOOL)
 
 
     
     namespace getdsc {
 
         template<typename T> struct is_vector : public std::false_type {};
+        template<typename T, typename A>
+        struct is_vector<std::vector<T, A>> : public std::true_type {};
 
-    template<typename T, typename A>
-    struct is_vector<std::vector<T, A>> : public std::true_type {};
+
+        template <typename T> struct is_string : public std::false_type {};
+        
+        template <> 
+        struct is_string<EString> : public std::true_type {};
+
 
         template <typename T>
         EValueDescription GetDescription()
         {
             if constexpr (is_vector<T>::value)
             {
-                return GetDescription<T::value_type>().GetAsArray();
+                return GetDescription<typename T::value_type>().GetAsArray();
+            }
+            else if constexpr (std::is_same<T, EString>::value)
+            {
+                return StringDescription;
+            }
+            else if constexpr (std::is_same<T, double>::value)
+            {
+                return DoubleDescription;
+            }
+            else if constexpr (std::is_same<T, float>::value)
+            {
+                return DoubleDescription;
+            }
+            else if constexpr (std::is_same<T, bool>::value)
+            {
+                return BoolDescription;
+            }
+            else if constexpr (std::is_same<T, int>::value)
+            {
+                return IntegerDescription;
             }
             else
             {
                 return T::_dsc;
             }
         }
-
-
-        extern template E_API EValueDescription getdsc::GetDescription<EString>();
-        extern template E_API EValueDescription getdsc::GetDescription<int>();
-        extern template E_API EValueDescription getdsc::GetDescription<float>();
-        extern template E_API EValueDescription getdsc::GetDescription<double>();
-        extern template E_API EValueDescription getdsc::GetDescription<bool>();
     }
 }

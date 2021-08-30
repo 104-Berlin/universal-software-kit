@@ -1,6 +1,29 @@
 #pragma once
 
+
 namespace Engine {
+    class EStructProperty;
+}
+namespace convert {
+
+    template <typename Value>
+    bool setter(Engine::EStructProperty* prop, const Value& value)
+    {
+        E_ASSERT(false, EString("Setter not implemented for type ") + typeid(Value).name());
+        return false;
+    }
+
+
+    template <typename Value>
+    bool getter(const Engine::EStructProperty* prop, Value* outValue)
+    {
+        E_ASSERT(false, EString("Getter not implemented for type ") + typeid(Value).name());
+        return false;
+    }
+};
+
+namespace Engine {
+    
 
     class E_API EProperty
     {
@@ -135,24 +158,24 @@ namespace Engine {
         {
             auto& insert_element = [&outVector, this](auto property){
                 T value;
-                if (property->GetValue<T>(value))
+                if (property->template GetValue<T>(value))
                 {
                     outVector.push_back(value);
                     return true;
                 }                        
                 E_ERROR("Getting array property as vector has some type conflicts!");
-                E_ERROR("Trying to get array of " + fDescription.fID + " as Vector<" + typeid(T).name() + ">");
+                E_ERROR("Trying to get array of " + fDescription.GetId() + " as Vector<" + typeid(T).name() + ">");
 
                 return false;
             };
 
             for (EProperty* prop : fElements)
             {
-                switch (fDescription.fType)
+                switch (fDescription.GetType())
                 {
                     case EValueType::STRUCT: 
                     {
-                        if (insert_element(static_cast<EStructProperty*>(prop));)
+                        if (insert_element(static_cast<EStructProperty*>(prop)))
                         {
                             return false;
                         }
@@ -179,24 +202,5 @@ namespace Engine {
     protected:
         virtual EProperty* OnClone() override;
     };
-
-
-    namespace prop {
-
-        // For Arrays
-        template <typename T, std::enable_if_t<std::is_base_of<std::vector<typename T::value_type>, T>::value, bool> = true>
-        EValueDescription GetDescription()
-        {
-            return GetDescription<T::value_type>().GetAsArray();
-        }
-
-
-        template <typename T>
-        void SetValueToProperty(EProperty* prop, const T& value)
-        {
-
-        }
-
-    }
 
 }

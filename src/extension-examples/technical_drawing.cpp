@@ -116,7 +116,8 @@ EXT_ENTRY
     if (vecProp)
     {
         vecProp->SetValue<EVec3>({5, 0, 1});
-        EVec3 vec = vecProp->GetValue<EVec3>();
+        EVec3 vec;
+        vecProp->GetValue<EVec3>(vec);
 
         E_INFO("VECTOR: (" + std::to_string(vec.x) + ", " + std::to_string(vec.y) + " ," + std::to_string(vec.z) + ")");
     }

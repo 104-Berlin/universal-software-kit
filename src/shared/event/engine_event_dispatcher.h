@@ -14,7 +14,7 @@ namespace Engine {
         auto Connect(const EValueDescription& dsc, Callback& fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, void>
         {
-            fRegisteredCallbacks.insert({dsc.GetId(), [&fn](EProperty*){fn()}});
+            fRegisteredCallbacks.insert({dsc.GetId(), [&fn](EProperty*){fn();}});
         }
 
         template <typename Callback>
@@ -37,15 +37,15 @@ namespace Engine {
         template <typename T>
         void Post(const EValueDescription& dsc, const T& data)
         {
-            E_ASSERT(dsc.fType == EValueType::STRUCT, "Only post struct events with template!");
-            EStructProperty* property = static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc));
+            E_ASSERT(dsc.GetType() == EValueType::STRUCT, "Only post struct events with template!");
+            EStructProperty* property = static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc));
             if (property->SetValue<T>(data))
             {
                 fComponentStorage.insert({dsc.GetId(), property});
             }
             else
             {
-                E_ERROR("Property could not be initialized with given type: " + typeid(T).name());
+                E_ERROR(EString("Property could not be initialized with given type: ") + typeid(T).name());
                 delete property;
                 return;
             }

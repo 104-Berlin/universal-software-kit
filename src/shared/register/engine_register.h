@@ -1,26 +1,6 @@
 #pragma once
 
-namespace Engine {
-    class EStructProperty;
-}
 
-namespace convert {
-
-    template <typename Value>
-    bool setter(Engine::EStructProperty* prop, const Value& value)
-    {
-        E_ASSERT(false, EString("Setter not implemented for type ") + typeid(Value).name());
-        return false;
-    }
-
-
-    template <typename Value>
-    bool getter(const Engine::EStructProperty* prop, Value* outValue)
-    {
-        E_ASSERT(false, EString("Getter not implemented for type ") + typeid(Value).name());
-        return false;
-    }
-};
 
 // See tests/test_engine_register.cpp
 // There is an example for a vector struct right at the top

@@ -24,8 +24,8 @@ using namespace Engine;
 #define E_SET_PROPERTY2(type, name) {::Engine::EValueDescription valDsc = ::Engine::getdsc::GetDescription<type>();\
                                     switch (valDsc.GetType())\
                                     {\
-                                    case ::Engine::EValueType::STRUCT: static_cast<::Engine::EStructProperty*>(EXPAND ( E_CONCATENATE(prop, name) ) )->SetValue<type>(EXPAND ( E_CONCATENATE ( value., name ) ) );\
-                                    case ::Engine::EValueType::PRIMITIVE: static_cast<::Engine::EValueProperty<type>*>(EXPAND ( E_CONCATENATE(prop, name) ) )->SetValue(EXPAND ( E_CONCATENATE ( value., name ) ) );\
+                                    case ::Engine::EValueType::STRUCT: static_cast<::Engine::EStructProperty*>(EXPAND ( E_CONCATENATE(prop, name) ) )->SetValue<type>(value. name );\
+                                    case ::Engine::EValueType::PRIMITIVE: static_cast<::Engine::EValueProperty<type>*>(EXPAND ( E_CONCATENATE(prop, name) ) )->SetValue(value. name );\
                                     case ::Engine::EValueType::ENUM: break;/*TODO*/\
                                     case ::Engine::EValueType::UNKNOWN: break;\
                                     }}
@@ -35,18 +35,18 @@ using namespace Engine;
 #define E_SET_SELF2(type, name) {::Engine::EValueDescription valDsc = ::Engine::getdsc::GetDescription<type>();\
                                     switch (valDsc.GetType())\
                                     {\
-                                    case ::Engine::EValueType::STRUCT: static_cast<::Engine::EStructProperty*>(EXPAND ( E_CONCATENATE(prop, name) ) )->GetValue<type>(EXPAND ( E_CONCATENATE ( value., name ) ) );\
-                                    case ::Engine::EValueType::PRIMITIVE: EXPAND ( E_CONCATENATE ( value., name ) ) = static_cast<::Engine::EValueProperty<type>*>(EXPAND ( E_CONCATENATE(prop, name) ) )->GetValue();\
+                                    case ::Engine::EValueType::STRUCT: static_cast<::Engine::EStructProperty*>(EXPAND ( E_CONCATENATE(prop, name) ) )->GetValue<type>(value. name );\
+                                    case ::Engine::EValueType::PRIMITIVE: value. name = static_cast<::Engine::EValueProperty<type>*>(EXPAND ( E_CONCATENATE(prop, name) ) )->GetValue();\
                                     case ::Engine::EValueType::ENUM: break;/*TODO*/\
                                     case ::Engine::EValueType::UNKNOWN: break;\
                                     }}
-#define E_SET_SELF(typename) EXPAND (E_SET_SELF2 typename )
+#define E_SET_SELF(typename) EXPAND ( E_SET_SELF2 typename )
 
 
-#define E_CHECK_EQUEL2(type, name) name == E_CONCATENATE(other., name) &&
+#define E_CHECK_EQUEL2(type, name) name == other. name &&
 #define E_CHECK_EQUEL(typename) EXPAND (E_CHECK_EQUEL2 typename )
 
-#define E_CHECK_EQUEL_LAST2(type, name) name == E_CONCATENATE(other., name)
+#define E_CHECK_EQUEL_LAST2(type, name) name == other. name
 #define E_CHECK_EQUEL_LAST(typename) EXPAND (E_CHECK_EQUEL_LAST2 typename )
 
 #define E_STORAGE_STRUCT(name, ...) struct name {\
