@@ -49,6 +49,15 @@ using namespace Engine;
 #define E_CHECK_EQUEL_LAST2(type, name) name == other. name
 #define E_CHECK_EQUEL_LAST(typename) EXPAND (E_CHECK_EQUEL_LAST2 typename )
 
+
+#ifdef EWIN
+#define E_CONVERT_DECL(structname) namespace convert {\
+                                        }
+#else
+#define E_CONVERT_DECL(structname) 
+#endif
+
+
 #define E_STORAGE_STRUCT(name, ...) struct name {\
                                         EXPAND (E_LOOP_ARGS(E_CREATE_STRUCT_PROP, __VA_ARGS__) )\
                                         static inline ::Engine::EValueDescription _dsc = ::Engine::EValueDescription::CreateStruct(EXPAND(E_STRINGIFY(name)), {\
