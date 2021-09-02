@@ -50,21 +50,13 @@ using namespace Engine;
 #define E_CHECK_EQUEL_LAST(typename) EXPAND (E_CHECK_EQUEL_LAST2 typename )
 
 
-#ifdef EWIN
-#define E_CONVERT_DECL(structname) namespace convert {\
-                                        }
-#else
-#define E_CONVERT_DECL(structname) 
-#endif
-
-
 #define E_STORAGE_STRUCT(name, ...) struct name {\
                                         EXPAND (E_LOOP_ARGS(E_CREATE_STRUCT_PROP, __VA_ARGS__) )\
                                         static inline ::Engine::EValueDescription _dsc = ::Engine::EValueDescription::CreateStruct(EXPAND(E_STRINGIFY(name)), {\
                                             EXPAND (E_LOOP_ARGS(E_CREATE_STRUCT_DSC, __VA_ARGS__))\
                                         });\
                                         \
-                                        static bool ToProperty(name & value, EStructProperty* property)\
+                                        static bool ToProperty(const name & value, EStructProperty* property)\
                                         {\
                                             EXPAND( E_LOOP_ARGS(E_GET_FROM_PROP, __VA_ARGS__) ) \
                                             if (\
@@ -82,6 +74,7 @@ using namespace Engine;
                                                 EXPAND(E_LOOP_ARGS_L(E_CHECK_NULL_AND, __VA_ARGS__))\
                                             ){\
                                                 EXPAND(E_LOOP_ARGS(E_SET_SELF, __VA_ARGS__))\
+                                                return true;\
                                             }\
                                             return false;\
                                         }\

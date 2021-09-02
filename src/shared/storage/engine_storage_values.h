@@ -96,16 +96,34 @@ namespace Engine {
         ~EStructProperty();
 
         template <typename T>
+        auto SetValue(const T& value) -> decltype(T::_dsc)
+        {
+            T::ToProperty(value, this);
+        }
+
+        template <typename T>
         void SetValue(const T& value)
         {
-            convert::setter<T>(this, value);
+            convert::setter(this, value);
+        }
+
+        template <typename T>
+        auto GetValue(T& outValue) const -> decltype(T::_dsc)
+        {
+            T result;
+            if (T::FromProperty(result, this))
+            {
+                outValue = result;
+                return true;
+            }
+            return false;
         }
 
         template <typename T>
         bool GetValue(T& outValue) const
         {
             T result;
-            if (convert::getter<T>(this, &result))
+            if (convert::getter(this, &result))
             {
                 outValue = result;
                 return true;
