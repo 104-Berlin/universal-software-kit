@@ -14,7 +14,7 @@ namespace Engine {
     public:
         using Entity = u32;
         E_STORAGE_TYPE(ComponentCreateEvent, 
-            (EString, Identifier),
+            (EValueDescription::t_ID, Identifier),
             (Entity, Handle)
         )
     private:
@@ -38,18 +38,24 @@ namespace Engine {
 
         bool IsAlive(Entity entity);
 
-        void InsertComponent(Entity entity, EValueDescription componentId);
-        void RemoveComponent(Entity entity, EValueDescription componentId);
-        bool HasComponent(Entity entity, EValueDescription componentId);
-        EStructProperty* GetComponent(Entity entity, EValueDescription componentId);
+        void InsertComponent(Entity entity, const EValueDescription& componentId);
+        void RemoveComponent(Entity entity, const EValueDescription& componentId);
+        bool HasComponent(Entity entity, const EValueDescription& componentId);
+        bool HasComponent(Entity entity, const EValueDescription::t_ID& componentId);
+        EStructProperty* GetComponent(Entity entity, const EValueDescription& componentId);
+        EStructProperty* GetComponent(Entity entity, const EValueDescription::t_ID& componentId);
+        EProperty* GetValueByIdentifier(Entity entity, const EString& identifier);
         EVector<EStructProperty*> GetAllComponents(Entity entity);
         EUnorderedMap<Entity, EStructProperty*>& View(const EValueDescription& description);
 
         template <typename Callback>
         void AddComponentCreateEventListener(const EValueDescription& description, Callback&& cb)
         {
-            fEventDispatcher.Connect<ComponentCreateEvent>([cb](ComponentCreateEvent event){
-                
+            fEventDispatcher.Connect<ComponentCreateEvent>([cb, description](ComponentCreateEvent event){
+                if (event.Identifier == description.GetId())
+                {
+                    cb(event.Handle);
+                }
             });
         }
 

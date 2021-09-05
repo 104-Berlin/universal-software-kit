@@ -77,45 +77,60 @@ bool ERegister::IsAlive(Entity entity)
     return std::find(fAliveEntites.begin(), fAliveEntites.end(), entity) != fAliveEntites.end();
 }
 
-void ERegister::InsertComponent(Entity entity, EValueDescription description) 
+void ERegister::InsertComponent(Entity entity, const EValueDescription& description) 
 {
     E_ASSERT_M(description.Valid(), "ERROR: Invalid value descrition!");
     E_ASSERT_M(description.GetType() == EValueType::STRUCT, "Component can only be inserted as struct");
     if (!IsAlive(entity)) { return; }
 
-    if (!HasComponent(entity, description))
+    if (!HasComponent(entity, description.GetId()))
     {
         EUnorderedMap<EString, EProperty*> properties;
 
         EStructProperty* storage = static_cast<EStructProperty*>(EProperty::CreateFromDescription(description.GetId(), description));
-        
+
         fComponentStorage[description.GetId()][entity] = storage;
+
+        fEventDispatcher.Post<ComponentCreateEvent>({description.GetId(), entity});
+        fEventDispatcher.Update();
     }
 }
 
-void ERegister::RemoveComponent(Entity entity, EValueDescription componentId)
+void ERegister::RemoveComponent(Entity entity, const EValueDescription& componentId)
 {
-    E_ASSERT(componentId.Valid(), "ERROR: Invalid value descrition!");
+    E_ASSERT_M(componentId.Valid(), "ERROR: Invalid value descrition!");
     if (!IsAlive(entity)) { return; }
     if (!HasComponent(entity, componentId)) { return; }
     delete fComponentStorage[componentId.GetId()][entity];
     fComponentStorage[componentId.GetId()].erase(entity);
 }
 
-bool ERegister::HasComponent(Entity entity, EValueDescription componentId) 
+bool ERegister::HasComponent(Entity entity, const EValueDescription& componentId) 
 {
-    E_ASSERT(componentId.Valid(), "ERROR: Invalid value descrition!");
-    return fComponentStorage[componentId.GetId()].find(entity) != fComponentStorage[componentId.GetId()].end();
+    E_ASSERT_M(componentId.Valid(), "ERROR: Invalid value descrition!");
+    return HasComponent(entity, componentId.GetId());
 }
 
-EStructProperty* ERegister::GetComponent(Entity entity, EValueDescription componentId) 
+bool Engine::ERegister::HasComponent(Entity entity, const EValueDescription::t_ID& componentId) 
 {
-    E_ASSERT(componentId.Valid(), "ERROR: Invalid value descrition!");
+    return fComponentStorage[componentId].find(entity) != fComponentStorage[componentId].end();
+}
+
+EStructProperty* ERegister::GetComponent(Entity entity, const EValueDescription& componentId) 
+{
+    E_ASSERT_M(componentId.Valid(), "ERROR: Invalid value descrition!");
+    return GetComponent(entity, componentId.GetId());
+}
+
+EStructProperty* ERegister::GetComponent(Entity entity, const EValueDescription::t_ID& componentId) 
+{
     if (!IsAlive(entity)) { return nullptr; }
     if (!HasComponent(entity, componentId)) { return nullptr; }
 
-    return fComponentStorage[componentId.GetId()][entity];
-EProperty* Engine::ERegister::GetValueByIdentifier(Entity entity, const EString& identifier) 
+    return fComponentStorage[componentId][entity];
+}
+
+EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identifier) 
 {
     EVector<EString> identList;
     size_t start = 0;
@@ -134,8 +149,48 @@ EProperty* Engine::ERegister::GetValueByIdentifier(Entity entity, const EString&
 
     for (size_t i = 1; i < identList.size(); i++)
     {
+        if (!currentProp) { return nullptr; }
         const EString& currentIdent = identList[i];
+        EValueDescription currentDsc = currentProp->GetDescription();
+
+        if (currentDsc.IsArray())
+        {
+            if (std::regex_match(currentIdent, std::regex("[0-9]+", std::regex::ECMAScript)))
+            {
+                size_t arrayIndex = std::atoi(currentIdent.c_str());
+                currentProp = static_cast<EArrayProperty*>(currentProp)->GetElement(arrayIndex);
+            }
+            else
+            {
+                currentProp = nullptr;
+            }
+        }
+        else
+        {
+            switch (currentDsc.GetType())
+            {
+            case EValueType::PRIMITIVE:
+            {
+                break;
+            }
+            case EValueType::STRUCT:
+            {
+                EStructProperty* structProp = static_cast<EStructProperty*>(currentProp);
+                currentProp = structProp->GetProperty(currentIdent);
+                break;
+            }
+            case EValueType::ENUM:
+            {
+                break;
+            }
+            case EValueType::UNKNOWN:
+            {
+                break;
+            }
+            }
+        }
     }
+    return currentProp;
 }
 
 EVector<EStructProperty*> ERegister::GetAllComponents(Entity entity) 

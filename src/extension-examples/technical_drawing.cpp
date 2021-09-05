@@ -67,8 +67,9 @@ APP_ENTRY
     drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
     
 
-    activeScene->AddComponentCreateEventListener(PlaneDescription, [drawingViewport](EStructProperty* mesh, ERegister::Entity entity){
+    activeScene->AddComponentCreateEventListener(PlaneDescription, [drawingViewport](ERegister::Entity entity){
         // Create mesh in 3D Scene
+        EStructProperty* mesh = activeScene->GetComponent(entity, PlaneDescription);
         if (drawingViewport.expired()) { return; }
         GMesh* gMesh = new GMesh();
         gMesh->SetData(planeVertices, planeIndices);
