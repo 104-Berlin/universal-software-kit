@@ -79,8 +79,8 @@ bool ERegister::IsAlive(Entity entity)
 
 void ERegister::InsertComponent(Entity entity, EValueDescription description) 
 {
-    E_ASSERT(description.Valid(), "ERROR: Invalid value descrition!");
-    E_ASSERT(description.GetType() == EValueType::STRUCT, "Component can only be inserted as struct");
+    E_ASSERT_M(description.Valid(), "ERROR: Invalid value descrition!");
+    E_ASSERT_M(description.GetType() == EValueType::STRUCT, "Component can only be inserted as struct");
     if (!IsAlive(entity)) { return; }
 
     if (!HasComponent(entity, description))
@@ -115,6 +115,27 @@ EStructProperty* ERegister::GetComponent(Entity entity, EValueDescription compon
     if (!HasComponent(entity, componentId)) { return nullptr; }
 
     return fComponentStorage[componentId.GetId()][entity];
+EProperty* Engine::ERegister::GetValueByIdentifier(Entity entity, const EString& identifier) 
+{
+    EVector<EString> identList;
+    size_t start = 0;
+    size_t end = identifier.find(".");
+    while (end != EString::npos)
+    {
+        identList.push_back(identifier.substr(start, end - start));
+        start = end + 1;
+        end = identifier.find(".", start);
+    }
+    E_ASSERT(identList.size() > 0);
+    // The first identifier is the component name
+    EProperty* currentProp = static_cast<EProperty*>(GetComponent(entity, identList[0]));
+    // if we couldnt find the component return
+    if (!currentProp) { return nullptr; }
+
+    for (size_t i = 1; i < identList.size(); i++)
+    {
+        const EString& currentIdent = identList[i];
+    }
 }
 
 EVector<EStructProperty*> ERegister::GetAllComponents(Entity entity) 

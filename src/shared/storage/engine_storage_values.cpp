@@ -50,7 +50,7 @@ EProperty* EProperty::CreateFromDescription(const EString& name, EValueDescripti
 
 EProperty* EProperty::CreatePropertyStruct(const EString& name, EValueDescription description)
 {
-    E_ASSERT(description.GetType() == EValueType::STRUCT, "Didnt provide struct description for creating property!");
+    E_ASSERT_M(description.GetType() == EValueType::STRUCT, "Didnt provide struct description for creating property!");
     EVector<EProperty*> fields;
     for (auto& entry : description.GetStructFields())
     {
@@ -65,7 +65,7 @@ EProperty* EProperty::CreatePropertyStruct(const EString& name, EValueDescriptio
 
 EProperty* EProperty::CreatePropertyPrimitive(const EString& name, EValueDescription description)
 {
-    E_ASSERT(description.GetType() == EValueType::PRIMITIVE, "Didnt provide primitive description for creating property!");
+    E_ASSERT_M(description.GetType() == EValueType::PRIMITIVE, "Didnt provide primitive description for creating property!");
     const EString& primitiveId = description.GetId();
     if (primitiveId == E_TYPEID_STRING) { return new EValueProperty<EString>(name, description); } 
     else if (primitiveId == E_TYPEID_INTEGER) { return new EValueProperty<i32>(name, description); }
@@ -77,14 +77,14 @@ EProperty* EProperty::CreatePropertyPrimitive(const EString& name, EValueDescrip
 
 EProperty* EProperty::CreatePropertyEnum(const EString& name, EValueDescription description)
 {
-    E_ASSERT(description.GetType() == EValueType::ENUM, "Didnt provide enum description for creating property!");
+    E_ASSERT_M(description.GetType() == EValueType::ENUM, "Didnt provide enum description for creating property!");
     EEnumProperty* result = new EEnumProperty(name, description);
     return result;
 }
 
 EProperty* EProperty::CreatePropertyArray(const EString& name, EValueDescription description)
 {
-    E_ASSERT(description.IsArray(), "Didnt provide enum description for creating property!");
+    E_ASSERT_M(description.IsArray(), "Didnt provide enum description for creating property!");
     EArrayProperty* result = new EArrayProperty(name, description);
     return result;
 }

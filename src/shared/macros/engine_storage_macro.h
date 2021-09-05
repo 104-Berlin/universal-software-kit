@@ -31,7 +31,7 @@
                                         }\
                                         else \
                                         {\
-                                            E_ASSERT(false, EString("Type missmatch! ") + typeid(type).name() + " is a vector, but the description is not an array!");\
+                                            E_ASSERT_M(false, EString("Type missmatch! ") + typeid(type).name() + " is a vector, but the description is not an array!");\
                                             return false;\
                                         }\
                                     }\
@@ -58,7 +58,7 @@
                                         }\
                                         else\
                                         {\
-                                            E_ASSERT(false, EString("Type missmatch! ") + typeid(type).name() + " is a vector, but the description is not an array!");\
+                                            E_ASSERT_M(false, EString("Type missmatch! ") + typeid(type).name() + " is a vector, but the description is not an array!");\
                                             return false;\
                                         }\
                                     }\

@@ -70,7 +70,7 @@ namespace Engine {
         template <typename T>
         void Post(const EValueDescription& dsc, const T& data)
         {
-            E_ASSERT(dsc.GetType() == EValueType::STRUCT, "Only post struct events with template!");
+            E_ASSERT_M(dsc.GetType() == EValueType::STRUCT, "Only post struct events with template!");
             EStructProperty* property = static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc));
             if (property->SetValue<T>(data))
             {

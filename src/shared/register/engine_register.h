@@ -14,7 +14,8 @@ namespace Engine {
     public:
         using Entity = u32;
         E_STORAGE_TYPE(ComponentCreateEvent, 
-            (EString, Identifier)
+            (EString, Identifier),
+            (Entity, Handle)
         )
     private:
     private:
@@ -47,6 +48,9 @@ namespace Engine {
         template <typename Callback>
         void AddComponentCreateEventListener(const EValueDescription& description, Callback&& cb)
         {
+            fEventDispatcher.Connect<ComponentCreateEvent>([cb](ComponentCreateEvent event){
+                
+            });
         }
 
 

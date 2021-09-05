@@ -109,7 +109,7 @@ namespace Engine {
             {
                 return T::_dsc;
             }
-            E_ASSERT(false, EString("Could not find description of type ") + typeid(T).name());
+            E_ASSERT_M(false, EString("Could not find description of type ") + typeid(T).name());
             return EValueDescription();
         }
 
