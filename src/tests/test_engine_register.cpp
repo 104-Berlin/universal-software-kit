@@ -75,7 +75,7 @@ TEST(RegisterTest, Basics)
 
 	bool componentCreated = false;
 
-	scene.AddComponentCreateEventListener(myTestComponent, [&componentCreated](EStructProperty* component){
+	scene.AddComponentCreateEventListener(myTestComponent, [&componentCreated](ERegister::Entity entity){
 		componentCreated = true;
 	});
 
@@ -167,7 +167,8 @@ TEST(RegisterTest, Basics)
 			EXPECT_TRUE(vectorProperty->HasProperty("X"));
 			EXPECT_FALSE(vectorProperty->HasProperty("WRONG"));
 
-			Vector v = vectorProperty->GetValue<Vector>();
+			Vector v;
+			EXPECT_TRUE(vectorProperty->GetValue<Vector>(v));
 			EXPECT_EQ(v.x, newVecValue.x);
 			EXPECT_EQ(v.y, newVecValue.y);
 			EXPECT_EQ(v.z, newVecValue.z);

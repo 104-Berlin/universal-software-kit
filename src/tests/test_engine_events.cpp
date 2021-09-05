@@ -4,14 +4,19 @@
 
 using namespace Engine;
 
-struct MyEvent
+/*struct MyEvent
 {
     int SomeValue;
-};
+};*/
+
+E_STORAGE_TYPE(MyEvent, 
+    (int, SomeValue)
+)
 
 TEST(EventTests, Basics)
 {
     EEventDispatcher eventDispatcher;
+
 
     i32 testingValue = 0;
 
@@ -24,8 +29,8 @@ TEST(EventTests, Basics)
     eventData.SomeValue = 10;
 
 
-    eventDispatcher.Enqueue(eventData);
-    eventDispatcher.Enqueue(eventData);
+    eventDispatcher.Post(MyEvent::_dsc, eventData);
+    eventDispatcher.Post(MyEvent::_dsc, eventData);
     eventDispatcher.Update();
 
     // Check if event got fired with correct value

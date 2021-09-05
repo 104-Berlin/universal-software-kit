@@ -2,10 +2,9 @@
 
 namespace Engine {
 
-    struct ERegisterChangedEvent
-    {
-        EString ExtensionName;
-    };
+    E_STORAGE_TYPE(ERegisterChangedEvent,
+        (EString, ExtensionName)
+    )
 
     template <typename T>
     class EExtensionRegister

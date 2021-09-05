@@ -39,11 +39,26 @@ bool EExtensionView::OnRender()
     return true;
 }
 
+EResourceView::EResourceView(Engine::EResourceManager* resourceManager) 
+    : EUIField("RESOURCE_MANAGER"), fResourceManager(resourceManager)
+{
+    
+}
+
+bool EResourceView::OnRender() 
+{
+    for (const EResourceData& data : fResourceManager->GetAllResource())
+    {
+        ImGui::Selectable(data.Path.c_str());
+    }
+    return true;
+}
+
 EObjectView::EObjectView(EExtensionManager* extensionManager)
     : EUIField("OBJECTVIEW"), fExtensionManager(extensionManager), fSelectedEntity(0)
 {
     fAddObjectButton = EMakeRef<EUIButton>("Add Object");
-    fAddObjectButton->AddEventListener<Engine::events::EButtonEvent>([this](){
+    fAddObjectButton->AddEventListener<events::EButtonEvent>([this](){
         fExtensionManager->GetActiveScene()->CreateEntity();
     });
 }

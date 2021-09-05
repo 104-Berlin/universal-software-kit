@@ -17,6 +17,8 @@
 #include <set>
 #include <exception>
 #include <cstddef>
+#include <type_traits>
+#include <regex>
 
 #ifdef M_PI
 #undef M_PI
@@ -54,8 +56,8 @@ typedef uint_fast8_t byte;
 
 typedef std::string EString;
 
-template <typename T>
-using EVector = std::vector<T>;
+template <typename ...T>
+using EVector = std::vector<T...>;
 
 template <typename T>
 using ESet = std::set<T>;

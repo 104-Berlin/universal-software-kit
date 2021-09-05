@@ -2,36 +2,50 @@
 
 namespace Engine {
 
+    struct EResourceData
+    {
+        EString Type;
+        EString Path;
+        byte*   Data;
+        size_t  DataSize;
+
+        EResourceData()
+            : Type(), Path(), Data(nullptr), DataSize(0)
+        {
+
+        }
+
+        EResourceData(EString type, EString path, byte* data, size_t dataSize)
+        {
+            Type = type;
+            Path = path;
+            Data = data;
+            DataSize = dataSize;
+        }
+
+        EResourceData(const EResourceData&) = default;
+
+        template <typename T>
+        void Convert(T& inValue)
+        {
+            T::ResourceConvert(Data, DataSize, inValue);
+        }
+    };
+
     class E_API EResourceManager
     {
     private:
-        EUnorderedMap<size_t, EUnorderedMap<EString, ESharedBuffer>> fLoadedResources;
+        EUnorderedMap<EString, EResourceData> fLoadedResources;
     public:
         EResourceManager();
+        ~EResourceManager();
+        
+        bool HasResource(const EString& path) const;
+        void RegisterResource(const EString& type, const EString& path, byte* resourceData, size_t resourceDataSize);
 
-        template <typename ResourceType>
-        void AddOrUpdateResource(const EString& identifier, const ResourceType& resourceData)
-        {
-            EUnorderedMap<EString, ESharedBuffer>& typesLoadedResources = fLoadedResources[typeid(ResourceType).hash_code()];
-            if (typesLoadedResources.find(identifier) == typesLoadedResources.end())
-            {
-                ESharedBuffer sb;
-                sb.InitWith<ResourceType>(&resourceData, sizeof(ResourceType));
-                typesLoadedResources[identifier] = sb;
-            }
-        }
-
-        template <typename ResourceType>
-        const ResourceType* GetResource(const EString& identifier)
-        {
-            const size_t typeId = typeid(ResourceType).hash_code();
-            const ESharedBuffer resultData = fLoadedResources[typeid(ResourceType).hash_code()][identifier];
-            if (!resultData.IsNull())
-            {
-                return resultData.Data<ResourceType>();
-            }
-            return nullptr;
-        }
+        EResourceData GetResource(const EString& path) const;
+        EVector<EResourceData> GetAllResource() const;
+        EVector<EResourceData> GetAllResource(const EString& type) const;
     };
 
 }

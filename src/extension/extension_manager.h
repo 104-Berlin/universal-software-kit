@@ -24,10 +24,9 @@ namespace Engine {
 #endif
     };
 
-    struct EExtensionLoadedEvent
-    {
-        EExtension* Extension;
-    };
+    E_STORAGE_TYPE(EExtensionLoadedEvent,
+        (EString, Extension)
+    )
 
     class E_EXTAPI EExtensionManager
     {

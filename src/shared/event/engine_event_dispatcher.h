@@ -2,103 +2,120 @@
 
 namespace Engine {
 
-#define EVENT_TYPE(Type) typeid(Type).hash_code()
-
     class E_API EEventDispatcher
     {
-    using EventType = size_t;
-
-        struct EventStorage
+        struct EventData
         {
-            /* data */
-            EventType       Type;
-            ESharedBuffer   EventData;
-
-            EventStorage()
-                : Type(0), EventData()
-            {}
-
-            ~EventStorage()
-            {}
-
-            EventStorage(const EventStorage& storage)
-            {
-                Type = storage.Type;
-                EventData = storage.EventData;
-            }
-
-            void operator=(const EventStorage& other)
-            {
-                Type = other.Type;
-                EventData = other.EventData;
-            }
-
-            template <typename Event>
-            void Init(const Event& evt)
-            {
-                Type = EVENT_TYPE(Event);
-                EventData.InitWith<Event>(&evt, sizeof(Event));
-            }
-
+            EValueDescription::t_ID Type;
+            EProperty* Data;
         };
-        
     public:
-
-        template<typename Event, typename CallbackFn>
-        auto Connect(CallbackFn&& fn)
-        -> std::enable_if_t<std::is_invocable<decltype(fn), Event&>::value, void>
+        using CallbackFunction = std::function<void(EProperty*)>;
+    private:
+        EVector<EventData> fPostedEvents;
+        EUnorderedMap<EValueDescription::t_ID, EVector<CallbackFunction>> fRegisteredCallbacks;
+    public:
+        template <typename Callback>
+        auto Connect(const EValueDescription& dsc, Callback& fn)
+        -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, void>
         {
-            fObervers[EVENT_TYPE(Event)].push_back([fn](void* evtData){
-                fn(*((Event*)evtData));
+            fRegisteredCallbacks[dsc.GetId()].push_back([fn](EProperty*){fn();});
+        }
+
+        template <typename Callback>
+        auto Connect(const EValueDescription& dsc, Callback&& fn)
+        -> std::enable_if_t<std::is_invocable<decltype(fn), EProperty*>::value, void>
+        {
+            fRegisteredCallbacks[dsc.GetId()].push_back(fn);
+        }
+
+        template <typename Event, typename Callback>
+        auto Connect(const EValueDescription& dsc, Callback&& fn)
+        -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
+        {
+            fRegisteredCallbacks[dsc.GetId()].push_back([fn](EProperty* property){
+                EStructProperty* structProp = static_cast<EStructProperty*>(property);
+                Event value;
+                if (structProp->GetValue<Event>(value))
+                {
+                    fn(value);
+                }
             });
         }
 
-        template<typename Event, typename CallbackFn>
-        auto Connect(CallbackFn&& fn)
+
+        template <typename Event, typename Callback>
+        auto Connect(Callback&& fn)
+        -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
+        {
+            fRegisteredCallbacks[Event::_dsc.GetId()].push_back([fn](EProperty* property){
+                EStructProperty* structProp = static_cast<EStructProperty*>(property);
+                Event value;
+                if (structProp->GetValue<Event>(value))
+                {
+                    fn(value);
+                }
+            });
+        }
+
+        template <typename Event, typename Callback>
+        auto Connect(Callback&& fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, void>
         {
-            fObervers[EVENT_TYPE(Event)].push_back([fn](void* evtData){
+            fRegisteredCallbacks[Event::_dsc.GetId()].push_back([fn](EProperty* property){
                 fn();
             });
         }
 
-        template <typename Event>
-        void Enqueue(const Event& evt)
+        template <typename T>
+        void Enqueue(const EValueDescription& dsc, const T& data)
         {
-            EventStorage storage;
-            storage.Init<Event>(evt);
-            fPostedEvents.push_back(storage);  
-        }
-
-        template <typename Event>
-        void Post(const Event& evt)
-        {
-            for (std::function<void(void*)> fn : fObervers[EVENT_TYPE(Event)])
+            E_ASSERT_M(dsc.GetType() == EValueType::STRUCT, "Only post struct events with template!");
+            EStructProperty* property = static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc));
+            if (property->SetValue<T>(data))
             {
-                fn((void*)&evt);
+                fPostedEvents.push_back({dsc.GetId(), property});
+            }
+            else
+            {
+                E_ERROR(EString("Property could not be initialized with given type: ") + typeid(T).name());
+                delete property;
+                return;
             }
         }
 
-        void Update()
+
+        template <typename T>
+        void Enqueue(const T& data)
         {
-            for (EventStorage& entry : fPostedEvents)
+            Enqueue<T>(getdsc::GetDescription<T>(), data);
+        }
+        void Enqueue(EValueDescription dsc, EProperty* property);
+
+        template <typename T>
+        void Post(const EValueDescription& dsc, const T& data)
+        {
+            E_ASSERT_M(dsc.GetType() == EValueType::STRUCT, "Only post struct events with template!");
+            EStructProperty* property = static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc));
+            if (property->SetValue<T>(data))
             {
-                for (std::function<void(void*)> fn : fObervers[entry.Type])
-                {                    
-                    fn(entry.EventData.Data());
+                for (CallbackFunction func : fRegisteredCallbacks[dsc.GetId()])
+                {
+                    func(property);
                 }
             }
-            fPostedEvents.clear();
+            delete property;
         }
 
-        void CleanUp()
+        template <typename T>
+        void Post(const T& data)
         {
-            fObervers.clear();
-            fPostedEvents.clear();
+            Post<T>(getdsc::GetDescription<T>(), data);
         }
-    private:
-        EUnorderedMap<EventType, EVector<std::function<void(void*)>>>   fObervers;
-        EVector<EventStorage>                                           fPostedEvents;
+        void Post(const EValueDescription& dsc, EProperty* property);
+
+
+        void Update();
     };
 
 }

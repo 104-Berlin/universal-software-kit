@@ -19,24 +19,22 @@ namespace Engine {
 
 
 namespace events {
-    struct EMouseMoveEvent
-    {
-        EVec2 Position;
-        EVec2 MouseDelta;
-    };
 
-    struct EMouseDownEvent
-    {
-        EVec2   Position;
-        u32     MouseButton;
-    };
+    E_STORAGE_TYPE(EMouseMoveEvent,
+        (EVec2, Position),
+        (EVec2, MouseDelta)
+    )
 
-    struct EMouseDragEvent
-    {
-        EVec2   Position;
-        EVec2   MouseDelta;
-        u32     MouseButton;
-    };
+    E_STORAGE_TYPE(EMouseDownEvent,
+        (EVec2,   Position),
+        (u32,     MouseButton)
+    )
+
+    E_STORAGE_TYPE(EMouseDragEvent,
+        (EVec2,   Position),
+        (EVec2,   MouseDelta),
+        (u32,     MouseButton)
+    )
 
 }
 
@@ -191,33 +189,29 @@ namespace events {
     class E_EDEXAPI EUIViewport : public EUIField
     {
     public:
-        EUIViewport();
-        ~EUIViewport();
+        EUIViewport(const Renderer::RCamera& = Renderer::RCamera(Renderer::ECameraMode::ORTHOGRAPHIC));
+        virtual ~EUIViewport();
 
         virtual bool OnRender() override;
     private:
-        /**
-         * Render function which will be called with the viewport size
-         */
-        using RenderFunction = std::function<void(Graphics::GContext*, Graphics::GFrameBuffer*)>;
-
-        RenderFunction fRenderFuntion;
         Graphics::GFrameBuffer* fFrameBuffer;
+
+        Renderer::RRenderer3D fRenderer;
+        Renderer::RCamera fCamera;
         Graphics::GScene fScene;
     public:
-        void SetRenderFunction(RenderFunction renderFunction);
-
         Graphics::GScene& GetScene();
         const Graphics::GScene& GetScene() const;
+
+        const Renderer::RCamera& GetCamera() const;
+        Renderer::RCamera& GetCamera();
     };
 
 
 namespace events {
-    struct EButtonEvent
-    {
-        char a;
-        EButtonEvent() {}
-    };
+    E_STORAGE_TYPE(EButtonEvent,
+        (int, a)
+    )
 }
 
     class E_EDEXAPI EUIButton : public EUIField
@@ -228,10 +222,9 @@ namespace events {
         virtual bool OnRender() override;
     };
 
-    struct ETextChangeEvent
-    {
-        EString Value;
-    };
+    E_STORAGE_TYPE(ETextChangeEvent,
+        (EString, Value)
+    )
 
     class E_EDEXAPI EUITextField : public EUIField
     {

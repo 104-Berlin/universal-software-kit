@@ -129,3 +129,4 @@ const EVector<EString>& EValueDescription::GetEnumOptions() const
 {
     return fEnumOptions;
 }
+

@@ -13,6 +13,16 @@ namespace Editor {
         virtual bool OnRender() override;
     };
 
+    class EResourceView : public Engine::EUIField
+    {
+    private:
+        Engine::EResourceManager* fResourceManager;
+    public:
+        EResourceView(Engine::EResourceManager* resourceManager);
+
+        virtual bool OnRender() override;
+    };
+
     class EObjectView : public Engine::EUIField
     {
     private:

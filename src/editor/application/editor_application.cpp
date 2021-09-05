@@ -4,19 +4,31 @@ using namespace Editor;
 using namespace Graphics;
 using namespace Engine;
 
+E_STORAGE_TYPE(MySubType, 
+    (double, SomeDouble),
+    (int, SomeMoreInt)
+)
+
+E_STORAGE_TYPE(MyType, 
+    (int, SomeInteger),
+    (int, Other),
+    (EString, SomeString),
+    (EVector<MySubType>, Working)
+)
 
 EApplication::EApplication() 
     : fGraphicsContext(nullptr), fCommandLine(&fExtensionManager.GetChaiContext())
 {
-    fExtensionManager.AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent& event) {
-        auto entry = (void(*)(const char*, Engine::EAppInit))event.Extension->GetFunction("app_entry");
+    fExtensionManager.AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent event) {
+        EExtension* extension = fExtensionManager.GetExtension(event.Extension);
+        auto entry = (void(*)(const char*, Engine::EAppInit))extension->GetFunction("app_entry");
         if (entry)
         {
             EAppInit init;
             init.PanelRegister = &fUIRegister;
-            entry(event.Extension->GetName().c_str(), init);
+            entry(extension->GetName().c_str(), init);
         }
-        auto initImGui = (void(*)())event.Extension->GetFunction("InitImGui");
+        auto initImGui = (void(*)())extension->GetFunction("InitImGui");
         if (initImGui)
         {
             initImGui();
@@ -26,6 +38,10 @@ EApplication::EApplication()
     fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
         this->RegenerateMainMenuBar();
     });
+    fExtensionManager.GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
+
+    std::cout << "VECTOR?" << is_vector<EString>::value << std::endl;
+    std::cout << getdsc::GetDescription<EString>().IsArray() << std::endl;
 }
 
 void EApplication::Start() 
@@ -45,7 +61,7 @@ void EApplication::RegenerateMainMenuBar()
         EFile file(saveToPath);
         file.SetFileAsString(json.dump());
     });
-    ERef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open"));
+    ERef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open..."));
     openScene->AddEventListener<events::EButtonEvent>([this](){
         EVector<EString> openScene = Wrapper::OpenFileDialog("Open", {"esc"});
         if (openScene.size() > 0)
@@ -56,6 +72,21 @@ void EApplication::RegenerateMainMenuBar()
             {
                 EDeserializer::ReadSceneFromJson(sceneJson, fExtensionManager.GetActiveScene(), fExtensionManager.GetTypeRegister().GetAllItems());
             }
+        }
+    });
+    ERef<EUIField> importResource = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Import..."));
+    importResource->AddEventListener<events::EButtonEvent>([this](){
+        EVector<EString> resourcesToOpen = Wrapper::OpenFileDialog("Import");
+        for (const EString& resourcePath : resourcesToOpen)
+        {
+            EFile resourceFile(resourcePath);
+
+            resourceFile.LoadToMemory();
+            ESharedBuffer fileBuffer = resourceFile.GetBuffer();
+            
+            byte* data = (byte*) malloc(fileBuffer.GetSizeInByte());
+            memcpy(data, fileBuffer.Data(), fileBuffer.GetSizeInByte());
+            fExtensionManager.GetActiveScene()->GetResourceManager().RegisterResource(resourceFile.GetFileExtension(), resourcePath,data, fileBuffer.GetSizeInByte());
         }
     });
 
@@ -135,6 +166,7 @@ void EApplication::RenderImGui()
 void EApplication::RegisterDefaultPanels() 
 {
     ERef<EUIPanel> resourcePanel = EMakeRef<EUIPanel>("Resource Panel");
+    resourcePanel->AddChild(EMakeRef<EResourceView>(&fExtensionManager.GetActiveScene()->GetResourceManager()));
 
 
 
