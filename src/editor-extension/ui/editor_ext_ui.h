@@ -19,24 +19,22 @@ namespace Engine {
 
 
 namespace events {
-    struct EMouseMoveEvent
-    {
-        EVec2 Position;
-        EVec2 MouseDelta;
-    };
 
-    struct EMouseDownEvent
-    {
-        EVec2   Position;
-        u32     MouseButton;
-    };
+    E_STORAGE_TYPE(EMouseMoveEvent,
+        (EVec2, Position),
+        (EVec2, MouseDelta)
+    )
 
-    struct EMouseDragEvent
-    {
-        EVec2   Position;
-        EVec2   MouseDelta;
-        u32     MouseButton;
-    };
+    E_STORAGE_TYPE(EMouseDownEvent,
+        (EVec2,   Position),
+        (u32,     MouseButton)
+    )
+
+    E_STORAGE_TYPE(EMouseDragEvent,
+        (EVec2,   Position),
+        (EVec2,   MouseDelta),
+        (u32,     MouseButton)
+    )
 
 }
 
@@ -152,7 +150,7 @@ namespace events {
         template <typename EventType, typename CB>
         void AddEventListener(CB&& callbackFunction)
         {
-            //fEventDispatcher.Connect<EventType>(callbackFunction);
+            fEventDispatcher.Connect<EventType>(callbackFunction);
         }
     };
 
@@ -211,11 +209,9 @@ namespace events {
 
 
 namespace events {
-    struct EButtonEvent
-    {
-        char a;
-        EButtonEvent() {}
-    };
+    E_STORAGE_TYPE(EButtonEvent,
+        (int, a)
+    )
 }
 
     class E_EDEXAPI EUIButton : public EUIField
@@ -226,10 +222,9 @@ namespace events {
         virtual bool OnRender() override;
     };
 
-    struct ETextChangeEvent
-    {
-        EString Value;
-    };
+    E_STORAGE_TYPE(ETextChangeEvent,
+        (EString, Value)
+    )
 
     class E_EDEXAPI EUITextField : public EUIField
     {

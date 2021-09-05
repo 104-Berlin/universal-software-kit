@@ -13,6 +13,8 @@
 
 #include "../deps/chai/include/chaiscript/chaiscript.hpp"
 
+#include "template/usefull_templates.h"
+
 #include "macros/engine_basic_macros.h"
 #include "macros/engine_storage_macro.h"
 

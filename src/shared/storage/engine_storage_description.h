@@ -60,28 +60,19 @@ namespace Engine {
 
     #define E_TYPEID_STRING "string"
     #define E_TYPEID_INTEGER "int"
+    #define E_TYPEID_UNSIGNED_INTEGER "uint"
     #define E_TYPEID_DOUBLE "double"
     #define E_TYPEID_BOOL "bool"
 
     #define StringDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_STRING)
     #define IntegerDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_INTEGER)
+    #define UnsignedIntegerDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_UNSIGNED_INTEGER)
     #define DoubleDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_DOUBLE)
     #define BoolDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_BOOL)
 
 
     
     namespace getdsc {
-
-        template<typename T> struct is_vector : public std::false_type {};
-        template<typename T, typename A>
-        struct is_vector<std::vector<T, A>> : public std::true_type {};
-
-
-        template <typename T> struct is_string : public std::false_type {};
-        
-        template <> 
-        struct is_string<EString> : public std::true_type {};
-
 
         template <typename T>
         EValueDescription GetDescription()
@@ -90,30 +81,37 @@ namespace Engine {
             {
                 return GetDescription<typename T::value_type>().GetAsArray();
             }
-            else if constexpr (std::is_same<T, EString>::value)
+            else if constexpr (std::is_same<T, EString>())
             {
                 return StringDescription;
             }
-            else if constexpr (std::is_same<T, double>::value)
+            else if constexpr (std::is_same<T, double>())
             {
                 return DoubleDescription;
             }
-            else if constexpr (std::is_same<T, float>::value)
+            else if constexpr (std::is_same<T, float>())
             {
                 return DoubleDescription;
             }
-            else if constexpr (std::is_same<T, bool>::value)
+            else if constexpr (std::is_same<T, bool>())
             {
                 return BoolDescription;
             }
-            else if constexpr (std::is_same<T, int>::value)
+            else if constexpr (is_one_of<T, int>())
             {
                 return IntegerDescription;
             }
-            else
+            else if constexpr (is_one_of<T, u32, unsigned int>())
+            {
+                return UnsignedIntegerDescription;
+            }
+            else 
             {
                 return T::_dsc;
             }
+            E_ASSERT(false, EString("Could not find description of type ") + typeid(T).name());
+            return EValueDescription();
         }
+
     }
 }

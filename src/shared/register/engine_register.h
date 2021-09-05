@@ -13,11 +13,10 @@ namespace Engine {
     {
     public:
         using Entity = u32;
+        E_STORAGE_TYPE(ComponentCreateEvent, 
+            (EString, Identifier)
+        )
     private:
-        struct EComponentCreateEvent {
-            Entity EntityID;
-            EStructProperty* Property;
-        };
     private:
         EString fName;
         EResourceManager fResourceManager;
@@ -48,12 +47,6 @@ namespace Engine {
         template <typename Callback>
         void AddComponentCreateEventListener(const EValueDescription& description, Callback&& cb)
         {
-            /*fEventDispatcher.Connect<EComponentCreateEvent>([cb, description](EComponentCreateEvent evt){
-                if (evt.Property->GetDescription() == description)
-                {
-                    cb(evt.Property, evt.EntityID);
-                }
-            });*/
         }
 
 

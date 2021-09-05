@@ -102,7 +102,8 @@ bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
     }
     fLoadedExtensions[newExtension->GetName()] = newExtension;
     //EStructProperty evt;
-    //fEventDispatcher.Post<EExtensionLoadedEvent>(evt);
+    fEventDispatcher.Post<EExtensionLoadedEvent>({newExtension->GetName()});
+    fEventDispatcher.Update();
     //TODO: EVENTS
     return true;
 }

@@ -4,92 +4,6 @@ using namespace Editor;
 using namespace Graphics;
 using namespace Engine;
 
-#define E_CREATE_STRUCT_PROP1(type, name) type name; 
-#define E_CREATE_STRUCT_PROP(nametype) EXPAND( EXPAND ( E_CREATE_STRUCT_PROP1 nametype ) )
-
-
-
-#define E_CREATE_STRUCT_DSC2(type, name) {E_STRINGIFY(name), ::Engine::getdsc::GetDescription<type>()},
-#define E_CREATE_STRUCT_DSC(nametype) EXPAND( E_CREATE_STRUCT_DSC2 nametype )
-
-#define E_GET_FROM_PROP2(type, name) ::Engine::EProperty* EXPAND ( E_CONCATENATE(prop, name) ) = property->GetProperty(E_STRINGIFY(name));
-#define E_GET_FROM_PROP(nametype) EXPAND( E_GET_FROM_PROP2 nametype )
-
-#define E_CHECK_NULL_AND2(type, name) EXPAND ( E_CONCATENATE(prop, name) ) &&
-#define E_CHECK_NULL_AND(typename) EXPAND ( E_CHECK_NULL_AND2 typename )
-#define E_CHECK_NULL_AND_LAST2(type, name) EXPAND ( E_CONCATENATE(prop, name) )
-#define E_CHECK_NULL_AND_LAST(typename) EXPAND ( E_CHECK_NULL_AND_LAST2 typename )
-
-
-#define E_SET_PROPERTY2(type, name) {::Engine::EValueDescription valDsc = ::Engine::getdsc::GetDescription<type>();\
-                                    switch (valDsc.GetType())\
-                                    {\
-                                    case ::Engine::EValueType::STRUCT: static_cast<::Engine::EStructProperty*>(EXPAND ( E_CONCATENATE(prop, name) ) )->SetValue<type>(value. name );\
-                                    case ::Engine::EValueType::PRIMITIVE: static_cast<::Engine::EValueProperty<type>*>(EXPAND ( E_CONCATENATE(prop, name) ) )->SetValue(value. name );\
-                                    case ::Engine::EValueType::ENUM: break;/*TODO*/\
-                                    case ::Engine::EValueType::UNKNOWN: break;\
-                                    }}
-#define E_SET_PROPERTY(typename) EXPAND ( E_SET_PROPERTY2 typename )
-
-
-#define E_SET_SELF2(type, name) {::Engine::EValueDescription valDsc = ::Engine::getdsc::GetDescription<type>();\
-                                    switch (valDsc.GetType())\
-                                    {\
-                                    case ::Engine::EValueType::STRUCT: static_cast<::Engine::EStructProperty*>(EXPAND ( E_CONCATENATE(prop, name) ) )->GetValue<type>(value. name );\
-                                    case ::Engine::EValueType::PRIMITIVE: value. name = static_cast<::Engine::EValueProperty<type>*>(EXPAND ( E_CONCATENATE(prop, name) ) )->GetValue();\
-                                    case ::Engine::EValueType::ENUM: break;/*TODO*/\
-                                    case ::Engine::EValueType::UNKNOWN: break;\
-                                    }}
-#define E_SET_SELF(typename) EXPAND ( E_SET_SELF2 typename )
-
-
-#define E_CHECK_EQUEL2(type, name) name == other. name &&
-#define E_CHECK_EQUEL(typename) EXPAND (E_CHECK_EQUEL2 typename )
-
-#define E_CHECK_EQUEL_LAST2(type, name) name == other. name
-#define E_CHECK_EQUEL_LAST(typename) EXPAND (E_CHECK_EQUEL_LAST2 typename )
-
-
-#define E_STORAGE_STRUCT(name, ...) struct name {\
-                                        EXPAND (E_LOOP_ARGS(E_CREATE_STRUCT_PROP, __VA_ARGS__) )\
-                                        static inline ::Engine::EValueDescription _dsc = ::Engine::EValueDescription::CreateStruct(EXPAND(E_STRINGIFY(name)), {\
-                                            EXPAND (E_LOOP_ARGS(E_CREATE_STRUCT_DSC, __VA_ARGS__))\
-                                        });\
-                                        \
-                                        static bool ToProperty(const name & value, EStructProperty* property)\
-                                        {\
-                                            EXPAND( E_LOOP_ARGS(E_GET_FROM_PROP, __VA_ARGS__) ) \
-                                            if (\
-                                                EXPAND(E_LOOP_ARGS_L(E_CHECK_NULL_AND, __VA_ARGS__))\
-                                            ){\
-                                                EXPAND(E_LOOP_ARGS(E_SET_PROPERTY, __VA_ARGS__))\
-                                                return true;\
-                                            }\
-                                            return false;\
-                                        }\
-                                        static bool FromProperty(name & value, EStructProperty* property)\
-                                        {\
-                                            EXPAND( E_LOOP_ARGS(E_GET_FROM_PROP, __VA_ARGS__) ) \
-                                            if (\
-                                                EXPAND(E_LOOP_ARGS_L(E_CHECK_NULL_AND, __VA_ARGS__))\
-                                            ){\
-                                                EXPAND(E_LOOP_ARGS(E_SET_SELF, __VA_ARGS__))\
-                                                return true;\
-                                            }\
-                                            return false;\
-                                        }\
-                                        bool operator==(const name& other) const {\
-                                            return \
-                                            EXPAND(E_LOOP_ARGS_L(E_CHECK_EQUEL, __VA_ARGS__));\
-                                        }\
-                                        bool operator!=(const name& other) const { return !((*this) == other);}\
-                                    };
-
-
-
-
-#define E_STORAGE_TYPE(name, ...) EXPAND(E_STORAGE_STRUCT(name, __VA_ARGS__))
-
 E_STORAGE_TYPE(MySubType, 
     (double, SomeDouble),
     (int, SomeMoreInt)
@@ -105,26 +19,29 @@ E_STORAGE_TYPE(MyType,
 EApplication::EApplication() 
     : fGraphicsContext(nullptr), fCommandLine(&fExtensionManager.GetChaiContext())
 {
-    /*fExtensionManager.AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent& event) {
-        auto entry = (void(*)(const char*, Engine::EAppInit))event.Extension->GetFunction("app_entry");
+    fExtensionManager.AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent event) {
+        EExtension* extension = fExtensionManager.GetExtension(event.Extension);
+        auto entry = (void(*)(const char*, Engine::EAppInit))extension->GetFunction("app_entry");
         if (entry)
         {
             EAppInit init;
             init.PanelRegister = &fUIRegister;
-            entry(event.Extension->GetName().c_str(), init);
+            entry(extension->GetName().c_str(), init);
         }
-        auto initImGui = (void(*)())event.Extension->GetFunction("InitImGui");
+        auto initImGui = (void(*)())extension->GetFunction("InitImGui");
         if (initImGui)
         {
             initImGui();
         }
-    });*/
+    });
 
-    /*fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
+    fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
         this->RegenerateMainMenuBar();
-    });*/
-    ERegister::Entity entity = fExtensionManager.GetActiveScene()->CreateEntity();
-    fExtensionManager.GetActiveScene()->InsertComponent(entity, MyType::_dsc);
+    });
+    fExtensionManager.GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
+
+    std::cout << "VECTOR?" << is_vector<EString>::value << std::endl;
+    std::cout << getdsc::GetDescription<EString>().IsArray() << std::endl;
 }
 
 void EApplication::Start() 

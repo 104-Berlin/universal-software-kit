@@ -69,6 +69,7 @@ EProperty* EProperty::CreatePropertyPrimitive(const EString& name, EValueDescrip
     const EString& primitiveId = description.GetId();
     if (primitiveId == E_TYPEID_STRING) { return new EValueProperty<EString>(name, description); } 
     else if (primitiveId == E_TYPEID_INTEGER) { return new EValueProperty<i32>(name, description); }
+    else if (primitiveId == E_TYPEID_UNSIGNED_INTEGER) { return new EValueProperty<u32>(name, description); }
     else if (primitiveId == E_TYPEID_DOUBLE) { return new EValueProperty<double>(name, description); }
     else if (primitiveId == E_TYPEID_BOOL) { return new EValueProperty<bool>(name, description); }
     return nullptr;
@@ -113,6 +114,7 @@ EStructProperty::~EStructProperty()
     }
     fProperties.clear();
 }
+
 
 bool EStructProperty::HasProperty(const EString& propertyName) const
 {

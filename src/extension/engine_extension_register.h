@@ -2,10 +2,9 @@
 
 namespace Engine {
 
-    struct ERegisterChangedEvent
-    {
-        EString ExtensionName;
-    };
+    E_STORAGE_TYPE(ERegisterChangedEvent,
+        (EString, ExtensionName)
+    )
 
     template <typename T>
     class EExtensionRegister
@@ -36,7 +35,8 @@ namespace Engine {
             fRegisteredItems[extensionName].push_back(item);
             ERegisterChangedEvent event;
             event.ExtensionName = extensionName;
-            //fEventDispatcher.Post<ERegisterChangedEvent>(event);
+            fEventDispatcher.Post<ERegisterChangedEvent>(event);
+            fEventDispatcher.Update();
         }
 
         /**
@@ -48,7 +48,8 @@ namespace Engine {
             fRegisteredItems[extensionName].clear();
             ERegisterChangedEvent event;
             event.ExtensionName = extensionName;
-            //fEventDispatcher.Post<ERegisterChangedEvent>(event);
+            fEventDispatcher.Post<ERegisterChangedEvent>(event);
+            fEventDispatcher.Update();
         }
 
         /**

@@ -24,14 +24,9 @@ namespace Engine {
 #endif
     };
 
-    struct EExtensionLoadedEvent
-    {
-        EString Extension;
-    };
-
-static EValueDescription ExtensionLoadEvent_dsc = EValueDescription::CreateStruct("ExtensionLoadEvent", {
-    {"ExtensionName", StringDescription}
-});
+    E_STORAGE_TYPE(EExtensionLoadedEvent,
+        (EString, Extension)
+    )
 
     class E_EXTAPI EExtensionManager
     {

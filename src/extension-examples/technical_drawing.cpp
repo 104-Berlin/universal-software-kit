@@ -17,11 +17,11 @@ std::vector<u32> planeIndices = {
 
 ERegister* activeScene = nullptr;
 
-static EValueDescription TechnicalMeshDsc = EValueDescription::CreateStruct("TechnicalDrawing", {{"Positions", dsc_Vec3.GetAsArray()}});
+static EValueDescription TechnicalMeshDsc = EValueDescription::CreateStruct("TechnicalDrawing", {{"Positions", EVec3_dsc.GetAsArray()}});
 
-static EValueDescription PlaneDescription = EValueDescription::CreateStruct("Plane", {{"Position", dsc_Vec3},
-                                                                                      {"Rotation", dsc_Vec3},
-                                                                                      {"Scale", dsc_Vec3}});
+static EValueDescription PlaneDescription = EValueDescription::CreateStruct("Plane", {{"Position", EVec3_dsc},
+                                                                                      {"Rotation", EVec3_dsc},
+                                                                                      {"Scale", EVec3_dsc}});
 
 struct ExtensionData
 {
@@ -108,17 +108,4 @@ EXT_ENTRY
 
     info.GetTypeRegister().RegisterItem(extensionName, TechnicalMeshDsc);
     info.GetTypeRegister().RegisterItem(extensionName, PlaneDescription);
-
-    ERegister::Entity entity = activeScene->CreateEntity();
-    activeScene->InsertComponent(entity, dsc_Vec3);
-
-    EStructProperty* vecProp = static_cast<EStructProperty*>(activeScene->GetComponent(entity, dsc_Vec3));
-    if (vecProp)
-    {
-        vecProp->SetValue<EVec3>({5, 0, 1});
-        EVec3 vec;
-        vecProp->GetValue<EVec3>(vec);
-
-        E_INFO("VECTOR: (" + std::to_string(vec.x) + ", " + std::to_string(vec.y) + " ," + std::to_string(vec.z) + ")");
-    }
 }

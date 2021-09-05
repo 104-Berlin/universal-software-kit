@@ -4,34 +4,67 @@ namespace Engine {
 
     class E_API EEventDispatcher
     {
+        struct EventData
+        {
+            EValueDescription::t_ID Type;
+            EProperty* Data;
+        };
     public:
         using CallbackFunction = std::function<void(EProperty*)>;
     private:
-        EUnorderedMap<EValueDescription::t_ID, EProperty*> fComponentStorage;
-        EUnorderedMap<EValueDescription::t_ID, CallbackFunction> fRegisteredCallbacks;
+        EVector<EventData> fPostedEvents;
+        EUnorderedMap<EValueDescription::t_ID, EVector<CallbackFunction>> fRegisteredCallbacks;
     public:
         template <typename Callback>
         auto Connect(const EValueDescription& dsc, Callback& fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, void>
         {
-            fRegisteredCallbacks.insert({dsc.GetId(), [&fn](EProperty*){fn();}});
+            fRegisteredCallbacks[dsc.GetId()].push_back([fn](EProperty*){fn();});
         }
 
         template <typename Callback>
         auto Connect(const EValueDescription& dsc, Callback&& fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn), EProperty*>::value, void>
         {
-            fRegisteredCallbacks.insert({dsc.GetId(), fn});
+            fRegisteredCallbacks[dsc.GetId()].push_back(fn);
         }
 
         template <typename Event, typename Callback>
         auto Connect(const EValueDescription& dsc, Callback&& fn)
-        -> std::enable_if_t<std::is_invocable<decltype(fn), Event&>::value, void>
+        -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
         {
-            fRegisteredCallbacks.insert({dsc.GetId(), [&fn](EProperty* property){
+            fRegisteredCallbacks[dsc.GetId()].push_back([fn](EProperty* property){
                 EStructProperty* structProp = static_cast<EStructProperty*>(property);
-                fn(structProp->GetValue<Event>());
-            }});
+                Event value;
+                if (structProp->GetValue<Event>(value))
+                {
+                    fn(value);
+                }
+            });
+        }
+
+
+        template <typename Event, typename Callback>
+        auto Connect(Callback&& fn)
+        -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
+        {
+            fRegisteredCallbacks[Event::_dsc.GetId()].push_back([fn](EProperty* property){
+                EStructProperty* structProp = static_cast<EStructProperty*>(property);
+                Event value;
+                if (structProp->GetValue<Event>(value))
+                {
+                    fn(value);
+                }
+            });
+        }
+
+        template <typename Event, typename Callback>
+        auto Connect(Callback&& fn)
+        -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, void>
+        {
+            fRegisteredCallbacks[Event::_dsc.GetId()].push_back([fn](EProperty* property){
+                fn();
+            });
         }
 
         template <typename T>
@@ -41,7 +74,7 @@ namespace Engine {
             EStructProperty* property = static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc));
             if (property->SetValue<T>(data))
             {
-                fComponentStorage.insert({dsc.GetId(), property});
+                fPostedEvents.push_back({dsc.GetId(), property});
             }
             else
             {
@@ -51,7 +84,17 @@ namespace Engine {
             }
         }
 
+
+        template <typename T>
+        void Post(const T& data)
+        {
+            Post<T>(T::_dsc, data);
+        }
+
         void Post(EValueDescription dsc, EProperty* property);
+
+
+        void Update();
     };
 
 }

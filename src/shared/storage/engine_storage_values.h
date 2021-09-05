@@ -1,6 +1,5 @@
 #pragma once
 
-
 namespace Engine {
     class EStructProperty;
 }
@@ -9,16 +8,28 @@ namespace convert {
     template <typename Value>
     bool setter(Engine::EStructProperty* prop, const Value& value)
     {
-        E_ASSERT(false, EString("Setter not implemented for type ") + typeid(Value).name());
-        return false;
+        if constexpr (is_primitive<Value>)
+        {
+            return false;
+        }
+        else
+        {
+            return Value::ToProperty(value, prop);
+        }
     }
 
 
     template <typename Value>
     bool getter(const Engine::EStructProperty* prop, Value* outValue)
     {
-        E_ASSERT(false, EString("Getter not implemented for type ") + typeid(Value).name());
-        return false;
+        if constexpr (is_primitive<Value>)
+        {
+            return false;
+        }
+        else
+        {
+            return Value::FromProperty(*outValue, prop);
+        }
     }
 };
 
@@ -96,27 +107,9 @@ namespace Engine {
         ~EStructProperty();
 
         template <typename T>
-        auto SetValue(const T& value) -> decltype(T::_dsc)
+        bool SetValue(const T& value) 
         {
-            T::ToProperty(value, this);
-        }
-
-        template <typename T>
-        void SetValue(const T& value)
-        {
-            convert::setter(this, value);
-        }
-
-        template <typename T>
-        auto GetValue(T& outValue) const -> decltype(T::_dsc)
-        {
-            T result;
-            if (T::FromProperty(result, this))
-            {
-                outValue = result;
-                return true;
-            }
-            return false;
+            return convert::setter<T>(this, value);
         }
 
         template <typename T>
@@ -131,6 +124,7 @@ namespace Engine {
             return false;
         }
 
+
         bool HasProperty(const EString& propertyName) const;
 
         EProperty* GetProperty(const EString& propertyName);
@@ -139,6 +133,9 @@ namespace Engine {
     protected:
         virtual EProperty* OnClone() override;
     };
+
+    
+
 
     class E_API EEnumProperty : public EProperty
     {
@@ -172,7 +169,8 @@ namespace Engine {
         void Clear();
 
         template <typename T>
-        bool GetValue(EVector<T>& outVector) const
+        auto GetValue(EVector<T>& outVector) const
+        -> std::enable_if_t<is_vector<T>::value, bool>
         {
             auto& insert_element = [&outVector, this](auto property){
                 T value;
@@ -193,7 +191,7 @@ namespace Engine {
                 {
                     case EValueType::STRUCT: 
                     {
-                        if (insert_element(static_cast<EStructProperty*>(prop)))
+                        if (!insert_element(static_cast<EStructProperty*>(prop)))
                         {
                             return false;
                         }
@@ -216,6 +214,55 @@ namespace Engine {
                     case EValueType::UNKNOWN: return false;
                 }
             }
+        }
+
+        template <typename T>
+        bool GetValue(T& outVector) const
+        {
+            return false;
+        }
+
+        template <typename T>
+        bool SetValue(const T& vector)
+        {
+            if constexpr (!is_vector<T>::value)
+            {
+                return false;
+            }
+            using ArrayType = typename T::value_type;
+            Clear();
+            EValueDescription dsc = fDescription.GetAsPrimitive();
+            for (const typename T::value_type& entry : vector)
+            {
+                EProperty* newEntry = EProperty::CreateFromDescription(std::to_string(fElements.size()), dsc);
+                switch (dsc.GetType())
+                {
+                case EValueType::PRIMITIVE:
+                {
+                    static_cast<EValueProperty<typename T::value_type>*>(newEntry)->SetValue(entry);
+                    break;
+                }
+                case EValueType::STRUCT:
+                {
+                    if (!static_cast<EStructProperty*>(newEntry)->SetValue<typename T::value_type>(entry))
+                    {
+                        return false;
+                    }
+                    break;
+                }
+                case EValueType::ENUM:
+                {
+                    // TODO:
+                    break;
+                }
+                case EValueType::UNKNOWN:
+                {
+                    break;
+                }
+                }
+                fElements.push_back(newEntry);
+            }
+            return true;
         }
     protected:
         virtual EProperty* OnClone() override;
