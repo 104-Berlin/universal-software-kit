@@ -26,6 +26,21 @@ EProperty* Engine::EProperty::Clone()
     return this->OnClone();
 }
 
+void EProperty::SetChangeFunc(ChangeFunc func) 
+{
+    fChangeFunc = func;
+}
+
+void EProperty::ConnectChangeFunc(EProperty* other) 
+{
+    other->SetChangeFunc([this](EString ident){
+        if (fChangeFunc)
+        {
+            fChangeFunc(GetPropertyName() + "." + ident);
+        }
+    });
+}
+
 
 
 EProperty* EProperty::CreateFromDescription(const EString& name, EValueDescription description) 
@@ -93,7 +108,10 @@ EProperty* EProperty::CreatePropertyArray(const EString& name, EValueDescription
 EStructProperty::EStructProperty(const EString& name, EValueDescription description, const EVector<EProperty*>& properties)
     : EProperty(name, description), fProperties(properties)
 {
-    
+    for (EProperty* property : fProperties)
+    {
+        ConnectChangeFunc(property);
+    }
 }
 
 Engine::EStructProperty::EStructProperty(const EStructProperty& other) 
@@ -102,7 +120,9 @@ Engine::EStructProperty::EStructProperty(const EStructProperty& other)
     fProperties.clear();
     for (EProperty* property : other.fProperties)
     {
-        fProperties.push_back(property->Clone());
+        EProperty* clone = property->Clone();
+        ConnectChangeFunc(clone);
+        fProperties.push_back(clone);
     }
 }
 
@@ -190,6 +210,7 @@ EEnumProperty::~EEnumProperty()
 void EEnumProperty::SetCurrentValue(const EString& value) 
 {
     fValue = value;
+    if (fChangeFunc) { fChangeFunc(GetPropertyName()); }
 }
 
 const EString& EEnumProperty::GetCurrentValue() const
@@ -213,7 +234,9 @@ Engine::EArrayProperty::EArrayProperty(EArrayProperty& other)
 {
     for (EProperty* prop : other.fElements)
     {
-        fElements.push_back(prop->Clone());
+        EProperty* clone = prop->Clone();
+        ConnectChangeFunc(clone);
+        fElements.push_back(clone);
     }
 }
 
@@ -226,7 +249,9 @@ EProperty* EArrayProperty::AddElement()
 {
     EString elementName = std::to_string(fElements.size());
     EProperty* result = EProperty::CreateFromDescription(elementName, fDescription.GetAsPrimitive());
+    ConnectChangeFunc(result);
     fElements.push_back(result);
+    if (fChangeFunc) {fChangeFunc(GetPropertyName());}
     return result;
 }
 
@@ -249,6 +274,7 @@ void EArrayProperty::RemoveElement(size_t index)
     }
     delete fElements[index];
     fElements.erase(fElements.begin() + index);
+    if (fChangeFunc) { fChangeFunc(GetPropertyName()); }
 }
 
 const EVector<EProperty*>& EArrayProperty::GetElements() const

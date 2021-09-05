@@ -39,9 +39,14 @@ namespace Engine {
     class E_API EProperty
     {
         friend class ERegister;
+        // Function when value changes
+        // Contains string to the current property identifier
+        using ChangeFunc = std::function<void(EString)>;
     public:
         EString fName;
         EValueDescription fDescription;
+    protected:
+        ChangeFunc fChangeFunc;
     public:
         EProperty(const EString& name, EValueDescription description);
         EProperty(EProperty&) = default;
@@ -55,7 +60,10 @@ namespace Engine {
         
     protected:
         virtual EProperty* OnClone() = 0;
-
+        // Only used by register. Should stay this way
+        // Register sends the events then
+        void SetChangeFunc(ChangeFunc func);
+        void ConnectChangeFunc(EProperty* other);
     public:
         static EProperty* CreateFromDescription(const EString& name, EValueDescription description);
     private:
@@ -83,6 +91,7 @@ namespace Engine {
         {
             if (value == fValue) { return; }
             fValue = value;
+            if (fChangeFunc) { fChangeFunc(GetPropertyName()); }
         }
 
         ValueType GetValue() const 
@@ -109,7 +118,12 @@ namespace Engine {
         template <typename T>
         bool SetValue(const T& value) 
         {
-            return convert::setter<T>(this, value);
+            if (convert::setter<T>(this, value))
+            {
+                if (fChangeFunc) { fChangeFunc(GetPropertyName()); }
+                return true;
+            }
+            return false;
         }
 
         template <typename T>
@@ -234,7 +248,9 @@ namespace Engine {
             EValueDescription dsc = fDescription.GetAsPrimitive();
             for (const typename T::value_type& entry : vector)
             {
-                EProperty* newEntry = EProperty::CreateFromDescription(std::to_string(fElements.size()), dsc);
+                size_t currentIndex = fElements.size();
+                EProperty* newEntry = EProperty::CreateFromDescription(std::to_string(currentIndex), dsc);
+                ConnectChangeFunc(newEntry);
                 switch (dsc.GetType())
                 {
                 case EValueType::PRIMITIVE:
@@ -262,6 +278,7 @@ namespace Engine {
                 }
                 fElements.push_back(newEntry);
             }
+            if (fChangeFunc) {fChangeFunc(GetPropertyName());}
             return true;
         }
     protected:

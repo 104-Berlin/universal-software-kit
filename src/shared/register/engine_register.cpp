@@ -85,14 +85,14 @@ void ERegister::InsertComponent(Entity entity, const EValueDescription& descript
 
     if (!HasComponent(entity, description.GetId()))
     {
-        EUnorderedMap<EString, EProperty*> properties;
-
         EStructProperty* storage = static_cast<EStructProperty*>(EProperty::CreateFromDescription(description.GetId(), description));
+        storage->SetChangeFunc([this, entity](EString ident){
+            fEventDispatcher.Post<ValueChangeEvent>({ident, entity});
+        });
 
         fComponentStorage[description.GetId()][entity] = storage;
 
         fEventDispatcher.Post<ComponentCreateEvent>({description.GetId(), entity});
-        fEventDispatcher.Update();
     }
 }
 
@@ -141,6 +141,7 @@ EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identif
         start = end + 1;
         end = identifier.find(".", start);
     }
+    identList.push_back(identifier.substr(start, identifier.length() - start));
     E_ASSERT(identList.size() > 0);
     // The first identifier is the component name
     EProperty* currentProp = static_cast<EProperty*>(GetComponent(entity, identList[0]));

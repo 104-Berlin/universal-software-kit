@@ -17,6 +17,8 @@ std::vector<u32> planeIndices = {
 
 ERegister* activeScene = nullptr;
 
+static EUnorderedMap<ERegister::Entity, GMesh*> meshes;
+
 static EValueDescription TechnicalMeshDsc = EValueDescription::CreateStruct("TechnicalDrawing", {{"Positions", EVec3_dsc.GetAsArray()}});
 
 static EValueDescription PlaneDescription = EValueDescription::CreateStruct("Plane", {{"Position", EVec3_dsc},
@@ -66,35 +68,53 @@ APP_ENTRY
     drawingViewport.lock()->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
     drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
     
+    activeScene->AddEntityChangeEventListener("Plane.Position", [](ERegister::Entity entity, const EString& ident){
+        GMesh* graphicsMesh = meshes[entity];
+        if (!graphicsMesh) { return; }
+        EStructProperty* pos = static_cast<EStructProperty*>(activeScene->GetValueByIdentifier(entity, "Plane.Position"));
+        EVec3 posVector;
+        if (pos->GetValue<EVec3>(posVector))
+        {
+            graphicsMesh->SetPosition(posVector);
+        }
+    });
+    activeScene->AddEntityChangeEventListener("Plane.Rotation", [](ERegister::Entity entity, const EString& ident){
+        GMesh* graphicsMesh = meshes[entity];
+        if (!graphicsMesh) { return; }
+        EStructProperty* pos = static_cast<EStructProperty*>(activeScene->GetValueByIdentifier(entity, "Plane.Rotation"));
+        EVec3 posVector;
+        if (pos->GetValue<EVec3>(posVector))
+        {
+            graphicsMesh->SetRotation(glm::vec3{glm::radians(posVector.x), glm::radians(posVector.y), glm::radians(posVector.z)});
+        }
+    });
+    activeScene->AddEntityChangeEventListener("Plane.Scale", [](ERegister::Entity entity, const EString& ident){
+        GMesh* graphicsMesh = meshes[entity];
+        if (!graphicsMesh) { return; }
+        EStructProperty* pos = static_cast<EStructProperty*>(activeScene->GetValueByIdentifier(entity, "Plane.Scale"));
+        EVec3 posVector;
+        if (pos->GetValue<EVec3>(posVector))
+        {
+            graphicsMesh->SetScale(posVector);
+        }
+    });
 
     activeScene->AddComponentCreateEventListener(PlaneDescription, [drawingViewport](ERegister::Entity entity){
         // Create mesh in 3D Scene
         EStructProperty* mesh = activeScene->GetComponent(entity, PlaneDescription);
         if (drawingViewport.expired()) { return; }
         GMesh* gMesh = new GMesh();
+        meshes[entity] = gMesh;
         gMesh->SetData(planeVertices, planeIndices);
         drawingViewport.lock()->GetScene().Add(gMesh);
         EProperty* pos = mesh->GetProperty("Position");
         EProperty* rot = mesh->GetProperty("Rotation");
         EProperty* sca = mesh->GetProperty("Scale");
-        if (pos)
-        {
-            /*pos->AddEventListener<events::EValueChangeEvent<EVec3>>([gMesh](const events::EValueChangeEvent<EVec3>& event){
-                gMesh->SetPosition(event.NewValue);
-            });*/
-        }
-        if (rot)
-        {
-            /*rot->AddEventListener<events::EValueChangeEvent<EVec3>>([gMesh](const events::EValueChangeEvent<EVec3>& event){
-                glm::quat rot(event.NewValue);
-                gMesh->SetRotation(rot);
-            });*/
-        }
+
         if (sca)
         {
-            /*sca->AddEventListener<events::EValueChangeEvent<EVec3>>([gMesh](const events::EValueChangeEvent<EVec3>& event){
-                gMesh->SetScale(event.NewValue);
-            });*/
+            EStructProperty* scaleProp = static_cast<EStructProperty*>(sca);
+            scaleProp->SetValue<EVec3>({1.0f, 1.0f, 1.0f});
         }
     });
 

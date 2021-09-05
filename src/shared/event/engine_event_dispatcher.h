@@ -68,7 +68,7 @@ namespace Engine {
         }
 
         template <typename T>
-        void Post(const EValueDescription& dsc, const T& data)
+        void Enqueue(const EValueDescription& dsc, const T& data)
         {
             E_ASSERT_M(dsc.GetType() == EValueType::STRUCT, "Only post struct events with template!");
             EStructProperty* property = static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc));
@@ -86,12 +86,33 @@ namespace Engine {
 
 
         template <typename T>
-        void Post(const T& data)
+        void Enqueue(const T& data)
         {
-            Post<T>(T::_dsc, data);
+            Enqueue<T>(getdsc::GetDescription<T>(), data);
+        }
+        void Enqueue(EValueDescription dsc, EProperty* property);
+
+        template <typename T>
+        void Post(const EValueDescription& dsc, const T& data)
+        {
+            E_ASSERT_M(dsc.GetType() == EValueType::STRUCT, "Only post struct events with template!");
+            EStructProperty* property = static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc));
+            if (property->SetValue<T>(data))
+            {
+                for (CallbackFunction func : fRegisteredCallbacks[dsc.GetId()])
+                {
+                    func(property);
+                }
+            }
+            delete property;
         }
 
-        void Post(EValueDescription dsc, EProperty* property);
+        template <typename T>
+        void Post(const T& data)
+        {
+            Post<T>(getdsc::GetDescription<T>(), data);
+        }
+        void Post(const EValueDescription& dsc, EProperty* property);
 
 
         void Update();

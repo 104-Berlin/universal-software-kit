@@ -14,7 +14,12 @@ namespace Engine {
     public:
         using Entity = u32;
         E_STORAGE_TYPE(ComponentCreateEvent, 
-            (EValueDescription::t_ID, Identifier),
+            (EValueDescription::t_ID, ValueId),
+            (Entity, Handle)
+        )
+
+        E_STORAGE_TYPE(ValueChangeEvent,
+            (EString, Identifier),
             (Entity, Handle)
         )
     private:
@@ -52,14 +57,24 @@ namespace Engine {
         void AddComponentCreateEventListener(const EValueDescription& description, Callback&& cb)
         {
             fEventDispatcher.Connect<ComponentCreateEvent>([cb, description](ComponentCreateEvent event){
-                if (event.Identifier == description.GetId())
+                if (event.ValueId == description.GetId())
                 {
                     cb(event.Handle);
                 }
             });
         }
 
-
+        template <typename Callback>
+        void AddEntityChangeEventListener(const EString& valueIdent, Callback&& cb)
+        {
+            fEventDispatcher.Connect<ValueChangeEvent>([cb, valueIdent](ValueChangeEvent event){
+                if (event.Identifier.length() < valueIdent.length()) {return;}
+                if (valueIdent == event.Identifier.substr(0, valueIdent.length()))
+                {
+                    cb(event.Handle, valueIdent);
+                }
+            });
+        }
     };
 
 

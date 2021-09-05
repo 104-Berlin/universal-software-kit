@@ -36,7 +36,6 @@ namespace Engine {
             ERegisterChangedEvent event;
             event.ExtensionName = extensionName;
             fEventDispatcher.Post<ERegisterChangedEvent>(event);
-            fEventDispatcher.Update();
         }
 
         /**
@@ -49,7 +48,6 @@ namespace Engine {
             ERegisterChangedEvent event;
             event.ExtensionName = extensionName;
             fEventDispatcher.Post<ERegisterChangedEvent>(event);
-            fEventDispatcher.Update();
         }
 
         /**

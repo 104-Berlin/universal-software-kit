@@ -85,33 +85,33 @@ void EUIField::OnRenderEnd()
         fLastMousePos = mousePos;
         if (glm::length(mouseDelta) > 0.0f)
         {
-            fEventDispatcher.Post<events::EMouseMoveEvent>({mousePos, mouseDelta});
+            fEventDispatcher.Enqueue<events::EMouseMoveEvent>({mousePos, mouseDelta});
         }
 
         
         if (ImGui::IsMouseClicked(0))
         {
-            fEventDispatcher.Post<events::EMouseDownEvent>(events::EMouseDownEvent{mousePos, 0});
+            fEventDispatcher.Enqueue<events::EMouseDownEvent>(events::EMouseDownEvent{mousePos, 0});
         }
         if (ImGui::IsMouseClicked(1))
         {
-            fEventDispatcher.Post<events::EMouseDownEvent>(events::EMouseDownEvent{mousePos, 1});
+            fEventDispatcher.Enqueue<events::EMouseDownEvent>(events::EMouseDownEvent{mousePos, 1});
         }
         if (ImGui::IsMouseClicked(2))
         {
-            fEventDispatcher.Post<events::EMouseDownEvent>(events::EMouseDownEvent{mousePos, 2});
+            fEventDispatcher.Enqueue<events::EMouseDownEvent>(events::EMouseDownEvent{mousePos, 2});
         }
         if (glm::length(mouseDrag0) > 0.0f)
         {
-            fEventDispatcher.Post<events::EMouseDragEvent>({mousePos, mouseDrag0, 0});
+            fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag0, 0});
         }
         if (glm::length(mouseDrag1) > 0.0f)
         {
-            fEventDispatcher.Post<events::EMouseDragEvent>({mousePos, mouseDrag1, 1});
+            fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag1, 1});
         }
         if (glm::length(mouseDrag2) > 0.0f)
         {
-            fEventDispatcher.Post<events::EMouseDragEvent>({mousePos, mouseDrag2, 2});
+            fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag2, 2});
         }
     }
     
@@ -236,7 +236,7 @@ bool EUIButton::OnRender()
 {
     if (ImGui::Button(GetLabel().c_str()))
     {
-        fEventDispatcher.Post<events::EButtonEvent>(events::EButtonEvent());
+        fEventDispatcher.Enqueue<events::EButtonEvent>(events::EButtonEvent());
     }
     return true;
 }
@@ -254,7 +254,7 @@ bool EUITextField::OnRender()
     if (ImGui::InputText(GetLabel().c_str(), text, 255, ImGuiInputTextFlags_EnterReturnsTrue))
     {
         fContent = text;
-        fEventDispatcher.Post<ETextChangeEvent>({fContent});
+        fEventDispatcher.Enqueue<ETextChangeEvent>({fContent});
     }
     return true;
 }
@@ -337,7 +337,7 @@ bool EUIMenuItem::OnRender()
 {
     if (ImGui::MenuItem(GetLabel().c_str()))
     {
-        fEventDispatcher.Post<events::EButtonEvent>(events::EButtonEvent());
+        fEventDispatcher.Enqueue<events::EButtonEvent>(events::EButtonEvent());
     }
     return true;
 }
