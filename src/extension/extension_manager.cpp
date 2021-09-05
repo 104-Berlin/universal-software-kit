@@ -150,6 +150,16 @@ const ETypeRegister& EExtensionManager::GetTypeRegister() const
     return fTypeRegister;
 }
 
+EResourceRegister& EExtensionManager::GetResourceRegister() 
+{
+    return fResourceRegister;
+}
+
+const EResourceRegister& EExtensionManager::GetResourceRegister() const
+{
+    return fResourceRegister;
+}
+
 EChaiContext& EExtensionManager::GetChaiContext() 
 {
     return fChaiScriptContext;

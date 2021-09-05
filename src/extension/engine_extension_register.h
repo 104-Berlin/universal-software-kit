@@ -105,4 +105,5 @@ namespace Engine {
     };
 
     using ETypeRegister = EExtensionRegister<EValueDescription>;
+    using EResourceRegister = EExtensionRegister<EResourceDescription>;
 }

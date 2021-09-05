@@ -2,6 +2,16 @@
 
 namespace Engine {
 
+    struct EResourceDescription
+    {   
+        using ImExFunction = std::function<byte*(const byte*)>;
+
+
+        EVector<EString>    AccpetedFileEndings;
+        ImExFunction        ImportFunction;
+        ImExFunction        ExportFunction;
+    };
+
     struct EResourceData
     {
         EString Type;

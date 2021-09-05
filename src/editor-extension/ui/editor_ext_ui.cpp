@@ -341,3 +341,14 @@ bool EUIMenuItem::OnRender()
     }
     return true;
 }
+
+EUIImageView::EUIImageView() 
+    : EUIField("ImageView")
+{
+    
+}
+
+bool EUIImageView::OnRender() 
+{
+    return true;
+}

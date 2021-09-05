@@ -280,4 +280,13 @@ namespace events {
     };
 
 
+    class E_EDEXAPI EUIImageView : public EUIField
+    {
+    private:
+    public:
+        EUIImageView();
+
+        virtual bool OnRender() override;
+    };
+
 }

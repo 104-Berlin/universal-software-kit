@@ -32,8 +32,9 @@ namespace Engine {
     {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
-        ERegister*                             fLoadedScene;
+        ERegister*                          fLoadedScene;
         ETypeRegister                       fTypeRegister;
+        EResourceRegister                   fResourceRegister;
         EEventDispatcher                    fEventDispatcher;
         EChaiContext                        fChaiScriptContext;
     public:
@@ -75,8 +76,13 @@ namespace Engine {
         ETypeRegister& GetTypeRegister();
         const ETypeRegister& GetTypeRegister() const;
 
+        EResourceRegister& GetResourceRegister();
+        const EResourceRegister& GetResourceRegister() const;
+
+
         EChaiContext& GetChaiContext();
         const EChaiContext& GetChaiContext() const;
+
 
         template <typename EventType, typename CB>
         void AddEventListener(CB&& callback)
