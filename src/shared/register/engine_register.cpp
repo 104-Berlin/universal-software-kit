@@ -77,11 +77,11 @@ bool ERegister::IsAlive(Entity entity)
     return std::find(fAliveEntites.begin(), fAliveEntites.end(), entity) != fAliveEntites.end();
 }
 
-void ERegister::InsertComponent(Entity entity, const EValueDescription& description) 
+EStructProperty* ERegister::AddComponent(Entity entity, const EValueDescription& description) 
 {
     E_ASSERT_M(description.Valid(), "ERROR: Invalid value descrition!");
     E_ASSERT_M(description.GetType() == EValueType::STRUCT, "Component can only be inserted as struct");
-    if (!IsAlive(entity)) { return; }
+    if (!IsAlive(entity)) { return nullptr; }
 
     if (!HasComponent(entity, description.GetId()))
     {
@@ -94,6 +94,7 @@ void ERegister::InsertComponent(Entity entity, const EValueDescription& descript
 
         fEventDispatcher.Post<ComponentCreateEvent>({description.GetId(), entity});
     }
+    return nullptr;
 }
 
 void ERegister::RemoveComponent(Entity entity, const EValueDescription& componentId)

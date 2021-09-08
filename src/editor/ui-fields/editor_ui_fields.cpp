@@ -3,8 +3,8 @@
 using namespace Editor;
 using namespace Engine;
 
-EExtensionView::EExtensionView(Engine::EExtensionManager* extensionManager) 
- : EUIField("ExtensionView"), fExtensionManager(extensionManager)
+EExtensionView::EExtensionView() 
+ : EUIField("ExtensionView")
 {
     
 }
@@ -16,7 +16,7 @@ EExtensionView::~EExtensionView()
 
 bool EExtensionView::OnRender() 
 {
-    EVector<EExtension*> loadedExtensions = fExtensionManager->GetLoadedExtensions();
+    EVector<EExtension*> loadedExtensions = EExtensionManager::instance().GetLoadedExtensions();
     for (EExtension* ext : loadedExtensions)
     {
         const EString& name = ext->GetName();
@@ -33,42 +33,54 @@ bool EExtensionView::OnRender()
         EVector<EString> loadingPaths = Graphics::Wrapper::OpenFileDialog("Load Extension", {"uex"});
         for (const EString& extPath : loadingPaths)
         {
-            fExtensionManager->LoadExtension(extPath);
+            EExtensionManager::instance().LoadExtension(extPath);
         }
     }
     return true;
 }
 
-EResourceView::EResourceView(Engine::EResourceManager* resourceManager) 
-    : EUIField("RESOURCE_MANAGER"), fResourceManager(resourceManager)
+EResourceView::EResourceView() 
+    : EUIField("RESOURCE_MANAGER"), selectedResource(0)
 {
     
 }
 
 bool EResourceView::OnRender() 
 {
-    for (EResourceData* data : fResourceManager->GetAllResource())
+    ImGui::BeginChild("Resources", {150, 0});
+    for (EResourceData* data : EExtensionManager::instance().GetActiveScene()->GetResourceManager().GetAllResource())
     {
-        ImGui::Selectable(data->Name.c_str());
+        if (ImGui::Selectable(data->Name.c_str()))
+        {
+            selectedResource = selectedResource == data->ID ? 0 : data->ID;
+        }
     }
+    ImGui::EndChild();
+    ImGui::SameLine();
+    ImGui::BeginChild("ResourceDetail");
+    if (selectedResource)
+    {
+        ImGui::LabelText("ID: ", "%d", selectedResource);
+    }
+    ImGui::EndChild();
     return true;
 }
 
-EObjectView::EObjectView(EExtensionManager* extensionManager)
-    : EUIField("OBJECTVIEW"), fExtensionManager(extensionManager), fSelectedEntity(0)
+EObjectView::EObjectView()
+    : EUIField("OBJECTVIEW"), fSelectedEntity(0)
 {
     fAddObjectButton = EMakeRef<EUIButton>("Add Object");
     fAddObjectButton->AddEventListener<events::EButtonEvent>([this](){
-        fExtensionManager->GetActiveScene()->CreateEntity();
+        EExtensionManager::instance().GetActiveScene()->CreateEntity();
     });
 }
 
 bool EObjectView::OnRender() 
 {
-    if (!fExtensionManager->GetActiveScene()) { return false; }
+    if (!EExtensionManager::instance().GetActiveScene()) { return false; }
 
     ImGui::BeginChild("Entity Child", {100, 0});
-    for (ERegister::Entity entity : fExtensionManager->GetActiveScene()->GetAllEntities())
+    for (ERegister::Entity entity : EExtensionManager::instance().GetActiveScene()->GetAllEntities())
     {
         EString entityIdent = "Entity " + std::to_string(entity);
         bool selected = fSelectedEntity == entity;
@@ -83,7 +95,7 @@ bool EObjectView::OnRender()
     ImGui::BeginChild("ComponentChild");
     if (fSelectedEntity)
     {
-        for (EStructProperty* storage : fExtensionManager->GetActiveScene()->GetAllComponents(fSelectedEntity))
+        for (EStructProperty* storage : EExtensionManager::instance().GetActiveScene()->GetAllComponents(fSelectedEntity))
         {
             RenderProperty(storage);
         }
@@ -94,15 +106,15 @@ bool EObjectView::OnRender()
         }
         if (ImGui::BeginPopup("add-component-popup"))
         {
-            for (EValueDescription compDsc : fExtensionManager->GetTypeRegister().GetAllItems())
+            for (EValueDescription compDsc : EExtensionManager::instance().GetTypeRegister().GetAllItems())
             {
                 if (compDsc.GetType() != EValueType::STRUCT) { continue; }
-                bool hasComp = fExtensionManager->GetActiveScene()->HasComponent(fSelectedEntity, compDsc);
+                bool hasComp = EExtensionManager::instance().GetActiveScene()->HasComponent(fSelectedEntity, compDsc);
                 if (!hasComp)
                 {
                     if (ImGui::Selectable(compDsc.GetId().c_str()))
                     {
-                        fExtensionManager->GetActiveScene()->InsertComponent(fSelectedEntity, compDsc);
+                        EExtensionManager::instance().GetActiveScene()->AddComponent(fSelectedEntity, compDsc);
                     }
                 }
             }
@@ -159,6 +171,8 @@ void EObjectView::RenderPrimitive(Engine::EProperty* storage)
     const EString& primitiveId = description.GetId();
     if (primitiveId == E_TYPEID_STRING) { RenderString(static_cast<EValueProperty<EString>*>(storage)); } 
     else if (primitiveId == E_TYPEID_INTEGER) { RenderInteger(static_cast<EValueProperty<i32>*>(storage)); }
+    else if (primitiveId == E_TYPEID_UNSIGNED_INTEGER) { RenderInteger(static_cast<EValueProperty<u32>*>(storage)); }
+    else if (primitiveId == E_TYPEID_UNSIGNED_BIG_INTEGER) { RenderInteger(static_cast<EValueProperty<u64>*>(storage)); }
     else if (primitiveId == E_TYPEID_DOUBLE) { RenderDouble(static_cast<EValueProperty<double>*>(storage)); }
     else if (primitiveId == E_TYPEID_BOOL) { RenderBool(static_cast<EValueProperty<bool>*>(storage)); }
 }
@@ -220,6 +234,24 @@ void EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage)
     i32 value = storage->GetValue();
     ImGui::PushID(storage);
     ImGui::InputInt(storage->GetPropertyName().c_str(), &value);
+    ImGui::PopID();
+    storage->SetValue(value);
+}
+
+void EObjectView::RenderInteger(Engine::EValueProperty<u32>* storage) 
+{
+    u32 value = storage->GetValue();
+    ImGui::PushID(storage);
+    ImGui::InputInt(storage->GetPropertyName().c_str(), (int*) &value);
+    ImGui::PopID();
+    storage->SetValue(value);
+}
+
+void EObjectView::RenderInteger(Engine::EValueProperty<u64>* storage) 
+{
+    u64 value = storage->GetValue();
+    ImGui::PushID(storage);
+    ImGui::InputInt(storage->GetPropertyName().c_str(), (int*) &value);
     ImGui::PopID();
     storage->SetValue(value);
 }

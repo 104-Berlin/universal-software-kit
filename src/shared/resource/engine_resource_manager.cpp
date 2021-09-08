@@ -18,12 +18,57 @@ bool EResourceManager::HasResource(const EResourceData::t_ID& id) const
     return fLoadedResources.find(id) != fLoadedResources.end();
 }
 
-void EResourceManager::RegisterResource(const EString& type, const EString& path, byte* resourceData, size_t resourceDataSize) 
+bool EResourceManager::ImportResource(const EString& name, const EResourceDescription& description, byte* rawData, size_t data_size) 
 {
-    E_INFO("New Resource: " + path);
-    EFile f(path);
-    
-    fLoadedResources.insert({CreateNewId(), new EResourceData(type, f.GetFileName(), resourceData, resourceDataSize)});
+    EResourceDescription::ResBuffer buffer;
+    buffer.Data = rawData;
+    buffer.Size = data_size;
+    if (description.ImportFunction)
+    {
+        buffer = description.ImportFunction({rawData, data_size});
+        if (!buffer.Data)
+        {
+            E_ERROR("Resource " + name + " could not be imported!");
+            return false;
+        }
+    }
+    EResourceData* newData = new EResourceData(CreateNewId(), description.ResourceName, name, buffer.Data, buffer.Size);
+    if (buffer.UserData)
+    {
+        newData->SetUserData(buffer.UserData, buffer.UserDataSize);
+    }
+    fLoadedResources.insert({newData->ID, newData});
+    return true;
+}
+
+bool EResourceManager::ImportResourceFromFile(const EString& filePath, const EResourceDescription& description) 
+{
+    EFile file(filePath);
+    return ImportResourceFromFile(file, description);
+}
+
+bool EResourceManager::ImportResourceFromFile(EFile& file, const EResourceDescription& description) 
+{
+    E_ASSERT(file.Exist());
+    file.LoadToMemory();
+    size_t file_size = file.GetBuffer().GetSizeInByte();
+
+
+
+    byte* dataPtr = nullptr;
+    size_t dataSize = 0;
+    if (description.ImportFunction)
+    {
+        dataPtr = file.GetBuffer().Data<byte>();
+        dataSize = file_size;
+    }
+    else
+    {
+        dataPtr = new byte[file_size];
+        memcpy(dataPtr, file.GetBuffer().Data(), file_size);
+        dataSize = file_size;
+    }
+    return ImportResource(file.GetFileName(), description, dataPtr, dataSize);
 }
 
 EResourceData* EResourceManager::GetResource(const EResourceData::t_ID& path) const

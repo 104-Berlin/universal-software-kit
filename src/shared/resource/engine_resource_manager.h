@@ -7,15 +7,24 @@ namespace Engine {
     {   
         struct ResBuffer
         {
-            byte*   Data;
-            size_t  Size;
+            byte*   Data = nullptr;
+            size_t  Size = 0;
+            
+            byte*   UserData = nullptr;
+            size_t  UserDataSize = 0;
         };
-        using ImExFunction = std::function<ResBuffer(const ResBuffer)>;
+        struct RawBuffer
+        {
+            byte* Data = nullptr;
+            size_t Size = 0;
+        };
+        using ImpFunction = std::function<ResBuffer(const RawBuffer)>;
+        using ExpFunction = std::function<RawBuffer(const ResBuffer)>;
 
         EString             ResourceName;
         EVector<EString>    AcceptedFileEndings;
-        ImExFunction        ImportFunction;
-        ImExFunction        ExportFunction;
+        ImpFunction         ImportFunction;
+        ExpFunction         ExportFunction;
 
         EResourceDescription() = default;
         EResourceDescription(const EString& name, const EVector<EString>& acceptedFileEndings)
@@ -42,21 +51,27 @@ namespace Engine {
     {
         using t_ID = u64;
 
+        t_ID    ID;
         EString Type;
         EString Name;
         EString PathToFile;
         byte*   Data;
         size_t  DataSize;
+        byte*   UserData;
+    private:
+        size_t  UserDataSize;
+    public:
 
-        EResourceData()
-            : Type(), Name(), PathToFile(), Data(nullptr), DataSize(0)
+        EResourceData(t_ID id = 0)
+            : ID(id), Type(), Name(), PathToFile(), Data(nullptr), DataSize(0), UserData(nullptr), UserDataSize(0)
         {
-
+            E_ASSERT_M(id, "Invalid id for resource data. Id cant be 0!");
         }
 
-        EResourceData(const EString& type, const EString& name, byte* data, size_t dataSize)
-            : Type(type), Name(name), PathToFile()
+        EResourceData(t_ID id, const EString& type, const EString& name, byte* data, size_t dataSize)
+            : ID(id), Type(type), Name(name), PathToFile(), UserData(nullptr), UserDataSize(0)
         {
+            E_ASSERT_M(id, "Invalid id for resource data. Id cant be 0!");
             Data = data;
             DataSize = dataSize;
         }
@@ -71,6 +86,40 @@ namespace Engine {
                 Data = nullptr;
             }
         }
+
+        template <typename T>
+        void SetUserData(const T& data)
+        {
+            if (UserData)
+            {
+                delete[] UserData;
+            }
+            UserData = new byte[sizeof(T)];
+            UserDataSize = sizeof(T);
+        }
+
+        void SetUserData(byte* data, size_t data_size)
+        {
+            E_ASSERT(data);
+            if (UserData)
+            {
+                delete[] UserData;
+            }
+            UserData = data;
+            UserDataSize = data_size;
+        }
+
+        template <typename T>
+        const T* GetUserData() const
+        {
+            E_ASSERT(UserDataSize == sizeof(T));
+            return static_cast<T*>(UserData);
+        }
+
+        const byte* GetUserData() const
+        {
+            return UserData;
+        }
     };
 
     class E_API EResourceManager
@@ -82,7 +131,10 @@ namespace Engine {
         ~EResourceManager();
         
         bool HasResource(const EResourceData::t_ID& id) const;
-        void RegisterResource(const EString& type, const EString& path, byte* resourceData, size_t resourceDataSize);
+        bool ImportResource(const EString& name, const EResourceDescription& description, byte* rawData, size_t data_size);
+        bool ImportResourceFromFile(const EString& filePath, const EResourceDescription& description);
+        bool ImportResourceFromFile(EFile& file, const EResourceDescription& description);
+        
 
         EResourceData* GetResource(const EResourceData::t_ID& id) const;
         EVector<EResourceData*> GetAllResource() const;

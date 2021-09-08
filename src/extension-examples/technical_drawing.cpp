@@ -40,7 +40,7 @@ void ViewportMouseMove(events::EMouseMoveEvent e)
 void ViewportClicked(events::EMouseDownEvent e)
 {
     ERegister::Entity newEntity = activeScene->CreateEntity();
-    activeScene->InsertComponent(newEntity, TechnicalMeshDsc);
+    activeScene->AddComponent(newEntity, TechnicalMeshDsc);
 
     EStructProperty* technicalMesh = activeScene->GetComponent(newEntity, TechnicalMeshDsc);
     EArrayProperty* arrayProp = static_cast<EArrayProperty*>(technicalMesh->GetProperty("Positions"));

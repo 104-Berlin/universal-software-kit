@@ -67,6 +67,23 @@ namespace events {
         bool fDirty;
 
         /**
+         * Width of the field.
+         * If 0 default size will be calculated.
+         */
+        float fWidthOverride;
+
+        /**
+         * Height of the field.
+         * If 0 default size will be calculated.
+         */
+        float fHeightOverride;
+
+        /**
+         * Final size after rendering
+         */
+        EVec2 fCalculatedSize;
+
+        /**
          * A List of all Children. These will be rendered, if the OnRender funtion returns true and this Field is visible
          */
         EVector<ERef<EUIField>> fChildren;
@@ -141,6 +158,45 @@ namespace events {
          * @return The current label
          */
         const EString& GetLabel() const;
+
+        /**
+         * Sets the size of the Field.
+         * @param width If 0 width will get calculated automatically!
+         * @param height If 0 height will get calculated automatically!
+         */
+        void SetSize(float width, float height);
+
+        /**
+         * Sets the size of the Field.
+         * @param size If one acis equal 0, the size for this axis will get calculated automatically!
+         */
+        void SetSize(const EVec2& size);
+
+
+        /** Sets width of field
+         * @param If 0 width will get calculated automatically!
+         */
+        void SetWidth(float width);
+
+        /** Sets height of field
+         * @param If 0 height will get calculated automatically!
+         */
+        void SetHeight(float height);
+
+        /**
+         * @return Size of the Field
+         */
+        EVec2 GetSize() const;
+
+        /**
+         * @return Width of the Field
+         */
+        float GetWidth() const;
+        /**
+         * @return Height of the Field
+         */
+        float GetHeight() const;
+
 
         /**
          * Adds a listener to specified EventType
@@ -283,8 +339,12 @@ namespace events {
     class E_EDEXAPI EUIImageView : public EUIField
     {
     private:
+        Graphics::GTexture2D* fTexture;
     public:
         EUIImageView();
+        ~EUIImageView();
+
+        void SetTextureData(byte* data, size_t width, size_t height);
 
         virtual bool OnRender() override;
     };

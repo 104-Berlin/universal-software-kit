@@ -29,7 +29,7 @@ void EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene,
                 EValueDescription description = findType(id);
                 if (description.Valid())
                 {
-                    saveToScene->InsertComponent(entity, description);
+                    saveToScene->AddComponent(entity, description);
                     EStructProperty* component = saveToScene->GetComponent(entity, description);
                     ReadPropertyFromJson(entityObject[component->GetPropertyName()], component);
                 }
@@ -61,6 +61,20 @@ void ReadPrimitiveFromJson(const EJson& json, EProperty* property)
         if (json.is_number_integer())
         {
             static_cast<EValueProperty<i32>*>(property)->SetValue(json.get<i32>());
+        }
+    }
+    else if (primitiveType == E_TYPEID_UNSIGNED_INTEGER)
+    {
+        if (json.is_number_integer())
+        {
+            static_cast<EValueProperty<u32>*>(property)->SetValue(json.get<u32>());
+        }
+    }
+    else if (primitiveType == E_TYPEID_UNSIGNED_BIG_INTEGER)
+    {
+        if (json.is_number_integer())
+        {
+            static_cast<EValueProperty<u64>*>(property)->SetValue(json.get<u64>());
         }
     }
     else if (primitiveType == E_TYPEID_STRING)

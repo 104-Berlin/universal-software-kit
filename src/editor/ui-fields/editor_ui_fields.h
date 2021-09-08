@@ -4,10 +4,8 @@ namespace Editor {
 
     class EExtensionView : public Engine::EUIField
     {
-    private:
-        Engine::EExtensionManager* fExtensionManager;
     public:
-        EExtensionView(Engine::EExtensionManager* extenionManager);
+        EExtensionView();
         virtual ~EExtensionView();
 
         virtual bool OnRender() override;
@@ -16,9 +14,9 @@ namespace Editor {
     class EResourceView : public Engine::EUIField
     {
     private:
-        Engine::EResourceManager* fResourceManager;
+        Engine::EResourceData::t_ID selectedResource;
     public:
-        EResourceView(Engine::EResourceManager* resourceManager);
+        EResourceView();
 
         virtual bool OnRender() override;
     };
@@ -27,10 +25,9 @@ namespace Editor {
     {
     private:
         Engine::ERegister::Entity fSelectedEntity;
-        Engine::EExtensionManager* fExtensionManager;
         ERef<Engine::EUIButton> fAddObjectButton;
     public:
-        EObjectView(Engine::EExtensionManager* extensionManager);
+        EObjectView();
 
         virtual bool OnRender() override;
 
@@ -45,6 +42,8 @@ namespace Editor {
 
         void RenderBool(Engine::EValueProperty<bool>* storage);
         void RenderInteger(Engine::EValueProperty<i32>* storage);
+        void RenderInteger(Engine::EValueProperty<u32>* storage);
+        void RenderInteger(Engine::EValueProperty<u64>* storage);
         void RenderDouble(Engine::EValueProperty<double>* storage);
         void RenderString(Engine::EValueProperty<EString>* storage);
     };

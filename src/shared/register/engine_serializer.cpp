@@ -42,6 +42,14 @@ EJson WritePrimitiveToJs(EProperty* property)
     {
         return static_cast<EValueProperty<i32>*>(property)->GetValue();
     }
+    else if (primitiveType == E_TYPEID_UNSIGNED_INTEGER)
+    {
+        return static_cast<EValueProperty<u32>*>(property)->GetValue();
+    }
+    else if (primitiveType == E_TYPEID_UNSIGNED_BIG_INTEGER)
+    {
+        return static_cast<EValueProperty<u64>*>(property)->GetValue();
+    }
     else if (primitiveType == E_TYPEID_STRING)
     {
         return static_cast<EValueProperty<EString>*>(property)->GetValue();

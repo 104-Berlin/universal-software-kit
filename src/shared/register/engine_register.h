@@ -43,7 +43,7 @@ namespace Engine {
 
         bool IsAlive(Entity entity);
 
-        void InsertComponent(Entity entity, const EValueDescription& componentId);
+        EStructProperty* AddComponent(Entity entity, const EValueDescription& componentId);
         void RemoveComponent(Entity entity, const EValueDescription& componentId);
         bool HasComponent(Entity entity, const EValueDescription& componentId);
         bool HasComponent(Entity entity, const EValueDescription::t_ID& componentId);
@@ -52,6 +52,30 @@ namespace Engine {
         EProperty* GetValueByIdentifier(Entity entity, const EString& identifier);
         EVector<EStructProperty*> GetAllComponents(Entity entity);
         EUnorderedMap<Entity, EStructProperty*>& View(const EValueDescription& description);
+
+
+        template <typename T>
+        T AddComponent(Entity entity)
+        {
+            EStructProperty* inserted = AddComponent(entity, getdsc::GetDescription<T>());
+            T result;
+            if (inserted)
+            {
+                convert::getter<T>(inserted, result);
+            }
+            return result;
+        }
+
+        template <typename T>
+        T GetComponent(Entity entity)
+        {
+            T result;
+            convert::getter<T>(GetComponent(entity, getdsc::GetDescription<T>()), &result);
+            return result;
+        }
+
+
+
 
         template <typename Callback>
         void AddComponentCreateEventListener(const EValueDescription& description, Callback&& cb)

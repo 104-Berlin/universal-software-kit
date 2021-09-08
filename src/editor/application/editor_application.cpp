@@ -17,10 +17,10 @@ E_STORAGE_STRUCT(MyType,
 )
 
 EApplication::EApplication() 
-    : fGraphicsContext(nullptr), fCommandLine(&fExtensionManager.GetChaiContext())
+    : fGraphicsContext(nullptr), fCommandLine(&EExtensionManager::instance().GetChaiContext())
 {
-    fExtensionManager.AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent event) {
-        EExtension* extension = fExtensionManager.GetExtension(event.Extension);
+    EExtensionManager::instance().AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent event) {
+        EExtension* extension = EExtensionManager::instance().GetExtension(event.Extension);
         auto entry = (void(*)(const char*, Engine::EAppInit))extension->GetFunction("app_entry");
         if (entry)
         {
@@ -38,7 +38,7 @@ EApplication::EApplication()
     fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
         this->RegenerateMainMenuBar();
     });
-    fExtensionManager.GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
+    EExtensionManager::instance().GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
 }
 
 void EApplication::Start() 
@@ -54,7 +54,7 @@ void EApplication::RegenerateMainMenuBar()
     ERef<EUIField> saveScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Save"));
     saveScene->AddEventListener<events::EButtonEvent>([this](){
         EString saveToPath = Wrapper::SaveFileDialog("Save To", {"esc"});
-        EJson json = ESerializer::WriteSceneToJson(fExtensionManager.GetActiveScene());
+        EJson json = ESerializer::WriteSceneToJson(EExtensionManager::instance().GetActiveScene());
         EFile file(saveToPath);
         file.SetFileAsString(json.dump());
     });
@@ -67,7 +67,7 @@ void EApplication::RegenerateMainMenuBar()
             EJson sceneJson = EJson::parse(sceneFile.GetFileAsString());
             if (!sceneJson.is_null())
             {
-                EDeserializer::ReadSceneFromJson(sceneJson, fExtensionManager.GetActiveScene(), fExtensionManager.GetTypeRegister().GetAllItems());
+                EDeserializer::ReadSceneFromJson(sceneJson, EExtensionManager::instance().GetActiveScene(), EExtensionManager::instance().GetTypeRegister().GetAllItems());
             }
         }
     });
@@ -78,22 +78,12 @@ void EApplication::RegenerateMainMenuBar()
         {
             EFile resourceFile(resourcePath);
 
-            resourceFile.LoadToMemory();
-            ESharedBuffer fileBuffer = resourceFile.GetBuffer();
-            
-            byte* data = (byte*) malloc(fileBuffer.GetSizeInByte());
-            memcpy(data, fileBuffer.Data(), fileBuffer.GetSizeInByte());
-
             EString type = resourceFile.GetFileExtension();
             EResourceDescription foundDescription;
-            if (this->fExtensionManager.GetResourceRegister().FindItem(FindResourceByType(type), &foundDescription) &&
+            if (EExtensionManager::instance().GetResourceRegister().FindItem(FindResourceByType(type), &foundDescription) &&
                 foundDescription.ImportFunction)
             {
-                auto data = foundDescription.ImportFunction({fileBuffer.Data<byte>(), fileBuffer.GetSizeInByte()});
-                if (data.Data)
-                {
-                    fExtensionManager.GetActiveScene()->GetResourceManager().RegisterResource(resourceFile.GetFileExtension(), resourcePath, data.Data, data.Size);
-                }
+                EExtensionManager::instance().GetActiveScene()->GetResourceManager().ImportResourceFromFile(resourceFile, foundDescription);
             }
             else
             {
@@ -180,23 +170,23 @@ void EApplication::RenderImGui()
 void EApplication::RegisterDefaultPanels() 
 {
     ERef<EUIPanel> resourcePanel = EMakeRef<EUIPanel>("Resource Panel");
-    resourcePanel->AddChild(EMakeRef<EResourceView>(&fExtensionManager.GetActiveScene()->GetResourceManager()));
+    resourcePanel->AddChild(EMakeRef<EResourceView>());
 
 
 
     ERef<EUIPanel> extensionPanel = EMakeRef<EUIPanel>("Extension Panel");
-    ERef<EExtensionView> extensionView = EMakeRef<EExtensionView>(&fExtensionManager);
+    ERef<EExtensionView> extensionView = EMakeRef<EExtensionView>();
     extensionPanel->AddChild(extensionView);
 
 
     ERef<EUIPanel> universalSceneView1 = EMakeRef<EUIPanel>("Basic Scene View 1");
-    universalSceneView1->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
+    universalSceneView1->AddChild(EMakeRef<EObjectView>());
     ERef<EUIPanel> universalSceneView2 = EMakeRef<EUIPanel>("Basic Scene View 2");
-    universalSceneView2->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
+    universalSceneView2->AddChild(EMakeRef<EObjectView>());
     ERef<EUIPanel> universalSceneView3 = EMakeRef<EUIPanel>("Basic Scene View 3");
-    universalSceneView3->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
+    universalSceneView3->AddChild(EMakeRef<EObjectView>());
     ERef<EUIPanel> universalSceneView4 = EMakeRef<EUIPanel>("Basic Scene View 4");
-    universalSceneView4->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
+    universalSceneView4->AddChild(EMakeRef<EObjectView>());
 
     fUIRegister.RegisterItem("Core", universalSceneView1);
     fUIRegister.RegisterItem("Core", universalSceneView2);
