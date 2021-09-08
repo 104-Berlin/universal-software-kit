@@ -33,9 +33,9 @@ namespace convert
     extern template E_API bool getter<Engine::EResourceLink>(const Engine::EStructProperty*, Engine::EResourceLink*);
 #else
     template <>
-    setter<Engine::EResourceLink>(Engine::EStructProperty*, const Engine::EResourceLink&);
+    bool setter<Engine::EResourceLink>(Engine::EStructProperty*, const Engine::EResourceLink&);
     template <>
-    getter<Engine::EResourceLink>(const Engine::EStructProperty*, Engine::EResourceLink*);
+    bool getter<Engine::EResourceLink>(const Engine::EStructProperty*, Engine::EResourceLink*);
 #endif
 }
 
