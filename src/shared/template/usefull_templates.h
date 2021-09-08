@@ -18,4 +18,4 @@ constexpr bool is_one_of()
 }
 
 template <typename T>
-constexpr bool is_primitive = is_one_of<T, int, unsigned int, u32, float, double, EString, bool>() || is_vector<T>::value;
+constexpr bool is_primitive = is_one_of<T, int, unsigned int, u32, float, double, EString, bool, u64, unsigned long long>() || is_vector<T>::value;

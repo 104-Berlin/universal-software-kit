@@ -89,12 +89,55 @@ namespace Engine {
         }
 
         /**
-         * Gets the items from a special extension. use "USK" for the default types
+         * Gets the items from a special extension. use "CORE" for the default types
          * @return List of items registered by the extension
          */
         const EVector<T>& GetItems(const EString& extensionName)
         {
             return fRegisteredItems[extensionName];
+        }
+
+        /**
+         * Finds an item with a callback function
+         * @param testFunction Callback to test the element for correctness
+         * @param outValue Pointer to put the found element
+         * @return Wether the element was found
+         */
+        bool FindItem(std::function<bool(const T&)> testFunction, T* outValue)
+        {
+            E_ASSERT(outValue);
+            
+            for (const T& element : GetAllItems())
+            {
+                if (testFunction(element))
+                {
+                    *outValue = element;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Finds an item with a callback function
+         * @param testFunction Callback to test the element for correctness
+         * @param extensionName If you want to search a specific extension
+         * @param outValue Pointer to put the found element
+         * @return Wether the element was found
+         */
+        bool FindItem(std::function<bool(const T&)> testFunction, const EString& extensionName, T* outValue)
+        {
+            E_ASSERT(outValue);
+
+            for (const T& element : GetItems(extensionName))
+            {
+                if (testFunction(element))
+                {
+                    *outValue = element;
+                    return true;
+                }
+            }
+            return false;
         }
 
         template <typename EventType, typename CB>

@@ -12,7 +12,7 @@ namespace Engine {
     class E_API ERegister
     {
     public:
-        using Entity = u32;
+        using Entity = u64;
         E_STORAGE_TYPE(ComponentCreateEvent, 
             (EValueDescription::t_ID, ValueId),
             (Entity, Handle)

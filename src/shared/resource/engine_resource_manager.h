@@ -2,60 +2,93 @@
 
 namespace Engine {
 
+
     struct EResourceDescription
     {   
-        using ImExFunction = std::function<byte*(const byte*)>;
+        struct ResBuffer
+        {
+            byte*   Data;
+            size_t  Size;
+        };
+        using ImExFunction = std::function<ResBuffer(const ResBuffer)>;
 
-
-        EVector<EString>    AccpetedFileEndings;
+        EString             ResourceName;
+        EVector<EString>    AcceptedFileEndings;
         ImExFunction        ImportFunction;
         ImExFunction        ExportFunction;
+
+        EResourceDescription() = default;
+        EResourceDescription(const EString& name, const EVector<EString>& acceptedFileEndings)
+            : ResourceName(name), AcceptedFileEndings(acceptedFileEndings)
+        {}
+    };
+
+    class FindResourceByType
+    {
+    private:
+        EString fType;
+    public:
+        FindResourceByType(const EString& type)
+            : fType(type)
+        {}
+
+        bool operator()(EResourceDescription other) const
+        {
+            return std::find(other.AcceptedFileEndings.begin(), other.AcceptedFileEndings.end(), fType) != other.AcceptedFileEndings.end();
+        }
     };
 
     struct EResourceData
     {
+        using t_ID = u64;
+
         EString Type;
-        EString Path;
+        EString Name;
+        EString PathToFile;
         byte*   Data;
         size_t  DataSize;
 
         EResourceData()
-            : Type(), Path(), Data(nullptr), DataSize(0)
+            : Type(), Name(), PathToFile(), Data(nullptr), DataSize(0)
         {
 
         }
 
-        EResourceData(EString type, EString path, byte* data, size_t dataSize)
+        EResourceData(const EString& type, const EString& name, byte* data, size_t dataSize)
+            : Type(type), Name(name), PathToFile()
         {
-            Type = type;
-            Path = path;
             Data = data;
             DataSize = dataSize;
         }
 
         EResourceData(const EResourceData&) = default;
 
-        template <typename T>
-        void Convert(T& inValue)
+        ~EResourceData()
         {
-            T::ResourceConvert(Data, DataSize, inValue);
+            if (Data)
+            {
+                delete Data;
+                Data = nullptr;
+            }
         }
     };
 
     class E_API EResourceManager
     {
     private:
-        EUnorderedMap<EString, EResourceData> fLoadedResources;
+        EUnorderedMap<EResourceData::t_ID, EResourceData*> fLoadedResources;
     public:
         EResourceManager();
         ~EResourceManager();
         
-        bool HasResource(const EString& path) const;
+        bool HasResource(const EResourceData::t_ID& id) const;
         void RegisterResource(const EString& type, const EString& path, byte* resourceData, size_t resourceDataSize);
 
-        EResourceData GetResource(const EString& path) const;
-        EVector<EResourceData> GetAllResource() const;
-        EVector<EResourceData> GetAllResource(const EString& type) const;
+        EResourceData* GetResource(const EResourceData::t_ID& id) const;
+        EVector<EResourceData*> GetAllResource() const;
+        EVector<EResourceData*> GetAllResource(const EString& type) const;
+
+        EResourceData::t_ID CreateNewId();
     };
 
 }

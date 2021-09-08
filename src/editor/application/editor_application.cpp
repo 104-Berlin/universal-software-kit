@@ -39,9 +39,6 @@ EApplication::EApplication()
         this->RegenerateMainMenuBar();
     });
     fExtensionManager.GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
-
-    std::cout << "VECTOR?" << is_vector<EString>::value << std::endl;
-    std::cout << getdsc::GetDescription<EString>().IsArray() << std::endl;
 }
 
 void EApplication::Start() 
@@ -86,7 +83,24 @@ void EApplication::RegenerateMainMenuBar()
             
             byte* data = (byte*) malloc(fileBuffer.GetSizeInByte());
             memcpy(data, fileBuffer.Data(), fileBuffer.GetSizeInByte());
-            fExtensionManager.GetActiveScene()->GetResourceManager().RegisterResource(resourceFile.GetFileExtension(), resourcePath,data, fileBuffer.GetSizeInByte());
+
+            EString type = resourceFile.GetFileExtension();
+            EResourceDescription foundDescription;
+            if (this->fExtensionManager.GetResourceRegister().FindItem(FindResourceByType(type), &foundDescription) &&
+                foundDescription.ImportFunction)
+            {
+                auto data = foundDescription.ImportFunction({fileBuffer.Data<byte>(), fileBuffer.GetSizeInByte()});
+                if (data.Data)
+                {
+                    fExtensionManager.GetActiveScene()->GetResourceManager().RegisterResource(resourceFile.GetFileExtension(), resourcePath, data.Data, data.Size);
+                }
+            }
+            else
+            {
+                // TODO: Show modal
+                E_ERROR("Could not find converter for resource with file ending " + type);
+            }
+
         }
     });
 
