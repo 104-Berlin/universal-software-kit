@@ -2,27 +2,39 @@
 
 
 
-#define E_CREATE_STRUCT_PROP1(type, name) type name; 
+#define E_CREATE_STRUCT_PROP1(type, name, ...) type name; 
 #define E_CREATE_STRUCT_PROP(nametype) EXPAND( EXPAND ( E_CREATE_STRUCT_PROP1 nametype ) )
 
 
 
-#define E_CREATE_STRUCT_DSC2(type, name) {E_STRINGIFY(name), ::Engine::getdsc::GetDescription<type>()},
+#define E_CREATE_STRUCT_DSC2(type, name, ...) {E_STRINGIFY(name), ::Engine::getdsc::GetDescription<type>()},
 #define E_CREATE_STRUCT_DSC(nametype) EXPAND( E_CREATE_STRUCT_DSC2 nametype )
 
-#define E_GET_FROM_PROP2(type, name) ::Engine::EProperty* EXPAND ( E_CONCATENATE(prop, name) ) = property->GetProperty(E_STRINGIFY(name));
+#define E_GET_FROM_PROP2(type, name, ...) ::Engine::EProperty* EXPAND ( E_CONCATENATE(prop, name) ) = property->GetProperty(E_STRINGIFY(name));
 #define E_GET_FROM_PROP(nametype) EXPAND( E_GET_FROM_PROP2 nametype )
 
-#define E_GET_FROM_PROP_CONST2(type, name) const ::Engine::EProperty* EXPAND ( E_CONCATENATE(prop, name) ) = property->GetProperty(E_STRINGIFY(name));
+#define E_GET_FROM_PROP_CONST2(type, name, ...) const ::Engine::EProperty* EXPAND ( E_CONCATENATE(prop, name) ) = property->GetProperty(E_STRINGIFY(name));
 #define E_GET_FROM_PROP_CONST(nametype) EXPAND( E_GET_FROM_PROP_CONST2 nametype )
 
-#define E_CHECK_NULL_AND2(type, name) EXPAND ( E_CONCATENATE(prop, name) ) &&
+#define E_CHECK_NULL_AND2(type, name, ...) EXPAND ( E_CONCATENATE(prop, name) ) &&
 #define E_CHECK_NULL_AND(typename) EXPAND ( E_CHECK_NULL_AND2 typename )
-#define E_CHECK_NULL_AND_LAST2(type, name) EXPAND ( E_CONCATENATE(prop, name) )
+#define E_CHECK_NULL_AND_LAST2(type, name, ...) EXPAND ( E_CONCATENATE(prop, name) )
 #define E_CHECK_NULL_AND_LAST(typename) EXPAND ( E_CHECK_NULL_AND_LAST2 typename )
 
+#define E_DEFAULT_CONSTRUCTUR2(type, name, ...) name = type(__VA_ARGS__);
+#define E_DEFAULT_CONSTRUCTUR(typename) EXPAND ( E_DEFAULT_CONSTRUCTUR2 typename )
 
-#define E_SET_PROPERTY2(type, s_name) {::Engine::EValueDescription valDsc = ::Engine::getdsc::GetDescription<type>();\
+#define E_COMPLETE_CONSTRUCTOR2(type, name, ...) name = EXPAND ( E_CONCATENATE(_, name) );
+#define E_COMPLETE_CONSTRUCTOR(typename) EXPAND ( E_COMPLETE_CONSTRUCTOR2 typename )
+
+#define E_CONSTRUCTOR_ARG2(type, name, ...) const type& EXPAND ( E_CONCATENATE(_, name) ),
+#define E_CONSTRUCTOR_ARG(typename) EXPAND ( E_CONSTRUCTOR_ARG2 typename )
+
+#define E_CONSTRUCTOR_ARG_L2(type, name, ...) const type& EXPAND ( E_CONCATENATE(_, name) )
+#define E_CONSTRUCTOR_ARG_LAST(typename) EXPAND ( E_CONSTRUCTOR_ARG_L2 typename )
+
+
+#define E_SET_PROPERTY2(type, s_name, ...) {::Engine::EValueDescription valDsc = ::Engine::getdsc::GetDescription<type>();\
                                     if constexpr (is_vector<type>::value)\
                                     {\
                                         if (valDsc.IsArray())\
@@ -49,7 +61,7 @@
 #define E_SET_PROPERTY(typename) EXPAND ( E_SET_PROPERTY2 typename )
 
 
-#define E_SET_SELF2(type, s_name) {::Engine::EValueDescription valDsc = ::Engine::getdsc::GetDescription<type>();\
+#define E_SET_SELF2(type, s_name, ...) {::Engine::EValueDescription valDsc = ::Engine::getdsc::GetDescription<type>();\
                                     if constexpr (is_vector<type>::value)\
                                     {\
                                         if (valDsc.IsArray())\
@@ -76,10 +88,10 @@
 #define E_SET_SELF(typename) EXPAND ( E_SET_SELF2 typename )
 
 
-#define E_CHECK_EQUEL2(type, name) name == other. name &&
+#define E_CHECK_EQUEL2(type, name, ...) name == other. name &&
 #define E_CHECK_EQUEL(typename) EXPAND (E_CHECK_EQUEL2 typename )
 
-#define E_CHECK_EQUEL_LAST2(type, name) name == other. name
+#define E_CHECK_EQUEL_LAST2(type, name, ...) name == other. name
 #define E_CHECK_EQUEL_LAST(typename) EXPAND (E_CHECK_EQUEL_LAST2 typename )
 
 
@@ -89,6 +101,14 @@
                                             EXPAND (E_LOOP_ARGS(E_CREATE_STRUCT_DSC, __VA_ARGS__))\
                                         });\
                                         \
+                                        name()\
+                                        {\
+                                            EXPAND ( E_LOOP_ARGS ( E_DEFAULT_CONSTRUCTUR, __VA_ARGS__ ) )\
+                                        }\
+                                        name ( EXPAND ( E_LOOP_ARGS_L( E_CONSTRUCTOR_ARG, __VA_ARGS__ ) ) )\
+                                        {\
+                                            EXPAND ( E_LOOP_ARGS ( E_COMPLETE_CONSTRUCTOR, __VA_ARGS__ ) )\
+                                        }\
                                         static bool ToProperty(const name & value, ::Engine::EStructProperty* property)\
                                         {\
                                             EXPAND( E_LOOP_ARGS(E_GET_FROM_PROP, __VA_ARGS__) ) \
@@ -119,6 +139,3 @@
                                     };
 
 
-
-
-#define E_STORAGE_TYPE(name, ...) EXPAND(E_STORAGE_STRUCT(name, __VA_ARGS__))

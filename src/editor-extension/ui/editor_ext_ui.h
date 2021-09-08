@@ -20,17 +20,17 @@ namespace Engine {
 
 namespace events {
 
-    E_STORAGE_TYPE(EMouseMoveEvent,
+    E_STORAGE_STRUCT(EMouseMoveEvent,
         (EVec2, Position),
         (EVec2, MouseDelta)
     )
 
-    E_STORAGE_TYPE(EMouseDownEvent,
+    E_STORAGE_STRUCT(EMouseDownEvent,
         (EVec2,   Position),
         (u32,     MouseButton)
     )
 
-    E_STORAGE_TYPE(EMouseDragEvent,
+    E_STORAGE_STRUCT(EMouseDragEvent,
         (EVec2,   Position),
         (EVec2,   MouseDelta),
         (u32,     MouseButton)
@@ -209,7 +209,7 @@ namespace events {
 
 
 namespace events {
-    E_STORAGE_TYPE(EButtonEvent,
+    E_STORAGE_STRUCT(EButtonEvent,
         (int, a)
     )
 }
@@ -222,7 +222,7 @@ namespace events {
         virtual bool OnRender() override;
     };
 
-    E_STORAGE_TYPE(ETextChangeEvent,
+    E_STORAGE_STRUCT(ETextChangeEvent,
         (EString, Value)
     )
 

@@ -30,6 +30,7 @@
 
 #include "event/engine_event_dispatcher.h"
 #include "resource/engine_resource_manager.h"
+#include "resource/engine_resource_storage_link.h"
 
 
 

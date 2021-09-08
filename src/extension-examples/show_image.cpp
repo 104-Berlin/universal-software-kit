@@ -7,6 +7,13 @@ using namespace Engine;
 using namespace Graphics;
 using namespace Renderer;
 
+static ERegister* activeScene;
+
+E_STORAGE_STRUCT(ImageLayer,
+    (bool, Visible),
+    (EResourceLink, resourceLink, "Image")
+)
+
 EResourceDescription::ResBuffer ImportImage(const EResourceDescription::ResBuffer data)
 {
     EResourceDescription::ResBuffer result;
@@ -15,6 +22,26 @@ EResourceDescription::ResBuffer ImportImage(const EResourceDescription::ResBuffe
     result.Size = x * y * 4;
     return result;
 }
+
+class ImageLayerView : public EUIField
+{
+public:
+    ImageLayerView()
+        : EUIField("ImageView")
+    {}
+
+    virtual bool OnRender() override
+    {
+        for (auto& property : activeScene->View(ImageLayer::_dsc))
+        {
+            ImageLayer layer;
+            if (property.second->GetValue<ImageLayer>(layer))
+            {
+                u64 resourceId = layer.resourceLink.ResourceId;
+            }
+        }
+    }
+};
 
 APP_ENTRY
 {
@@ -29,6 +56,8 @@ EXT_ENTRY
 {
     EResourceDescription imageDsc("Image",{"png", "jpeg", "bmp"});
     imageDsc.ImportFunction = &ImportImage;
+
+    activeScene = info.GetActiveScene();
 
     info.GetResourceRegister().RegisterItem(extensionName, imageDsc);
 }

@@ -9,7 +9,7 @@ using namespace Engine;
     int SomeValue;
 };*/
 
-E_STORAGE_TYPE(MyEvent, 
+E_STORAGE_STRUCT(MyEvent, 
     (int, SomeValue)
 )
 

@@ -13,6 +13,7 @@ add_library(Shared SHARED   file/engine_file_collection.cpp
                             register/engine_serializer.cpp
                             register/engine_deserializer.cpp
                             resource/engine_resource_manager.cpp
+                            resource/engine_resource_storage_link.cpp
                             logging/engine_logging.cpp)
 
 target_include_directories(Shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

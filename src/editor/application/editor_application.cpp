@@ -4,12 +4,12 @@ using namespace Editor;
 using namespace Graphics;
 using namespace Engine;
 
-E_STORAGE_TYPE(MySubType, 
+E_STORAGE_STRUCT(MySubType, 
     (double, SomeDouble),
     (int, SomeMoreInt)
 )
 
-E_STORAGE_TYPE(MyType, 
+E_STORAGE_STRUCT(MyType, 
     (int, SomeInteger),
     (int, Other),
     (EString, SomeString),

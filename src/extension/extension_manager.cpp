@@ -169,3 +169,9 @@ const EChaiContext& EExtensionManager::GetChaiContext() const
 {
     return fChaiScriptContext;
 }
+
+EExtensionManager& EExtensionManager::instance() 
+{
+    static EExtensionManager theManager;
+    return theManager;
+}

@@ -24,7 +24,7 @@ namespace Engine {
 #endif
     };
 
-    E_STORAGE_TYPE(EExtensionLoadedEvent,
+    E_STORAGE_STRUCT(EExtensionLoadedEvent,
         (EString, Extension)
     )
 
@@ -83,6 +83,7 @@ namespace Engine {
         EChaiContext& GetChaiContext();
         const EChaiContext& GetChaiContext() const;
 
+        static EExtensionManager& instance();
 
         template <typename EventType, typename CB>
         void AddEventListener(CB&& callback)

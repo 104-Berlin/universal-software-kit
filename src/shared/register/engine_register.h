@@ -13,12 +13,12 @@ namespace Engine {
     {
     public:
         using Entity = u64;
-        E_STORAGE_TYPE(ComponentCreateEvent, 
+        E_STORAGE_STRUCT(ComponentCreateEvent, 
             (EValueDescription::t_ID, ValueId),
             (Entity, Handle)
         )
 
-        E_STORAGE_TYPE(ValueChangeEvent,
+        E_STORAGE_STRUCT(ValueChangeEvent,
             (EString, Identifier),
             (Entity, Handle)
         )

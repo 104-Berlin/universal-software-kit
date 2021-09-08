@@ -2,7 +2,7 @@
 
 namespace Engine {
 
-    E_STORAGE_TYPE(ERegisterChangedEvent,
+    E_STORAGE_STRUCT(ERegisterChangedEvent,
         (EString, ExtensionName)
     )
 

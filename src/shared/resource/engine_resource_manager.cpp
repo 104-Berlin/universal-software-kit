@@ -63,7 +63,7 @@ EVector<EResourceData*> EResourceManager::GetAllResource(const EString& type) co
 EResourceData::t_ID EResourceManager::CreateNewId() 
 {
     EResourceData::t_ID result = 1;
-    while (HasResource(result))
+    while (HasResource(result) && result != 0)
     {
         result *= 3;
         result += 1;
