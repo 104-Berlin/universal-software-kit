@@ -2,7 +2,7 @@
 
 namespace Engine {
 
-    class EResourceLink
+    class E_API EResourceLink
     {
     public:
         EString Type;
