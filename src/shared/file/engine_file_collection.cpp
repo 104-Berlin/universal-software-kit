@@ -137,7 +137,7 @@ void EFileCollection::SetFromCompleteBuffer(ESharedBuffer buffer)
     }
 }
 
-void EFileCollection::WriteU32(u8* ptr, u32 value) const
+void EFileCollection::WriteU32(u8* ptr, u32 value)
 {
     ptr[0] = (u8)( ( value ) & 0xFF );
     ptr[1] = (u8)( ( value ) >> 8 );
@@ -145,7 +145,7 @@ void EFileCollection::WriteU32(u8* ptr, u32 value) const
     ptr[3] = (u8)( ( value >> 16 ) >> 8 );
 }
 
-void EFileCollection::WriteU64(u8* ptr, u64 value) const
+void EFileCollection::WriteU64(u8* ptr, u64 value) 
 {
     ptr[0] = (u8)( ( value ) & 0xFF );
     ptr[1] = (u8)( ( value ) >> 8 );

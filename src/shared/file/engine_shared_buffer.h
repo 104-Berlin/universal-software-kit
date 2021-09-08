@@ -56,7 +56,7 @@ namespace Engine {
 
             virtual void Delete()
             {
-                delete [] (T*)fData;
+                delete [] fData;
             }
 
             virtual void* Get()

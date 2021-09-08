@@ -344,7 +344,7 @@ namespace events {
         EUIImageView();
         ~EUIImageView();
 
-        void SetTextureData(byte* data, size_t width, size_t height);
+        void SetTextureData(u8* data, size_t width, size_t height);
 
         virtual bool OnRender() override;
     };

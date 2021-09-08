@@ -8,6 +8,8 @@ namespace Engine {
         static void ReadSceneFromJson(const EJson& json, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes);
 
         static void ReadPropertyFromJson(const EJson& json, EProperty* property);
+
+        static void ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes);
     };
 
 }

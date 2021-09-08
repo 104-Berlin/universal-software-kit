@@ -10,7 +10,7 @@ EResourceManager::EResourceManager()
 
 EResourceManager::~EResourceManager() 
 {
-    
+    Clear();
 }
 
 bool EResourceManager::HasResource(const EResourceData::t_ID& id) const
@@ -18,7 +18,17 @@ bool EResourceManager::HasResource(const EResourceData::t_ID& id) const
     return fLoadedResources.find(id) != fLoadedResources.end();
 }
 
-bool EResourceManager::ImportResource(const EString& name, const EResourceDescription& description, byte* rawData, size_t data_size) 
+bool EResourceManager::AddResource(EResourceData* data) 
+{
+    if (HasResource(data->ID))
+    {
+        return false;
+    }
+    fLoadedResources.insert({data->ID, data});
+    return true;
+}
+
+bool EResourceManager::ImportResource(const EString& name, const EResourceDescription& description, u8* rawData, size_t data_size) 
 {
     EResourceDescription::ResBuffer buffer;
     buffer.Data = rawData;
@@ -55,20 +65,29 @@ bool EResourceManager::ImportResourceFromFile(EFile& file, const EResourceDescri
 
 
 
-    byte* dataPtr = nullptr;
+    u8* dataPtr = nullptr;
     size_t dataSize = 0;
     if (description.ImportFunction)
     {
-        dataPtr = file.GetBuffer().Data<byte>();
+        dataPtr = file.GetBuffer().Data<u8>();
         dataSize = file_size;
     }
     else
     {
-        dataPtr = new byte[file_size];
+        dataPtr = new u8[file_size];
         memcpy(dataPtr, file.GetBuffer().Data(), file_size);
         dataSize = file_size;
     }
     return ImportResource(file.GetFileName(), description, dataPtr, dataSize);
+}
+
+void EResourceManager::Clear() 
+{
+    for (auto& entry : fLoadedResources)
+    {
+        delete entry.second;
+    }
+    fLoadedResources.clear();
 }
 
 EResourceData* EResourceManager::GetResource(const EResourceData::t_ID& path) const

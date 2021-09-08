@@ -7,15 +7,15 @@ namespace Engine {
     {   
         struct ResBuffer
         {
-            byte*   Data = nullptr;
+            u8*   Data = nullptr;
             size_t  Size = 0;
             
-            byte*   UserData = nullptr;
+            u8*   UserData = nullptr;
             size_t  UserDataSize = 0;
         };
         struct RawBuffer
         {
-            byte* Data = nullptr;
+            u8* Data = nullptr;
             size_t Size = 0;
         };
         using ImpFunction = std::function<ResBuffer(const RawBuffer)>;
@@ -55,11 +55,10 @@ namespace Engine {
         EString Type;
         EString Name;
         EString PathToFile;
-        byte*   Data;
-        size_t  DataSize;
-        byte*   UserData;
-    private:
-        size_t  UserDataSize;
+        u8*   Data;
+        u64     DataSize;
+        u8*   UserData;
+        u64     UserDataSize;
     public:
 
         EResourceData(t_ID id = 0)
@@ -68,7 +67,7 @@ namespace Engine {
             E_ASSERT_M(id, "Invalid id for resource data. Id cant be 0!");
         }
 
-        EResourceData(t_ID id, const EString& type, const EString& name, byte* data, size_t dataSize)
+        EResourceData(t_ID id, const EString& type, const EString& name, u8* data, size_t dataSize)
             : ID(id), Type(type), Name(name), PathToFile(), UserData(nullptr), UserDataSize(0)
         {
             E_ASSERT_M(id, "Invalid id for resource data. Id cant be 0!");
@@ -94,11 +93,11 @@ namespace Engine {
             {
                 delete[] UserData;
             }
-            UserData = new byte[sizeof(T)];
+            UserData = new u8[sizeof(T)];
             UserDataSize = sizeof(T);
         }
 
-        void SetUserData(byte* data, size_t data_size)
+        void SetUserData(u8* data, size_t data_size)
         {
             E_ASSERT(data);
             if (UserData)
@@ -116,7 +115,7 @@ namespace Engine {
             return static_cast<T*>(UserData);
         }
 
-        const byte* GetUserData() const
+        const u8* GetUserData() const
         {
             return UserData;
         }
@@ -131,9 +130,12 @@ namespace Engine {
         ~EResourceManager();
         
         bool HasResource(const EResourceData::t_ID& id) const;
-        bool ImportResource(const EString& name, const EResourceDescription& description, byte* rawData, size_t data_size);
+        bool AddResource(EResourceData* data); // Delete the Resource data if function returns false!!
+        bool ImportResource(const EString& name, const EResourceDescription& description, u8* rawData, size_t data_size);
         bool ImportResourceFromFile(const EString& filePath, const EResourceDescription& description);
         bool ImportResourceFromFile(EFile& file, const EResourceDescription& description);
+
+        void Clear();
         
 
         EResourceData* GetResource(const EResourceData::t_ID& id) const;

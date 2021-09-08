@@ -399,7 +399,7 @@ EUIImageView::~EUIImageView()
     delete fTexture;
 }
 
-void EUIImageView::SetTextureData(byte* data, size_t width, size_t height) 
+void EUIImageView::SetTextureData(u8* data, size_t width, size_t height) 
 {
     fTexture->SetData(data, width, height);
 }

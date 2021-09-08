@@ -136,3 +136,61 @@ void EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
         }
     }
 }
+
+void EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes) 
+{
+    EFileCollection fileCollection;
+    fileCollection.SetFromCompleteBuffer(buffer);
+
+    // Load resource
+    saveToScene->GetResourceManager().Clear();
+
+    EJson sceneJson = EJson::object();
+    for (const auto& entry : fileCollection)
+    {
+        if (entry.first == "CORE/scene.json")
+        {
+            EString jsonString = EString(entry.second.Data<char>());
+            
+            sceneJson = EJson::parse(jsonString);
+            continue;
+        }
+
+
+        const u8* pointer = entry.second.Data<u8>();
+
+        EString type = EString((char*)pointer);
+        pointer += type.length() + 1;
+
+        EResourceData::t_ID id = *(EResourceData::t_ID*)pointer;
+        pointer += sizeof(EResourceData::t_ID);
+        
+        u64 dataSize = *(u64*)pointer;
+        pointer += sizeof(u64);
+
+        u8* resourceData = new u8[dataSize];
+        memcpy(resourceData, pointer, dataSize);
+        pointer += dataSize;
+
+        u64 userDataSize = *(u64*)pointer;
+        u8* userData = nullptr;
+        if (userDataSize > 0)
+        {
+            pointer += sizeof(u64);
+
+            userData = new u8[userDataSize];
+            memcpy(userData, pointer, userDataSize);
+        }
+
+        EFile file(entry.first);
+        EResourceData* finalResourceData = new EResourceData(id, type, file.GetFileName(), resourceData, dataSize);
+        finalResourceData->SetUserData(userData, userDataSize);
+        if (!saveToScene->GetResourceManager().AddResource(finalResourceData))
+        {
+            E_ERROR("Could not add resource. Resource with same ids allready exist!");
+            delete finalResourceData;
+        }
+    }
+
+    ReadSceneFromJson(sceneJson, saveToScene, registeredTypes);
+}

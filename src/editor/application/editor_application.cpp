@@ -54,9 +54,12 @@ void EApplication::RegenerateMainMenuBar()
     ERef<EUIField> saveScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Save"));
     saveScene->AddEventListener<events::EButtonEvent>([this](){
         EString saveToPath = Wrapper::SaveFileDialog("Save To", {"esc"});
-        EJson json = ESerializer::WriteSceneToJson(EExtensionManager::instance().GetActiveScene());
-        EFile file(saveToPath);
-        file.SetFileAsString(json.dump());
+        if (!saveToPath.empty())
+        {
+            EFile file(saveToPath);
+            file.SetFileBuffer(ESerializer::WriteFullSceneBuffer(EExtensionManager::instance().GetActiveScene()));
+            file.SaveBufferToDisk();
+        }
     });
     ERef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open..."));
     openScene->AddEventListener<events::EButtonEvent>([this](){
@@ -64,10 +67,10 @@ void EApplication::RegenerateMainMenuBar()
         if (openScene.size() > 0)
         {
             EFile sceneFile(openScene[0]);
-            EJson sceneJson = EJson::parse(sceneFile.GetFileAsString());
-            if (!sceneJson.is_null())
+            sceneFile.LoadToMemory();
+            if (!sceneFile.GetBuffer().IsNull())
             {
-                EDeserializer::ReadSceneFromJson(sceneJson, EExtensionManager::instance().GetActiveScene(), EExtensionManager::instance().GetTypeRegister().GetAllItems());
+                EDeserializer::ReadSceneFromFileBuffer(sceneFile.GetBuffer(), EExtensionManager::instance().GetActiveScene(), EExtensionManager::instance().GetTypeRegister().GetAllItems());
             }
         }
     });

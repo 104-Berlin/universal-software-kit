@@ -33,7 +33,7 @@ EResourceDescription::ResBuffer ImportImage(const EResourceDescription::RawBuffe
     userData->height = y;
     userData->channels = 4;//n; ?
 
-    result.UserData = (byte*) userData;
+    result.UserData = (u8*) userData;
     result.UserDataSize = sizeof(ImageUserData);
 
     return result;
@@ -48,6 +48,12 @@ public:
         : EUIField("ImageView")
     {
         activeScene->AddComponentCreateEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
+            
+            EStructProperty* imageLayer = activeScene->GetComponent(handle, ImageLayer::_dsc);
+            if (imageLayer)
+            {
+                convert::setter<ImageLayer>(imageLayer, ImageLayer());
+            }
             ERef<EUIImageView> newImageView = EMakeRef<EUIImageView>();
             newImageView->SetSize(100, 100);
             fImageViews[handle] = newImageView;

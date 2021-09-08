@@ -49,9 +49,9 @@ namespace Engine {
          */
         void SetFromCompleteBuffer(ESharedBuffer buffer);
 
-    private:
-        void WriteU32(u8* ptr, u32 value) const;
-        void WriteU64(u8* ptr, u64 value) const;
+    public:
+        static void WriteU32(u8* ptr, u32 value);
+        static void WriteU64(u8* ptr, u64 value);
     };
 
 }
