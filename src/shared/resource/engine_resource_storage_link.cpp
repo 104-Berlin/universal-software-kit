@@ -1,13 +1,12 @@
 #include "engine.h"
 #include "prefix_shared.h"
 
-    using namespace Engine;
+Engine::EResourceLink::EResourceLink(const EString& type) 
+	: Type(type)
+{
 	
-		Engine::EResourceLink::EResourceLink(const EString& type) 
-			: fType(typ)
-		{
-			
-		}
+}
+
 #ifndef EWIN
 template <>
 #endif
