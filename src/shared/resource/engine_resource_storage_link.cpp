@@ -22,6 +22,8 @@ Engine::EValueDescription Engine::getdsc::GetDescription<Engine::EResourceLink>(
 template <>
 bool convert::setter<Engine::EResourceLink>(Engine::EStructProperty* property, const Engine::EResourceLink& resourceLink)
 {
+	using namespace Engine;
+	
 	EValueProperty<EString>* type = (EValueProperty<EString>*)property->GetProperty("Type");
 	EValueProperty<u64>* id = (EValueProperty<u64>*)property->GetProperty("ResourceID");
 	if (id)
