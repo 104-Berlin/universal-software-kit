@@ -8,9 +8,7 @@ namespace Engine {
         EString Type;
         EResourceData::t_ID ResourceId;
 
-        EResourceLink(const EString& type = "")
-            : Type(type), ResourceId(0)
-        {}
+        EResourceLink(const EString& type = "");
         ~EResourceLink() = default;
 
         bool operator==(const EResourceLink& other) const
