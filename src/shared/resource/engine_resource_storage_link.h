@@ -11,6 +11,7 @@ namespace Engine {
         EResourceLink(const EString& type = "")
             : Type(type), ResourceId(0)
         {}
+        ~EResourceLink() = default;
 
         bool operator==(const EResourceLink& other) const
         {
