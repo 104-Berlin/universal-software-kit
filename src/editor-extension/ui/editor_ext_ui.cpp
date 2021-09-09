@@ -29,6 +29,16 @@ ERef<EUIField> EUIField::AddChild(const ERef<EUIField>& child)
     return fChildren.back();
 }
 
+void EUIField::RemoveChild(const EWeakRef<EUIField>& child) 
+{
+    if (child.expired()) {return;}
+    EVector<ERef<EUIField>>::iterator foundChild = std::find(fChildren.begin(), fChildren.end(), child.lock());
+    if (foundChild != fChildren.end())
+    {
+        fChildren.erase(foundChild);
+    }
+}
+
 void EUIField::Clear() 
 {
     fChildren.clear();
@@ -392,6 +402,7 @@ EUIImageView::EUIImageView()
     : EUIField("ImageView")
 {
     fTexture = Graphics::Wrapper::CreateTexture();
+    fTexture->SetTextureFormat(Graphics::GTextureFormat::RGBA8);
 }
 
 EUIImageView::~EUIImageView() 

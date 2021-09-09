@@ -60,7 +60,7 @@ bool EResourceView::OnRender()
     ImGui::BeginChild("ResourceDetail");
     if (selectedResource)
     {
-        ImGui::LabelText("ID: ", "%d", selectedResource);
+        ImGui::LabelText("ID: ", "%llu", selectedResource);
     }
     ImGui::EndChild();
     return true;

@@ -18,6 +18,11 @@ namespace Engine {
             (Entity, Handle)
         )
 
+        E_STORAGE_STRUCT(ComponentDeleteEvent,
+            (EValueDescription::t_ID, ValueId),
+            (Entity, Handle)
+        )
+
         E_STORAGE_STRUCT(ValueChangeEvent,
             (EString, Identifier),
             (Entity, Handle)
@@ -89,6 +94,17 @@ namespace Engine {
         }
 
         template <typename Callback>
+        void AddComponentDeleteEventListener(const EValueDescription& description, Callback&& cb)
+        {
+            fEventDispatcher.Connect<ComponentDeleteEvent>([cb, description](ComponentDeleteEvent event){
+                if (description.GetId() == event.ValueId)
+                {
+                    std::invoke(cb, event.Handle);
+                }
+            });
+        }
+
+        template <typename Callback>
         void AddEntityChangeEventListener(const EString& valueIdent, Callback&& cb)
         {
             fEventDispatcher.Connect<ValueChangeEvent>([cb, valueIdent](ValueChangeEvent event){
@@ -99,6 +115,7 @@ namespace Engine {
                 }
             });
         }
+
     };
 
 

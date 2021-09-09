@@ -46,6 +46,7 @@ void ERegister::DestroyEntity(Entity entity)
     }
     for (auto& entry : fComponentStorage)
     {
+        fEventDispatcher.Post<ComponentDeleteEvent>({entry.first, entity});
         delete entry.second[entity];
         entry.second.erase(entity);
     }
@@ -102,8 +103,11 @@ void ERegister::RemoveComponent(Entity entity, const EValueDescription& componen
     E_ASSERT_M(componentId.Valid(), "ERROR: Invalid value descrition!");
     if (!IsAlive(entity)) { return; }
     if (!HasComponent(entity, componentId)) { return; }
+
     delete fComponentStorage[componentId.GetId()][entity];
     fComponentStorage[componentId.GetId()].erase(entity);
+
+    fEventDispatcher.Post<ComponentDeleteEvent>({componentId.GetId(), entity});
 }
 
 bool ERegister::HasComponent(Entity entity, const EValueDescription& componentId) 

@@ -114,6 +114,12 @@ namespace events {
         ERef<EUIField> AddChild(const ERef<EUIField>& child);
 
         /**
+         * Removes a child from the list
+         * @param child Weak pointer to field which gets deleted.
+         */
+        void RemoveChild(const EWeakRef<EUIField>& child);
+
+        /**
          * Removes all childre
          */
         void Clear();

@@ -24,14 +24,20 @@ E_STORAGE_STRUCT(ImageLayer,
 EResourceDescription::ResBuffer ImportImage(const EResourceDescription::RawBuffer data)
 {
     EResourceDescription::ResBuffer result;
+
     int x, y, n;
-    result.Data = stbi_load_from_memory(data.Data, data.Size, &x, &y, &n, 4);
-    result.Size = x * y * 4;
+    stbi_uc* imageData = stbi_load_from_memory(data.Data, data.Size, &x, &y, &n, 0);
+
+    result.Data = new u8[x * y * n];
+    memcpy(result.Data, (u8*)imageData, x * y * n);
+    result.Size = x * y * n;
+
+    stbi_image_free(imageData);
 
     ImageUserData* userData = new ImageUserData;
     userData->width = x;
     userData->height = y;
-    userData->channels = 4;//n; ?
+    userData->channels = n;
 
     result.UserData = (u8*) userData;
     result.UserDataSize = sizeof(ImageUserData);
@@ -55,9 +61,18 @@ public:
                 convert::setter<ImageLayer>(imageLayer, ImageLayer());
             }
             ERef<EUIImageView> newImageView = EMakeRef<EUIImageView>();
-            newImageView->SetSize(100, 100);
+            newImageView->SetSize(250, 250);
             fImageViews[handle] = newImageView;
             AddChild(newImageView);
+        });
+
+        activeScene->AddComponentDeleteEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
+            EUnorderedMap<ERegister::Entity, EWeakRef<EUIImageView>>::iterator it = fImageViews.find(handle);
+            if (it != fImageViews.end())
+            {
+                RemoveChild(it->second);
+                fImageViews.erase(it);
+            }
         });
 
         activeScene->AddEntityChangeEventListener("ImageLayer.resourceLink",[this](ERegister::Entity handle, const EString&){
