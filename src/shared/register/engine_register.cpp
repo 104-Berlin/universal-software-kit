@@ -65,6 +65,7 @@ void ERegister::Clear()
     {
         for (auto& storage : entry.second)
         {
+            fEventDispatcher.Post<ComponentDeleteEvent>({entry.first, storage.first});
             delete storage.second;
         }
     }
