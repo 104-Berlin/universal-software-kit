@@ -249,9 +249,9 @@ void EObjectView::RenderInteger(Engine::EValueProperty<u32>* storage)
 
 void EObjectView::RenderInteger(Engine::EValueProperty<u64>* storage) 
 {
-    u64 value = storage->GetValue();
+    int value = (int) storage->GetValue();
     ImGui::PushID(storage);
-    ImGui::InputInt(storage->GetPropertyName().c_str(), (int*) &value);
+    ImGui::InputInt(storage->GetPropertyName().c_str(), &value);
     ImGui::PopID();
     storage->SetValue(value);
 }
