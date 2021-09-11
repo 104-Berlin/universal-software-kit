@@ -29,3 +29,8 @@ void EEventDispatcher::Update()
     }
     fPostedEvents.clear();
 }
+
+void EEventDispatcher::DisconnectEvents() 
+{
+    fRegisteredCallbacks.clear();
+}

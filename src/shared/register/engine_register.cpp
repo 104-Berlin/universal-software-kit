@@ -12,6 +12,18 @@ ERegister::ERegister(const EString& name)
     
 }
 
+Engine::ERegister::~ERegister() 
+{
+    for (auto& entry : fComponentStorage)
+    {
+        for (auto& values : entry.second)
+        {
+            delete values.second;
+        }
+    }
+    fComponentStorage.clear();
+}
+
 
 EResourceManager& ERegister::GetResourceManager() 
 {
@@ -134,6 +146,11 @@ EStructProperty* ERegister::GetComponent(Entity entity, const EValueDescription:
     if (!HasComponent(entity, componentId)) { return nullptr; }
 
     return fComponentStorage[componentId][entity];
+}
+
+void Engine::ERegister::DisconnectEvents() 
+{
+    fEventDispatcher.DisconnectEvents();
 }
 
 EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identifier) 

@@ -18,7 +18,8 @@ struct ImageUserData
 
 E_STORAGE_STRUCT(ImageLayer,
     (bool, Visible),
-    (EResourceLink, resourceLink, "Image")
+    (EResourceLink, resourceLink, "Image"),
+    (EString, SomeString)
 )
 
 EResourceDescription::ResBuffer ImportImage(const EResourceDescription::RawBuffer data)
@@ -96,9 +97,6 @@ APP_ENTRY
     ERef<EUIPanel> showPanel = EMakeRef<EUIPanel>("Show Panel");
     showPanel->AddChild(EMakeRef<ImageLayerView>());
     info.PanelRegister->RegisterItem(extensionName, showPanel);
-    
-
-    
 }
 
 EXT_ENTRY

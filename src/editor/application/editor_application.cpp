@@ -26,6 +26,7 @@ EApplication::EApplication()
         {
             EAppInit init;
             init.PanelRegister = &fUIRegister;
+            E_INFO("Running APP_INIT for plugtin \"" + extension->GetName() + "\"");
             entry(extension->GetName().c_str(), init);
         }
         auto initImGui = (void(*)())extension->GetFunction("InitImGui");
@@ -33,6 +34,10 @@ EApplication::EApplication()
         {
             initImGui();
         }
+    });
+
+    EExtensionManager::instance().AddEventListener<EExtensionUnloadEvent>([this](EExtensionUnloadEvent event){
+        fUIRegister.ClearRegisteredItems(event.ExtensionName);
     });
 
     fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
@@ -70,6 +75,7 @@ void EApplication::RegenerateMainMenuBar()
             sceneFile.LoadToMemory();
             if (!sceneFile.GetBuffer().IsNull())
             {
+                EExtensionManager::instance().Reload();
                 EDeserializer::ReadSceneFromFileBuffer(sceneFile.GetBuffer(), EExtensionManager::instance().GetActiveScene(), EExtensionManager::instance().GetTypeRegister().GetAllItems());
             }
         }

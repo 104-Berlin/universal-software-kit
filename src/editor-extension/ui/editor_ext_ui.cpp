@@ -249,12 +249,12 @@ EUIViewport::~EUIViewport()
     }
 }
 
-Graphics::GScene& EUIViewport::GetScene() 
+Renderer::RScene& EUIViewport::GetScene() 
 {
     return fScene;
 }
 
-const Graphics::GScene& EUIViewport::GetScene() const
+const Renderer::RScene& EUIViewport::GetScene() const
 {
     return fScene;
 }

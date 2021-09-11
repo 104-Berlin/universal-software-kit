@@ -210,7 +210,7 @@ namespace events {
          * @param callbackFunction Function which will be invoked with given EventType when event is triggered
          */
         template <typename EventType, typename CB>
-        void AddEventListener(CB&& callbackFunction)
+        void AddEventListener(CB callbackFunction)
         {
             fEventDispatcher.Connect<EventType>(callbackFunction);
         }
@@ -260,10 +260,10 @@ namespace events {
 
         Renderer::RRenderer3D fRenderer;
         Renderer::RCamera fCamera;
-        Graphics::GScene fScene;
+        Renderer::RScene fScene;
     public:
-        Graphics::GScene& GetScene();
-        const Graphics::GScene& GetScene() const;
+        Renderer::RScene& GetScene();
+        const Renderer::RScene& GetScene() const;
 
         const Renderer::RCamera& GetCamera() const;
         Renderer::RCamera& GetCamera();

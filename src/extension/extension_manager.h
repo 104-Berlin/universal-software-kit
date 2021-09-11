@@ -14,9 +14,10 @@ namespace Engine {
         void    InitImGui();
 
         const EString& GetName() const;
-
+        const EString& GetFilePath() const;
     private:
         EString fExtensionName;
+        EString fFilePath;
 #ifdef EWIN
         HINSTANCE fHandle;
 #else
@@ -26,6 +27,11 @@ namespace Engine {
 
     E_STORAGE_STRUCT(EExtensionLoadedEvent,
         (EString, Extension)
+    )
+
+    E_STORAGE_STRUCT(EExtensionUnloadEvent,
+        (EString, ExtensionName),
+        (EString, PathToExtension)
     )
 
     class E_EXTAPI EExtensionManager
@@ -63,6 +69,12 @@ namespace Engine {
         EVector<EExtension*> GetLoadedExtensions();
 
         /**
+         * Check if an Extension is Loaded
+         * @return IsLoaded
+         */
+        bool IsLoaded(const EString& extensionName);
+
+        /**
          * @return The active scene
          */
         ERegister* GetActiveScene() const;
@@ -84,6 +96,13 @@ namespace Engine {
         const EChaiContext& GetChaiContext() const;
 
         static EExtensionManager& instance();
+
+
+        void Reload();
+        void ReloadExtension(const EString& extensionName);
+        void ReloadExtension(EExtension* extension);
+
+        void UnloadExtension(EExtension* extension);
 
         template <typename EventType, typename CB>
         void AddEventListener(CB&& callback)

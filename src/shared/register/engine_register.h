@@ -38,6 +38,7 @@ namespace Engine {
         EVector<Entity>     fDeadEntites;
     public:
         ERegister(const EString& name = "Unknown");
+        ~ERegister();
         
         EResourceManager& GetResourceManager();
 
@@ -83,7 +84,7 @@ namespace Engine {
 
 
         template <typename Callback>
-        void AddComponentCreateEventListener(const EValueDescription& description, Callback&& cb)
+        void AddComponentCreateEventListener(const EValueDescription& description, Callback cb)
         {
             fEventDispatcher.Connect<ComponentCreateEvent>([cb, description](ComponentCreateEvent event){
                 if (event.ValueId == description.GetId())
@@ -94,7 +95,7 @@ namespace Engine {
         }
 
         template <typename Callback>
-        void AddComponentDeleteEventListener(const EValueDescription& description, Callback&& cb)
+        void AddComponentDeleteEventListener(const EValueDescription& description, Callback cb)
         {
             fEventDispatcher.Connect<ComponentDeleteEvent>([cb, description](ComponentDeleteEvent event){
                 if (description.GetId() == event.ValueId)
@@ -105,7 +106,7 @@ namespace Engine {
         }
 
         template <typename Callback>
-        void AddEntityChangeEventListener(const EString& valueIdent, Callback&& cb)
+        void AddEntityChangeEventListener(const EString& valueIdent, Callback cb)
         {
             fEventDispatcher.Connect<ValueChangeEvent>([cb, valueIdent](ValueChangeEvent event){
                 if (event.Identifier.length() < valueIdent.length()) {return;}
@@ -116,6 +117,10 @@ namespace Engine {
             });
         }
 
+
+        // Do these between extension deletion and scene delete. 
+        // If a lambda is defined in an extension the event dispatcher cant clean up the lambda, because the symbols are not loaded anymore
+        void DisconnectEvents();
     };
 
 
