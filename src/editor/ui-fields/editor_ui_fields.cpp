@@ -16,17 +16,35 @@ EExtensionView::~EExtensionView()
 
 bool EExtensionView::OnRender() 
 {
-    EVector<EExtension*> loadedExtensions = EExtensionManager::instance().GetLoadedExtensions();
-    for (EExtension* ext : loadedExtensions)
     {
-        const EString& name = ext->GetName();
-        ImGui::Text("%s", name.c_str());
-        ImGui::SameLine();
-        if (ImGui::Button("Reload"))
+        EVector<EExtension*> loadedExtensions = EExtensionManager::instance().GetLoadedExtensions();
+        for (EExtension* ext : loadedExtensions)
         {
-            // Load the extension
-            E_INFO("reload not implemented for extensions!");
+            EString name = ext->GetName();
+            EString fullPath = ext->GetFilePath();
+            ImGui::Text("%s", name.c_str());
+            ImGui::SameLine();
+            if (ImGui::Button("Reload"))
+            {
+                EExtensionManager::instance().ReloadExtension(ext);
+                // The ext ptr is invald after here. 
+                break; // For now we just break. Cases other extensions to disappear for one frame 
+            }
+            ImGui::SameLine();
+            bool isLoaded = EExtensionManager::instance().IsLoaded(name);
+            if (ImGui::Checkbox("Loaded", &isLoaded))
+            {
+                if (isLoaded)
+                {
+                    EExtensionManager::instance().LoadExtension(fullPath);
+                }
+                else
+                {
+                    EExtensionManager::instance().UnloadExtension(ext);
+                }
+            }
         }
+        // Refetch the loaded extensions. If the reload was clicked one of the pointers is invalid. Refetching them solves the problem!
     }
     if (ImGui::Button("Load Extension"))
     {
