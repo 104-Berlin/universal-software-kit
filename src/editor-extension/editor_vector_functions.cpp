@@ -101,6 +101,7 @@ bool convert::getter<EVec4>(const Engine::EStructProperty* property, EVec4* outV
 	return false;
 }
 
+
 #ifndef EWIN
 template <>
 #endif
@@ -108,6 +109,7 @@ Engine::EValueDescription Engine::getdsc::GetDescription<EVec2>()
 {
 	return EVec2_dsc;
 }
+
 
 #ifndef EWIN
 template <>

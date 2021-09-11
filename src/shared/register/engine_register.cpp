@@ -12,6 +12,18 @@ ERegister::ERegister(const EString& name)
     
 }
 
+Engine::ERegister::~ERegister() 
+{
+    for (auto& entry : fComponentStorage)
+    {
+        for (auto& values : entry.second)
+        {
+            delete values.second;
+        }
+    }
+    fComponentStorage.clear();
+}
+
 
 EResourceManager& ERegister::GetResourceManager() 
 {
@@ -46,6 +58,7 @@ void ERegister::DestroyEntity(Entity entity)
     }
     for (auto& entry : fComponentStorage)
     {
+        fEventDispatcher.Post<ComponentDeleteEvent>({entry.first, entity});
         delete entry.second[entity];
         entry.second.erase(entity);
     }
@@ -64,6 +77,7 @@ void ERegister::Clear()
     {
         for (auto& storage : entry.second)
         {
+            fEventDispatcher.Post<ComponentDeleteEvent>({entry.first, storage.first});
             delete storage.second;
         }
     }
@@ -77,11 +91,11 @@ bool ERegister::IsAlive(Entity entity)
     return std::find(fAliveEntites.begin(), fAliveEntites.end(), entity) != fAliveEntites.end();
 }
 
-void ERegister::InsertComponent(Entity entity, const EValueDescription& description) 
+EStructProperty* ERegister::AddComponent(Entity entity, const EValueDescription& description) 
 {
     E_ASSERT_M(description.Valid(), "ERROR: Invalid value descrition!");
     E_ASSERT_M(description.GetType() == EValueType::STRUCT, "Component can only be inserted as struct");
-    if (!IsAlive(entity)) { return; }
+    if (!IsAlive(entity)) { return nullptr; }
 
     if (!HasComponent(entity, description.GetId()))
     {
@@ -94,6 +108,7 @@ void ERegister::InsertComponent(Entity entity, const EValueDescription& descript
 
         fEventDispatcher.Post<ComponentCreateEvent>({description.GetId(), entity});
     }
+    return nullptr;
 }
 
 void ERegister::RemoveComponent(Entity entity, const EValueDescription& componentId)
@@ -101,8 +116,11 @@ void ERegister::RemoveComponent(Entity entity, const EValueDescription& componen
     E_ASSERT_M(componentId.Valid(), "ERROR: Invalid value descrition!");
     if (!IsAlive(entity)) { return; }
     if (!HasComponent(entity, componentId)) { return; }
+
     delete fComponentStorage[componentId.GetId()][entity];
     fComponentStorage[componentId.GetId()].erase(entity);
+
+    fEventDispatcher.Post<ComponentDeleteEvent>({componentId.GetId(), entity});
 }
 
 bool ERegister::HasComponent(Entity entity, const EValueDescription& componentId) 
@@ -128,6 +146,11 @@ EStructProperty* ERegister::GetComponent(Entity entity, const EValueDescription:
     if (!HasComponent(entity, componentId)) { return nullptr; }
 
     return fComponentStorage[componentId][entity];
+}
+
+void Engine::ERegister::DisconnectEvents() 
+{
+    fEventDispatcher.DisconnectEvents();
 }
 
 EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identifier) 

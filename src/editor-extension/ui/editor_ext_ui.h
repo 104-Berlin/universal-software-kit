@@ -20,17 +20,17 @@ namespace Engine {
 
 namespace events {
 
-    E_STORAGE_TYPE(EMouseMoveEvent,
+    E_STORAGE_STRUCT(EMouseMoveEvent,
         (EVec2, Position),
         (EVec2, MouseDelta)
     )
 
-    E_STORAGE_TYPE(EMouseDownEvent,
+    E_STORAGE_STRUCT(EMouseDownEvent,
         (EVec2,   Position),
         (u32,     MouseButton)
     )
 
-    E_STORAGE_TYPE(EMouseDragEvent,
+    E_STORAGE_STRUCT(EMouseDragEvent,
         (EVec2,   Position),
         (EVec2,   MouseDelta),
         (u32,     MouseButton)
@@ -67,6 +67,23 @@ namespace events {
         bool fDirty;
 
         /**
+         * Width of the field.
+         * If 0 default size will be calculated.
+         */
+        float fWidthOverride;
+
+        /**
+         * Height of the field.
+         * If 0 default size will be calculated.
+         */
+        float fHeightOverride;
+
+        /**
+         * Final size after rendering
+         */
+        EVec2 fCalculatedSize;
+
+        /**
          * A List of all Children. These will be rendered, if the OnRender funtion returns true and this Field is visible
          */
         EVector<ERef<EUIField>> fChildren;
@@ -95,6 +112,12 @@ namespace events {
          * @return The added child
          */
         ERef<EUIField> AddChild(const ERef<EUIField>& child);
+
+        /**
+         * Removes a child from the list
+         * @param child Weak pointer to field which gets deleted.
+         */
+        void RemoveChild(const EWeakRef<EUIField>& child);
 
         /**
          * Removes all childre
@@ -143,12 +166,51 @@ namespace events {
         const EString& GetLabel() const;
 
         /**
+         * Sets the size of the Field.
+         * @param width If 0 width will get calculated automatically!
+         * @param height If 0 height will get calculated automatically!
+         */
+        void SetSize(float width, float height);
+
+        /**
+         * Sets the size of the Field.
+         * @param size If one acis equal 0, the size for this axis will get calculated automatically!
+         */
+        void SetSize(const EVec2& size);
+
+
+        /** Sets width of field
+         * @param If 0 width will get calculated automatically!
+         */
+        void SetWidth(float width);
+
+        /** Sets height of field
+         * @param If 0 height will get calculated automatically!
+         */
+        void SetHeight(float height);
+
+        /**
+         * @return Size of the Field
+         */
+        EVec2 GetSize() const;
+
+        /**
+         * @return Width of the Field
+         */
+        float GetWidth() const;
+        /**
+         * @return Height of the Field
+         */
+        float GetHeight() const;
+
+
+        /**
          * Adds a listener to specified EventType
          * @param EventType typename of one of the UI Event structs
          * @param callbackFunction Function which will be invoked with given EventType when event is triggered
          */
         template <typename EventType, typename CB>
-        void AddEventListener(CB&& callbackFunction)
+        void AddEventListener(CB callbackFunction)
         {
             fEventDispatcher.Connect<EventType>(callbackFunction);
         }
@@ -198,10 +260,10 @@ namespace events {
 
         Renderer::RRenderer3D fRenderer;
         Renderer::RCamera fCamera;
-        Graphics::GScene fScene;
+        Renderer::RScene fScene;
     public:
-        Graphics::GScene& GetScene();
-        const Graphics::GScene& GetScene() const;
+        Renderer::RScene& GetScene();
+        const Renderer::RScene& GetScene() const;
 
         const Renderer::RCamera& GetCamera() const;
         Renderer::RCamera& GetCamera();
@@ -209,7 +271,7 @@ namespace events {
 
 
 namespace events {
-    E_STORAGE_TYPE(EButtonEvent,
+    E_STORAGE_STRUCT(EButtonEvent,
         (int, a)
     )
 }
@@ -222,7 +284,7 @@ namespace events {
         virtual bool OnRender() override;
     };
 
-    E_STORAGE_TYPE(ETextChangeEvent,
+    E_STORAGE_STRUCT(ETextChangeEvent,
         (EString, Value)
     )
 
@@ -279,5 +341,18 @@ namespace events {
         virtual bool OnRender() override;
     };
 
+
+    class E_EDEXAPI EUIImageView : public EUIField
+    {
+    private:
+        Graphics::GTexture2D* fTexture;
+    public:
+        EUIImageView();
+        ~EUIImageView();
+
+        void SetTextureData(u8* data, size_t width, size_t height);
+
+        virtual bool OnRender() override;
+    };
 
 }

@@ -29,7 +29,7 @@ void EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene,
                 EValueDescription description = findType(id);
                 if (description.Valid())
                 {
-                    saveToScene->InsertComponent(entity, description);
+                    saveToScene->AddComponent(entity, description);
                     EStructProperty* component = saveToScene->GetComponent(entity, description);
                     ReadPropertyFromJson(entityObject[component->GetPropertyName()], component);
                 }
@@ -61,6 +61,20 @@ void ReadPrimitiveFromJson(const EJson& json, EProperty* property)
         if (json.is_number_integer())
         {
             static_cast<EValueProperty<i32>*>(property)->SetValue(json.get<i32>());
+        }
+    }
+    else if (primitiveType == E_TYPEID_UNSIGNED_INTEGER)
+    {
+        if (json.is_number_integer())
+        {
+            static_cast<EValueProperty<u32>*>(property)->SetValue(json.get<u32>());
+        }
+    }
+    else if (primitiveType == E_TYPEID_UNSIGNED_BIG_INTEGER)
+    {
+        if (json.is_number_integer())
+        {
+            static_cast<EValueProperty<u64>*>(property)->SetValue(json.get<u64>());
         }
     }
     else if (primitiveType == E_TYPEID_STRING)
@@ -121,4 +135,62 @@ void EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
         case EValueType::UNKNOWN: break;
         }
     }
+}
+
+void EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes) 
+{
+    EFileCollection fileCollection;
+    fileCollection.SetFromCompleteBuffer(buffer);
+
+    // Load resource
+    saveToScene->GetResourceManager().Clear();
+
+    EJson sceneJson = EJson::object();
+    for (const auto& entry : fileCollection)
+    {
+        if (entry.first == "CORE/scene.json")
+        {
+            EString jsonString = EString(entry.second.Data<char>());
+            
+            sceneJson = EJson::parse(jsonString);
+            continue;
+        }
+
+
+        const u8* pointer = entry.second.Data<u8>();
+
+        EString type = EString((char*)pointer);
+        pointer += type.length() + 1;
+
+        EResourceData::t_ID id = *(EResourceData::t_ID*)pointer;
+        pointer += sizeof(EResourceData::t_ID);
+        
+        u64 dataSize = *(u64*)pointer;
+        pointer += sizeof(u64);
+
+        u8* resourceData = new u8[dataSize];
+        memcpy(resourceData, pointer, dataSize);
+        pointer += dataSize;
+
+        u64 userDataSize = *(u64*)pointer;
+        u8* userData = nullptr;
+        if (userDataSize > 0)
+        {
+            pointer += sizeof(u64);
+
+            userData = new u8[userDataSize];
+            memcpy(userData, pointer, userDataSize);
+        }
+
+        EFile file(entry.first);
+        EResourceData* finalResourceData = new EResourceData(id, type, file.GetFileName(), resourceData, dataSize);
+        finalResourceData->SetUserData(userData, userDataSize);
+        if (!saveToScene->GetResourceManager().AddResource(finalResourceData))
+        {
+            E_ERROR("Could not add resource. Resource with same ids allready exist!");
+            delete finalResourceData;
+        }
+    }
+
+    ReadSceneFromJson(sceneJson, saveToScene, registeredTypes);
 }

@@ -61,12 +61,14 @@ namespace Engine {
     #define E_TYPEID_STRING "string"
     #define E_TYPEID_INTEGER "int"
     #define E_TYPEID_UNSIGNED_INTEGER "uint"
+    #define E_TYPEID_UNSIGNED_BIG_INTEGER "ulonglong"
     #define E_TYPEID_DOUBLE "double"
     #define E_TYPEID_BOOL "bool"
 
     #define StringDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_STRING)
     #define IntegerDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_INTEGER)
     #define UnsignedIntegerDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_UNSIGNED_INTEGER)
+    #define UnsignedBigIntegerDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_UNSIGNED_BIG_INTEGER)
     #define DoubleDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_DOUBLE)
     #define BoolDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_BOOL)
 
@@ -104,6 +106,10 @@ namespace Engine {
             else if constexpr (is_one_of<T, u32, unsigned int>())
             {
                 return UnsignedIntegerDescription;
+            }
+            else if constexpr (is_one_of<T, u64, unsigned long long>())
+            {
+                return UnsignedBigIntegerDescription;
             }
             else 
             {

@@ -4,20 +4,20 @@ using namespace Engine;
 using namespace Graphics;
 using namespace Renderer;
 
-std::vector<Graphics::GMesh::Vertex> planeVertices = {
+EVector<RMesh::Vertex> planeVertices = {
     {{-50.0f,-50.0f, -1.0f}},
     {{ 50.0f,-50.0f, -1.0f}},
     {{ 50.0f, 50.0f, -1.0f}},
     {{-50.0f, 50.0f, -1.0f}},
 };
 
-std::vector<u32> planeIndices = {
+EVector<u32> planeIndices = {
     0, 1, 2, 2, 3, 0
 };
 
 ERegister* activeScene = nullptr;
 
-static EUnorderedMap<ERegister::Entity, GMesh*> meshes;
+static EUnorderedMap<ERegister::Entity, RMesh*> meshes;
 
 static EValueDescription TechnicalMeshDsc = EValueDescription::CreateStruct("TechnicalDrawing", {{"Positions", EVec3_dsc.GetAsArray()}});
 
@@ -40,7 +40,7 @@ void ViewportMouseMove(events::EMouseMoveEvent e)
 void ViewportClicked(events::EMouseDownEvent e)
 {
     ERegister::Entity newEntity = activeScene->CreateEntity();
-    activeScene->InsertComponent(newEntity, TechnicalMeshDsc);
+    activeScene->AddComponent(newEntity, TechnicalMeshDsc);
 
     EStructProperty* technicalMesh = activeScene->GetComponent(newEntity, TechnicalMeshDsc);
     EArrayProperty* arrayProp = static_cast<EArrayProperty*>(technicalMesh->GetProperty("Positions"));
@@ -69,7 +69,7 @@ APP_ENTRY
     drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
     
     activeScene->AddEntityChangeEventListener("Plane.Position", [](ERegister::Entity entity, const EString& ident){
-        GMesh* graphicsMesh = meshes[entity];
+        RMesh* graphicsMesh = meshes[entity];
         if (!graphicsMesh) { return; }
         EStructProperty* pos = static_cast<EStructProperty*>(activeScene->GetValueByIdentifier(entity, "Plane.Position"));
         EVec3 posVector;
@@ -79,7 +79,7 @@ APP_ENTRY
         }
     });
     activeScene->AddEntityChangeEventListener("Plane.Rotation", [](ERegister::Entity entity, const EString& ident){
-        GMesh* graphicsMesh = meshes[entity];
+        RMesh* graphicsMesh = meshes[entity];
         if (!graphicsMesh) { return; }
         EStructProperty* pos = static_cast<EStructProperty*>(activeScene->GetValueByIdentifier(entity, "Plane.Rotation"));
         EVec3 posVector;
@@ -89,7 +89,7 @@ APP_ENTRY
         }
     });
     activeScene->AddEntityChangeEventListener("Plane.Scale", [](ERegister::Entity entity, const EString& ident){
-        GMesh* graphicsMesh = meshes[entity];
+        RMesh* graphicsMesh = meshes[entity];
         if (!graphicsMesh) { return; }
         EStructProperty* pos = static_cast<EStructProperty*>(activeScene->GetValueByIdentifier(entity, "Plane.Scale"));
         EVec3 posVector;
@@ -103,7 +103,7 @@ APP_ENTRY
         // Create mesh in 3D Scene
         EStructProperty* mesh = activeScene->GetComponent(entity, PlaneDescription);
         if (drawingViewport.expired()) { return; }
-        GMesh* gMesh = new GMesh();
+        RMesh* gMesh = new RMesh();
         meshes[entity] = gMesh;
         gMesh->SetData(planeVertices, planeIndices);
         drawingViewport.lock()->GetScene().Add(gMesh);
@@ -117,6 +117,7 @@ APP_ENTRY
             scaleProp->SetValue<EVec3>({1.0f, 1.0f, 1.0f});
         }
     });
+
 
 
 

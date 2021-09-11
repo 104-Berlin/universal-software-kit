@@ -8,6 +8,8 @@ namespace Engine {
         static EJson WriteSceneToJson(ERegister* scene);
 
         static EJson WritePropertyToJs(EProperty* property);
+        
+        static ESharedBuffer WriteFullSceneBuffer(ERegister* reg);
     };
 
 }

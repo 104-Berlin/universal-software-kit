@@ -13,6 +13,7 @@ EExtension::EExtension(const EString& pathToPlugin)
     }
 
     fExtensionName = pluginFile.GetFileName();
+    fFilePath = pluginFile.GetFullPath();
 
     LoadPlugin(pluginFile.GetFullPath());
 }
@@ -68,6 +69,11 @@ const EString& EExtension::GetName() const
     return fExtensionName;
 }
 
+const EString& EExtension::GetFilePath() const
+{
+    return fFilePath;
+}
+
 
 EExtensionManager::EExtensionManager()
 {
@@ -101,14 +107,14 @@ bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
         loadFunction(newExtension->GetName().c_str(), *this);
     }
     fLoadedExtensions[newExtension->GetName()] = newExtension;
-    //EStructProperty evt;
+
     fEventDispatcher.Post<EExtensionLoadedEvent>({newExtension->GetName()});
-    //TODO: EVENTS
     return true;
 }
 
 EExtension* EExtensionManager::GetExtension(const EString& extensionName)
 {
+    if (!IsLoaded(extensionName)) { E_WARN("Could not find extension \"" + extensionName + "\""); return nullptr; }
     return fLoadedExtensions[extensionName];
 }
 
@@ -120,6 +126,11 @@ EVector<EExtension*> EExtensionManager::GetLoadedExtensions()
         result.push_back(entry.second);
     }
     return result;
+}
+
+bool EExtensionManager::IsLoaded(const EString& extensionName) 
+{
+    return fLoadedExtensions.find(extensionName) != fLoadedExtensions.end();
 }
 
 ERegister* EExtensionManager::GetActiveScene() const
@@ -150,6 +161,16 @@ const ETypeRegister& EExtensionManager::GetTypeRegister() const
     return fTypeRegister;
 }
 
+EResourceRegister& EExtensionManager::GetResourceRegister() 
+{
+    return fResourceRegister;
+}
+
+const EResourceRegister& EExtensionManager::GetResourceRegister() const
+{
+    return fResourceRegister;
+}
+
 EChaiContext& EExtensionManager::GetChaiContext() 
 {
     return fChaiScriptContext;
@@ -158,4 +179,68 @@ EChaiContext& EExtensionManager::GetChaiContext()
 const EChaiContext& EExtensionManager::GetChaiContext() const
 {
     return fChaiScriptContext;
+}
+
+EExtensionManager& EExtensionManager::instance() 
+{
+    static EExtensionManager theManager;
+    return theManager;
+}
+
+void EExtensionManager::Reload() 
+{
+    // Cache pointers to extension, because map will change with reload
+    fLoadedScene->DisconnectEvents();
+
+    EVector<EExtension*> allExtensions = GetLoadedExtensions();
+    EVector<EString> extensionToLoad;
+    for (EExtension* ext : allExtensions)
+    {
+        extensionToLoad.push_back(ext->GetFilePath());
+        UnloadExtension(ext);
+    }
+
+    delete fLoadedScene;
+    fLoadedScene = new ERegister();
+
+    for (const EString& extensionPath : extensionToLoad)
+    {
+        LoadExtension(extensionPath);
+    }
+}
+
+void EExtensionManager::ReloadExtension(const EString& extensionName) 
+{
+    EExtension* toReload = GetExtension(extensionName);
+    if (toReload)
+    {
+        ReloadExtension(toReload);
+    }
+    else
+    {
+        E_WARN("Could not reload extension " + extensionName + ". It was not found!");
+    }
+}
+
+void EExtensionManager::ReloadExtension(EExtension* extension) 
+{
+    EString extensionPath = extension->GetFilePath();
+    UnloadExtension(extension);
+    // TODO: We have to find all events that got queued be the extension.
+    // If we call these functions they will be deleted i guess
+    LoadExtension(extensionPath);
+}
+
+void EExtensionManager::UnloadExtension(EExtension* extension) 
+{
+    if (!extension) { return; }
+    EString extensionName = extension->GetName();
+    EString extensionPath = extension->GetFilePath();
+
+    fTypeRegister.ClearRegisteredItems(extensionName);
+    fResourceRegister.ClearRegisteredItems(extensionName);
+    fLoadedExtensions.erase(extensionName);
+    fEventDispatcher.Post<EExtensionUnloadEvent>({extensionName, extensionPath});
+
+    delete extension;
 }

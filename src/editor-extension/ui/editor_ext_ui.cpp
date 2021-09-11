@@ -11,7 +11,14 @@ void intern::InitUI()
 }
 
 EUIField::EUIField(const EString& label) 
-    : fLabel(label), fID(next_ui_id()), fVisible(true), fDirty(false), fLastMousePos(0.0f, 0.0f)
+    :   fLabel(label), 
+        fID(next_ui_id()), 
+        fVisible(true), 
+        fDirty(false), 
+        fWidthOverride(0),
+        fHeightOverride(0),
+        fCalculatedSize(),
+        fLastMousePos(0.0f, 0.0f)
 {
     
 }
@@ -20,6 +27,16 @@ ERef<EUIField> EUIField::AddChild(const ERef<EUIField>& child)
 {
     fChildren.push_back(child);
     return fChildren.back();
+}
+
+void EUIField::RemoveChild(const EWeakRef<EUIField>& child) 
+{
+    if (child.expired()) {return;}
+    EVector<ERef<EUIField>>::iterator foundChild = std::find(fChildren.begin(), fChildren.end(), child.lock());
+    if (foundChild != fChildren.end())
+    {
+        fChildren.erase(foundChild);
+    }
 }
 
 void EUIField::Clear() 
@@ -59,14 +76,16 @@ bool EUIField::OnRender()
 
 void EUIField::OnRenderEnd() 
 {
+    ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
+    ImGuiWindow* window = g.CurrentWindow;
+
+    ImRect itemRect = window->DC.LastItemRect;
+    
+    fCalculatedSize.x = itemRect.GetWidth();
+    fCalculatedSize.y = itemRect.GetHeight();
+
     if (ImGui::IsItemHovered())
     {
-        ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
-        ImGuiWindow* window = g.CurrentWindow;
-
-        ImRect itemRect = window->DC.LastItemRect;
-
-
         EVec2 mousePos(ImGui::GetMousePos().x, ImGui::GetMousePos().y);
         mousePos -= EVec2(itemRect.Min.x, itemRect.Min.y);
 
@@ -133,6 +152,43 @@ const EString& EUIField::GetLabel() const
     return fLabel;    
 }
 
+void EUIField::SetSize(float width, float height) 
+{
+    fWidthOverride = width;
+    fHeightOverride = height;
+}
+
+void EUIField::SetSize(const EVec2& size) 
+{
+    fWidthOverride = size.x;
+    fHeightOverride = size.y;
+}
+
+void EUIField::SetWidth(float width) 
+{
+    fWidthOverride = width;
+}
+
+void EUIField::SetHeight(float height) 
+{
+    fHeightOverride = height;
+}
+
+EVec2 EUIField::GetSize() const
+{
+    return fCalculatedSize;
+}
+
+float EUIField::GetWidth() const
+{
+    return fCalculatedSize.x;
+}
+
+float EUIField::GetHeight() const
+{
+    return fCalculatedSize.y;
+}
+
 EUIPanel::EUIPanel(const EString& title) 
     : EUIField(title), fOpen(true)
 {
@@ -193,12 +249,12 @@ EUIViewport::~EUIViewport()
     }
 }
 
-Graphics::GScene& EUIViewport::GetScene() 
+Renderer::RScene& EUIViewport::GetScene() 
 {
     return fScene;
 }
 
-const Graphics::GScene& EUIViewport::GetScene() const
+const Renderer::RScene& EUIViewport::GetScene() const
 {
     return fScene;
 }
@@ -220,7 +276,7 @@ bool EUIViewport::OnRender()
     fFrameBuffer->Resize(contentRegion.x, contentRegion.y, Graphics::GFrameBufferFormat::RGBA8);
     fRenderer.Render(&fScene, &fCamera);
 
-    ImGui::Image((ImTextureID)(unsigned long)fFrameBuffer->GetColorAttachment(), contentRegion, {0, 1}, {1, 0});
+    ImGui::Image((ImTextureID)(unsigned long long)(unsigned long)fFrameBuffer->GetColorAttachment(), contentRegion, {0, 1}, {1, 0});
 
     return true;
 }
@@ -234,7 +290,7 @@ EUIButton::EUIButton(const EString& label)
 
 bool EUIButton::OnRender() 
 {
-    if (ImGui::Button(GetLabel().c_str()))
+    if (ImGui::Button(GetLabel().c_str(), {fWidthOverride, fHeightOverride}))
     {
         fEventDispatcher.Enqueue<events::EButtonEvent>(events::EButtonEvent());
     }
@@ -339,5 +395,38 @@ bool EUIMenuItem::OnRender()
     {
         fEventDispatcher.Enqueue<events::EButtonEvent>(events::EButtonEvent());
     }
+    return true;
+}
+
+EUIImageView::EUIImageView() 
+    : EUIField("ImageView")
+{
+    fTexture = Graphics::Wrapper::CreateTexture();
+    fTexture->SetTextureFormat(Graphics::GTextureFormat::RGBA8);
+}
+
+EUIImageView::~EUIImageView() 
+{
+    delete fTexture;
+}
+
+void EUIImageView::SetTextureData(u8* data, size_t width, size_t height) 
+{
+    fTexture->SetData(data, width, height);
+}
+
+bool EUIImageView::OnRender() 
+{
+    ImVec2 size = ImGui::GetContentRegionAvail();
+    if (fWidthOverride != 0)
+    {
+        size.x = fWidthOverride;
+    }
+    if (fHeightOverride != 0)
+    {
+        size.y = fHeightOverride;
+    }
+    
+    ImGui::Image((ImTextureID)(u64)fTexture->GetID(), size);
     return true;
 }

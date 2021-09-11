@@ -15,22 +15,32 @@ namespace Engine {
         EVector<EventData> fPostedEvents;
         EUnorderedMap<EValueDescription::t_ID, EVector<CallbackFunction>> fRegisteredCallbacks;
     public:
+        ~EEventDispatcher()
+        {
+            fRegisteredCallbacks.clear();
+            for (EventData data : fPostedEvents)
+            {
+                delete data.Data;
+            }
+            fPostedEvents.clear();
+        }
+
         template <typename Callback>
-        auto Connect(const EValueDescription& dsc, Callback& fn)
+        auto Connect(const EValueDescription& dsc, Callback fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, void>
         {
             fRegisteredCallbacks[dsc.GetId()].push_back([fn](EProperty*){fn();});
         }
 
         template <typename Callback>
-        auto Connect(const EValueDescription& dsc, Callback&& fn)
+        auto Connect(const EValueDescription& dsc, Callback fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn), EProperty*>::value, void>
         {
             fRegisteredCallbacks[dsc.GetId()].push_back(fn);
         }
 
         template <typename Event, typename Callback>
-        auto Connect(const EValueDescription& dsc, Callback&& fn)
+        auto Connect(const EValueDescription& dsc, Callback fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
         {
             fRegisteredCallbacks[dsc.GetId()].push_back([fn](EProperty* property){
@@ -45,7 +55,7 @@ namespace Engine {
 
 
         template <typename Event, typename Callback>
-        auto Connect(Callback&& fn)
+        auto Connect(Callback fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
         {
             fRegisteredCallbacks[Event::_dsc.GetId()].push_back([fn](EProperty* property){
@@ -59,7 +69,7 @@ namespace Engine {
         }
 
         template <typename Event, typename Callback>
-        auto Connect(Callback&& fn)
+        auto Connect(Callback fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, void>
         {
             fRegisteredCallbacks[Event::_dsc.GetId()].push_back([fn](EProperty* property){
@@ -116,6 +126,9 @@ namespace Engine {
 
 
         void Update();
+
+
+        void DisconnectEvents();
     };
 
 }

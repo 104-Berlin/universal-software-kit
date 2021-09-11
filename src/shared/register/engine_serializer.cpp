@@ -42,6 +42,14 @@ EJson WritePrimitiveToJs(EProperty* property)
     {
         return static_cast<EValueProperty<i32>*>(property)->GetValue();
     }
+    else if (primitiveType == E_TYPEID_UNSIGNED_INTEGER)
+    {
+        return static_cast<EValueProperty<u32>*>(property)->GetValue();
+    }
+    else if (primitiveType == E_TYPEID_UNSIGNED_BIG_INTEGER)
+    {
+        return static_cast<EValueProperty<u64>*>(property)->GetValue();
+    }
     else if (primitiveType == E_TYPEID_STRING)
     {
         return static_cast<EValueProperty<EString>*>(property)->GetValue();
@@ -100,4 +108,65 @@ EJson ESerializer::WritePropertyToJs(EProperty* property)
     }
 
     return 0;
+}
+
+ESharedBuffer ESerializer::WriteFullSceneBuffer(ERegister* reg) 
+{
+    EFileCollection fileCollection;
+
+    EString jsonString = WriteSceneToJson(reg).dump();
+    ESharedBuffer jsonBuffer;
+    jsonBuffer.InitWith<char>(jsonString.size() + 1);
+    char* data = jsonBuffer.Data<char>();
+    strcpy(data, jsonString.c_str());
+
+
+    fileCollection.AddFile("CORE/scene.json", jsonBuffer);
+
+    for (EResourceData* resourceData : reg->GetResourceManager().GetAllResource())
+    {
+        size_t bufferSize = resourceData->Type.length() + 1 + sizeof(EResourceData::t_ID) + sizeof(u64) + resourceData->DataSize + sizeof(u64) + resourceData->UserDataSize;
+        ESharedBuffer resourceBuffer;
+        resourceBuffer.InitWith<u8>(bufferSize);
+
+        u8* pointer = resourceBuffer.Data<u8>();
+
+        strcpy((char*) pointer, resourceData->Type.c_str());
+        pointer += resourceData->Type.size() + 1;
+
+        EFileCollection::WriteU64(pointer, resourceData->ID);
+        pointer += sizeof(EResourceData::t_ID);
+
+        EFileCollection::WriteU64(pointer, resourceData->DataSize);
+        pointer += sizeof(u64);
+
+        memcpy(pointer, resourceData->Data, resourceData->DataSize);
+        pointer += resourceData->DataSize;
+
+        if (!resourceData->UserData)
+        {
+            EFileCollection::WriteU64(pointer, 0);
+        }
+        else
+        {
+            EFileCollection::WriteU64(pointer, resourceData->UserDataSize);
+            pointer += sizeof(u64);
+            
+            memcpy(pointer, resourceData->UserData, resourceData->UserDataSize);
+        }
+        EString fileName;
+        if (!resourceData->PathToFile.empty())
+        {
+            fileName = resourceData->PathToFile;
+        }
+        else 
+        {
+            fileName = resourceData->Type + resourceData->Name;
+        }
+        fileCollection.AddFile(fileName, resourceBuffer);
+
+    }
+
+    
+    return fileCollection.GetCompleteBuffer();
 }

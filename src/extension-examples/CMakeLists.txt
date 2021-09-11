@@ -15,9 +15,14 @@ add_library(UISHOW MODULE ui_show.cpp)
 set_target_properties(UISHOW PROPERTIES SUFFIX ".uex")
 set_target_properties(UISHOW PROPERTIES PREFIX "")
 
+add_library(SHOW_IMAGE MODULE show_image.cpp)
+set_target_properties(SHOW_IMAGE PROPERTIES SUFFIX ".uex")
+set_target_properties(SHOW_IMAGE PROPERTIES PREFIX "")
+
 target_link_libraries(Example1 EEditorExtension)
 target_link_libraries(TECHDRAW EEditorExtension)
 target_link_libraries(UISHOW EEditorExtension)
+target_link_libraries(SHOW_IMAGE EEditorExtension)
 endif()
 
 

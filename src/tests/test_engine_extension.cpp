@@ -24,7 +24,7 @@ TEST(ExtensionTest, LoadExtension)
         ERegister* activeScene = extensionManager.GetActiveScene();
 
         ERegister::Entity entity = activeScene->CreateEntity();
-        activeScene->InsertComponent(entity, electricalDsc);
+        activeScene->AddComponent(entity, electricalDsc);
 
         EXPECT_TRUE(activeScene->HasComponent(entity, electricalDsc));
 

@@ -12,7 +12,7 @@
     {{2.0f, 0.5f,-0.5f}},
     */
 
-std::vector<Graphics::GMesh::Vertex> planeVertices = {
+std::vector<Renderer::RMesh::Vertex> planeVertices = {
     {{-1000.0f, -10.0f, -1000.0f}},
     {{ 1000.0f, -10.0f, -1000.0f}},
     {{ 1000.0f, -10.0f,  1000.0f}},
@@ -23,7 +23,7 @@ std::vector<unsigned int> planeIndices = {
     0, 1, 2, 2, 3, 0
 };
 
-std::vector<Graphics::GMesh::Vertex> vertices = {
+std::vector<Renderer::RMesh::Vertex> vertices = {
     {{-50.0f,-50.0f, -1.0f}},
     {{ 50.0f,-50.0f, -1.0f}},
     {{ 50.0f, 50.0f, -1.0f}},
@@ -34,8 +34,8 @@ std::vector<unsigned int> indices = {
     0, 1, 2
 };
 
-static Graphics::GMesh* mesh = nullptr;
-static Graphics::GMesh* planeMesh = nullptr;
+static Renderer::RMesh* mesh = nullptr;
+static Renderer::RMesh* planeMesh = nullptr;
 
 static float matrix[16] =
 { 1.f, 0.f, 0.f, 0.f,
@@ -66,7 +66,7 @@ static EWeakRef<Engine::EUIViewport> viewport;
 class TestUiField : public Engine::EUIField
 {
 public:
-    std::vector<Graphics::GMesh::Vertex> fVertices;
+    std::vector<Renderer::RMesh::Vertex> fVertices;
     std::vector<unsigned int> fIndices;
 public:
     TestUiField()
@@ -78,7 +78,7 @@ public:
     virtual bool OnRender()
     {
         size_t vertexId = 0;
-        for (Graphics::GMesh::Vertex& vertex : fVertices)
+        for (Renderer::RMesh::Vertex& vertex : fVertices)
         {
             ImGui::PushID(vertexId);
             ImGui::InputFloat3("Position", &vertex.Position.x);
@@ -164,7 +164,7 @@ APP_ENTRY
 {
     ERef<Engine::EUIPanel> uiPanel = EMakeRef<Engine::EUIPanel>("First panel");
     viewport = std::dynamic_pointer_cast<Engine::EUIViewport>(uiPanel->AddChild(EMakeRef<Engine::EUIViewport>()));
-    mesh = new Graphics::GMesh();
+    mesh = new Renderer::RMesh();
     mesh->SetData(vertices, indices);
     viewport.lock()->GetScene().Add(mesh);
 

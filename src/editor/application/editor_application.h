@@ -9,7 +9,6 @@ namespace Editor {
 
         ERef<Engine::EUIMainMenuBar>            fMainMenu;
 
-        Engine::EExtensionManager   fExtensionManager;
         Engine::EUIRegister         fUIRegister;
         ECommandLine                fCommandLine;
     public:

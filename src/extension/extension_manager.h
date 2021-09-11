@@ -14,9 +14,10 @@ namespace Engine {
         void    InitImGui();
 
         const EString& GetName() const;
-
+        const EString& GetFilePath() const;
     private:
         EString fExtensionName;
+        EString fFilePath;
 #ifdef EWIN
         HINSTANCE fHandle;
 #else
@@ -24,16 +25,22 @@ namespace Engine {
 #endif
     };
 
-    E_STORAGE_TYPE(EExtensionLoadedEvent,
+    E_STORAGE_STRUCT(EExtensionLoadedEvent,
         (EString, Extension)
+    )
+
+    E_STORAGE_STRUCT(EExtensionUnloadEvent,
+        (EString, ExtensionName),
+        (EString, PathToExtension)
     )
 
     class E_EXTAPI EExtensionManager
     {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
-        ERegister*                             fLoadedScene;
+        ERegister*                          fLoadedScene;
         ETypeRegister                       fTypeRegister;
+        EResourceRegister                   fResourceRegister;
         EEventDispatcher                    fEventDispatcher;
         EChaiContext                        fChaiScriptContext;
     public:
@@ -62,6 +69,12 @@ namespace Engine {
         EVector<EExtension*> GetLoadedExtensions();
 
         /**
+         * Check if an Extension is Loaded
+         * @return IsLoaded
+         */
+        bool IsLoaded(const EString& extensionName);
+
+        /**
          * @return The active scene
          */
         ERegister* GetActiveScene() const;
@@ -75,8 +88,21 @@ namespace Engine {
         ETypeRegister& GetTypeRegister();
         const ETypeRegister& GetTypeRegister() const;
 
+        EResourceRegister& GetResourceRegister();
+        const EResourceRegister& GetResourceRegister() const;
+
+
         EChaiContext& GetChaiContext();
         const EChaiContext& GetChaiContext() const;
+
+        static EExtensionManager& instance();
+
+
+        void Reload();
+        void ReloadExtension(const EString& extensionName);
+        void ReloadExtension(EExtension* extension);
+
+        void UnloadExtension(EExtension* extension);
 
         template <typename EventType, typename CB>
         void AddEventListener(CB&& callback)

@@ -4,12 +4,12 @@ using namespace Editor;
 using namespace Graphics;
 using namespace Engine;
 
-E_STORAGE_TYPE(MySubType, 
+E_STORAGE_STRUCT(MySubType, 
     (double, SomeDouble),
     (int, SomeMoreInt)
 )
 
-E_STORAGE_TYPE(MyType, 
+E_STORAGE_STRUCT(MyType, 
     (int, SomeInteger),
     (int, Other),
     (EString, SomeString),
@@ -17,15 +17,16 @@ E_STORAGE_TYPE(MyType,
 )
 
 EApplication::EApplication() 
-    : fGraphicsContext(nullptr), fCommandLine(&fExtensionManager.GetChaiContext())
+    : fGraphicsContext(nullptr), fCommandLine(&EExtensionManager::instance().GetChaiContext())
 {
-    fExtensionManager.AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent event) {
-        EExtension* extension = fExtensionManager.GetExtension(event.Extension);
+    EExtensionManager::instance().AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent event) {
+        EExtension* extension = EExtensionManager::instance().GetExtension(event.Extension);
         auto entry = (void(*)(const char*, Engine::EAppInit))extension->GetFunction("app_entry");
         if (entry)
         {
             EAppInit init;
             init.PanelRegister = &fUIRegister;
+            E_INFO("Running APP_INIT for plugtin \"" + extension->GetName() + "\"");
             entry(extension->GetName().c_str(), init);
         }
         auto initImGui = (void(*)())extension->GetFunction("InitImGui");
@@ -35,13 +36,14 @@ EApplication::EApplication()
         }
     });
 
+    EExtensionManager::instance().AddEventListener<EExtensionUnloadEvent>([this](EExtensionUnloadEvent event){
+        fUIRegister.ClearRegisteredItems(event.ExtensionName);
+    });
+
     fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
         this->RegenerateMainMenuBar();
     });
-    fExtensionManager.GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
-
-    std::cout << "VECTOR?" << is_vector<EString>::value << std::endl;
-    std::cout << getdsc::GetDescription<EString>().IsArray() << std::endl;
+    EExtensionManager::instance().GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
 }
 
 void EApplication::Start() 
@@ -57,9 +59,12 @@ void EApplication::RegenerateMainMenuBar()
     ERef<EUIField> saveScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Save"));
     saveScene->AddEventListener<events::EButtonEvent>([this](){
         EString saveToPath = Wrapper::SaveFileDialog("Save To", {"esc"});
-        EJson json = ESerializer::WriteSceneToJson(fExtensionManager.GetActiveScene());
-        EFile file(saveToPath);
-        file.SetFileAsString(json.dump());
+        if (!saveToPath.empty())
+        {
+            EFile file(saveToPath);
+            file.SetFileBuffer(ESerializer::WriteFullSceneBuffer(EExtensionManager::instance().GetActiveScene()));
+            file.SaveBufferToDisk();
+        }
     });
     ERef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open..."));
     openScene->AddEventListener<events::EButtonEvent>([this](){
@@ -67,10 +72,11 @@ void EApplication::RegenerateMainMenuBar()
         if (openScene.size() > 0)
         {
             EFile sceneFile(openScene[0]);
-            EJson sceneJson = EJson::parse(sceneFile.GetFileAsString());
-            if (!sceneJson.is_null())
+            sceneFile.LoadToMemory();
+            if (!sceneFile.GetBuffer().IsNull())
             {
-                EDeserializer::ReadSceneFromJson(sceneJson, fExtensionManager.GetActiveScene(), fExtensionManager.GetTypeRegister().GetAllItems());
+                EExtensionManager::instance().Reload();
+                EDeserializer::ReadSceneFromFileBuffer(sceneFile.GetBuffer(), EExtensionManager::instance().GetActiveScene(), EExtensionManager::instance().GetTypeRegister().GetAllItems());
             }
         }
     });
@@ -81,12 +87,19 @@ void EApplication::RegenerateMainMenuBar()
         {
             EFile resourceFile(resourcePath);
 
-            resourceFile.LoadToMemory();
-            ESharedBuffer fileBuffer = resourceFile.GetBuffer();
-            
-            byte* data = (byte*) malloc(fileBuffer.GetSizeInByte());
-            memcpy(data, fileBuffer.Data(), fileBuffer.GetSizeInByte());
-            fExtensionManager.GetActiveScene()->GetResourceManager().RegisterResource(resourceFile.GetFileExtension(), resourcePath,data, fileBuffer.GetSizeInByte());
+            EString type = resourceFile.GetFileExtension();
+            EResourceDescription foundDescription;
+            if (EExtensionManager::instance().GetResourceRegister().FindItem(FindResourceByType(type), &foundDescription) &&
+                foundDescription.ImportFunction)
+            {
+                EExtensionManager::instance().GetActiveScene()->GetResourceManager().ImportResourceFromFile(resourceFile, foundDescription);
+            }
+            else
+            {
+                // TODO: Show modal
+                E_ERROR("Could not find converter for resource with file ending " + type);
+            }
+
         }
     });
 
@@ -166,23 +179,23 @@ void EApplication::RenderImGui()
 void EApplication::RegisterDefaultPanels() 
 {
     ERef<EUIPanel> resourcePanel = EMakeRef<EUIPanel>("Resource Panel");
-    resourcePanel->AddChild(EMakeRef<EResourceView>(&fExtensionManager.GetActiveScene()->GetResourceManager()));
+    resourcePanel->AddChild(EMakeRef<EResourceView>());
 
 
 
     ERef<EUIPanel> extensionPanel = EMakeRef<EUIPanel>("Extension Panel");
-    ERef<EExtensionView> extensionView = EMakeRef<EExtensionView>(&fExtensionManager);
+    ERef<EExtensionView> extensionView = EMakeRef<EExtensionView>();
     extensionPanel->AddChild(extensionView);
 
 
     ERef<EUIPanel> universalSceneView1 = EMakeRef<EUIPanel>("Basic Scene View 1");
-    universalSceneView1->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
+    universalSceneView1->AddChild(EMakeRef<EObjectView>());
     ERef<EUIPanel> universalSceneView2 = EMakeRef<EUIPanel>("Basic Scene View 2");
-    universalSceneView2->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
+    universalSceneView2->AddChild(EMakeRef<EObjectView>());
     ERef<EUIPanel> universalSceneView3 = EMakeRef<EUIPanel>("Basic Scene View 3");
-    universalSceneView3->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
+    universalSceneView3->AddChild(EMakeRef<EObjectView>());
     ERef<EUIPanel> universalSceneView4 = EMakeRef<EUIPanel>("Basic Scene View 4");
-    universalSceneView4->AddChild(EMakeRef<EObjectView>(&fExtensionManager));
+    universalSceneView4->AddChild(EMakeRef<EObjectView>());
 
     fUIRegister.RegisterItem("Core", universalSceneView1);
     fUIRegister.RegisterItem("Core", universalSceneView2);

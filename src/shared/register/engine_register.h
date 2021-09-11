@@ -12,13 +12,18 @@ namespace Engine {
     class E_API ERegister
     {
     public:
-        using Entity = u32;
-        E_STORAGE_TYPE(ComponentCreateEvent, 
+        using Entity = u64;
+        E_STORAGE_STRUCT(ComponentCreateEvent, 
             (EValueDescription::t_ID, ValueId),
             (Entity, Handle)
         )
 
-        E_STORAGE_TYPE(ValueChangeEvent,
+        E_STORAGE_STRUCT(ComponentDeleteEvent,
+            (EValueDescription::t_ID, ValueId),
+            (Entity, Handle)
+        )
+
+        E_STORAGE_STRUCT(ValueChangeEvent,
             (EString, Identifier),
             (Entity, Handle)
         )
@@ -33,6 +38,7 @@ namespace Engine {
         EVector<Entity>     fDeadEntites;
     public:
         ERegister(const EString& name = "Unknown");
+        ~ERegister();
         
         EResourceManager& GetResourceManager();
 
@@ -43,7 +49,7 @@ namespace Engine {
 
         bool IsAlive(Entity entity);
 
-        void InsertComponent(Entity entity, const EValueDescription& componentId);
+        EStructProperty* AddComponent(Entity entity, const EValueDescription& componentId);
         void RemoveComponent(Entity entity, const EValueDescription& componentId);
         bool HasComponent(Entity entity, const EValueDescription& componentId);
         bool HasComponent(Entity entity, const EValueDescription::t_ID& componentId);
@@ -53,8 +59,32 @@ namespace Engine {
         EVector<EStructProperty*> GetAllComponents(Entity entity);
         EUnorderedMap<Entity, EStructProperty*>& View(const EValueDescription& description);
 
+
+        template <typename T>
+        T AddComponent(Entity entity)
+        {
+            EStructProperty* inserted = AddComponent(entity, getdsc::GetDescription<T>());
+            T result;
+            if (inserted)
+            {
+                convert::getter<T>(inserted, result);
+            }
+            return result;
+        }
+
+        template <typename T>
+        T GetComponent(Entity entity)
+        {
+            T result;
+            convert::getter<T>(GetComponent(entity, getdsc::GetDescription<T>()), &result);
+            return result;
+        }
+
+
+
+
         template <typename Callback>
-        void AddComponentCreateEventListener(const EValueDescription& description, Callback&& cb)
+        void AddComponentCreateEventListener(const EValueDescription& description, Callback cb)
         {
             fEventDispatcher.Connect<ComponentCreateEvent>([cb, description](ComponentCreateEvent event){
                 if (event.ValueId == description.GetId())
@@ -65,7 +95,18 @@ namespace Engine {
         }
 
         template <typename Callback>
-        void AddEntityChangeEventListener(const EString& valueIdent, Callback&& cb)
+        void AddComponentDeleteEventListener(const EValueDescription& description, Callback cb)
+        {
+            fEventDispatcher.Connect<ComponentDeleteEvent>([cb, description](ComponentDeleteEvent event){
+                if (description.GetId() == event.ValueId)
+                {
+                    std::invoke(cb, event.Handle);
+                }
+            });
+        }
+
+        template <typename Callback>
+        void AddEntityChangeEventListener(const EString& valueIdent, Callback cb)
         {
             fEventDispatcher.Connect<ValueChangeEvent>([cb, valueIdent](ValueChangeEvent event){
                 if (event.Identifier.length() < valueIdent.length()) {return;}
@@ -75,6 +116,11 @@ namespace Engine {
                 }
             });
         }
+
+
+        // Do these between extension deletion and scene delete. 
+        // If a lambda is defined in an extension the event dispatcher cant clean up the lambda, because the symbols are not loaded anymore
+        void DisconnectEvents();
     };
 
 
