@@ -107,6 +107,7 @@ EStructProperty* ERegister::AddComponent(Entity entity, const EValueDescription&
         fComponentStorage[description.GetId()][entity] = storage;
 
         fEventDispatcher.Post<ComponentCreateEvent>({description.GetId(), entity});
+        return storage;
     }
     return nullptr;
 }
