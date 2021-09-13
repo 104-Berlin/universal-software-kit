@@ -58,7 +58,7 @@ void ERegister::DestroyEntity(Entity entity)
     }
     for (auto& entry : fComponentStorage)
     {
-        fEventDispatcher.Post<ComponentDeleteEvent>({entry.first, entity});
+        fEventDispatcher.Enqueue<ComponentDeleteEvent>({entry.first, entity});
         delete entry.second[entity];
         entry.second.erase(entity);
     }
@@ -77,7 +77,7 @@ void ERegister::Clear()
     {
         for (auto& storage : entry.second)
         {
-            fEventDispatcher.Post<ComponentDeleteEvent>({entry.first, storage.first});
+            fEventDispatcher.Enqueue<ComponentDeleteEvent>({entry.first, storage.first});
             delete storage.second;
         }
     }
@@ -101,12 +101,13 @@ EStructProperty* ERegister::AddComponent(Entity entity, const EValueDescription&
     {
         EStructProperty* storage = static_cast<EStructProperty*>(EProperty::CreateFromDescription(description.GetId(), description));
         storage->SetChangeFunc([this, entity](EString ident){
-            fEventDispatcher.Post<ValueChangeEvent>({ident, entity});
+            fEventDispatcher.Enqueue<ValueChangeEvent>({ident, entity});
         });
 
         fComponentStorage[description.GetId()][entity] = storage;
 
-        fEventDispatcher.Post<ComponentCreateEvent>({description.GetId(), entity});
+        fEventDispatcher.Enqueue<ComponentCreateEvent>({description.GetId(), entity});
+        return storage;
     }
     return nullptr;
 }
@@ -120,7 +121,7 @@ void ERegister::RemoveComponent(Entity entity, const EValueDescription& componen
     delete fComponentStorage[componentId.GetId()][entity];
     fComponentStorage[componentId.GetId()].erase(entity);
 
-    fEventDispatcher.Post<ComponentDeleteEvent>({componentId.GetId(), entity});
+    fEventDispatcher.Enqueue<ComponentDeleteEvent>({componentId.GetId(), entity});
 }
 
 bool ERegister::HasComponent(Entity entity, const EValueDescription& componentId) 
@@ -151,6 +152,11 @@ EStructProperty* ERegister::GetComponent(Entity entity, const EValueDescription:
 void Engine::ERegister::DisconnectEvents() 
 {
     fEventDispatcher.DisconnectEvents();
+}
+
+void Engine::ERegister::UpdateEvents() 
+{
+    fEventDispatcher.Update();
 }
 
 EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identifier) 

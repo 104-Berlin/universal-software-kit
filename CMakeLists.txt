@@ -14,6 +14,7 @@ option(USE_COV "Use the covarage option when not using MSVC" FALSE)
 option(BUILD_EDITOR "Build the editor for mac or windows" TRUE)
 option(BUILD_EXAMPLES "Build exmaples" TRUE)
 option(BUILD_TEST "Toggle the unittest" TRUE)
+option(BUILD_CLT "Toggle the Command-Line-Tool" TRUE)
 
 # Editor only for windows and mac supported
 if (NOT WIN32 AND NOT APPLE)
@@ -38,10 +39,20 @@ endif(WIN32)
 
 include_directories(src/)
 
+add_subdirectory(src/util)
 add_subdirectory(src/shared)
 add_subdirectory(src/extension)
 add_subdirectory(src/scripting)
 
+add_subdirectory(src/interface)
+
+
+#########################
+##### COMMAND_LINE ######
+
+if (${BUILD_CLT})
+  add_subdirectory(src/command-line)
+endif()
 
 #########################
 ###### TESTING ##########

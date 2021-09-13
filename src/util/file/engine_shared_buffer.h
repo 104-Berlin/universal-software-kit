@@ -2,7 +2,7 @@
 
 namespace Engine {
 
-    class E_API ESharedBuffer
+    class ESharedBuffer
     {
     private:
         class BufferDataBase

@@ -15,9 +15,9 @@ namespace Engine {
 		};
 
 
-		extern E_API EString GetPrefixString(ELogType type);
-		extern E_API EString GetFileNameFromPath(const EString& path);
-		extern E_API void Log(ELogType type, const EString& str, u32 line, const char* file);
+		extern EString GetPrefixString(ELogType type);
+		extern EString GetFileNameFromPath(const EString& path);
+		extern void Log(ELogType type, const EString& str, u32 line, const char* file);
 
 	}
 
