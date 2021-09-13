@@ -43,7 +43,7 @@ shared::ESharedError shared::CreateComponent(const EString& componentId, ERegist
         EValueDescription desc;
         if (!EXTENSION_MANAGER.GetTypeRegister().FindItem(EFindTypeDescByName(componentId), &desc))
         {
-            E_ERROR("Could not find type");
+            E_ERROR("Could not find type" + componentId);
             return; // ERROR
         }
         EStructProperty* prop = ACTIVE_SCENE->AddComponent(entity, desc);
@@ -54,6 +54,40 @@ shared::ESharedError shared::CreateComponent(const EString& componentId, ERegist
         inter::PrintProperty(prop);
     });
     return false;
+}
+
+shared::ESharedError  shared::SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString)
+{
+    StaticSharedContext::instance().RunInMainThread([valueIdent, entity, valueString](){
+        EProperty* prop = ACTIVE_SCENE->GetValueByIdentifier(entity, valueIdent);
+        if (!prop)
+        {
+            return;
+        }
+
+        EValueDescription desc = prop->GetDescription();
+        
+
+        EDeserializer::ReadPropertyFromJson(EJson::parse(valueString, [](int depth, EJson::parse_event_t event, EJson& parsed) -> bool { return true; }, false), prop);
+    });
+    return false;
+}
+
+
+EStructProperty* shared::GetComponent(const EString& componentId, ERegister::Entity entity) 
+{
+    EValueDescription desc;
+    if (!EXTENSION_MANAGER.GetTypeRegister().FindItem(EFindTypeDescByName(componentId), &desc))
+    {
+        E_ERROR("Could not find type " + componentId);
+        return nullptr;
+    }
+    EStructProperty* result = ACTIVE_SCENE->GetComponent(entity, desc);
+    if (!result)
+    {
+        E_WARN("Could not find component " + componentId);
+    }
+    return result;
 }
 
 

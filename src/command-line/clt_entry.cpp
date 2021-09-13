@@ -22,11 +22,14 @@ int main(int argc, char** argv)
 
         if (args.size() > 0)
         {
-            if (args[0] == "New")
+            auto& entry = args[0];
+            std::transform(entry.begin(), entry.end(), entry.begin(),
+                            [](unsigned char c){ return std::tolower(c); });
+            if (args[0] == "new")
             {
                 shared::CreateEntity();
             }
-            else if (args[0] == "Add")
+            else if (args[0] == "add")
             {
                 if (args.size() == 3)
                 {
@@ -35,7 +38,37 @@ int main(int argc, char** argv)
                 }
                 else
                 {
-                    std::cout << "Invalid use! Add <entityid> <valueid>" << std::endl;
+                    std::cout << "Invalid use! add <entityid> <valueid>" << std::endl;
+                }
+            }
+            else if (args[0] == "show")
+            {
+                if (args.size() == 3)
+                {
+                    ERegister::Entity entity = std::stoi(args[1]);
+                    EStructProperty* component = shared::GetComponent(args[2], entity);
+                    if (component)
+                    {
+                        inter::PrintProperty(component);
+                    }
+                }
+                else
+                {
+                    std::cout << "Invalid use! show <entityid> <valueid>" << std::endl;
+                }
+            }
+            else if (args[0] == "set")
+            {
+                if (args.size() == 4)
+                {
+                    ERegister::Entity entity = std::stoi(args[1]);
+                    
+                    shared::SetValue(entity, args[2], args[3]);
+
+                }
+                else
+                {
+                    std::cout << "Invalid use! set <entityid> <valueident> <value>" << std::endl;
                 }
             }
         }

@@ -9,3 +9,7 @@ target_compile_definitions(EInterface PRIVATE SH_INTERFACE_EXPORT)
 
 
 target_link_libraries(EInterface EExtension)
+
+if(UNIX)
+target_link_libraries(EInterface pthread)
+endif(UNIX)

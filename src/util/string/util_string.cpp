@@ -19,3 +19,11 @@ EVector<EString> EStringUtil::SplitString(const EString& value, const EString& d
     }
     return result;
 }
+
+EString EStringUtil::ToLower(const EString& value) 
+{
+    EString result = value;
+    std::transform(result.begin(), result.end(), result.begin(),
+                    [](unsigned char c){ return std::tolower(c); });
+    return result;
+}

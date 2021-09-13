@@ -33,10 +33,19 @@ namespace Engine {
         // true = ERROR!
         using ESharedError = bool; // Error is bool for now. Replace with actual errors
 
+
+        // Setter
         ESharedError E_INTER_API LoadExtension(const EString& pathToExtension);
         ESharedError E_INTER_API CreateEntity();
 
         ESharedError E_INTER_API CreateComponent(const EString& componentId, ERegister::Entity entity);
+
+        ESharedError E_INTER_API SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
+
+
+        // Getter
+        
+       E_INTER_API EStructProperty* GetComponent(const EString& componentId, ERegister::Entity entity);
     }
 
 }
