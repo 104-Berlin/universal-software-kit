@@ -41,6 +41,6 @@ int main(int argc, char** argv)
         }
     } while (input != "Q");
     
-    shared::StaticSharedContext::CleanUp();
+    shared::StaticSharedContext::Stop();
     return 0;
 }

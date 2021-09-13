@@ -7,15 +7,21 @@ namespace Engine {
         class E_INTER_API StaticSharedContext
         {
         private:
-            EExtensionManager fExtensionManager;
+            EExtensionManager               fExtensionManager;
+            std::thread                     fRunningThread;
+            EQueue<std::function<void()>>   fMainThreadQueue;
+            std::mutex                      fQueueMutex;
+            std::atomic<bool>               fIsRunning;
         public:
             StaticSharedContext();
             ~StaticSharedContext();
 
             EExtensionManager& GetExtensionManager();
 
+            static void RunInMainThread(std::function<void()> function);
+
             static void Start();
-            static void CleanUp();
+            static void Stop();
 
             static StaticSharedContext& instance();
         private:
