@@ -68,7 +68,7 @@ namespace Engine {
 
         // For structs
         /**
-         * @brief Add a field description to the struct descpriptionss
+         * @brief Add a field description to the struct descpriptions
          * @param name The name of the Field
          * @param description The description to insert
          * @return Reference to this pointer
