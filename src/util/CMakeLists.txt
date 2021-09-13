@@ -16,5 +16,5 @@ target_compile_definitions(Util PRIVATE SHARED_EXPORT)
 
 
 if (UNIX)
-target_compile_options(EExtension -fPIC)
+target_compile_options(Util -fPIC)
 endif()
