@@ -11,3 +11,10 @@ add_library(Util STATIC     file/engine_file_collection.cpp
 
 target_include_directories(Util PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(Util PRIVATE SHARED_EXPORT)
+
+
+
+
+if (UNIX)
+target_compile_options(EExtension -fPIC)
+endif()
