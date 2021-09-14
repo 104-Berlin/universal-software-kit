@@ -82,6 +82,7 @@ TEST(RegisterTest, Basics)
 	ERegister::Entity entity = scene.CreateEntity();
 	EXPECT_FALSE(componentCreated);
 	scene.AddComponent(entity, myTestComponent);
+	scene.UpdateEvents();
 	EXPECT_TRUE(componentCreated);
 	scene.AddComponent(entity, vector);
 
