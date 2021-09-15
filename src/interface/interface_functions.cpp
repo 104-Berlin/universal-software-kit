@@ -125,6 +125,11 @@ namespace Engine {
             return fExtensionManager;
         }
         
+        ERegister& StaticSharedContext::GetActiveRegister() 
+        {
+            return fLoadedRegister;
+        }
+        
         void StaticSharedContext::RunInMainThread(std::function<void()> function) 
         {
             std::lock_guard<std::mutex> lock(fInstance->fQueueMutex);
