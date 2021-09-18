@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 project(USKSharedInterface)
 
 add_library(EInterface SHARED   interface_functions.cpp
+                                interface_register_socket.cpp
                                 util/interface_util.cpp)
 
 target_include_directories(EInterface PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
