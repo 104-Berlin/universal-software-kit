@@ -13,11 +13,16 @@ ERegisterSocket::~ERegisterSocket()
     if (fSocketId > -1)
     {
 #ifdef EWIN
-
+        closesocket(fSocketId);
 #else
         close(fSocketId);
 #endif
     }
+}
+
+void ERegisterSocket::Connect(ERegisterReceiver* receiver) 
+{
+    
 }
 
 void ERegisterSocket::Init() 
@@ -43,5 +48,30 @@ void ERegisterSocket::Init()
         return;
     }
 
+    
+}
+
+ERegisterReceiver::ERegisterReceiver(ERegisterSocket* connectTo) 
+{
+    
+}
+
+ERegisterReceiver::~ERegisterReceiver() 
+{
+    
+}
+
+void ERegisterReceiver::Send_CreateNewEntity() 
+{
+    
+}
+
+void ERegisterReceiver::Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description) 
+{
+    
+}
+
+void ERegisterReceiver::Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString) 
+{
     
 }

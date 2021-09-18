@@ -97,6 +97,20 @@ namespace Engine {
 
         StaticSharedContext::StaticSharedContext() 
         {
+            // Start socket connection. Windows needs permission. We start and end it all in this class
+        #ifdef EWIN
+            WSADATA wsaData;
+
+            int res = WSAStartup(MAKEWORD(2, 2), &wsaData);
+            if (res != 0)
+            {
+                E_ERROR("Could not start windows socket api!");
+                E_ERROR("PROGRAMM NOT RUNNING CORRECTLY!");
+                return;
+            }
+        #endif
+
+
             fRunningThread = std::thread([this](){
                 fIsRunning = true;
                 while (fIsRunning)
@@ -114,6 +128,9 @@ namespace Engine {
 
         StaticSharedContext::~StaticSharedContext() 
         {
+        #ifdef EWIN
+            WSACleanup();
+        #endif
             if (fRunningThread.joinable())
             {
                 fRunningThread.join();
