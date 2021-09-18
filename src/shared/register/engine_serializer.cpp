@@ -3,6 +3,15 @@
 
 using namespace Engine;
 
+EJson ESerializer::WriteStorageDescriptionToJson(const EValueDescription& description) 
+{
+    EJson result = EJson::object();
+
+    
+
+    return result;
+}
+
 EJson WriteStructToJs(EStructProperty* property);
 
 
@@ -92,19 +101,13 @@ EJson ESerializer::WritePropertyToJs(EProperty* property)
     EValueDescription description = property->GetDescription();
     EValueType type = description.GetType();
 
-    if (description.IsArray())
+    switch (type)
     {
-        return WriteArrayToJs(static_cast<EArrayProperty*>(property));
-    }
-    else
-    {
-        switch (type)
-        {
-        case EValueType::PRIMITIVE: return WritePrimitiveToJs(property);
-        case EValueType::STRUCT: return WriteStructToJs(static_cast<EStructProperty*>(property));
-        case EValueType::ENUM: return WriteEnumToJs(static_cast<EEnumProperty*>(property));
-        case EValueType::UNKNOWN: return 0;
-        }
+    case EValueType::PRIMITIVE: return WritePrimitiveToJs(property);
+    case EValueType::ARRAY: return WriteArrayToJs(static_cast<EArrayProperty*>(property));
+    case EValueType::STRUCT: return WriteStructToJs(static_cast<EStructProperty*>(property));
+    case EValueType::ENUM: return WriteEnumToJs(static_cast<EEnumProperty*>(property));
+    case EValueType::UNKNOWN: return 0;
     }
 
     return 0;

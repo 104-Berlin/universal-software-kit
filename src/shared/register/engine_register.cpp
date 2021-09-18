@@ -203,6 +203,11 @@ EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identif
             {
                 break;
             }
+            case EValueType::ARRAY:
+            {
+
+                break;
+            }
             case EValueType::STRUCT:
             {
                 EStructProperty* structProp = static_cast<EStructProperty*>(currentProp);

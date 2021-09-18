@@ -3,6 +3,11 @@
 
 using namespace Engine;
 
+void EDeserializer::ReadStorageDescriptionFromJson(const EJson& json, EValueDescription* description) 
+{
+    
+}
+
 void EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes) 
 {
     auto findType = [&registeredTypes](const EString& id) -> EValueDescription {
@@ -121,19 +126,14 @@ void EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
 {
     EValueDescription currentDsc = property->GetDescription();
     EValueType currentType = currentDsc.GetType();
-    if (currentDsc.IsArray())
+
+    switch (currentType)
     {
-        ReadArrayFromJson(json, static_cast<EArrayProperty*>(property));
-    }
-    else
-    {
-        switch (currentType)
-        {
-        case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json, property); break;
-        case EValueType::STRUCT: ReadStructFromJson(json, static_cast<EStructProperty*>(property)); break;
-        case EValueType::ENUM: ReadEnumFromJson(json, static_cast<EEnumProperty*>(property)); break;
-        case EValueType::UNKNOWN: break;
-        }
+    case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json, property); break;
+    case EValueType::ARRAY: ReadArrayFromJson(json, static_cast<EArrayProperty*>(property)); break;
+    case EValueType::STRUCT: ReadStructFromJson(json, static_cast<EStructProperty*>(property)); break;
+    case EValueType::ENUM: ReadEnumFromJson(json, static_cast<EEnumProperty*>(property)); break;
+    case EValueType::UNKNOWN: break;
     }
 }
 

@@ -154,19 +154,14 @@ void EObjectView::RenderProperty(Engine::EProperty* storage)
 {
     EValueDescription propertyDsc = storage->GetDescription();
     EValueType type = propertyDsc.GetType();
-    if (propertyDsc.IsArray())
+
+    switch (type)
     {
-        RenderArray(static_cast<EArrayProperty*>(storage));
-    }
-    else
-    {
-        switch (type)
-        {
-        case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage)); break;
-        case EValueType::PRIMITIVE: RenderPrimitive(storage); break;
-        case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage)); break;
-        case EValueType::UNKNOWN: break;
-        }
+    case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage)); break;
+    case EValueType::ARRAY: RenderArray(static_cast<EArrayProperty*>(storage)); break;
+    case EValueType::PRIMITIVE: RenderPrimitive(storage); break;
+    case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage)); break;
+    case EValueType::UNKNOWN: break;
     }
 }
 

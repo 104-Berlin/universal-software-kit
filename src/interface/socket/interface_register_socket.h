@@ -1,10 +1,6 @@
 #pragma once
 
 namespace Engine {
-
-    class ERegisterConnection;
-
-
     class E_INTER_API ERegisterSocket
     {
         /**
@@ -42,6 +38,8 @@ namespace Engine {
 
         void Connect(ERegisterConnection* receiver);
     private:
+        int Receive(int socketId, u8* data, size_t data_size);
+
         void Init();
         void CleanUp();
 
@@ -49,28 +47,8 @@ namespace Engine {
         void Run_Connection(int socketId, const sockaddr_in& address);
 
         void HandleConnection(int socketId, const sockaddr_in& address);
-    };
-
-    class E_INTER_API ERegisterConnection
-    {
-    private:   
-        int                 fSocketId;
-
-
-    public:
-        ERegisterConnection();
-        ~ERegisterConnection();
-
-        void Send_CreateNewEntity();
-        void Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description);
-        void Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
-
-
-        void Connect(const EString& connectTo, int connectToPort);
-
-        void Init();
-        void CleanUp();
-    private:
+        void HandleDisconnect(int socketId);
     };
 
 }
+

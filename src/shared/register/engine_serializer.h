@@ -5,6 +5,8 @@ namespace Engine {
     class E_API ESerializer
     {
     public:
+        static EJson WriteStorageDescriptionToJson(const EValueDescription& description);
+
         static EJson WriteSceneToJson(ERegister* scene);
 
         static EJson WritePropertyToJs(EProperty* property);

@@ -37,7 +37,7 @@
 #define E_SET_PROPERTY2(type, s_name, ...) {::Engine::EValueDescription valDsc = ::Engine::getdsc::GetDescription<type>();\
                                     if constexpr (is_vector<type>::value)\
                                     {\
-                                        if (valDsc.IsArray())\
+                                        if (valDsc.GetType() == ::Engine::EValueType::ARRAY)\
                                         {\
                                             static_cast<::Engine::EArrayProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetValue<type>(value. s_name);\
                                         }\
@@ -64,7 +64,7 @@
 #define E_SET_SELF2(type, s_name, ...) {::Engine::EValueDescription valDsc = ::Engine::getdsc::GetDescription<type>();\
                                     if constexpr (is_vector<type>::value)\
                                     {\
-                                        if (valDsc.IsArray())\
+                                        if (valDsc.GetType() == ::Engine::EValueType::ARRAY)\
                                         {\
                                             static_cast<const ::Engine::EArrayProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetValue<type>(value. s_name);\
                                         }\

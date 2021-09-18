@@ -1,8 +1,9 @@
 #include "prefix_interface.h"
 
+using namespace Engine;
+
 #define LISTEN_BACKLOG 50
 
-using namespace Engine;
 
 ERegisterSocket::ERegisterSocket(int port) 
     : fPort(port), fSocketId(-1)
@@ -18,6 +19,17 @@ ERegisterSocket::~ERegisterSocket()
 void ERegisterSocket::Connect(ERegisterConnection* receiver) 
 {
     
+}
+
+int ERegisterSocket::Receive(int socketId, u8* data, size_t data_size) 
+{
+    int n;
+#ifdef EWIN
+        n = recv(socketId, (char*) data, data_size, 0);
+#else
+        n = read(socketId, (void*) data, data_size);
+#endif
+    return n;
 }
 
 void ERegisterSocket::Init() 
@@ -105,27 +117,30 @@ void ERegisterSocket::Run_Connection(int socketId, const sockaddr_in& address)
 {
     while (fIsRunning)
     {
-        char buffer[255];
-        memset(buffer, 0, 255);
-        int n;
-#ifdef EWIN
-        n = recv(socketId, buffer, 255, 0);
-#else
-        n = read(socketId, buffer, 255);
-#endif
+        ESocketEvent event;
+        int n = Receive(socketId, (u8*)&event, sizeof(ESocketEvent));
         if (n == 0)
         {
-            E_INFO(EString("User disconnect: ") + inet_ntoa(address.sin_addr));
+            HandleDisconnect(socketId);
             break;
         }
         // Handle Command and send back something
-
-        // For now just print message
-        // Make it null terminate for safety
-        buffer[254] = 0;
-        EString asString = buffer;
-
-        E_INFO("Server got from user: " + asString);
+        switch (event)
+        {
+        case ESocketEvent::CREATE_ENTITY:
+        {
+            E_ERROR("CREATE ENTITY");
+            break;
+        }
+        case ESocketEvent::CREATE_COMPONENT:
+        {
+            ESocketEvent_CreateComponent data;
+            n = Receive(socketId, (u8*)&data, sizeof(ESocketEvent_CreateComponent));
+            if (n == 0) { HandleDisconnect(socketId); return; }
+            
+            break;
+        }
+        }
     }
 }
 
@@ -147,80 +162,20 @@ void ERegisterSocket::HandleConnection(int socketId, const sockaddr_in& address)
     fConnections.push_back(newConnection);
 }
 
-ERegisterConnection::ERegisterConnection() 
+void ERegisterSocket::HandleDisconnect(int socketId) 
 {
-}
+    std::lock_guard<std::mutex> lock(fConnectionMutex);
 
-ERegisterConnection::~ERegisterConnection() 
-{
-    
-}
-
-void ERegisterConnection::Send_CreateNewEntity() 
-{
-    int n;
-    const char* buffer = "Hello World";
-
-#ifdef EWIN
-    n = send(fSocketId, buffer, strlen(buffer), 0);
-#else
-    n = write(fSocketId, buffer, strlen(buffer));
-#endif
-
-
-}
-
-void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description) 
-{
-    
-}
-
-void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString) 
-{
-    
-}
-
-void ERegisterConnection::Init() 
-{
-    int socketDomain = AF_INET;
-    fSocketId = socket(socketDomain, SOCK_STREAM, 0);
-    if (fSocketId == -1)
+    EVector<Connection>::iterator it = std::find_if(fConnections.begin(), fConnections.end(), [socketId](const Connection& con) -> bool{
+        return con.SocketId == socketId;
+    });
+    if (it != fConnections.end())
     {
-        E_ERROR("Could not create receiver socket!");
-        return;
+        E_INFO(EString("User disconnect: ") + inet_ntoa(it->Address.sin_addr));
+        fConnections.erase(it);
     }
-}
-
-void ERegisterConnection::CleanUp() 
-{
-    if (fSocketId > -1)
+    else
     {
-#ifdef EWIN
-        closesocket(fSocketId);
-#else
-        close(fSocketId);
-#endif
-
-        fSocketId = -1;
-    }
-}
-
-void ERegisterConnection::Connect(const EString& connectTo, int connectToPort) 
-{
-    hostent* connect_to_server = gethostbyname(connectTo.c_str());
-    if (connect_to_server == NULL)
-    {
-        E_ERROR("Could not find Server " + connectTo);
-    }
-
-    sockaddr_in serverAddr;
-    serverAddr.sin_family = AF_INET;
-    bcopy((char*)connect_to_server->h_addr_list[0], (char*)&serverAddr.sin_addr, connect_to_server->h_length);
-    serverAddr.sin_port = htons(connectToPort);
-
-    if (connect(fSocketId, (sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
-    {
-        E_ERROR("Could not connect to server!");
-        return;
+        E_ERROR(EString("Could not disconnect user with SocketID: ") + std::to_string(socketId));
     }
 }

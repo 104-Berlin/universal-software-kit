@@ -44,19 +44,15 @@ void inter::PrintProperty(EProperty* prop)
 {
     EValueDescription dsc = prop->GetDescription();
     std::cout << "\"" << prop->GetPropertyName() << "\": ";
-    if (dsc.IsArray())
+    
+    switch (dsc.GetType())
     {
-        PrintProperty_Array(static_cast<EArrayProperty*>(prop));
+    case EValueType::PRIMITIVE: PrintProperty_Prim(prop); break;
+    case EValueType::ARRAY: PrintProperty_Array(static_cast<EArrayProperty*>(prop)); break;
+    case EValueType::STRUCT: PrintProperty_Struct(static_cast<EStructProperty*>(prop)); break;
+    case EValueType::ENUM: break;
+    case EValueType::UNKNOWN: break;
     }
-    else
-    {
-        switch (dsc.GetType())
-        {
-        case EValueType::PRIMITIVE: PrintProperty_Prim(prop); break;
-        case EValueType::STRUCT: PrintProperty_Struct(static_cast<EStructProperty*>(prop));
-        case EValueType::ENUM: break;
-        case EValueType::UNKNOWN: break;
-        }
-    }
+    
     std::cout << std::endl;
 }
