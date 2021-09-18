@@ -8,7 +8,8 @@ namespace Engine {
         {
         private:
             EExtensionManager               fExtensionManager;
-            ERegister                       fLoadedRegister;
+            ERegisterConnection             fRegisterConnection;
+            ERegisterSocket*                fRegisterSocket;
             std::thread                     fRunningThread;
             EQueue<std::function<void()>>   fMainThreadQueue;
             std::mutex                      fQueueMutex;
@@ -18,7 +19,7 @@ namespace Engine {
             ~StaticSharedContext();
 
             EExtensionManager&  GetExtensionManager();
-            ERegister&          GetActiveRegister();
+            ERegisterConnection&  GetRegisterConnection();
 
             static void RunInMainThread(std::function<void()> function);
 

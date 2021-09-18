@@ -39,5 +39,5 @@
 
 #include "util/interface_util.h"
 
-#include "interface_functions.h"
 #include "interface_register_socket.h"
+#include "interface_functions.h"

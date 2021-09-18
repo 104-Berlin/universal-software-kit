@@ -10,7 +10,8 @@ shared::StaticSharedContext* shared::StaticSharedContext::fInstance = nullptr;
 
 shared::ESharedError shared::LoadExtension(const EString& pathToExtension) 
 {
-    StaticSharedContext::instance().RunInMainThread([pathToExtension](){
+    
+    /*StaticSharedContext::instance().RunInMainThread([pathToExtension](){
         EFile file(pathToExtension);
         if (!file.Exist())
         {
@@ -23,23 +24,24 @@ shared::ESharedError shared::LoadExtension(const EString& pathToExtension)
         EExtension* extension = EXTENSION_MANAGER.GetExtension(file.GetFileName());
         E_ASSERT(extension);
         E_INFO("Loaded extension \"" + extension->GetName() + "\"");
-    });
+    });*/
 
     return false;
 }
 
 shared::ESharedError shared::CreateEntity() 
 {
-    StaticSharedContext::instance().RunInMainThread([](){
+    StaticSharedContext::instance().GetRegisterConnection().Send_CreateNewEntity();
+    /*StaticSharedContext::instance().RunInMainThread([](){
         ERegister::Entity ent = ACTIVE_SCENE->CreateEntity();
         E_INFO("Created entity " + std::to_string(ent));
-    });
+    });*/
     return false;
 }
 
 shared::ESharedError shared::CreateComponent(const EString& componentId, ERegister::Entity entity) 
 {
-    StaticSharedContext::instance().RunInMainThread([componentId, entity](){
+    /*StaticSharedContext::instance().RunInMainThread([componentId, entity](){
         EValueDescription desc;
         if (!EXTENSION_MANAGER.GetTypeRegister().FindItem(EFindTypeDescByName(componentId), &desc))
         {
@@ -52,13 +54,13 @@ shared::ESharedError shared::CreateComponent(const EString& componentId, ERegist
             return; // ERROR
         }
         inter::PrintProperty(prop);
-    });
+    });*/
     return false;
 }
 
 shared::ESharedError  shared::SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString)
 {
-    StaticSharedContext::instance().RunInMainThread([valueIdent, entity, valueString](){
+    /*StaticSharedContext::instance().RunInMainThread([valueIdent, entity, valueString](){
         EProperty* prop = ACTIVE_SCENE->GetValueByIdentifier(entity, valueIdent);
         if (!prop)
         {
@@ -69,7 +71,7 @@ shared::ESharedError  shared::SetValue(ERegister::Entity entity, const EString& 
         
 
         EDeserializer::ReadPropertyFromJson(EJson::parse(valueString, [](int depth, EJson::parse_event_t event, EJson& parsed) -> bool { return true; }, false), prop);
-    });
+    });*/
     return false;
 }
 
@@ -96,6 +98,7 @@ namespace Engine {
     namespace shared {
 
         StaticSharedContext::StaticSharedContext() 
+            : fRegisterSocket(nullptr)
         {
             // Start socket connection. Windows needs permission. We start and end it all in this class
         #ifdef EWIN
@@ -110,6 +113,11 @@ namespace Engine {
             }
         #endif
 
+            // For now we create local socket
+            fRegisterSocket = new ERegisterSocket(420);
+            fRegisterConnection.Init();
+            fRegisterConnection.Connect("localhost", 420);
+            
 
             fRunningThread = std::thread([this](){
                 fIsRunning = true;
@@ -128,6 +136,9 @@ namespace Engine {
 
         StaticSharedContext::~StaticSharedContext() 
         {
+            fRegisterConnection.CleanUp();
+
+            if (fRegisterSocket) { delete fRegisterSocket; }
         #ifdef EWIN
             WSACleanup();
         #endif
@@ -142,9 +153,9 @@ namespace Engine {
             return fExtensionManager;
         }
         
-        ERegister& StaticSharedContext::GetActiveRegister() 
+        ERegisterConnection& StaticSharedContext::GetRegisterConnection() 
         {
-            return fLoadedRegister;
+            return fRegisterConnection;
         }
         
         void StaticSharedContext::RunInMainThread(std::function<void()> function) 
