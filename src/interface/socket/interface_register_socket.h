@@ -1,5 +1,7 @@
 #pragma once
 
+struct sockaddr_in;
+
 namespace Engine {
     class E_INTER_API ERegisterSocket
     {
@@ -15,16 +17,21 @@ namespace Engine {
         {
             std::thread*    Thread;
             int             SocketId;
-            sockaddr_in     Address;
+            sockaddr_in*    Address;
 
             Connection() = default;
         };
     private:
-        ERegister           fLoadedRegister; // The register to get and set data
-        sockaddr_in         fAddressInfo; // Info to the current socket
+        ERegister*          fLoadedRegister; // The register to get and set data
+
+
+        int                 fSocketId; // The running socket
+        sockaddr_in*        fAddressInfo; // Info to the current socket
+
+        int                 fEventSocket; // The Event socket
+        sockaddr_in*        fEventAddressInfo; // Info to event socket
         
         int                 fPort; // Running port
-        int                 fSocketId; // The running socket
 
         std::atomic<bool>   fIsRunning;
 
@@ -33,12 +40,15 @@ namespace Engine {
 
         EVector<Connection> fConnections;
         std::mutex          fConnectionMutex;
+
+        std::mutex          fSendEventDataMutex;
     public:
         ERegisterSocket(int port);
         ~ERegisterSocket();
-
-        void Connect(ERegisterConnection* receiver);
     private:
+        int GetEventPort() const;
+
+
         int Receive(int socketId, u8* data, size_t data_size);
         void Receive(int socketId, EJson& outJson);
 
@@ -50,9 +60,9 @@ namespace Engine {
         void CleanUp();
 
         void Run_AcceptConnections();
-        void Run_Connection(int socketId, const sockaddr_in& address);
+        void Run_Connection(int socketId, sockaddr_in* address);
 
-        void HandleConnection(int socketId, const sockaddr_in& address);
+        void HandleConnection(int socketId, sockaddr_in* address);
         void HandleDisconnect(int socketId);
 
 

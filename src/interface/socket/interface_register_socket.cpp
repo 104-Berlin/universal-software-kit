@@ -6,12 +6,9 @@ using namespace Engine;
 
 
 ERegisterSocket::ERegisterSocket(int port) 
-    : fPort(port), fSocketId(-1)
+    : fPort(port), fSocketId(-1), fAddressInfo(nullptr), fLoadedRegister(new ERegister())
 {
     Init();
-    fLoadedRegister.CatchAllEvents([this](EStructProperty* data){
-        HandleRegisterEvent(data);
-    });
 }
 
 ERegisterSocket::~ERegisterSocket() 
@@ -26,13 +23,7 @@ void ERegisterSocket::Connect(ERegisterConnection* receiver)
 
 int ERegisterSocket::Receive(int socketId, u8* data, size_t data_size) 
 {
-    int n;
-#ifdef EWIN
-        n = recv(socketId, (char*) data, data_size, 0);
-#else
-        n = read(socketId, (void*) data, data_size);
-#endif
-    return n;
+    return _sock::read(socketId, data, data_size);
 }
 
 void ERegisterSocket::Receive(int socketId, EJson& outJson) 
@@ -56,12 +47,9 @@ void ERegisterSocket::Receive(int socketId, EJson& outJson)
 
 void ERegisterSocket::Send(int socketId, const u8* data, size_t data_size) 
 {
-    int n;
-#ifdef EWIN
-    n = send(socketId, (const char*) data, data_size, 0);
-#else
-    n = write(socketId, data, data_size);
-#endif
+    std::lock_guard<std::mutex> lock(fSendEventDataMutex);
+    
+    int n = _sock::send(socketId, data, data_size);
 }
 
 void ERegisterSocket::Send(int socketId, const EJson& request) 
@@ -75,8 +63,22 @@ void ERegisterSocket::Send(int socketId, const EJson& request)
 
 void ERegisterSocket::Init() 
 {
+    if (fLoadedRegister)
+    {
+        delete fLoadedRegister;
+    }
+    fLoadedRegister = new ERegister();
+
+    fLoadedRegister->CatchAllEvents([this](EStructProperty* data){
+        HandleRegisterEvent(data);
+    });
+
+ 
+
     // TODO: For single machine interface use AF_LOCAL
     int socketDomain = AF_INET;
+
+    // SETUP MEMORY SOCKET
 
     fSocketId = socket(socketDomain, SOCK_STREAM, 0);
 
@@ -86,9 +88,10 @@ void ERegisterSocket::Init()
         return;
     }
 
-    fAddressInfo.sin_family = socketDomain;
-    fAddressInfo.sin_addr.s_addr = INADDR_ANY;
-    fAddressInfo.sin_port = htons(fPort);
+    fAddressInfo = new sockaddr_in();
+    fAddressInfo->sin_family = socketDomain;
+    fAddressInfo->sin_addr.s_addr = INADDR_ANY;
+    fAddressInfo->sin_port = htons(fPort);
 
     if (bind(fSocketId, (const sockaddr*)&fAddressInfo, sizeof(fAddressInfo)) == -1)
     {
@@ -99,31 +102,34 @@ void ERegisterSocket::Init()
     fIsRunning = true;
     fAcceptThread = std::thread([this](){
         Run_AcceptConnections();
-    });    
+    });  
+    fRegisterEventThread = std::thread([this](){
+        while (fIsRunning)
+        {
+            fLoadedRegister->UpdateEvents();
+        }
+    });
 }
 
 void ERegisterSocket::CleanUp() 
 {
     fIsRunning = false;
 
-
-    
-
     if (fSocketId > -1)
     {
-#ifdef EWIN
-        closesocket(fSocketId);
-#else
-        close(fSocketId);
-#endif
-
+        _sock::close(fSocketId);
         fSocketId = -1;
     }
+    
 
 
     if (fAcceptThread.joinable())
     {
         fAcceptThread.join();
+    }
+    if (fRegisterEventThread.joinable())
+    {
+        fRegisterEventThread.join();
     }
 
     for (auto& entry : fConnections)
@@ -133,8 +139,21 @@ void ERegisterSocket::CleanUp()
             entry.Thread->join();
         }
         delete entry.Thread;
+        delete entry.Address;
     }
     fConnections.clear();
+
+    if (fAddressInfo)
+    {
+        delete fAddressInfo;
+    }
+
+    if (fLoadedRegister)
+    {
+        delete fLoadedRegister;
+        fLoadedRegister = nullptr;
+    }
+
 }
 
 void ERegisterSocket::Run_AcceptConnections() 
@@ -142,19 +161,19 @@ void ERegisterSocket::Run_AcceptConnections()
     listen(fSocketId, LISTEN_BACKLOG);
     while (fIsRunning)
     {
-        sockaddr_in client_address;
+        sockaddr_in* client_address = new sockaddr_in();
         socklen_t client_length = sizeof(client_address);
 
-        int newSocketId = accept(fSocketId, (sockaddr*)&client_address, &client_length);
+        int newSocketId = accept(fSocketId, (sockaddr*)client_address, &client_length);
         if (newSocketId != -1)
         {
-            E_INFO(EString("RegisterSocket: Got new connection from ") + inet_ntoa(client_address.sin_addr) + " port: " + std::to_string(ntohs(client_address.sin_port)));
+            E_INFO(EString("RegisterSocket: Got new connection from ") + inet_ntoa(client_address->sin_addr) + " port: " + std::to_string(ntohs(client_address->sin_port)));
             HandleConnection(newSocketId, client_address);
         }
     }
 }
 
-void ERegisterSocket::Run_Connection(int socketId, const sockaddr_in& address) 
+void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address) 
 {
     while (fIsRunning)
     {
@@ -165,12 +184,16 @@ void ERegisterSocket::Run_Connection(int socketId, const sockaddr_in& address)
             HandleDisconnect(socketId);
             break;
         }
+        // I think we have to wait here for the event thread to finish sending the data
+
+
+
         // Handle Command and send back something
         switch (event)
         {
         case ESocketEvent::CREATE_ENTITY:
         {
-            ERegister::Entity entity = fLoadedRegister.CreateEntity();
+            ERegister::Entity entity = fLoadedRegister->CreateEntity();
             E_ERROR("CREATE ENTITY " + std::to_string(entity));
             break;
         }
@@ -190,7 +213,7 @@ void ERegisterSocket::Run_Connection(int socketId, const sockaddr_in& address)
             if (inputJson["Entity"].is_number_integer())
             {
                 ERegister::Entity entity = (ERegister::Entity) inputJson["Entity"].get<int>();
-                EStructProperty* property = fLoadedRegister.AddComponent(entity, dsc);
+                EStructProperty* property = fLoadedRegister->AddComponent(entity, dsc);
                 if (property)
                 {
                     E_INFO("Add Component " + dsc.GetId());
@@ -210,7 +233,7 @@ void ERegisterSocket::Run_Connection(int socketId, const sockaddr_in& address)
                 EString valueIdent = requestJson["ValueIdent"].get<EString>();
                 EString value = requestJson["Value"].get<EString>();
 
-                EProperty* foundProperty = fLoadedRegister.GetValueByIdentifier(entity, valueIdent);
+                EProperty* foundProperty = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
                 if (!foundProperty)
                 {
                     E_ERROR("Could not set value. Value not found!");
@@ -229,7 +252,7 @@ void ERegisterSocket::Run_Connection(int socketId, const sockaddr_in& address)
             {
                 ERegister::Entity entity = requestJson["Entity"].get<int>();
                 EString valueIdent = requestJson["ValueIdent"].get<EString>();
-                EProperty* foundValue = fLoadedRegister.GetValueByIdentifier(entity, valueIdent);
+                EProperty* foundValue = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
                 EJson resultJson = EJson::object();
                 if (foundValue)
                 {
@@ -245,7 +268,7 @@ void ERegisterSocket::Run_Connection(int socketId, const sockaddr_in& address)
     }
 }
 
-void ERegisterSocket::HandleConnection(int socketId, const sockaddr_in& address) 
+void ERegisterSocket::HandleConnection(int socketId, sockaddr_in* address) 
 {
     std::lock_guard<std::mutex> lock(fConnectionMutex);
 
@@ -272,7 +295,7 @@ void ERegisterSocket::HandleDisconnect(int socketId)
     });
     if (it != fConnections.end())
     {
-        E_INFO(EString("User disconnect: ") + inet_ntoa(it->Address.sin_addr));
+        E_INFO(EString("User disconnect: ") + inet_ntoa(it->Address->sin_addr));
         fConnections.erase(it);
     }
     else
@@ -283,5 +306,5 @@ void ERegisterSocket::HandleDisconnect(int socketId)
 
 void ERegisterSocket::HandleRegisterEvent(EStructProperty* data) 
 {
-    
+
 }

@@ -90,7 +90,7 @@ namespace Engine {
         -> std::enable_if_t<std::is_invocable<decltype(fn), EStructProperty*>::value, void>
         {
             std::lock_guard<std::mutex> lock(fEventMutex);
-            fCallAllways.push_back(fn);
+            fCallAllways.push_back([fn](EProperty* prop){fn(static_cast<EStructProperty*>(prop)); });
         }
 
         template <typename T>
@@ -118,6 +118,8 @@ namespace Engine {
         }
         void Enqueue(EValueDescription dsc, EProperty* property);
 
+        void Post_P(const EValueDescription& dsc, EProperty* property);
+
         template <typename T>
         void Post(const EValueDescription& dsc, const T& data)
         {
@@ -125,10 +127,7 @@ namespace Engine {
             EStructProperty* property = static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc));
             if (property->SetValue<T>(data))
             {
-                for (CallbackFunction func : fRegisteredCallbacks[dsc.GetId()])
-                {
-                    func(property);
-                }
+                Post_P(dsc, property);
             }
             delete property;
         }
@@ -138,7 +137,6 @@ namespace Engine {
         {
             Post<T>(getdsc::GetDescription<T>(), data);
         }
-        void Post(const EValueDescription& dsc, EProperty* property);
 
 
         void Update();

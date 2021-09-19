@@ -10,7 +10,7 @@ void EEventDispatcher::Enqueue(EValueDescription dsc, EProperty* property)
     fPostedEvents.push_back({dsc.GetId(), property->Clone()});
 }
 
-void EEventDispatcher::Post(const EValueDescription& dsc, EProperty* property) 
+void EEventDispatcher::Post_P(const EValueDescription& dsc, EProperty* property) 
 {
     std::lock_guard<std::mutex> lock(fEventMutex);
     for (CallbackFunction func : fRegisteredCallbacks[dsc.GetId()])

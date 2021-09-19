@@ -83,11 +83,7 @@ void ERegisterConnection::CleanUp()
 {
     if (fSocketId > -1)
     {
-#ifdef EWIN
-        closesocket(fSocketId);
-#else
-        close(fSocketId);
-#endif
+        _sock::close(fSocketId);
 
         fSocketId = -1;
     }
@@ -106,13 +102,7 @@ void ERegisterConnection::Get(EJson& outValue)
 
 int ERegisterConnection::Get(u8* buffer, size_t buffer_size) 
 {
-     int n;
-#ifdef EWIN
-        n = recv(fSocketId, (char*) buffer, buffer_size, 0);
-#else
-        n = read(fSocketId, (void*) buffer, buffer_size);
-#endif
-    return n;
+    return _sock::read(fSocketId, buffer, buffer_size);
 }
 
 void ERegisterConnection::Send(ESocketEvent eventType) 
@@ -122,12 +112,7 @@ void ERegisterConnection::Send(ESocketEvent eventType)
 
 void ERegisterConnection::Send(const u8* buffer, size_t buffer_size) 
 {
-    int n;
-#ifdef EWIN
-    n = send(fSocketId, (const char*) buffer, buffer_size, 0);
-#else
-    n = write(fSocketId, buffer, buffer_size);
-#endif
+    _sock::send(fSocketId, buffer, buffer_size);
 }
 
 void ERegisterConnection::Send(const EJson& value) 

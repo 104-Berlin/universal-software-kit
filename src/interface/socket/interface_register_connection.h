@@ -7,7 +7,7 @@ namespace Engine {
     private:   
         int                 fSocketId;
 
-
+        std::thread         fListenThread;
     public:
         ERegisterConnection();
         ~ERegisterConnection();
