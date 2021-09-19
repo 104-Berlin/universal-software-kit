@@ -16,13 +16,15 @@ namespace Engine {
         void Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description);
         void Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
 
-        
+        ERef<EProperty> Send_GetValue(ERegister::Entity entity, const EString& valueIdent);
 
         void Connect(const EString& connectTo, int connectToPort);
 
         void Init();
         void CleanUp();
     private:
+        void Get(EJson& outValue);
+        int Get(u8* buffer, size_t buffer_size);
 
         void Send(const u8* buffer, size_t buffer_size);
 

@@ -32,6 +32,44 @@ int ERegisterSocket::Receive(int socketId, u8* data, size_t data_size)
     return n;
 }
 
+void ERegisterSocket::Receive(int socketId, EJson& outJson) 
+{
+    int n = 0;
+    size_t dataLen;
+    n = Receive(socketId, (u8*)&dataLen, sizeof(size_t));
+    if (n == 0) { HandleDisconnect(socketId); return; }
+    
+
+    u8* buffer = new u8[dataLen];
+    memset(buffer, 0, dataLen);
+    n = Receive(socketId, buffer, dataLen);
+    if (n == 0) { HandleDisconnect(socketId); return; }
+
+    EString asString = EString((const char*) buffer);
+    delete[] buffer;
+
+    outJson = EJson::parse(asString);
+}
+
+void ERegisterSocket::Send(int socketId, const u8* data, size_t data_size) 
+{
+    int n;
+#ifdef EWIN
+    n = send(socketId, (const char*) data, data_size, 0);
+#else
+    n = write(socketId, data, data_size);
+#endif
+}
+
+void ERegisterSocket::Send(int socketId, const EJson& request) 
+{
+    EString requestAsString = request.dump();
+    const char* buf = requestAsString.c_str();
+    size_t bufLen = strlen(buf) + 1;
+    Send(socketId, (u8*) &bufLen, sizeof(size_t));
+    Send(socketId, (u8*) buf, bufLen);
+}
+
 void ERegisterSocket::Init() 
 {
     // TODO: For single machine interface use AF_LOCAL
@@ -135,19 +173,9 @@ void ERegisterSocket::Run_Connection(int socketId, const sockaddr_in& address)
         }
         case ESocketEvent::CREATE_COMPONENT:
         {
-            size_t dataLen;
-            n = Receive(socketId, (u8*)&dataLen, sizeof(size_t));
-            if (n == 0) { HandleDisconnect(socketId); return; }
-            
+            EJson inputJson = EJson::object();
+            Receive(socketId, inputJson);
 
-            u8* buffer = new u8[dataLen];
-            memset(buffer, 0, dataLen);
-            n = Receive(socketId, buffer, dataLen);
-            if (n == 0) { HandleDisconnect(socketId); return; }
-
-            EString asString = EString((const char*) buffer);
-            E_INFO("GOT JSON: " + asString);
-            EJson inputJson = EJson::parse(asString);
             const EJson& descriptionJson = inputJson["ValueDescription"];
             EValueDescription dsc;
             if (!EDeserializer::ReadStorageDescriptionFromJson(descriptionJson, &dsc))
@@ -155,19 +183,58 @@ void ERegisterSocket::Run_Connection(int socketId, const sockaddr_in& address)
                 E_ERROR("Could not read storage description from parsed json!");
                 break;
             }
-            ERegister::Entity entity = 0;
+            
             if (inputJson["Entity"].is_number_integer())
             {
-                entity = (ERegister::Entity) inputJson["Entity"].get<int>();
-            }
-            if (entity)
-            {
+                ERegister::Entity entity = (ERegister::Entity) inputJson["Entity"].get<int>();
                 EStructProperty* property = fLoadedRegister.AddComponent(entity, dsc);
                 if (property)
                 {
                     E_INFO("Add Component " + dsc.GetId());
                     inter::PrintProperty(property);
                 }
+            }
+            break;
+        }
+        case ESocketEvent::SET_VALUE:
+        {
+            EJson requestJson = EJson::object();
+            Receive(socketId, requestJson);
+
+            if (requestJson["Entity"].is_number_integer() && requestJson["ValueIdent"].is_string() && requestJson["Value"].is_string())
+            {
+                ERegister::Entity entity = requestJson["Entity"].get<int>();
+                EString valueIdent = requestJson["ValueIdent"].get<EString>();
+                EString value = requestJson["Value"].get<EString>();
+
+                EProperty* foundProperty = fLoadedRegister.GetValueByIdentifier(entity, valueIdent);
+                if (!foundProperty)
+                {
+                    E_ERROR("Could not set value. Value not found!");
+                    return;
+                }
+                EDeserializer::ReadPropertyFromJson(EJson::parse(value), foundProperty);
+                E_INFO("Value " + valueIdent + " setted on entity " + std::to_string(entity) + "!");
+            }
+            break;
+        }
+        case ESocketEvent::GET_VALUE:
+        {
+            EJson requestJson = EJson::object();
+            Receive(socketId, requestJson);
+            if (requestJson["Entity"].is_number_integer() && requestJson["ValueIdent"].is_string())
+            {
+                ERegister::Entity entity = requestJson["Entity"].get<int>();
+                EString valueIdent = requestJson["ValueIdent"].get<EString>();
+                EProperty* foundValue = fLoadedRegister.GetValueByIdentifier(entity, valueIdent);
+                EJson resultJson = EJson::object();
+                if (foundValue)
+                {
+                    resultJson["ValueDescription"] = ESerializer::WriteStorageDescriptionToJson(foundValue->GetDescription());
+                    resultJson["PropertyName"] = foundValue->GetPropertyName();
+                    resultJson["Value"] = ESerializer::WritePropertyToJs(foundValue);
+                }
+                Send(socketId, resultJson);
             }
             break;
         }

@@ -48,7 +48,7 @@ namespace Engine {
 
         // Getter
         
-       E_INTER_API EStructProperty* GetComponent(const EString& componentId, ERegister::Entity entity);
+       E_INTER_API ERef<EProperty> GetValue(ERegister::Entity entity, const EString& vlaueIdent);
     }
 
 }

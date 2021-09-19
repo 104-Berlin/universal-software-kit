@@ -26,6 +26,16 @@ EProperty* Engine::EProperty::Clone()
     return this->OnClone();
 }
 
+bool EProperty::IsValid() const
+{
+    return !fName.empty() && fDescription.Valid();
+}
+
+bool EProperty::operator()() const
+{
+    return IsValid();
+}
+
 void EProperty::SetChangeFunc(ChangeFunc func) 
 {
     fChangeFunc = func;

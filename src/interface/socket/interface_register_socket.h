@@ -39,6 +39,11 @@ namespace Engine {
         void Connect(ERegisterConnection* receiver);
     private:
         int Receive(int socketId, u8* data, size_t data_size);
+        void Receive(int socketId, EJson& outJson);
+
+
+        void Send(int socketId, const u8* data, size_t data_size);
+        void Send(int socketId, const EJson& request);
 
         void Init();
         void CleanUp();

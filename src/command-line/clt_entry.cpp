@@ -41,15 +41,15 @@ int main(int argc, char** argv)
                     std::cout << "Invalid use! add <entityid> <valueid>" << std::endl;
                 }
             }
-            else if (args[0] == "show")
+            else if (args[0] == "get")
             {
                 if (args.size() == 3)
                 {
                     ERegister::Entity entity = std::stoi(args[1]);
-                    EStructProperty* component = shared::GetComponent(args[2], entity);
+                    ERef<EProperty> component = shared::GetValue(entity, args[2]);
                     if (component)
                     {
-                        inter::PrintProperty(component);
+                        inter::PrintProperty(component.get());
                     }
                 }
                 else
@@ -64,7 +64,6 @@ int main(int argc, char** argv)
                     ERegister::Entity entity = std::stoi(args[1]);
                     
                     shared::SetValue(entity, args[2], args[3]);
-
                 }
                 else
                 {

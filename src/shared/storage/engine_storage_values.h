@@ -58,6 +58,8 @@ namespace Engine {
 
         EProperty* Clone();
         
+        bool IsValid() const;
+        bool operator()() const;
     protected:
         virtual EProperty* OnClone() = 0;
         // Only used by register. Should stay this way

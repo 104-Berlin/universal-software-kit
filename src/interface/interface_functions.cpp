@@ -68,6 +68,7 @@ shared::ESharedError shared::CreateComponent(const EString& componentId, ERegist
 
 shared::ESharedError  shared::SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString)
 {
+    StaticSharedContext::instance().GetRegisterConnection().Send_SetValue(entity, valueIdent, valueString);
     /*StaticSharedContext::instance().RunInMainThread([valueIdent, entity, valueString](){
         EProperty* prop = ACTIVE_SCENE->GetValueByIdentifier(entity, valueIdent);
         if (!prop)
@@ -84,18 +85,12 @@ shared::ESharedError  shared::SetValue(ERegister::Entity entity, const EString& 
 }
 
 
-EStructProperty* shared::GetComponent(const EString& componentId, ERegister::Entity entity) 
+ERef<EProperty> shared::GetValue(ERegister::Entity entity, const EString& valueIdent) 
 {
-    EValueDescription desc;
-    if (!EXTENSION_MANAGER.GetTypeRegister().FindItem(EFindTypeDescByName(componentId), &desc))
-    {
-        E_ERROR("Could not find type " + componentId);
-        return nullptr;
-    }
-    EStructProperty* result = ACTIVE_SCENE->GetComponent(entity, desc);
+    ERef<EProperty> result = StaticSharedContext::instance().GetRegisterConnection().Send_GetValue(entity, valueIdent);
     if (!result)
     {
-        E_WARN("Could not find component " + componentId);
+        E_WARN("Could not find value " + valueIdent);
     }
     return result;
 }

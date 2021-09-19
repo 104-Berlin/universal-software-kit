@@ -32,7 +32,40 @@ void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, cons
 
 void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString) 
 {
-    
+    EJson requestJson = EJson::object();
+    requestJson["Entity"] = entity;
+    requestJson["ValueIdent"] = valueIdent;
+    requestJson["Value"] = valueString;
+
+    Send(ESocketEvent::SET_VALUE);
+    Send(requestJson);
+}
+
+ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, const EString& valueIdent) 
+{
+    Send(ESocketEvent::GET_VALUE);
+    EJson request = EJson::object();
+    request["Entity"] = entity;
+    request["ValueIdent"] = valueIdent;
+    Send(request);
+
+    EJson result = EJson::object();
+    Get(result);
+
+    EValueDescription propertyDescription;
+    if (!result["ValueDescription"].is_null() && result["PropertyName"].is_string() && !result["Value"].is_null())
+    {
+        EDeserializer::ReadStorageDescriptionFromJson(result["ValueDescription"], &propertyDescription);
+
+        ERef<EProperty> resProperty = ERef<EProperty>(EProperty::CreateFromDescription(result["PropertyName"].get<EString>(), propertyDescription));
+
+        if (EDeserializer::ReadPropertyFromJson(result["Value"], resProperty.get()))
+        {
+            return resProperty;
+        }
+        return nullptr;
+    }
+    return nullptr;
 }
 
 void ERegisterConnection::Init() 
@@ -58,6 +91,28 @@ void ERegisterConnection::CleanUp()
 
         fSocketId = -1;
     }
+}
+
+void ERegisterConnection::Get(EJson& outValue) 
+{
+    size_t bufLen = 0;
+    Get((u8*)&bufLen, sizeof(size_t));
+    u8* buffer = new u8[bufLen];
+    Get(buffer, bufLen);
+    EString bufAsString = EString((const char*)buffer);
+    delete[] buffer;
+    outValue = EJson::parse(bufAsString);
+}
+
+int ERegisterConnection::Get(u8* buffer, size_t buffer_size) 
+{
+     int n;
+#ifdef EWIN
+        n = recv(fSocketId, (char*) buffer, buffer_size, 0);
+#else
+        n = read(fSocketId, (void*) buffer, buffer_size);
+#endif
+    return n;
 }
 
 void ERegisterConnection::Send(ESocketEvent eventType) 
