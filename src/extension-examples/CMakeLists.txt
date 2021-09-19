@@ -30,4 +30,4 @@ add_library(Example2 MODULE example2.cpp)
 set_target_properties(Example2 PROPERTIES SUFFIX ".uex")
 set_target_properties(Example2 PROPERTIES PREFIX "")
 
-target_link_libraries(Example2 EExtension)
+target_link_libraries(Example2 EInterface)

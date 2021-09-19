@@ -8,5 +8,5 @@ add_library(EEditorExtension SHARED editor_vector_functions.cpp
 target_compile_definitions(EEditorExtension PRIVATE EXPORT_EDITOR_EXTENSION)
 target_include_directories(EEditorExtension PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(EEditorExtension EExtension)
+target_link_libraries(EEditorExtension EInterface)
 target_link_libraries(EEditorExtension GRenderer)
