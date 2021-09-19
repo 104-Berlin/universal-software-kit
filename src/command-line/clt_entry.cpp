@@ -70,6 +70,17 @@ int main(int argc, char** argv)
                     std::cout << "Invalid use! set <entityid> <valueident> <value>" << std::endl;
                 }
             }
+            else if (args[0] == "connect")
+            {
+                if (args.size() == 2)
+                {
+                    shared::StaticSharedContext::instance().ConnectTo(args[1]);
+                }
+                else
+                {
+                    std::cout << "Invalid use! connect <ipaddress>" << std::endl;
+                }
+            }
         }
     } while (input != "Q");
     

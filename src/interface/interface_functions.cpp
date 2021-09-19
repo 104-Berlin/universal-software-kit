@@ -161,6 +161,20 @@ namespace Engine {
             return fRegisterConnection;
         }
         
+        void StaticSharedContext::ConnectTo(const EString& address) 
+        {
+            if (fRegisterSocket)
+            {
+                delete fRegisterSocket;
+                fRegisterSocket = nullptr;
+            }
+            // Restart the connection
+            fRegisterConnection.CleanUp();
+            fRegisterConnection.Init();
+
+            fRegisterConnection.Connect(address, 420);
+        }
+        
         void StaticSharedContext::RunInMainThread(std::function<void()> function) 
         {
             std::lock_guard<std::mutex> lock(fInstance->fQueueMutex);
@@ -185,5 +199,6 @@ namespace Engine {
             E_ASSERT_M(fInstance, "Shared Context was not created yet. You try and use the system before it was initilized. StaticSharedContext::Start() was not called!");
             return *fInstance;
         }
+        
     }
 }

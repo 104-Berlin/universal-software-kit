@@ -21,6 +21,8 @@ namespace Engine {
             EExtensionManager&  GetExtensionManager();
             ERegisterConnection&  GetRegisterConnection();
 
+            void ConnectTo(const EString& address);
+
             static void RunInMainThread(std::function<void()> function);
 
             static void Start();

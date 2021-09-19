@@ -213,6 +213,14 @@ namespace Engine {
                         }
                         break;
                     }
+                    case EValueType::ARRAY:
+                    {
+                        if (!insert_element(static_cast<EArrayProperty*>(prop)))
+                        {
+                            return false;
+                        }
+                        break;
+                    }
                     case EValueType::PRIMITIVE:
                     {
                         if (!insert_element(static_cast<EValueProperty<T>*>(prop)))
@@ -248,7 +256,7 @@ namespace Engine {
             using ArrayType = typename T::value_type;
             Clear();
             EValueDescription dsc = fDescription.GetAsPrimitive();
-            for (const typename T::value_type& entry : vector)
+            for (const ArrayType& entry : vector)
             {
                 size_t currentIndex = fElements.size();
                 EProperty* newEntry = EProperty::CreateFromDescription(std::to_string(currentIndex), dsc);
@@ -263,6 +271,21 @@ namespace Engine {
                 case EValueType::STRUCT:
                 {
                     if (!static_cast<EStructProperty*>(newEntry)->SetValue<typename T::value_type>(entry))
+                    {
+                        return false;
+                    }
+                    break;
+                }
+                case EValueType::ARRAY:
+                {
+                    if constexpr (is_vector<ArrayType>::value)
+                    {
+                        if (!static_cast<EArrayProperty*>(newEntry)->SetValue<typename T::value_type>(entry))
+                        {
+                            return false;
+                        }
+                    }
+                    else
                     {
                         return false;
                     }
