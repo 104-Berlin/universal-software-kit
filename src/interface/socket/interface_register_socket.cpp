@@ -16,11 +16,6 @@ ERegisterSocket::~ERegisterSocket()
     CleanUp();
 }
 
-void ERegisterSocket::Connect(ERegisterConnection* receiver) 
-{
-    
-}
-
 int ERegisterSocket::Receive(int socketId, u8* data, size_t data_size) 
 {
     return _sock::read(socketId, data, data_size);

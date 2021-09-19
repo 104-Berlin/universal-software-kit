@@ -28,9 +28,6 @@ namespace Engine {
         int                 fSocketId; // The running socket
         sockaddr_in*        fAddressInfo; // Info to the current socket
 
-        int                 fEventSocket; // The Event socket
-        sockaddr_in*        fEventAddressInfo; // Info to event socket
-        
         int                 fPort; // Running port
 
         std::atomic<bool>   fIsRunning;
@@ -46,9 +43,6 @@ namespace Engine {
         ERegisterSocket(int port);
         ~ERegisterSocket();
     private:
-        int GetEventPort() const;
-
-
         int Receive(int socketId, u8* data, size_t data_size);
         void Receive(int socketId, EJson& outJson);
 

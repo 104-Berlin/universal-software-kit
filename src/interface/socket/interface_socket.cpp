@@ -26,7 +26,7 @@ int _sock::send(int socketId, const u8* data, size_t data_size)
 {
     int n = -1;
 #ifdef EWIN
-    n = send(socketId, (const char*) data, data_size, 0);
+    n = ::send(socketId, (const char*) data, data_size, 0);
 #else
     n = write(socketId, data, data_size);
 #endif
