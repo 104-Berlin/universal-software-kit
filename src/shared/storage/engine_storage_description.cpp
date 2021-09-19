@@ -79,7 +79,7 @@ bool EValueDescription::Valid() const
 EValueDescription EValueDescription::GetAsArray() const
 {
     EValueDescription result(EValueType::ARRAY, GetId());
-    result.SetArrayType(GetType());
+    result.SetArrayType(*this);
     return result;
 }
 
