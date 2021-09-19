@@ -9,26 +9,34 @@ EJson ESerializer::WriteStorageDescriptionToJson(const EValueDescription& descri
 
     result["Type"] = description.GetType();
     result["ID"] = description.GetId();
-    if (description.GetType() == EValueType::ARRAY)
+    switch (description.GetType())
     {
-        result["ArrayType"] = WriteStorageDescriptionToJson(description.GetAsPrimitive());
-    }
-    else if (description.GetType() == EValueType::STRUCT)
-    {
-        result["StructFields"] = EJson::object();
-        EJson& structFieldJson = result["StructFields"];
-        for (auto& entry : description.GetStructFields())
+        case EValueType::PRIMITIVE:
+        case EValueType::UNKNOWN: break;
+        case EValueType::ARRAY:
         {
-            structFieldJson[entry.first.c_str()] = WriteStorageDescriptionToJson(*entry.second);
+            result["ArrayType"] = WriteStorageDescriptionToJson(description.GetAsPrimitive());
+            break;
         }
-    }
-    else if (description.GetType() == EValueType::ENUM)
-    {
-        EJson& enumOptions = result["EnumOptions"];
-        enumOptions = EJson::array();
-        for (const EString& option : description.GetEnumOptions())
+        case EValueType::STRUCT:
         {
-            enumOptions.push_back(option.c_str());
+            result["StructFields"] = EJson::object();
+            EJson& structFieldJson = result["StructFields"];
+            for (auto& entry : description.GetStructFields())
+            {
+                structFieldJson[entry.first.c_str()] = WriteStorageDescriptionToJson(*entry.second);
+            }
+            break;
+        }
+        case EValueType::ENUM:
+        {
+            EJson& enumOptions = result["EnumOptions"];
+            enumOptions = EJson::array();
+            for (const EString& option : description.GetEnumOptions())
+            {
+                enumOptions.push_back(option.c_str());
+            }
+            break;
         }
     }
 

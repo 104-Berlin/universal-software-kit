@@ -3,12 +3,61 @@
 
 using namespace Engine;
 
-void EDeserializer::ReadStorageDescriptionFromJson(const EJson& json, EValueDescription* description) 
+bool EDeserializer::ReadStorageDescriptionFromJson(const EJson& json, EValueDescription* description) 
 {
-    
+    if (json.is_null()) { return false; }
+    if (!json["Type"].is_null() && !json["ID"].is_null())
+    {
+        if (!json["Type"].is_number_integer()) { return false; }
+        if (!json["ID"].is_string()) { return false; }
+
+        EString id = json["ID"].get<EString>();
+        EValueType type = (EValueType) json["Type"].get<int>();
+
+        EValueDescription newValueType = EValueDescription(type, id);
+        switch (type)
+        {
+        case EValueType::PRIMITIVE:
+        case EValueType::UNKNOWN: break;
+        case EValueType::ARRAY:
+        {
+            const EJson& arrayType = json["ArrayType"];
+            if (!arrayType.is_object() || arrayType.size() == 0) { return false; }
+            EValueDescription arrayTypeDsc;
+            if (!ReadStorageDescriptionFromJson(arrayType, &arrayTypeDsc)) { return false; }
+            newValueType.SetArrayType(arrayTypeDsc);
+            break;
+        }
+        case EValueType::STRUCT:
+        {
+            const EJson& structFieldsJson = json["StructFields"];
+            if (!structFieldsJson.is_object() || structFieldsJson.size() == 0) { return false; }
+            for (const auto& entry : structFieldsJson.items())
+            {
+                EValueDescription fieldDesc;
+                if (!ReadStorageDescriptionFromJson(entry.value(), &fieldDesc)) { return false; }
+                newValueType.AddStructField(entry.key(), fieldDesc);
+            }
+            break;
+        }
+        case EValueType::ENUM:
+        {
+            const EJson& enumOptionJson = json["EnumOptions"];
+            if (!enumOptionJson.is_array()) { return false; }
+            for (auto& entry : enumOptionJson)
+            {
+                if (!entry.is_string()) { return false; }
+                newValueType.AddEnumOption(entry.get<EString>());
+            }
+            break;
+        }
+        }
+        *description = newValueType;
+    }
+    return true;
 }
 
-void EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes) 
+bool EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes) 
 {
     auto findType = [&registeredTypes](const EString& id) -> EValueDescription {
         for (EValueDescription dsc : registeredTypes)
@@ -41,9 +90,10 @@ void EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene,
             }
         }
     }
+    return true;
 }
 
-void ReadPrimitiveFromJson(const EJson& json, EProperty* property)
+bool ReadPrimitiveFromJson(const EJson& json, EProperty* property)
 {
     EString primitiveType = property->GetDescription().GetId();
 
@@ -52,6 +102,7 @@ void ReadPrimitiveFromJson(const EJson& json, EProperty* property)
         if (json.is_boolean())
         {
             static_cast<EValueProperty<bool>*>(property)->SetValue(json.get<bool>());
+            return true;
         }
     }
     else if (primitiveType == E_TYPEID_DOUBLE)
@@ -59,6 +110,7 @@ void ReadPrimitiveFromJson(const EJson& json, EProperty* property)
         if (json.is_number_float())
         {
             static_cast<EValueProperty<double>*>(property)->SetValue(json.get<double>());
+            return true;
         }
     }
     else if (primitiveType == E_TYPEID_INTEGER)
@@ -66,6 +118,7 @@ void ReadPrimitiveFromJson(const EJson& json, EProperty* property)
         if (json.is_number_integer())
         {
             static_cast<EValueProperty<i32>*>(property)->SetValue(json.get<i32>());
+            return true;
         }
     }
     else if (primitiveType == E_TYPEID_UNSIGNED_INTEGER)
@@ -73,6 +126,7 @@ void ReadPrimitiveFromJson(const EJson& json, EProperty* property)
         if (json.is_number_integer())
         {
             static_cast<EValueProperty<u32>*>(property)->SetValue(json.get<u32>());
+            return true;
         }
     }
     else if (primitiveType == E_TYPEID_UNSIGNED_BIG_INTEGER)
@@ -80,6 +134,7 @@ void ReadPrimitiveFromJson(const EJson& json, EProperty* property)
         if (json.is_number_integer())
         {
             static_cast<EValueProperty<u64>*>(property)->SetValue(json.get<u64>());
+            return true;
         }
     }
     else if (primitiveType == E_TYPEID_STRING)
@@ -87,20 +142,24 @@ void ReadPrimitiveFromJson(const EJson& json, EProperty* property)
         if (json.is_string())
         {
             static_cast<EValueProperty<EString>*>(property)->SetValue(json.get<EString>());
+            return true;
         }
     }
+    return false;
 }
 
 
-void ReadEnumFromJson(const EJson& json, EEnumProperty* property)
+bool ReadEnumFromJson(const EJson& json, EEnumProperty* property)
 {
     if (json["CurrentValue"].is_string())
     {
         property->SetCurrentValue(json["CurrentValue"].get<EString>());
+        return true;
     }
+    return false;
 }
 
-void ReadArrayFromJson(const EJson& json, EArrayProperty* property)
+bool ReadArrayFromJson(const EJson& json, EArrayProperty* property)
 {
     property->Clear();
     for (const EJson& entry : json)
@@ -108,9 +167,10 @@ void ReadArrayFromJson(const EJson& json, EArrayProperty* property)
         EProperty* newElement = property->AddElement();
         EDeserializer::ReadPropertyFromJson(entry, newElement);
     }
+    return true;
 }
 
-void ReadStructFromJson(const EJson& json, EStructProperty* property)
+bool ReadStructFromJson(const EJson& json, EStructProperty* property)
 {
     EValueDescription description = property->GetDescription();
     
@@ -120,9 +180,10 @@ void ReadStructFromJson(const EJson& json, EStructProperty* property)
 
         EDeserializer::ReadPropertyFromJson(json[entry.first], property->GetProperty(entry.first));
     }
+    return true;
 }
 
-void EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property) 
+bool EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property) 
 {
     EValueDescription currentDsc = property->GetDescription();
     EValueType currentType = currentDsc.GetType();
@@ -135,9 +196,10 @@ void EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
     case EValueType::ENUM: ReadEnumFromJson(json, static_cast<EEnumProperty*>(property)); break;
     case EValueType::UNKNOWN: break;
     }
+    return true;
 }
 
-void EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes) 
+bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes) 
 {
     EFileCollection fileCollection;
     fileCollection.SetFromCompleteBuffer(buffer);
@@ -192,5 +254,5 @@ void EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* sav
         }
     }
 
-    ReadSceneFromJson(sceneJson, saveToScene, registeredTypes);
+    return ReadSceneFromJson(sceneJson, saveToScene, registeredTypes);
 }

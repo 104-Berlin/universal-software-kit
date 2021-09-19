@@ -16,6 +16,7 @@ namespace Engine {
         void Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description);
         void Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
 
+        
 
         void Connect(const EString& connectTo, int connectToPort);
 

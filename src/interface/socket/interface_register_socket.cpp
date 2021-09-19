@@ -129,7 +129,8 @@ void ERegisterSocket::Run_Connection(int socketId, const sockaddr_in& address)
         {
         case ESocketEvent::CREATE_ENTITY:
         {
-            E_ERROR("CREATE ENTITY");
+            ERegister::Entity entity = fLoadedRegister.CreateEntity();
+            E_ERROR("CREATE ENTITY " + std::to_string(entity));
             break;
         }
         case ESocketEvent::CREATE_COMPONENT:
@@ -146,7 +147,28 @@ void ERegisterSocket::Run_Connection(int socketId, const sockaddr_in& address)
 
             EString asString = EString((const char*) buffer);
             E_INFO("GOT JSON: " + asString);
-
+            EJson inputJson = EJson::parse(asString);
+            const EJson& descriptionJson = inputJson["ValueDescription"];
+            EValueDescription dsc;
+            if (!EDeserializer::ReadStorageDescriptionFromJson(descriptionJson, &dsc))
+            {
+                E_ERROR("Could not read storage description from parsed json!");
+                break;
+            }
+            ERegister::Entity entity = 0;
+            if (inputJson["Entity"].is_number_integer())
+            {
+                entity = (ERegister::Entity) inputJson["Entity"].get<int>();
+            }
+            if (entity)
+            {
+                EStructProperty* property = fLoadedRegister.AddComponent(entity, dsc);
+                if (property)
+                {
+                    E_INFO("Add Component " + dsc.GetId());
+                    inter::PrintProperty(property);
+                }
+            }
             break;
         }
         }

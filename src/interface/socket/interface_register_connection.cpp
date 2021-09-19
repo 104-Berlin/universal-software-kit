@@ -22,8 +22,12 @@ void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, cons
     E_ASSERT(description.Valid());
     if (!description.Valid()) { return; }
 
+    EJson createJson = EJson::object();
+    createJson["ValueDescription"] = ESerializer::WriteStorageDescriptionToJson(description);
+    createJson["Entity"] = entity;
+
     Send(ESocketEvent::CREATE_COMPONENT);
-    Send(ESerializer::WriteStorageDescriptionToJson(description));
+    Send(createJson);
 }
 
 void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString) 
