@@ -163,16 +163,18 @@ namespace Engine {
         
         void StaticSharedContext::ConnectTo(const EString& address) 
         {
+            // Restart the connection
+            fRegisterConnection.CleanUp();
             if (fRegisterSocket)
             {
                 delete fRegisterSocket;
                 fRegisterSocket = nullptr;
             }
-            // Restart the connection
-            fRegisterConnection.CleanUp();
             fRegisterConnection.Init();
-
+            
+            E_INFO("Connecting to " + address);
             fRegisterConnection.Connect(address, 420);
+            E_INFO("Connected!");
         }
         
         void StaticSharedContext::RunInMainThread(std::function<void()> function) 
