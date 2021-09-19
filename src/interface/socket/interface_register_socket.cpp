@@ -134,10 +134,19 @@ void ERegisterSocket::Run_Connection(int socketId, const sockaddr_in& address)
         }
         case ESocketEvent::CREATE_COMPONENT:
         {
-            ESocketEvent_CreateComponent data;
-            n = Receive(socketId, (u8*)&data, sizeof(ESocketEvent_CreateComponent));
+            size_t dataLen;
+            n = Receive(socketId, (u8*)&dataLen, sizeof(size_t));
             if (n == 0) { HandleDisconnect(socketId); return; }
             
+
+            u8* buffer = new u8[dataLen];
+            memset(buffer, 0, dataLen);
+            n = Receive(socketId, buffer, dataLen);
+            if (n == 0) { HandleDisconnect(socketId); return; }
+
+            EString asString = EString((const char*) buffer);
+            E_INFO("GOT JSON: " + asString);
+
             break;
         }
         }

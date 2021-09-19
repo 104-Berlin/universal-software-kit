@@ -4,13 +4,16 @@
 using namespace Engine;
 
 EValueDescription::EValueDescription(EValueType type, EValueDescription::t_ID id) 
-    : fType(type), fID(id)
+    : fType(type), fID(id), fArrayType(nullptr)
 {
-
+    if (type == EValueType::ARRAY)
+    {
+        fArrayType = new EValueDescription();
+    }
 }
 
 EValueDescription::EValueDescription(const EValueDescription& other)
-    : fType(other.fType), fID(other.fID), fEnumOptions(other.fEnumOptions)
+    : fType(other.fType), fID(other.fID), fArrayType(nullptr), fEnumOptions(other.fEnumOptions)
 {
     fStructFields.clear();
     for (auto& entry : other.fStructFields)
@@ -18,7 +21,10 @@ EValueDescription::EValueDescription(const EValueDescription& other)
         fStructFields[entry.first] = new EValueDescription(*entry.second);
     }
 
-    fArrayType = new EValueDescription(*other.fArrayType);
+    if (other.fArrayType)
+    {
+        fArrayType = new EValueDescription(*other.fArrayType);
+    }
 }
 
 
@@ -34,7 +40,10 @@ EValueDescription& EValueDescription::operator=(const EValueDescription& other)
         fStructFields[entry.first] = new EValueDescription(*entry.second);
     }
 
-    fArrayType = new EValueDescription(*other.fArrayType);
+    if (other.fArrayType)
+    {
+        fArrayType = new EValueDescription(*other.fArrayType);
+    }
     return *this;
 }
 
@@ -44,6 +53,10 @@ EValueDescription::~EValueDescription()
     for (auto& entry : fStructFields)
     {
         delete entry.second;
+    }
+    if (fArrayType)
+    {
+        delete fArrayType;
     }
 }
 
@@ -72,7 +85,7 @@ EValueDescription EValueDescription::GetAsArray() const
 
 EValueDescription EValueDescription::GetAsPrimitive() const
 {
-    return fArrayType;
+    return *fArrayType;
 }
 
 EValueDescription EValueDescription::CreateStruct(const t_ID& id, std::initializer_list<std::pair<EString, EValueDescription>> childs) 
@@ -129,6 +142,11 @@ const EVector<EString>& EValueDescription::GetEnumOptions() const
 
 void EValueDescription::SetArrayType(const EValueDescription& type) 
 {
-    *fArrayType = type;
+    if (GetType() == EValueType::ARRAY)
+    {
+        if (!fArrayType) { fArrayType = new EValueDescription(); }
+
+        *fArrayType = type;
+    }
 }
 

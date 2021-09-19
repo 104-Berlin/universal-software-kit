@@ -41,6 +41,14 @@ shared::ESharedError shared::CreateEntity()
 
 shared::ESharedError shared::CreateComponent(const EString& componentId, ERegister::Entity entity) 
 {
+    EValueDescription desc;
+    if (!EXTENSION_MANAGER.GetTypeRegister().FindItem(EFindTypeDescByName(componentId), &desc))
+    {
+        E_ERROR("Could not find type" + componentId);
+        return true; // ERROR
+    }
+    StaticSharedContext::instance().GetRegisterConnection().Send_CreateNewComponent(entity, desc);
+
     /*StaticSharedContext::instance().RunInMainThread([componentId, entity](){
         EValueDescription desc;
         if (!EXTENSION_MANAGER.GetTypeRegister().FindItem(EFindTypeDescByName(componentId), &desc))

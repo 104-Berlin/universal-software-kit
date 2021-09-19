@@ -12,10 +12,4 @@ namespace Engine {
         GET_VALUE = 20
     };
 
-    struct ESocketEvent_CreateComponent
-    {
-        ERegister::Entity Entity;
-        char              Component[128];
-    };
-
 }

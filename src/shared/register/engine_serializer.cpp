@@ -7,7 +7,30 @@ EJson ESerializer::WriteStorageDescriptionToJson(const EValueDescription& descri
 {
     EJson result = EJson::object();
 
-    
+    result["Type"] = description.GetType();
+    result["ID"] = description.GetId();
+    if (description.GetType() == EValueType::ARRAY)
+    {
+        result["ArrayType"] = WriteStorageDescriptionToJson(description.GetAsPrimitive());
+    }
+    else if (description.GetType() == EValueType::STRUCT)
+    {
+        result["StructFields"] = EJson::object();
+        EJson& structFieldJson = result["StructFields"];
+        for (auto& entry : description.GetStructFields())
+        {
+            structFieldJson[entry.first.c_str()] = WriteStorageDescriptionToJson(*entry.second);
+        }
+    }
+    else if (description.GetType() == EValueType::ENUM)
+    {
+        EJson& enumOptions = result["EnumOptions"];
+        enumOptions = EJson::array();
+        for (const EString& option : description.GetEnumOptions())
+        {
+            enumOptions.push_back(option.c_str());
+        }
+    }
 
     return result;
 }

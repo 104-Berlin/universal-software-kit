@@ -19,7 +19,11 @@ void ERegisterConnection::Send_CreateNewEntity()
 
 void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description) 
 {
-    
+    E_ASSERT(description.Valid());
+    if (!description.Valid()) { return; }
+
+    Send(ESocketEvent::CREATE_COMPONENT);
+    Send(ESerializer::WriteStorageDescriptionToJson(description));
 }
 
 void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString) 
@@ -55,10 +59,6 @@ void ERegisterConnection::CleanUp()
 void ERegisterConnection::Send(ESocketEvent eventType) 
 {
     Send((u8*)&eventType, sizeof(ESocketEvent));
-    switch (eventType)
-    {
-        
-    }
 }
 
 void ERegisterConnection::Send(const u8* buffer, size_t buffer_size) 
@@ -69,6 +69,16 @@ void ERegisterConnection::Send(const u8* buffer, size_t buffer_size)
 #else
     n = write(fSocketId, buffer, buffer_size);
 #endif
+}
+
+void ERegisterConnection::Send(const EJson& value) 
+{
+    EString valueDump = value.dump();
+    const char* buffer = valueDump.c_str();
+    size_t len = strlen(buffer) + 1;
+
+    Send((u8*)&len, sizeof(size_t));
+    Send((u8*)buffer, len);
 }
 
 void ERegisterConnection::Connect(const EString& connectTo, int connectToPort) 

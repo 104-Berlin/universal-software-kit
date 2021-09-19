@@ -182,8 +182,13 @@ EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identif
         if (!currentProp) { return nullptr; }
         const EString& currentIdent = identList[i];
         EValueDescription currentDsc = currentProp->GetDescription();
-
-        if (currentDsc.IsArray())
+        switch (currentDsc.GetType())
+        {
+        case EValueType::PRIMITIVE:
+        {
+            break;
+        }
+        case EValueType::ARRAY:
         {
             if (std::regex_match(currentIdent, std::regex("[0-9]+", std::regex::ECMAScript)))
             {
@@ -194,35 +199,22 @@ EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identif
             {
                 currentProp = nullptr;
             }
+            break;
         }
-        else
+        case EValueType::STRUCT:
         {
-            switch (currentDsc.GetType())
-            {
-            case EValueType::PRIMITIVE:
-            {
-                break;
-            }
-            case EValueType::ARRAY:
-            {
-
-                break;
-            }
-            case EValueType::STRUCT:
-            {
-                EStructProperty* structProp = static_cast<EStructProperty*>(currentProp);
-                currentProp = structProp->GetProperty(currentIdent);
-                break;
-            }
-            case EValueType::ENUM:
-            {
-                break;
-            }
-            case EValueType::UNKNOWN:
-            {
-                break;
-            }
-            }
+            EStructProperty* structProp = static_cast<EStructProperty*>(currentProp);
+            currentProp = structProp->GetProperty(currentIdent);
+            break;
+        }
+        case EValueType::ENUM:
+        {
+            break;
+        }
+        case EValueType::UNKNOWN:
+        {
+            break;
+        }
         }
     }
     return currentProp;

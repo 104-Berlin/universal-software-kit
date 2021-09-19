@@ -23,8 +23,9 @@ namespace Engine {
         void CleanUp();
     private:
 
-        void Send(ESocketEvent eventType);
-
         void Send(const u8* buffer, size_t buffer_size);
+
+        void Send(ESocketEvent eventType);
+        void Send(const EJson& value);
     };
 }

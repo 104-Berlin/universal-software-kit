@@ -46,19 +46,13 @@ void EProperty::ConnectChangeFunc(EProperty* other)
 EProperty* EProperty::CreateFromDescription(const EString& name, EValueDescription description) 
 {
     EValueType type = description.GetType();
-    if (description.IsArray())
+    switch (type)
     {
-        return CreatePropertyArray(name, description);
-    }
-    else
-    {
-        switch (type)
-        {
-        case EValueType::PRIMITIVE: return CreatePropertyPrimitive(name, description);
-        case EValueType::STRUCT: return CreatePropertyStruct(name, description);
-        case EValueType::ENUM: return CreatePropertyEnum(name, description);
-        case EValueType::UNKNOWN: return nullptr;
-        }
+    case EValueType::PRIMITIVE: return CreatePropertyPrimitive(name, description);
+    case EValueType::ARRAY: return CreatePropertyArray(name, description);
+    case EValueType::STRUCT: return CreatePropertyStruct(name, description);
+    case EValueType::ENUM: return CreatePropertyEnum(name, description);
+    case EValueType::UNKNOWN: return nullptr;
     }
     return nullptr;
 }
@@ -100,7 +94,7 @@ EProperty* EProperty::CreatePropertyEnum(const EString& name, EValueDescription 
 
 EProperty* EProperty::CreatePropertyArray(const EString& name, EValueDescription description)
 {
-    E_ASSERT_M(description.IsArray(), "Didnt provide enum description for creating property!");
+    E_ASSERT_M(description.GetType() == EValueType::ARRAY, "Didnt provide enum description for creating property!");
     EArrayProperty* result = new EArrayProperty(name, description);
     return result;
 }
