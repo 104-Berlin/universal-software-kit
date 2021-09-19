@@ -117,6 +117,12 @@ namespace Engine {
             });
         }
 
+        template <typename Callback>
+        void CatchAllEvents(Callback cb)
+        {
+            fEventDispatcher.ConnectAll(cb);
+        }
+
 
         // Do these between extension deletion and scene delete. 
         // If a lambda is defined in an extension the event dispatcher cant clean up the lambda, because the symbols are not loaded anymore

@@ -9,6 +9,9 @@ ERegisterSocket::ERegisterSocket(int port)
     : fPort(port), fSocketId(-1)
 {
     Init();
+    fLoadedRegister.CatchAllEvents([this](EStructProperty* data){
+        HandleRegisterEvent(data);
+    });
 }
 
 ERegisterSocket::~ERegisterSocket() 
@@ -276,4 +279,9 @@ void ERegisterSocket::HandleDisconnect(int socketId)
     {
         E_ERROR(EString("Could not disconnect user with SocketID: ") + std::to_string(socketId));
     }
+}
+
+void ERegisterSocket::HandleRegisterEvent(EStructProperty* data) 
+{
+    
 }

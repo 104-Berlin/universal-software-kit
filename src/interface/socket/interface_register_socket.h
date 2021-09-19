@@ -29,6 +29,7 @@ namespace Engine {
         std::atomic<bool>   fIsRunning;
 
         std::thread         fAcceptThread; // Thread that accepts new connections
+        std::thread         fRegisterEventThread; // Thread that updates register events
 
         EVector<Connection> fConnections;
         std::mutex          fConnectionMutex;
@@ -53,6 +54,9 @@ namespace Engine {
 
         void HandleConnection(int socketId, const sockaddr_in& address);
         void HandleDisconnect(int socketId);
+
+
+        void HandleRegisterEvent(EStructProperty* data);
     };
 
 }
