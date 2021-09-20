@@ -75,7 +75,7 @@ void ERegisterSocket::Init()
 
     // SETUP MEMORY SOCKET
 
-    fSocketId = socket(socketDomain, SOCK_STREAM, 0);
+    fSocketId = socket(AF_INET, SOCK_STREAM, 0);
 
     if (fSocketId == -1)
     {
@@ -84,13 +84,15 @@ void ERegisterSocket::Init()
     }
 
     fAddressInfo = new sockaddr_in();
-    fAddressInfo->sin_family = socketDomain;
+    fAddressInfo->sin_family = AF_INET;
     fAddressInfo->sin_addr.s_addr = INADDR_ANY;
     fAddressInfo->sin_port = htons(fPort);
 
     if (bind(fSocketId, (const sockaddr*)&fAddressInfo, sizeof(fAddressInfo)) == -1)
     {
         E_ERROR("Could not bind the socket " + std::to_string(fSocketId));
+        
+        E_ERROR(EString("Error code: ") + strerror(errno));
         return;
     }
 
