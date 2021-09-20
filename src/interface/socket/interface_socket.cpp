@@ -7,7 +7,7 @@ void _sock::close(int socketId)
 #ifdef EWIN
         closesocket(socketId);
 #else
-        close(socketId);
+        ::close(socketId);
 #endif
 }
 
@@ -17,7 +17,7 @@ int _sock::read(int socketId, u8* data, size_t data_size)
 #ifdef EWIN
     n = recv(socketId, (char*) data, data_size, 0);
 #else
-    n = read(socketId, data, data_size);
+    n = ::read(socketId, data, data_size);
 #endif
     return n;
 }

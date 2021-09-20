@@ -84,11 +84,12 @@ void ERegisterSocket::Init()
     }
 
     fAddressInfo = new sockaddr_in();
+    memset(fAddressInfo, 0, sizeof(sockaddr_in));
     fAddressInfo->sin_family = AF_INET;
     fAddressInfo->sin_addr.s_addr = INADDR_ANY;
     fAddressInfo->sin_port = htons(fPort);
 
-    if (bind(fSocketId, (const sockaddr*)&fAddressInfo, sizeof(fAddressInfo)) == -1)
+    if (bind(fSocketId, (const sockaddr*)fAddressInfo, sizeof(sockaddr_in)) == -1)
     {
         E_ERROR("Could not bind the socket " + std::to_string(fSocketId));
         
