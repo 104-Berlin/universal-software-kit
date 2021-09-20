@@ -4,10 +4,26 @@ namespace Engine {
     
     class E_INTER_API ERegisterConnection
     {
+        using RequestId = u32;
     private:   
         int                 fSocketId;
 
+        std::atomic<bool>   fListening;
         std::thread         fListenThread;
+
+
+        struct Request
+        {
+            std::mutex* Mutex;
+            EJson       Json;
+
+            Request(std::mutex* mutex)
+                : Mutex(mutex)
+            {
+                Json = EJson::object();
+            }
+        };
+        EUnorderedMap<RequestId, Request> fRequests;
     public:
         ERegisterConnection();
         ~ERegisterConnection();
@@ -30,5 +46,9 @@ namespace Engine {
 
         void Send(ESocketEvent eventType);
         void Send(const EJson& value);
+
+        void Run_ListenLoop();
+
+        EJson WaitForRequest(RequestId id);
     };
 }

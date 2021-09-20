@@ -4,7 +4,9 @@ using namespace Engine;
 
 
 ERegisterConnection::ERegisterConnection() 
+    : fSocketId(-1)
 {
+    fListening = false;
 }
 
 ERegisterConnection::~ERegisterConnection() 
@@ -77,15 +79,27 @@ void ERegisterConnection::Init()
         E_ERROR("Could not create receiver socket!");
         return;
     }
+
+    fListening = true;
+    fListenThread = std::thread([this](){
+        Run_ListenLoop();
+    });
 }
 
 void ERegisterConnection::CleanUp() 
 {
+    fListening = false;
+
     if (fSocketId > -1)
     {
         _sock::close(fSocketId);
 
         fSocketId = -1;
+    }
+
+    if (fListenThread.joinable())
+    {
+        fListenThread.join();
     }
 }
 
@@ -123,6 +137,43 @@ void ERegisterConnection::Send(const EJson& value)
 
     Send((u8*)&len, sizeof(size_t));
     Send((u8*)buffer, len);
+}
+
+void ERegisterConnection::Run_ListenLoop() 
+{
+    while (fListening)
+    {
+        ESocketEvent event;
+        Get((u8*)&event, sizeof(ESocketEvent));
+
+        switch (event)
+        {
+        case ESocketEvent::CREATE_COMPONENT:
+        case ESocketEvent::CREATE_ENTITY:
+        case ESocketEvent::SET_VALUE:
+        {
+            break;
+        }
+        case ESocketEvent::GET_VALUE:
+        {
+
+            break;
+        }
+        case ESocketEvent::REGISTER_EVENT:
+        {
+
+            break;
+        }
+        }
+    }
+}
+
+EJson ERegisterConnection::WaitForRequest(RequestId id) 
+{
+    std::mutex waitMutex;
+    fRequests.insert({id, Request(&waitMutex)});
+    
+    return EJson::object();
 }
 
 void ERegisterConnection::Connect(const EString& connectTo, int connectToPort) 
