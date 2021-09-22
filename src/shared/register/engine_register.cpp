@@ -154,6 +154,11 @@ void Engine::ERegister::DisconnectEvents()
     fEventDispatcher.DisconnectEvents();
 }
 
+void Engine::ERegister::WaitForEvent() 
+{
+    fEventDispatcher.WaitForEvent();
+}
+
 void Engine::ERegister::UpdateEvents() 
 {
     fEventDispatcher.Update();

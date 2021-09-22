@@ -11,7 +11,7 @@
     #define E_API
 #endif
 
-#include "../deps/chai/include/chaiscript/chaiscript.hpp"
+//#include "../deps/chai/include/chaiscript/chaiscript.hpp"
 
 #include "prefix_util.h"
 

@@ -5,6 +5,7 @@ using namespace Engine;
 EVector<EString> EStringUtil::SplitString(const EString& value, const EString& delim) 
 {
     EVector<EString> result;
+    if (value.empty()) { return result; }
     size_t last_pos = 0;
     size_t pos = last_pos;
     EString token;

@@ -104,6 +104,8 @@ void ERegisterSocket::Init()
     fRegisterEventThread = std::thread([this](){
         while (fIsRunning)
         {
+            // Wait for event
+            fLoadedRegister->WaitForEvent();
             fLoadedRegister->UpdateEvents();
         }
     });

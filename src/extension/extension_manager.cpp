@@ -171,16 +171,6 @@ const EResourceRegister& EExtensionManager::GetResourceRegister() const
     return fResourceRegister;
 }
 
-EChaiContext& EExtensionManager::GetChaiContext() 
-{
-    return fChaiScriptContext;
-}
-
-const EChaiContext& EExtensionManager::GetChaiContext() const
-{
-    return fChaiScriptContext;
-}
-
 EExtensionManager& EExtensionManager::instance() 
 {
     static EExtensionManager theManager;

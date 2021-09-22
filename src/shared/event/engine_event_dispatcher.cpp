@@ -3,11 +3,13 @@
 
 using namespace Engine;
 
-void EEventDispatcher::Enqueue(EValueDescription dsc, EProperty* property) 
+void EEventDispatcher::Enqueue_P(EValueDescription dsc, EProperty* property) 
 {
-    std::lock_guard<std::mutex> lock(fEventMutex);
+    std::unique_lock<std::mutex> lock(fEventMutex);
     E_ASSERT_M(dsc == property->GetDescription(), "Description has to match the property description when posting event!");
     fPostedEvents.push_back({dsc.GetId(), property->Clone()});
+    lock.unlock();
+    fNewEvent.notify_all();
 }
 
 void EEventDispatcher::Post_P(const EValueDescription& dsc, EProperty* property) 
@@ -25,7 +27,7 @@ void EEventDispatcher::Post_P(const EValueDescription& dsc, EProperty* property)
 
 void EEventDispatcher::Update() 
 {
-    std::lock_guard<std::mutex> lock(fEventMutex);
+    std::unique_lock<std::mutex> lock(fEventMutex);
     for (auto& entry : fPostedEvents)
     {
         for (auto& cb : fRegisteredCallbacks[entry.Type])
@@ -39,6 +41,14 @@ void EEventDispatcher::Update()
         delete entry.Data;
     }
     fPostedEvents.clear();
+}
+
+void EEventDispatcher::WaitForEvent() 
+{
+    if (fPostedEvents.size() > 0) { return; }
+
+    std::unique_lock<std::mutex> lk(fWaitMutex);
+    fNewEvent.wait(lk, [this]{return fPostedEvents.size() > 0;});
 }
 
 void EEventDispatcher::DisconnectEvents() 

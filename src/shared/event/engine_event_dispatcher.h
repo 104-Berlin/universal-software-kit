@@ -17,6 +17,9 @@ namespace Engine {
         EVector<CallbackFunction> fCallAllways;
 
         std::mutex  fEventMutex;
+
+        std::mutex              fWaitMutex;
+        std::condition_variable fNewEvent;
     public:
         ~EEventDispatcher()
         {
@@ -89,9 +92,11 @@ namespace Engine {
         auto ConnectAll(Callback fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn), EStructProperty*>::value, void>
         {
-            std::lock_guard<std::mutex> lock(fEventMutex);
+            std::unique_lock<std::mutex> lock(fEventMutex);
             fCallAllways.push_back([fn](EProperty* prop){fn(static_cast<EStructProperty*>(prop)); });
         }
+
+        void Enqueue_P(EValueDescription dsc, EProperty* property);
 
         template <typename T>
         void Enqueue(const EValueDescription& dsc, const T& data)
@@ -100,7 +105,7 @@ namespace Engine {
             EStructProperty* property = static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc));
             if (property->SetValue<T>(data))
             {
-                fPostedEvents.push_back({dsc.GetId(), property});
+                Enqueue_P(dsc, property);
             }
             else
             {
@@ -116,7 +121,6 @@ namespace Engine {
         {
             Enqueue<T>(getdsc::GetDescription<T>(), data);
         }
-        void Enqueue(EValueDescription dsc, EProperty* property);
 
         void Post_P(const EValueDescription& dsc, EProperty* property);
 
@@ -140,7 +144,7 @@ namespace Engine {
 
 
         void Update();
-
+        void WaitForEvent();
 
         void DisconnectEvents();
     };
