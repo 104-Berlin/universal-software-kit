@@ -120,21 +120,6 @@ namespace Engine {
             fRegisterSocket = new ERegisterSocket(420);
             fRegisterConnection.Init();
             fRegisterConnection.Connect("localhost", 420);
-            
-
-            fRunningThread = std::thread([this](){
-                fIsRunning = true;
-                while (fIsRunning)
-                {
-                    if (fMainThreadQueue.size() > 0)
-                    {
-                        std::lock_guard<std::mutex> guard(fQueueMutex);
-                        fMainThreadQueue.front()();
-                        fMainThreadQueue.pop();
-                    }
-                    this->fExtensionManager.GetActiveScene()->UpdateEvents();
-                }
-            });
         }
 
         StaticSharedContext::~StaticSharedContext() 
@@ -145,10 +130,6 @@ namespace Engine {
         #ifdef EWIN
             WSACleanup();
         #endif
-            if (fRunningThread.joinable())
-            {
-                fRunningThread.join();
-            }
         }
 
         EExtensionManager& StaticSharedContext::GetExtensionManager() 
@@ -176,12 +157,6 @@ namespace Engine {
             fRegisterConnection.Connect(address, 420);
             E_INFO("Connected!");
         }
-        
-        void StaticSharedContext::RunInMainThread(std::function<void()> function) 
-        {
-            std::lock_guard<std::mutex> lock(fInstance->fQueueMutex);
-            fInstance->fMainThreadQueue.push(function);
-        }
 
 
         void StaticSharedContext::Start() 
@@ -191,7 +166,6 @@ namespace Engine {
 
         void StaticSharedContext::Stop() 
         {
-            fInstance->fIsRunning = false;
             delete fInstance;
             fInstance = nullptr;
         }

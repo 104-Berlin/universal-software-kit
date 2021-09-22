@@ -14,11 +14,10 @@ namespace Engine {
 
         struct Request
         {
-            std::mutex* Mutex;
-            EJson       Json;
+            std::condition_variable GotResult;
+            EJson                   Json;
 
-            Request(std::mutex* mutex)
-                : Mutex(mutex)
+            Request()
             {
                 Json = EJson::object();
             }

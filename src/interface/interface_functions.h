@@ -10,10 +10,6 @@ namespace Engine {
             EExtensionManager               fExtensionManager;
             ERegisterConnection             fRegisterConnection;
             ERegisterSocket*                fRegisterSocket;
-            std::thread                     fRunningThread;
-            EQueue<std::function<void()>>   fMainThreadQueue;
-            std::mutex                      fQueueMutex;
-            std::atomic<bool>               fIsRunning;
         public:
             StaticSharedContext();
             ~StaticSharedContext();
@@ -22,8 +18,6 @@ namespace Engine {
             ERegisterConnection&  GetRegisterConnection();
 
             void ConnectTo(const EString& address);
-
-            static void RunInMainThread(std::function<void()> function);
 
             static void Start();
             static void Stop();

@@ -156,7 +156,7 @@ void ERegisterConnection::Run_ListenLoop()
         }
         case ESocketEvent::GET_VALUE:
         {
-
+            
             break;
         }
         case ESocketEvent::REGISTER_EVENT:
@@ -171,7 +171,10 @@ void ERegisterConnection::Run_ListenLoop()
 EJson ERegisterConnection::WaitForRequest(RequestId id) 
 {
     std::mutex waitMutex;
-    fRequests.insert({id, Request(&waitMutex)});
+    std::unique_lock<std::mutex> lock(waitMutex);
+    fRequests.insert({id, Request()});
+    fRequests[id].GotResult.wait(lock);
+    
     
     return EJson::object();
 }
