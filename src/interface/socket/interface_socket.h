@@ -3,14 +3,7 @@
 namespace Engine {
 
 
-    namespace _sock {
-        void close(int socketId);
-        int read(int socketId, u8* data, size_t data_size);
-        int send(int socketId, const u8* data, size_t data_size);
-    }
-
-
-    enum class ESocketEvent : u32
+    enum class EPacketType : u32
     {
         CREATE_ENTITY = 0,
         CREATE_COMPONENT = 1,
@@ -22,4 +15,21 @@ namespace Engine {
         REGISTER_EVENT = 40,
     };
 
+    struct ERegisterPacket
+    {
+        using PackId = u32;
+        EPacketType PacketType;
+        PackId      ID;
+        EJson       Body;
+    };
+
+
+    namespace _sock {
+        void close(int socketId);
+        int read(int socketId, u8* data, size_t data_size);
+        int send(int socketId, const u8* data, size_t data_size);
+
+        void send_packet(int socketId, const ERegisterPacket& packet);
+        void read_packet(int socketId, ERegisterPacket* outPacket);
+    }
 }

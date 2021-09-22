@@ -197,8 +197,8 @@ void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address)
 {
     while (fIsRunning)
     {
-        ESocketEvent event;
-        int n = Receive(socketId, (u8*)&event, sizeof(ESocketEvent));
+        EPacketType event;
+        int n = Receive(socketId, (u8*)&event, sizeof(EPacketType));
         if (n == 0)
         {
             HandleDisconnect(socketId);
@@ -211,13 +211,13 @@ void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address)
         // Handle Command and send back something
         switch (event)
         {
-        case ESocketEvent::CREATE_ENTITY:
+        case EPacketType::CREATE_ENTITY:
         {
             ERegister::Entity entity = fLoadedRegister->CreateEntity();
             E_ERROR("CREATE ENTITY " + std::to_string(entity));
             break;
         }
-        case ESocketEvent::CREATE_COMPONENT:
+        case EPacketType::CREATE_COMPONENT:
         {
             EJson inputJson = EJson::object();
             Receive(socketId, inputJson);
@@ -242,7 +242,7 @@ void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address)
             }
             break;
         }
-        case ESocketEvent::SET_VALUE:
+        case EPacketType::SET_VALUE:
         {
             EJson requestJson = EJson::object();
             Receive(socketId, requestJson);
@@ -264,7 +264,7 @@ void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address)
             }
             break;
         }
-        case ESocketEvent::GET_VALUE:
+        case EPacketType::GET_VALUE:
         {
             EJson requestJson = EJson::object();
             Receive(socketId, requestJson);

@@ -16,7 +16,7 @@ ERegisterConnection::~ERegisterConnection()
 
 void ERegisterConnection::Send_CreateNewEntity() 
 {
-    Send(ESocketEvent::CREATE_ENTITY);
+    Send(EPacketType::CREATE_ENTITY);
 }
 
 void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description) 
@@ -28,7 +28,7 @@ void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, cons
     createJson["ValueDescription"] = ESerializer::WriteStorageDescriptionToJson(description);
     createJson["Entity"] = entity;
 
-    Send(ESocketEvent::CREATE_COMPONENT);
+    Send(EPacketType::CREATE_COMPONENT);
     Send(createJson);
 }
 
@@ -39,13 +39,13 @@ void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString&
     requestJson["ValueIdent"] = valueIdent;
     requestJson["Value"] = valueString;
 
-    Send(ESocketEvent::SET_VALUE);
+    Send(EPacketType::SET_VALUE);
     Send(requestJson);
 }
 
 ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, const EString& valueIdent) 
 {
-    Send(ESocketEvent::GET_VALUE);
+    Send(EPacketType::GET_VALUE);
     EJson request = EJson::object();
     request["Entity"] = entity;
     request["ValueIdent"] = valueIdent;
@@ -119,9 +119,9 @@ int ERegisterConnection::Get(u8* buffer, size_t buffer_size)
     return _sock::read(fSocketId, buffer, buffer_size);
 }
 
-void ERegisterConnection::Send(ESocketEvent eventType) 
+void ERegisterConnection::Send(EPacketType eventType) 
 {
-    Send((u8*)&eventType, sizeof(ESocketEvent));
+    Send((u8*)&eventType, sizeof(EPacketType));
 }
 
 void ERegisterConnection::Send(const u8* buffer, size_t buffer_size) 
@@ -143,23 +143,23 @@ void ERegisterConnection::Run_ListenLoop()
 {
     while (fListening)
     {
-        ESocketEvent event;
-        Get((u8*)&event, sizeof(ESocketEvent));
+        EPacketType event;
+        Get((u8*)&event, sizeof(EPacketType));
 
         switch (event)
         {
-        case ESocketEvent::CREATE_COMPONENT:
-        case ESocketEvent::CREATE_ENTITY:
-        case ESocketEvent::SET_VALUE:
+        case EPacketType::CREATE_COMPONENT:
+        case EPacketType::CREATE_ENTITY:
+        case EPacketType::SET_VALUE:
         {
             break;
         }
-        case ESocketEvent::GET_VALUE:
+        case EPacketType::GET_VALUE:
         {
             
             break;
         }
-        case ESocketEvent::REGISTER_EVENT:
+        case EPacketType::REGISTER_EVENT:
         {
 
             break;
@@ -168,11 +168,10 @@ void ERegisterConnection::Run_ListenLoop()
     }
 }
 
-EJson ERegisterConnection::WaitForRequest(RequestId id) 
+EJson ERegisterConnection::WaitForRequest(ERegisterPacket::PackId id) 
 {
     std::mutex waitMutex;
     std::unique_lock<std::mutex> lock(waitMutex);
-    fRequests.insert({id, Request()});
     fRequests[id].GotResult.wait(lock);
     
     

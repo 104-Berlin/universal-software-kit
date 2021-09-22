@@ -4,7 +4,6 @@ namespace Engine {
     
     class E_INTER_API ERegisterConnection
     {
-        using RequestId = u32;
     private:   
         int                 fSocketId;
 
@@ -22,7 +21,7 @@ namespace Engine {
                 Json = EJson::object();
             }
         };
-        EUnorderedMap<RequestId, Request> fRequests;
+        EUnorderedMap<ERegisterPacket::PackId, Request> fRequests;
     public:
         ERegisterConnection();
         ~ERegisterConnection();
@@ -43,11 +42,11 @@ namespace Engine {
 
         void Send(const u8* buffer, size_t buffer_size);
 
-        void Send(ESocketEvent eventType);
+        void Send(EPacketType eventType);
         void Send(const EJson& value);
 
         void Run_ListenLoop();
 
-        EJson WaitForRequest(RequestId id);
+        EJson WaitForRequest(ERegisterPacket::PackId id);
     };
 }

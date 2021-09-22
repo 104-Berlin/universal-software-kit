@@ -289,8 +289,8 @@ void EObjectView::RenderString(Engine::EValueProperty<EString>* storage)
     storage->SetValue(buf);
 }
 
-ECommandLine::ECommandLine(EChaiContext* context) 
-    : EUIField("CommandLine"), fChaiContext(context)
+ECommandLine::ECommandLine() 
+    : EUIField("CommandLine")
 {
     
 }
@@ -320,7 +320,7 @@ bool ECommandLine::OnRender()
     memset(buffer, 0, 255);
     if (ImGui::InputText("##COMMAND_LINE_INPUT", buffer, 255, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        fChaiContext->Execute(buffer);
+        //fChaiContext->Execute(buffer);
     }
     ImGui::PopItemWidth();
     ImGui::End();

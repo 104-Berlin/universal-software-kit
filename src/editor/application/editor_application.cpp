@@ -17,7 +17,7 @@ E_STORAGE_STRUCT(MyType,
 )
 
 EApplication::EApplication() 
-    : fGraphicsContext(nullptr), fCommandLine(&EExtensionManager::instance().GetChaiContext())
+    : fGraphicsContext(nullptr), fCommandLine()
 {
     EExtensionManager::instance().AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent event) {
         EExtension* extension = EExtensionManager::instance().GetExtension(event.Extension);
