@@ -154,19 +154,14 @@ void EObjectView::RenderProperty(Engine::EProperty* storage)
 {
     EValueDescription propertyDsc = storage->GetDescription();
     EValueType type = propertyDsc.GetType();
-    if (propertyDsc.IsArray())
+
+    switch (type)
     {
-        RenderArray(static_cast<EArrayProperty*>(storage));
-    }
-    else
-    {
-        switch (type)
-        {
-        case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage)); break;
-        case EValueType::PRIMITIVE: RenderPrimitive(storage); break;
-        case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage)); break;
-        case EValueType::UNKNOWN: break;
-        }
+    case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage)); break;
+    case EValueType::ARRAY: RenderArray(static_cast<EArrayProperty*>(storage)); break;
+    case EValueType::PRIMITIVE: RenderPrimitive(storage); break;
+    case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage)); break;
+    case EValueType::UNKNOWN: break;
     }
 }
 
@@ -294,8 +289,8 @@ void EObjectView::RenderString(Engine::EValueProperty<EString>* storage)
     storage->SetValue(buf);
 }
 
-ECommandLine::ECommandLine(EChaiContext* context) 
-    : EUIField("CommandLine"), fChaiContext(context)
+ECommandLine::ECommandLine() 
+    : EUIField("CommandLine")
 {
     
 }
@@ -325,7 +320,7 @@ bool ECommandLine::OnRender()
     memset(buffer, 0, 255);
     if (ImGui::InputText("##COMMAND_LINE_INPUT", buffer, 255, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        fChaiContext->Execute(buffer);
+        //fChaiContext->Execute(buffer);
     }
     ImGui::PopItemWidth();
     ImGui::End();

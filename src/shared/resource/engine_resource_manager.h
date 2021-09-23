@@ -32,20 +32,6 @@ namespace Engine {
         {}
     };
 
-    class FindResourceByType
-    {
-    private:
-        EString fType;
-    public:
-        FindResourceByType(const EString& type)
-            : fType(type)
-        {}
-
-        bool operator()(EResourceDescription other) const
-        {
-            return std::find(other.AcceptedFileEndings.begin(), other.AcceptedFileEndings.end(), fType) != other.AcceptedFileEndings.end();
-        }
-    };
 
     struct EResourceData
     {

@@ -23,7 +23,7 @@ namespace Engine {
     /**
      * Representation of a File inside the Engine
      */
-    class E_API EFile
+    class EFile
     {
     private:
         EString fFilePath;

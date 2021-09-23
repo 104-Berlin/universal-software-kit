@@ -42,7 +42,6 @@ namespace Engine {
         ETypeRegister                       fTypeRegister;
         EResourceRegister                   fResourceRegister;
         EEventDispatcher                    fEventDispatcher;
-        EChaiContext                        fChaiScriptContext;
     public:
         EExtensionManager();
         ~EExtensionManager();
@@ -90,10 +89,6 @@ namespace Engine {
 
         EResourceRegister& GetResourceRegister();
         const EResourceRegister& GetResourceRegister() const;
-
-
-        EChaiContext& GetChaiContext();
-        const EChaiContext& GetChaiContext() const;
 
         static EExtensionManager& instance();
 

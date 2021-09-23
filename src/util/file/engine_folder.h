@@ -17,7 +17,7 @@ namespace Engine {
     /**
      * Representation of a Folder inside the Engine
      */
-    class E_API EFolder
+    class EFolder
     {
     public:
     private:

@@ -17,7 +17,7 @@ E_STORAGE_STRUCT(MyType,
 )
 
 EApplication::EApplication() 
-    : fGraphicsContext(nullptr), fCommandLine(&EExtensionManager::instance().GetChaiContext())
+    : fGraphicsContext(nullptr), fCommandLine()
 {
     EExtensionManager::instance().AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent event) {
         EExtension* extension = EExtensionManager::instance().GetExtension(event.Extension);
@@ -89,7 +89,7 @@ void EApplication::RegenerateMainMenuBar()
 
             EString type = resourceFile.GetFileExtension();
             EResourceDescription foundDescription;
-            if (EExtensionManager::instance().GetResourceRegister().FindItem(FindResourceByType(type), &foundDescription) &&
+            if (EExtensionManager::instance().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
                 foundDescription.ImportFunction)
             {
                 EExtensionManager::instance().GetActiveScene()->GetResourceManager().ImportResourceFromFile(resourceFile, foundDescription);

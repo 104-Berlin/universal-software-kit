@@ -7,6 +7,7 @@ namespace Engine {
         UNKNOWN,
 
         STRUCT,
+        ARRAY,
         ENUM,
         PRIMITIVE
     };
@@ -22,7 +23,8 @@ namespace Engine {
         // For enum
         EVector<EString> fEnumOptions;
         // For array
-        bool fIsArray;
+        EValueDescription* fArrayType;
+        
         // For struct
         EUnorderedMap<EString, EValueDescription*> fStructFields;
     public:
@@ -45,7 +47,8 @@ namespace Engine {
         const EVector<EString>& GetEnumOptions() const;
 
         // Array
-        bool IsArray() const;
+        void SetArrayType(const EValueDescription& type);
+
         EValueDescription GetAsArray() const;
         EValueDescription GetAsPrimitive() const;
 

@@ -50,10 +50,8 @@ namespace Editor {
 
     class ECommandLine : public Engine::EUIField
     {
-    private:
-        Engine::EChaiContext* fChaiContext;
     public:
-        ECommandLine(Engine::EChaiContext* context);
+        ECommandLine();
 
         virtual bool OnRender() override;
     };

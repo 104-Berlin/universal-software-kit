@@ -14,7 +14,7 @@
 
 #include "engine.h"
 #include "prefix_shared.h"
-#include "engine_extension.h"
+#include "prefix_interface.h"
 
 
 #define INIT_IMGUI_FUNC EXTENSION_EXPORT_FUN void InitImGui() { ImGui::SetCurrentContext(Graphics::Wrapper::GetCurrentImGuiContext()); }

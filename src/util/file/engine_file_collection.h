@@ -9,7 +9,7 @@ namespace Engine {
 
     // A class that can pack multiple files into one
     // Like a zip file but with no compression
-    class E_API EFileCollection
+    class EFileCollection
     {
         using FileMap = EUnorderedMap<EString, ESharedBuffer>;
     private:

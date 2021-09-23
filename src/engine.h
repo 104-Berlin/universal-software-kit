@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <type_traits>
 #include <regex>
+#include <atomic>
 
 #ifdef M_PI
 #undef M_PI

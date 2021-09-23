@@ -3,6 +3,46 @@
 
 using namespace Engine;
 
+EJson ESerializer::WriteStorageDescriptionToJson(const EValueDescription& description) 
+{
+    EJson result = EJson::object();
+
+    result["Type"] = description.GetType();
+    result["ID"] = description.GetId();
+    switch (description.GetType())
+    {
+        case EValueType::PRIMITIVE:
+        case EValueType::UNKNOWN: break;
+        case EValueType::ARRAY:
+        {
+            result["ArrayType"] = WriteStorageDescriptionToJson(description.GetAsPrimitive());
+            break;
+        }
+        case EValueType::STRUCT:
+        {
+            result["StructFields"] = EJson::object();
+            EJson& structFieldJson = result["StructFields"];
+            for (auto& entry : description.GetStructFields())
+            {
+                structFieldJson[entry.first.c_str()] = WriteStorageDescriptionToJson(*entry.second);
+            }
+            break;
+        }
+        case EValueType::ENUM:
+        {
+            EJson& enumOptions = result["EnumOptions"];
+            enumOptions = EJson::array();
+            for (const EString& option : description.GetEnumOptions())
+            {
+                enumOptions.push_back(option.c_str());
+            }
+            break;
+        }
+    }
+
+    return result;
+}
+
 EJson WriteStructToJs(EStructProperty* property);
 
 
@@ -92,19 +132,13 @@ EJson ESerializer::WritePropertyToJs(EProperty* property)
     EValueDescription description = property->GetDescription();
     EValueType type = description.GetType();
 
-    if (description.IsArray())
+    switch (type)
     {
-        return WriteArrayToJs(static_cast<EArrayProperty*>(property));
-    }
-    else
-    {
-        switch (type)
-        {
-        case EValueType::PRIMITIVE: return WritePrimitiveToJs(property);
-        case EValueType::STRUCT: return WriteStructToJs(static_cast<EStructProperty*>(property));
-        case EValueType::ENUM: return WriteEnumToJs(static_cast<EEnumProperty*>(property));
-        case EValueType::UNKNOWN: return 0;
-        }
+    case EValueType::PRIMITIVE: return WritePrimitiveToJs(property);
+    case EValueType::ARRAY: return WriteArrayToJs(static_cast<EArrayProperty*>(property));
+    case EValueType::STRUCT: return WriteStructToJs(static_cast<EStructProperty*>(property));
+    case EValueType::ENUM: return WriteEnumToJs(static_cast<EEnumProperty*>(property));
+    case EValueType::UNKNOWN: return 0;
     }
 
     return 0;

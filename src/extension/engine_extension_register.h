@@ -149,4 +149,38 @@ namespace Engine {
 
     using ETypeRegister = EExtensionRegister<EValueDescription>;
     using EResourceRegister = EExtensionRegister<EResourceDescription>;
+
+
+
+
+    
+    class EFindTypeDescByName
+    {
+    private:
+        EString fName;
+    public:
+        EFindTypeDescByName(const EString& name)
+            : fName(name)
+        {}
+
+        bool operator()(EValueDescription other) const
+        {
+            return other.GetId() == fName;
+        }
+    };
+
+     class EFindResourceByType
+    {
+    private:
+        EString fType;
+    public:
+        EFindResourceByType(const EString& type)
+            : fType(type)
+        {}
+
+        bool operator()(EResourceDescription other) const
+        {
+            return std::find(other.AcceptedFileEndings.begin(), other.AcceptedFileEndings.end(), fType) != other.AcceptedFileEndings.end();
+        }
+    };
 }

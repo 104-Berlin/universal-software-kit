@@ -1,0 +1,185 @@
+#include "prefix_interface.h"
+
+using namespace Engine;
+
+
+ERegisterConnection::ERegisterConnection() 
+    : fSocketId(-1)
+{
+    fListening = false;
+}
+
+ERegisterConnection::~ERegisterConnection() 
+{
+    
+}
+
+void ERegisterConnection::Send_CreateNewEntity() 
+{
+    ERegisterPacket packet;
+    packet.ID = GetNewPacketID();
+    packet.PacketType = EPacketType::CREATE_ENTITY;
+    
+}
+
+void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description) 
+{
+    E_ASSERT(description.Valid());
+    if (!description.Valid()) { return; }
+
+    EJson createJson = EJson::object();
+    createJson["ValueDescription"] = ESerializer::WriteStorageDescriptionToJson(description);
+    createJson["Entity"] = entity;
+
+
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::CREATE_COMPONENT;
+    packet.ID = GetNewPacketID();
+    packet.Body = createJson;
+    
+    _sock::send_packet(fSocketId, packet);
+}
+
+void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString) 
+{
+    EJson requestJson = EJson::object();
+    requestJson["Entity"] = entity;
+    requestJson["ValueIdent"] = valueIdent;
+    requestJson["Value"] = valueString;
+
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::SET_VALUE;
+    packet.ID = GetNewPacketID();
+    packet.Body = requestJson;
+
+    _sock::send_packet(fSocketId, packet);
+}
+
+ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, const EString& valueIdent) 
+{
+    EJson request = EJson::object();
+    request["Entity"] = entity;
+    request["ValueIdent"] = valueIdent;
+    
+    
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::GET_VALUE;
+    packet.ID = GetNewPacketID();
+    packet.Body = request;
+
+    EJson result = WaitForRequest(packet.ID);
+
+    EValueDescription propertyDescription;
+    if (!result["ValueDescription"].is_null() && result["PropertyName"].is_string() && !result["Value"].is_null())
+    {
+        EDeserializer::ReadStorageDescriptionFromJson(result["ValueDescription"], &propertyDescription);
+
+        ERef<EProperty> resProperty = ERef<EProperty>(EProperty::CreateFromDescription(result["PropertyName"].get<EString>(), propertyDescription));
+
+        if (EDeserializer::ReadPropertyFromJson(result["Value"], resProperty.get()))
+        {
+            return resProperty;
+        }
+        return nullptr;
+    }
+    return nullptr;
+}
+
+void ERegisterConnection::Init() 
+{
+    int socketDomain = AF_INET;
+    fSocketId = socket(socketDomain, SOCK_STREAM, 0);
+    if (fSocketId == -1)
+    {
+        E_ERROR("Could not create receiver socket!");
+        return;
+    }
+
+    fListening = true;
+    fListenThread = std::thread([this](){
+        Run_ListenLoop();
+    });
+}
+
+void ERegisterConnection::CleanUp() 
+{
+    fListening = false;
+
+    if (fSocketId > -1)
+    {
+        _sock::close(fSocketId);
+
+        fSocketId = -1;
+    }
+
+    if (fListenThread.joinable())
+    {
+        fListenThread.join();
+    }
+}
+
+void ERegisterConnection::Run_ListenLoop() 
+{
+    while (fListening)
+    {
+        ERegisterPacket packet;
+        _sock::read_packet(fSocketId, &packet);
+        GotPacket(packet);
+    }
+}
+
+EJson ERegisterConnection::WaitForRequest(ERegisterPacket::PackId id) 
+{
+    std::mutex waitMutex;
+    std::unique_lock<std::mutex> lock(waitMutex);
+    fRequests[id].GotResult.wait(lock);
+    
+    
+    return EJson::object();
+}
+
+bool ERegisterConnection::IsWaitingForRequest(ERegisterPacket::PackId id) 
+{
+    return fRequests.find(id) != fRequests.end();
+}
+
+void ERegisterConnection::GotPacket(const ERegisterPacket& packet) 
+{
+    if (IsWaitingForRequest(packet.ID))
+    {
+        fRequests[packet.ID].Json = packet.Body;
+
+        fRequests[packet.ID].GotResult.notify_all();
+        fRequests.erase(packet.ID);
+    }
+}
+
+ERegisterPacket::PackId ERegisterConnection::GetNewPacketID() const
+{
+    ERegisterPacket::PackId result = 0;
+    while (result != 0 && fRequests.find(result) != fRequests.end())
+    {
+        result = result + 7 * 3;
+    }
+    return result;
+}
+
+void ERegisterConnection::Connect(const EString& connectTo, int connectToPort) 
+{
+    hostent* connect_to_server = gethostbyname(connectTo.c_str());
+    if (connect_to_server == NULL)
+    {
+        E_ERROR("Could not find Server " + connectTo);
+    }
+
+    sockaddr_in serverAddr;
+    serverAddr.sin_family = AF_INET;
+    bcopy((char*)connect_to_server->h_addr_list[0], (char*)&serverAddr.sin_addr, connect_to_server->h_length);
+    serverAddr.sin_port = htons(connectToPort);
+
+    if (connect(fSocketId, (sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
+    {
+        E_ERROR("Could not connect to server!");
+        return;
+    }
+}

@@ -7,7 +7,4 @@ add_executable(USKEditor    editor_entry.cpp
 
 target_include_directories(USKEditor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(EEditorExtension EExtension)
-target_link_libraries(EEditorExtension GRenderer)
-
 target_link_libraries(USKEditor EEditorExtension)
