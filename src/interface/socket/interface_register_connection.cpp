@@ -16,7 +16,10 @@ ERegisterConnection::~ERegisterConnection()
 
 void ERegisterConnection::Send_CreateNewEntity() 
 {
-    Send(EPacketType::CREATE_ENTITY);
+    ERegisterPacket packet;
+    packet.ID = GetNewPacketID();
+    packet.PacketType = EPacketType::CREATE_ENTITY;
+    
 }
 
 void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description) 
@@ -28,8 +31,13 @@ void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, cons
     createJson["ValueDescription"] = ESerializer::WriteStorageDescriptionToJson(description);
     createJson["Entity"] = entity;
 
-    Send(EPacketType::CREATE_COMPONENT);
-    Send(createJson);
+
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::CREATE_COMPONENT;
+    packet.ID = GetNewPacketID();
+    packet.Body = createJson;
+    
+    _sock::send_packet(fSocketId, packet);
 }
 
 void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString) 
@@ -39,20 +47,27 @@ void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString&
     requestJson["ValueIdent"] = valueIdent;
     requestJson["Value"] = valueString;
 
-    Send(EPacketType::SET_VALUE);
-    Send(requestJson);
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::SET_VALUE;
+    packet.ID = GetNewPacketID();
+    packet.Body = requestJson;
+
+    _sock::send_packet(fSocketId, packet);
 }
 
 ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, const EString& valueIdent) 
 {
-    Send(EPacketType::GET_VALUE);
     EJson request = EJson::object();
     request["Entity"] = entity;
     request["ValueIdent"] = valueIdent;
-    Send(request);
+    
+    
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::GET_VALUE;
+    packet.ID = GetNewPacketID();
+    packet.Body = request;
 
-    EJson result = EJson::object();
-    Get(result);
+    EJson result = WaitForRequest(packet.ID);
 
     EValueDescription propertyDescription;
     if (!result["ValueDescription"].is_null() && result["PropertyName"].is_string() && !result["Value"].is_null())
@@ -103,68 +118,13 @@ void ERegisterConnection::CleanUp()
     }
 }
 
-void ERegisterConnection::Get(EJson& outValue) 
-{
-    size_t bufLen = 0;
-    Get((u8*)&bufLen, sizeof(size_t));
-    u8* buffer = new u8[bufLen];
-    Get(buffer, bufLen);
-    EString bufAsString = EString((const char*)buffer);
-    delete[] buffer;
-    outValue = EJson::parse(bufAsString);
-}
-
-int ERegisterConnection::Get(u8* buffer, size_t buffer_size) 
-{
-    return _sock::read(fSocketId, buffer, buffer_size);
-}
-
-void ERegisterConnection::Send(EPacketType eventType) 
-{
-    Send((u8*)&eventType, sizeof(EPacketType));
-}
-
-void ERegisterConnection::Send(const u8* buffer, size_t buffer_size) 
-{
-    _sock::send(fSocketId, buffer, buffer_size);
-}
-
-void ERegisterConnection::Send(const EJson& value) 
-{
-    EString valueDump = value.dump();
-    const char* buffer = valueDump.c_str();
-    size_t len = strlen(buffer) + 1;
-
-    Send((u8*)&len, sizeof(size_t));
-    Send((u8*)buffer, len);
-}
-
 void ERegisterConnection::Run_ListenLoop() 
 {
     while (fListening)
     {
-        EPacketType event;
-        Get((u8*)&event, sizeof(EPacketType));
-
-        switch (event)
-        {
-        case EPacketType::CREATE_COMPONENT:
-        case EPacketType::CREATE_ENTITY:
-        case EPacketType::SET_VALUE:
-        {
-            break;
-        }
-        case EPacketType::GET_VALUE:
-        {
-            
-            break;
-        }
-        case EPacketType::REGISTER_EVENT:
-        {
-
-            break;
-        }
-        }
+        ERegisterPacket packet;
+        _sock::read_packet(fSocketId, &packet);
+        GotPacket(packet);
     }
 }
 
@@ -176,6 +136,32 @@ EJson ERegisterConnection::WaitForRequest(ERegisterPacket::PackId id)
     
     
     return EJson::object();
+}
+
+bool ERegisterConnection::IsWaitingForRequest(ERegisterPacket::PackId id) 
+{
+    return fRequests.find(id) != fRequests.end();
+}
+
+void ERegisterConnection::GotPacket(const ERegisterPacket& packet) 
+{
+    if (IsWaitingForRequest(packet.ID))
+    {
+        fRequests[packet.ID].Json = packet.Body;
+
+        fRequests[packet.ID].GotResult.notify_all();
+        fRequests.erase(packet.ID);
+    }
+}
+
+ERegisterPacket::PackId ERegisterConnection::GetNewPacketID() const
+{
+    ERegisterPacket::PackId result = 0;
+    while (result != 0 && fRequests.find(result) != fRequests.end())
+    {
+        result = result + 7 * 3;
+    }
+    return result;
 }
 
 void ERegisterConnection::Connect(const EString& connectTo, int connectToPort) 

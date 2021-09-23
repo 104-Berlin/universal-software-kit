@@ -47,7 +47,12 @@ void EEventDispatcher::WaitForEvent()
     if (fPostedEvents.size() > 0) { return; }
 
     std::unique_lock<std::mutex> lk(fWaitMutex);
-    fNewEvent.wait(lk, [this]{return fPostedEvents.size() > 0;});
+    fNewEvent.wait(lk);
+}
+
+void EEventDispatcher::StopWaiting() 
+{
+    fNewEvent.notify_all();
 }
 
 void EEventDispatcher::DisconnectEvents() 

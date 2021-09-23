@@ -43,13 +43,6 @@ namespace Engine {
         ERegisterSocket(int port);
         ~ERegisterSocket();
     private:
-        int Receive(int socketId, u8* data, size_t data_size);
-        void Receive(int socketId, EJson& outJson);
-
-
-        void Send(int socketId, const u8* data, size_t data_size);
-        void Send(int socketId, const EJson& request);
-
         void Init();
         void CleanUp();
 

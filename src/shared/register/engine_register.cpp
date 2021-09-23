@@ -159,6 +159,11 @@ void Engine::ERegister::WaitForEvent()
     fEventDispatcher.WaitForEvent();
 }
 
+EEventDispatcher& Engine::ERegister::GetEventDispatcher()
+{
+    return fEventDispatcher;
+}
+
 void Engine::ERegister::UpdateEvents() 
 {
     fEventDispatcher.Update();

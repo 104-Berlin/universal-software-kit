@@ -145,6 +145,7 @@ namespace Engine {
 
         void Update();
         void WaitForEvent();
+        void StopWaiting();
 
         void DisconnectEvents();
     };

@@ -37,16 +37,12 @@ namespace Engine {
         void Init();
         void CleanUp();
     private:
-        void Get(EJson& outValue);
-        int Get(u8* buffer, size_t buffer_size);
-
-        void Send(const u8* buffer, size_t buffer_size);
-
-        void Send(EPacketType eventType);
-        void Send(const EJson& value);
-
         void Run_ListenLoop();
 
         EJson WaitForRequest(ERegisterPacket::PackId id);
+        bool IsWaitingForRequest(ERegisterPacket::PackId id);
+        void GotPacket(const ERegisterPacket& packet);
+
+        ERegisterPacket::PackId GetNewPacketID() const;
     };
 }

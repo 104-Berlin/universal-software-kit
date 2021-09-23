@@ -21,6 +21,13 @@ namespace Engine {
         EPacketType PacketType;
         PackId      ID;
         EJson       Body;
+
+        ERegisterPacket()
+        {
+            ID = 0;
+            PacketType = EPacketType::CREATE_ENTITY;
+            Body = EJson::object();
+        }
     };
 
 
@@ -30,6 +37,8 @@ namespace Engine {
         int send(int socketId, const u8* data, size_t data_size);
 
         void send_packet(int socketId, const ERegisterPacket& packet);
-        void read_packet(int socketId, ERegisterPacket* outPacket);
+        int read_packet(int socketId, ERegisterPacket* outPacket);
+
+        void print_last_socket_error();
     }
 }

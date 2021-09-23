@@ -129,6 +129,8 @@ namespace Engine {
         void DisconnectEvents();
         void WaitForEvent();
 
+        EEventDispatcher& GetEventDispatcher();
+
         void UpdateEvents();
     };
 

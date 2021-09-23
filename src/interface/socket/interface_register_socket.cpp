@@ -16,46 +16,6 @@ ERegisterSocket::~ERegisterSocket()
     CleanUp();
 }
 
-int ERegisterSocket::Receive(int socketId, u8* data, size_t data_size) 
-{
-    return _sock::read(socketId, data, data_size);
-}
-
-void ERegisterSocket::Receive(int socketId, EJson& outJson) 
-{
-    int n = 0;
-    size_t dataLen;
-    n = Receive(socketId, (u8*)&dataLen, sizeof(size_t));
-    if (n == 0) { HandleDisconnect(socketId); return; }
-    
-
-    u8* buffer = new u8[dataLen];
-    memset(buffer, 0, dataLen);
-    n = Receive(socketId, buffer, dataLen);
-    if (n == 0) { HandleDisconnect(socketId); return; }
-
-    EString asString = EString((const char*) buffer);
-    delete[] buffer;
-
-    outJson = EJson::parse(asString);
-}
-
-void ERegisterSocket::Send(int socketId, const u8* data, size_t data_size) 
-{
-    std::lock_guard<std::mutex> lock(fSendEventDataMutex);
-    
-    int n = _sock::send(socketId, data, data_size);
-}
-
-void ERegisterSocket::Send(int socketId, const EJson& request) 
-{
-    EString requestAsString = request.dump();
-    const char* buf = requestAsString.c_str();
-    size_t bufLen = strlen(buf) + 1;
-    Send(socketId, (u8*) &bufLen, sizeof(size_t));
-    Send(socketId, (u8*) buf, bufLen);
-}
-
 void ERegisterSocket::Init() 
 {
     if (fLoadedRegister)
@@ -92,28 +52,7 @@ void ERegisterSocket::Init()
     if (bind(fSocketId, (const sockaddr*)fAddressInfo, sizeof(sockaddr_in)) == -1)
     {
         E_ERROR("Could not bind the socket " + std::to_string(fSocketId));
-        
-#ifdef EWIN
-        char msgbuf [256];   // for a message up to 255 bytes.
-
-
-        msgbuf [0] = '\0';    // Microsoft doesn't guarantee this on man page.
-
-        int err = WSAGetLastError ();
-
-        FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,   // flags
-                    NULL,                // lpsource
-                    err,                 // message id
-                    MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),    // languageid
-                    msgbuf,              // output buffer
-                    sizeof (msgbuf),     // size of msgbuf, bytes
-                    NULL);               // va_list of arguments
-
-        E_ERROR(EString("Error code: ") + msgbuf);
-
-#else
-        E_ERROR(EString("Error code: ") + strerror(errno));
-#endif
+        _sock::print_last_socket_error();
         return;
     }
 
@@ -133,6 +72,8 @@ void ERegisterSocket::Init()
 
 void ERegisterSocket::CleanUp() 
 {
+    
+
     fIsRunning = false;
 
     if (fSocketId > -1)
@@ -147,21 +88,29 @@ void ERegisterSocket::CleanUp()
     {
         fAcceptThread.join();
     }
+
+    {
+        std::lock_guard<std::mutex> lock(fConnectionMutex);
+        for (auto& entry : fConnections)
+        {
+            if (entry.Thread->joinable())
+            {
+                entry.Thread->join();
+            }
+            delete entry.Thread;
+            if (entry.Address)
+            {
+                delete entry.Address;
+            }
+        }
+        fConnections.clear();
+    }
+
+    fLoadedRegister->GetEventDispatcher().StopWaiting();
     if (fRegisterEventThread.joinable())
     {
         fRegisterEventThread.join();
     }
-
-    for (auto& entry : fConnections)
-    {
-        if (entry.Thread->joinable())
-        {
-            entry.Thread->join();
-        }
-        delete entry.Thread;
-        delete entry.Address;
-    }
-    fConnections.clear();
 
     if (fAddressInfo)
     {
@@ -197,19 +146,18 @@ void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address)
 {
     while (fIsRunning)
     {
-        EPacketType event;
-        int n = Receive(socketId, (u8*)&event, sizeof(EPacketType));
+        ERegisterPacket packet;
+        int n = _sock::read_packet(socketId, &packet);
         if (n == 0)
         {
             HandleDisconnect(socketId);
             break;
         }
-        // I think we have to wait here for the event thread to finish sending the data
 
-
+        EJson responseJson = EJson::object();
 
         // Handle Command and send back something
-        switch (event)
+        switch (packet.PacketType)
         {
         case EPacketType::CREATE_ENTITY:
         {
@@ -219,10 +167,7 @@ void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address)
         }
         case EPacketType::CREATE_COMPONENT:
         {
-            EJson inputJson = EJson::object();
-            Receive(socketId, inputJson);
-
-            const EJson& descriptionJson = inputJson["ValueDescription"];
+            const EJson& descriptionJson = packet.Body["ValueDescription"];
             EValueDescription dsc;
             if (!EDeserializer::ReadStorageDescriptionFromJson(descriptionJson, &dsc))
             {
@@ -230,9 +175,9 @@ void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address)
                 break;
             }
             
-            if (inputJson["Entity"].is_number_integer())
+            if (packet.Body["Entity"].is_number_integer())
             {
-                ERegister::Entity entity = (ERegister::Entity) inputJson["Entity"].get<int>();
+                ERegister::Entity entity = (ERegister::Entity) packet.Body["Entity"].get<int>();
                 EStructProperty* property = fLoadedRegister->AddComponent(entity, dsc);
                 if (property)
                 {
@@ -244,14 +189,11 @@ void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address)
         }
         case EPacketType::SET_VALUE:
         {
-            EJson requestJson = EJson::object();
-            Receive(socketId, requestJson);
-
-            if (requestJson["Entity"].is_number_integer() && requestJson["ValueIdent"].is_string() && requestJson["Value"].is_string())
+            if (packet.Body["Entity"].is_number_integer() && packet.Body["ValueIdent"].is_string() && packet.Body["Value"].is_string())
             {
-                ERegister::Entity entity = requestJson["Entity"].get<int>();
-                EString valueIdent = requestJson["ValueIdent"].get<EString>();
-                EString value = requestJson["Value"].get<EString>();
+                ERegister::Entity entity = packet.Body["Entity"].get<int>();
+                EString valueIdent = packet.Body["ValueIdent"].get<EString>();
+                EString value = packet.Body["Value"].get<EString>();
 
                 EProperty* foundProperty = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
                 if (!foundProperty)
@@ -259,32 +201,38 @@ void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address)
                     E_ERROR("Could not set value. Value not found!");
                     return;
                 }
-                EDeserializer::ReadPropertyFromJson(EJson::parse(value), foundProperty);
-                E_INFO("Value " + valueIdent + " setted on entity " + std::to_string(entity) + "!");
+                if (EDeserializer::ReadPropertyFromJson(EJson::parse(value), foundProperty))
+                {
+                    E_INFO("Value " + valueIdent + " setted on entity " + std::to_string(entity) + "!");
+                }
             }
             break;
         }
         case EPacketType::GET_VALUE:
         {
-            EJson requestJson = EJson::object();
-            Receive(socketId, requestJson);
-            if (requestJson["Entity"].is_number_integer() && requestJson["ValueIdent"].is_string())
+            if (packet.Body["Entity"].is_number_integer() && packet.Body["ValueIdent"].is_string())
             {
-                ERegister::Entity entity = requestJson["Entity"].get<int>();
-                EString valueIdent = requestJson["ValueIdent"].get<EString>();
+                ERegister::Entity entity = packet.Body["Entity"].get<int>();
+                EString valueIdent = packet.Body["ValueIdent"].get<EString>();
                 EProperty* foundValue = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
-                EJson resultJson = EJson::object();
+
                 if (foundValue)
                 {
-                    resultJson["ValueDescription"] = ESerializer::WriteStorageDescriptionToJson(foundValue->GetDescription());
-                    resultJson["PropertyName"] = foundValue->GetPropertyName();
-                    resultJson["Value"] = ESerializer::WritePropertyToJs(foundValue);
+                    responseJson["ValueDescription"] = ESerializer::WriteStorageDescriptionToJson(foundValue->GetDescription());
+                    responseJson["PropertyName"] = foundValue->GetPropertyName();
+                    responseJson["Value"] = ESerializer::WritePropertyToJs(foundValue);
                 }
-                Send(socketId, resultJson);
             }
             break;
         }
         }
+
+        ERegisterPacket responsePacket;
+        responsePacket.ID = packet.ID;
+        responsePacket.PacketType = packet.PacketType;
+        responsePacket.Body = responseJson;
+
+        _sock::send_packet(socketId, responsePacket);
     }
 }
 
@@ -298,6 +246,7 @@ void ERegisterSocket::HandleConnection(int socketId, sockaddr_in* address)
 
 
     Connection newConnection;
+    newConnection.Address = address;
     newConnection.SocketId = socketId;
     newConnection.Thread = new std::thread([this, socketId, address](){
         Run_Connection(socketId, address);
