@@ -8,25 +8,10 @@
 namespace Engine {
 
 
-
     class E_API ERegister
     {
     public:
         using Entity = u64;
-        E_STORAGE_STRUCT(ComponentCreateEvent, 
-            (EValueDescription::t_ID, ValueId),
-            (Entity, Handle)
-        )
-
-        E_STORAGE_STRUCT(ComponentDeleteEvent,
-            (EValueDescription::t_ID, ValueId),
-            (Entity, Handle)
-        )
-
-        E_STORAGE_STRUCT(ValueChangeEvent,
-            (EString, Identifier),
-            (Entity, Handle)
-        )
     private:
     private:
         EString fName;
@@ -82,41 +67,6 @@ namespace Engine {
 
 
 
-
-        template <typename Callback>
-        void AddComponentCreateEventListener(const EValueDescription& description, Callback cb)
-        {
-            fEventDispatcher.Connect<ComponentCreateEvent>([cb, description](ComponentCreateEvent event){
-                if (event.ValueId == description.GetId())
-                {
-                    cb(event.Handle);
-                }
-            });
-        }
-
-        template <typename Callback>
-        void AddComponentDeleteEventListener(const EValueDescription& description, Callback cb)
-        {
-            fEventDispatcher.Connect<ComponentDeleteEvent>([cb, description](ComponentDeleteEvent event){
-                if (description.GetId() == event.ValueId)
-                {
-                    std::invoke(cb, event.Handle);
-                }
-            });
-        }
-
-        template <typename Callback>
-        void AddEntityChangeEventListener(const EString& valueIdent, Callback cb)
-        {
-            fEventDispatcher.Connect<ValueChangeEvent>([cb, valueIdent](ValueChangeEvent event){
-                if (event.Identifier.length() < valueIdent.length()) {return;}
-                if (valueIdent == event.Identifier.substr(0, valueIdent.length()))
-                {
-                    cb(event.Handle, valueIdent);
-                }
-            });
-        }
-
         template <typename Callback>
         void CatchAllEvents(Callback cb)
         {
@@ -133,6 +83,26 @@ namespace Engine {
 
         void UpdateEvents();
     };
+
+    
+    E_STORAGE_STRUCT(EntityCreateEvent,
+        (ERegister::Entity, Handle)
+    )
+
+    E_STORAGE_STRUCT(ComponentCreateEvent, 
+        (EValueDescription::t_ID, ValueId),
+        (ERegister::Entity, Handle)
+    )
+
+    E_STORAGE_STRUCT(ComponentDeleteEvent,
+        (EValueDescription::t_ID, ValueId),
+        (ERegister::Entity, Handle)
+    )
+
+    E_STORAGE_STRUCT(ValueChangeEvent,
+        (EString, Identifier),
+        (ERegister::Entity, Handle)
+    )
 
 
 

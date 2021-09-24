@@ -1,3 +1,4 @@
+
 #include "engine.h"
 #include "prefix_shared.h"
 
@@ -46,6 +47,7 @@ ERegister::Entity ERegister::CreateEntity()
         currentEntity++;
     }
     fAliveEntites.push_back(newEntity);
+    fEventDispatcher.Enqueue<EntityCreateEvent>({newEntity});
     return newEntity;
 }
 

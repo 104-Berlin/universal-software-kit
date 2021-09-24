@@ -11,6 +11,7 @@ namespace Engine {
         SET_VALUE = 2,
 
         GET_VALUE = 20,
+        GET_ALL_VALUES = 21,
 
         REGISTER_EVENT = 40,
     };

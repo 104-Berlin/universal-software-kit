@@ -15,8 +15,6 @@ EVector<u32> planeIndices = {
     0, 1, 2, 2, 3, 0
 };
 
-ERegister* activeScene = nullptr;
-
 static EUnorderedMap<ERegister::Entity, RMesh*> meshes;
 
 static EValueDescription TechnicalMeshDsc = EValueDescription::CreateStruct("TechnicalDrawing", {{"Positions", EVec3_dsc.GetAsArray()}});
@@ -39,7 +37,7 @@ void ViewportMouseMove(events::EMouseMoveEvent e)
 
 void ViewportClicked(events::EMouseDownEvent e)
 {
-    ERegister::Entity newEntity = activeScene->CreateEntity();
+    /*ERegister::Entity newEntity = activeScene->CreateEntity();
     activeScene->AddComponent(newEntity, TechnicalMeshDsc);
 
     EStructProperty* technicalMesh = activeScene->GetComponent(newEntity, TechnicalMeshDsc);
@@ -47,7 +45,7 @@ void ViewportClicked(events::EMouseDownEvent e)
     EStructProperty* vector = static_cast<EStructProperty*>(arrayProp->AddElement());
     vector->SetValue(EVec3(e.Position.x, e.Position.y, 0.0f));
     data.CurrentEditPoint = static_cast<EStructProperty*>(arrayProp->AddElement());
-    data.CurrentEditPoint->SetValue(EVec3(e.Position.x, e.Position.y, 0.0f));
+    data.CurrentEditPoint->SetValue(EVec3(e.Position.x, e.Position.y, 0.0f));*/
 }
 
 void ViewportDrag(events::EMouseDragEvent e)
@@ -68,7 +66,7 @@ APP_ENTRY
     drawingViewport.lock()->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
     drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
     
-    activeScene->AddEntityChangeEventListener("Plane.Position", [](ERegister::Entity entity, const EString& ident){
+    /*activeScene->AddEntityChangeEventListener("Plane.Position", [](ERegister::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity];
         if (!graphicsMesh) { return; }
         EStructProperty* pos = static_cast<EStructProperty*>(activeScene->GetValueByIdentifier(entity, "Plane.Position"));
@@ -116,7 +114,7 @@ APP_ENTRY
             EStructProperty* scaleProp = static_cast<EStructProperty*>(sca);
             scaleProp->SetValue<EVec3>({1.0f, 1.0f, 1.0f});
         }
-    });
+    });*/
 
 
 
@@ -126,8 +124,6 @@ APP_ENTRY
 
 EXT_ENTRY
 {
-    activeScene = info.GetActiveScene();
-
     info.GetTypeRegister().RegisterItem(extensionName, TechnicalMeshDsc);
     info.GetTypeRegister().RegisterItem(extensionName, PlaneDescription);
 }

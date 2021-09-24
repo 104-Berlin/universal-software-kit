@@ -22,6 +22,8 @@ namespace Engine {
             }
         };
         EUnorderedMap<ERegisterPacket::PackId, Request> fRequests;
+
+        EEventDispatcher                                fEventDispatcher;
     public:
         ERegisterConnection();
         ~ERegisterConnection();
@@ -31,11 +33,15 @@ namespace Engine {
         void Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
 
         ERef<EProperty> Send_GetValue(ERegister::Entity entity, const EString& valueIdent);
+        EVector<ERef<EProperty>> Send_GetAllValues(ERegister::Entity entity);
 
         void Connect(const EString& connectTo, int connectToPort);
 
         void Init();
         void CleanUp();
+
+        EEventDispatcher& GetEventDispatcher();
+        const EEventDispatcher& GetEventDispatcher() const;
     private:
         void Run_ListenLoop();
 

@@ -62,8 +62,8 @@ void EApplication::RegenerateMainMenuBar()
         if (!saveToPath.empty())
         {
             EFile file(saveToPath);
-            file.SetFileBuffer(ESerializer::WriteFullSceneBuffer(EExtensionManager::instance().GetActiveScene()));
-            file.SaveBufferToDisk();
+            //file.SetFileBuffer(ESerializer::WriteFullSceneBuffer(EExtensionManager::instance().GetActiveScene()));
+            //file.SaveBufferToDisk();
         }
     });
     ERef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open..."));
@@ -76,7 +76,7 @@ void EApplication::RegenerateMainMenuBar()
             if (!sceneFile.GetBuffer().IsNull())
             {
                 EExtensionManager::instance().Reload();
-                EDeserializer::ReadSceneFromFileBuffer(sceneFile.GetBuffer(), EExtensionManager::instance().GetActiveScene(), EExtensionManager::instance().GetTypeRegister().GetAllItems());
+                ///EDeserializer::ReadSceneFromFileBuffer(sceneFile.GetBuffer(), EExtensionManager::instance().GetActiveScene(), EExtensionManager::instance().GetTypeRegister().GetAllItems());
             }
         }
     });
@@ -92,7 +92,7 @@ void EApplication::RegenerateMainMenuBar()
             if (EExtensionManager::instance().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
                 foundDescription.ImportFunction)
             {
-                EExtensionManager::instance().GetActiveScene()->GetResourceManager().ImportResourceFromFile(resourceFile, foundDescription);
+                //EExtensionManager::instance().GetActiveScene()->GetResourceManager().ImportResourceFromFile(resourceFile, foundDescription);
             }
             else
             {

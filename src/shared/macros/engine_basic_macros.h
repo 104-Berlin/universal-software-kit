@@ -38,8 +38,8 @@
 
 #define E_LOOP_ARGS_1(cb, entry) EXPAND ( cb (entry) )
 
-#define E_LOOP_ARGS_2(cb, entry, last) EXPAND (cb (entry) )\
-                                        EXPAND ( E_LOOP_ARGS_1 (cb, last) )
+#define E_LOOP_ARGS_2(cb, entry, ...) EXPAND (cb (entry) )\
+                                        EXPAND ( E_LOOP_ARGS_1 (cb, __VA_ARGS__) )
 #define E_LOOP_ARGS_3(cb, entry, ...) EXPAND (cb (entry) )\
                                         EXPAND (E_LOOP_ARGS_2  (cb, __VA_ARGS__) )
 #define E_LOOP_ARGS_4(cb, entry, ...) EXPAND (cb (entry) )\

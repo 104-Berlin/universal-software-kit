@@ -87,6 +87,33 @@ ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, con
     return nullptr;
 }
 
+EVector<ERef<EProperty>> ERegisterConnection::Send_GetAllValues(ERegister::Entity entity) 
+{
+    EJson request = EJson::object();
+    request["Entity"] = entity;
+    
+    
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::GET_ALL_VALUES;
+    packet.ID = GetNewPacketID();
+    packet.Body = request;
+
+    _sock::send_packet(fSocketId, packet);
+
+    EJson response = WaitForRequest(packet.ID);
+
+    EVector<ERef<EProperty>> result;
+    for (EJson& valueJson : response)
+    {
+        EProperty* property;
+        if (EDeserializer::ReadPropertyFromJson_WithDescription(valueJson, &property))
+        {
+            result.push_back(ERef<EProperty>(property));
+        }
+    }
+    return result;
+}
+
 void ERegisterConnection::Init() 
 {
     int socketDomain = AF_INET;
@@ -118,6 +145,16 @@ void ERegisterConnection::CleanUp()
     {
         fListenThread.join();
     }
+}
+
+EEventDispatcher& ERegisterConnection::GetEventDispatcher() 
+{
+    return fEventDispatcher;
+}
+
+const EEventDispatcher& ERegisterConnection::GetEventDispatcher() const
+{
+    return fEventDispatcher;
 }
 
 void ERegisterConnection::Run_ListenLoop() 
@@ -164,6 +201,21 @@ void ERegisterConnection::GotPacket(const ERegisterPacket& packet)
         fRequests[packet.ID].Json = packet.Body;
 
         fRequests[packet.ID].GotResult.notify_all();
+    }
+    if (packet.PacketType == EPacketType::REGISTER_EVENT)
+    {
+        EValueDescription propertyDescription;
+        if (!packet.Body["ValueDescription"].is_null() && !packet.Body["Value"].is_null())
+        {
+            EDeserializer::ReadStorageDescriptionFromJson(packet.Body["ValueDescription"], &propertyDescription);
+
+            ERef<EProperty> resProperty = ERef<EProperty>(EProperty::CreateFromDescription(propertyDescription.GetId(), propertyDescription));
+
+            if (EDeserializer::ReadPropertyFromJson(packet.Body["Value"], resProperty.get()))
+            {
+                fEventDispatcher.Post_P(propertyDescription, resProperty.get());
+            }
+        }
     }
 }
 

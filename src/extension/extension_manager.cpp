@@ -77,12 +77,10 @@ const EString& EExtension::GetFilePath() const
 
 EExtensionManager::EExtensionManager()
 {
-    fLoadedScene = new ERegister("New Scene");
 }
 
 EExtensionManager::~EExtensionManager() 
 {
-    delete fLoadedScene;
 }
 
 bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
@@ -133,11 +131,6 @@ bool EExtensionManager::IsLoaded(const EString& extensionName)
     return fLoadedExtensions.find(extensionName) != fLoadedExtensions.end();
 }
 
-ERegister* EExtensionManager::GetActiveScene() const
-{
-    return fLoadedScene;
-}
-
 EValueDescription EExtensionManager::GetValueDescriptionById(const EString& extensionName, const EString& typeId) 
 {
     const EVector<EValueDescription>& registeredTypes = fTypeRegister.GetItems(extensionName);
@@ -180,8 +173,6 @@ EExtensionManager& EExtensionManager::instance()
 void EExtensionManager::Reload() 
 {
     // Cache pointers to extension, because map will change with reload
-    fLoadedScene->DisconnectEvents();
-
     EVector<EExtension*> allExtensions = GetLoadedExtensions();
     EVector<EString> extensionToLoad;
     for (EExtension* ext : allExtensions)
@@ -189,9 +180,6 @@ void EExtensionManager::Reload()
         extensionToLoad.push_back(ext->GetFilePath());
         UnloadExtension(ext);
     }
-
-    delete fLoadedScene;
-    fLoadedScene = new ERegister();
 
     for (const EString& extensionPath : extensionToLoad)
     {

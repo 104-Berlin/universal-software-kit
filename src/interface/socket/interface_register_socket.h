@@ -15,11 +15,16 @@ namespace Engine {
 
         struct Connection
         {
-            std::thread*    Thread;
-            int             SocketId;
-            sockaddr_in*    Address;
+            std::thread    Thread;
+            int            SocketId;
+            sockaddr_in*   Address = nullptr;
 
             Connection() = default;
+            ~Connection();
+
+            void SendPacket(const ERegisterPacket& packet);
+        private:
+            std::mutex      SendMutex;
         };
     private:
         ERegister*          fLoadedRegister; // The register to get and set data
@@ -35,7 +40,7 @@ namespace Engine {
         std::thread         fAcceptThread; // Thread that accepts new connections
         std::thread         fRegisterEventThread; // Thread that updates register events
 
-        EVector<Connection> fConnections;
+        EVector<Connection*>fConnections;
         std::mutex          fConnectionMutex;
 
         std::mutex          fSendEventDataMutex;
@@ -47,7 +52,7 @@ namespace Engine {
         void CleanUp();
 
         void Run_AcceptConnections();
-        void Run_Connection(int socketId, sockaddr_in* address);
+        void Run_Connection(Connection* connection);
 
         void HandleConnection(int socketId, sockaddr_in* address);
         void HandleDisconnect(int socketId);

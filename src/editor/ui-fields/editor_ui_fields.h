@@ -24,8 +24,10 @@ namespace Editor {
     class EObjectView : public Engine::EUIField
     {
     private:
-        Engine::ERegister::Entity fSelectedEntity;
-        ERef<Engine::EUIButton> fAddObjectButton;
+        EVector<ERef<Engine::EProperty>>    fSelectedComponents;
+        Engine::ERegister::Entity           fSelectedEntity;
+        EVector<Engine::ERegister::Entity>  fEntities;
+        ERef<Engine::EUIButton>             fAddObjectButton;
     public:
         EObjectView();
 
@@ -46,6 +48,8 @@ namespace Editor {
         void RenderInteger(Engine::EValueProperty<u64>* storage);
         void RenderDouble(Engine::EValueProperty<double>* storage);
         void RenderString(Engine::EValueProperty<EString>* storage);
+
+        bool HasSelectedComponent(Engine::EValueDescription dsc);
     };
 
     class ECommandLine : public Engine::EUIField

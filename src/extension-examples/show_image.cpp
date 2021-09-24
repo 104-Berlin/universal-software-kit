@@ -7,8 +7,6 @@ using namespace Engine;
 using namespace Graphics;
 using namespace Renderer;
 
-static ERegister* activeScene;
-
 struct ImageUserData
 {
     int width;
@@ -54,7 +52,7 @@ public:
     ImageLayerView()
         : EUIField("ImageView")
     {
-        activeScene->AddComponentCreateEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
+        /*activeScene->AddComponentCreateEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
             
             EStructProperty* imageLayer = activeScene->GetComponent(handle, ImageLayer::_dsc);
             if (imageLayer)
@@ -88,7 +86,7 @@ public:
                     fImageViews[handle].lock()->SetTextureData(data->Data, userData->width, userData->height);
                 }
             }
-        });
+        });*/
     }
 };
 
@@ -101,8 +99,6 @@ APP_ENTRY
 
 EXT_ENTRY
 {
-    activeScene = info.GetActiveScene();
-
     EResourceDescription imageDsc("Image",{"png", "jpeg", "bmp"});
     imageDsc.ImportFunction = &ImportImage;
 

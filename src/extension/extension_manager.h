@@ -38,7 +38,6 @@ namespace Engine {
     {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
-        ERegister*                          fLoadedScene;
         ETypeRegister                       fTypeRegister;
         EResourceRegister                   fResourceRegister;
         EEventDispatcher                    fEventDispatcher;
@@ -72,11 +71,6 @@ namespace Engine {
          * @return IsLoaded
          */
         bool IsLoaded(const EString& extensionName);
-
-        /**
-         * @return The active scene
-         */
-        ERegister* GetActiveScene() const;
 
         /**
          * Gets a value description by name

@@ -47,22 +47,13 @@ shared::ESharedError shared::CreateComponent(const EString& componentId, ERegist
         E_ERROR("Could not find type" + componentId);
         return true; // ERROR
     }
-    StaticSharedContext::instance().GetRegisterConnection().Send_CreateNewComponent(entity, desc);
+    CreateComponent(desc, entity);
+    return false;
+}
 
-    /*StaticSharedContext::instance().RunInMainThread([componentId, entity](){
-        EValueDescription desc;
-        if (!EXTENSION_MANAGER.GetTypeRegister().FindItem(EFindTypeDescByName(componentId), &desc))
-        {
-            E_ERROR("Could not find type" + componentId);
-            return; // ERROR
-        }
-        EStructProperty* prop = ACTIVE_SCENE->AddComponent(entity, desc);
-        if (!prop) 
-        {
-            return; // ERROR
-        }
-        inter::PrintProperty(prop);
-    });*/
+shared::ESharedError shared::CreateComponent(const EValueDescription& componentId, ERegister::Entity entity) 
+{
+    StaticSharedContext::instance().GetRegisterConnection().Send_CreateNewComponent(entity, componentId);
     return false;
 }
 
@@ -92,13 +83,28 @@ ERef<EProperty> shared::GetValue(ERegister::Entity entity, const EString& valueI
     {
         E_WARN("Could not find value " + valueIdent);
     }
+    
     return result;
 }
 
+EVector<ERef<EProperty>> shared::GetAllComponents(ERegister::Entity entity) 
+{
+    return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllValues(entity);
+}
 
 namespace Engine {
     
     namespace shared {
+        EEventDispatcher& ERegisterEventDispatcher::GetEventDispatcher() 
+        {
+            return fEventDispatcher;
+        }
+        
+        const EEventDispatcher& ERegisterEventDispatcher::GetEventDispatcher() const
+        {
+            return fEventDispatcher;
+        }
+    
 
         StaticSharedContext::StaticSharedContext() 
             : fRegisterSocket(nullptr)
@@ -115,6 +121,11 @@ namespace Engine {
                 return;
             }
         #endif
+
+            fRegisterConnection.GetEventDispatcher().ConnectAll([this](EStructProperty* property){
+                fRegisterEventDispatcher.GetEventDispatcher().Post_P(property->GetDescription(), property);
+            });
+
 
             // For now we create local socket
             fRegisterSocket = new ERegisterSocket(420);
@@ -140,6 +151,11 @@ namespace Engine {
         ERegisterConnection& StaticSharedContext::GetRegisterConnection() 
         {
             return fRegisterConnection;
+        }
+        
+        ERegisterEventDispatcher& StaticSharedContext::Events() 
+        {
+            return fRegisterEventDispatcher;
         }
         
         void StaticSharedContext::ConnectTo(const EString& address) 

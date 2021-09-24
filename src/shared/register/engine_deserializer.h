@@ -11,6 +11,7 @@ namespace Engine {
         static bool ReadSceneFromJson(const EJson& json, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes);
 
         static bool ReadPropertyFromJson(const EJson& json, EProperty* property);
+        static bool ReadPropertyFromJson_WithDescription(const EJson& json, EProperty** property);
 
         static bool ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes);
     };

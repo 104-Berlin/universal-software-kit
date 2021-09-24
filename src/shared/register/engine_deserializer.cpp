@@ -199,6 +199,22 @@ bool EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
     return true;
 }
 
+bool EDeserializer::ReadPropertyFromJson_WithDescription(const EJson& json, EProperty** property) 
+{
+    EValueDescription dsc;
+    if (json["ValueDescription"].is_object() && ReadStorageDescriptionFromJson(json["ValueDescription"], &dsc))
+    {
+        *property = EProperty::CreateFromDescription(dsc.GetId(), dsc);
+        if (json["Value"].is_object() && ReadPropertyFromJson(json["Value"], *property))
+        {
+            return true;
+        }
+        delete *property;
+        return false;
+    }
+    return false;
+}
+
 bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes) 
 {
     EFileCollection fileCollection;

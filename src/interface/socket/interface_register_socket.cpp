@@ -1,8 +1,28 @@
 #include "prefix_interface.h"
 
 using namespace Engine;
-
 #define LISTEN_BACKLOG 50
+
+
+
+ERegisterSocket::Connection::~Connection() 
+{
+    if (Thread.joinable())
+    {
+        Thread.join();
+    }
+    if (Address)
+    {
+        delete Address;
+        Address = nullptr;
+    }
+}
+
+void ERegisterSocket::Connection::SendPacket(const ERegisterPacket& packet) 
+{
+    std::lock_guard<std::mutex> lock(SendMutex);
+    _sock::send_packet(SocketId, packet);
+}
 
 
 ERegisterSocket::ERegisterSocket(int port) 
@@ -91,17 +111,9 @@ void ERegisterSocket::CleanUp()
 
     {
         std::lock_guard<std::mutex> lock(fConnectionMutex);
-        for (auto& entry : fConnections)
+        for (Connection* entry : fConnections)
         {
-            if (entry.Thread->joinable())
-            {
-                entry.Thread->join();
-            }
-            delete entry.Thread;
-            if (entry.Address)
-            {
-                delete entry.Address;
-            }
+            delete entry;
         }
         fConnections.clear();
     }
@@ -146,15 +158,15 @@ void ERegisterSocket::Run_AcceptConnections()
     }
 }
 
-void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address) 
+void ERegisterSocket::Run_Connection(Connection* connection) 
 {
     while (fIsRunning)
     {
         ERegisterPacket packet;
-        int n = _sock::read_packet(socketId, &packet);
+        int n = _sock::read_packet(connection->SocketId, &packet);
         if (n == 0)
         {
-            HandleDisconnect(socketId);
+            HandleDisconnect(connection->SocketId);
             break;
         }
         else if (n < 0)
@@ -230,10 +242,23 @@ void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address)
 
                 if (foundValue)
                 {
-                    responseJson["ValueDescription"] = ESerializer::WriteStorageDescriptionToJson(foundValue->GetDescription());
+                    responseJson = ESerializer::WritePropertyToJs(foundValue, true /* With Description*/);
                     responseJson["PropertyName"] = foundValue->GetPropertyName();
-                    responseJson["Value"] = ESerializer::WritePropertyToJs(foundValue);
                 }
+            }
+            break;
+        }
+        case EPacketType::GET_ALL_VALUES:
+        {
+            if (packet.Body["Entity"].is_number_integer())
+            {
+                ERegister::Entity entity = packet.Body["Entity"].get<int>();
+                EJson propertyArrayJson = EJson::array();
+                for (EProperty* property : fLoadedRegister->GetAllComponents(entity))
+                {
+                    propertyArrayJson.push_back(ESerializer::WritePropertyToJs(property, true/*With description*/));
+                }
+                responseJson = propertyArrayJson;
             }
             break;
         }
@@ -244,7 +269,7 @@ void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address)
         responsePacket.PacketType = packet.PacketType;
         responsePacket.Body = responseJson;
 
-        _sock::send_packet(socketId, responsePacket);
+        connection->SendPacket(responsePacket);
     }
 }
 
@@ -256,28 +281,29 @@ void ERegisterSocket::HandleConnection(int socketId, sockaddr_in* address)
     E_ASSERT(socketId != -1);
     if (socketId == -1) { return; }
 
-
-    Connection newConnection;
-    newConnection.Address = address;
-    newConnection.SocketId = socketId;
-    newConnection.Thread = new std::thread([this, socketId, address](){
-        Run_Connection(socketId, address);
+    Connection* newConnection = new Connection();
+    newConnection->Address = address;
+    newConnection->SocketId = socketId;
+    newConnection->Thread = std::thread([this, newConnection](){
+        Run_Connection(newConnection);
     });
 
     fConnections.push_back(newConnection);
+    
 }
 
 void ERegisterSocket::HandleDisconnect(int socketId) 
 {
     std::lock_guard<std::mutex> lock(fConnectionMutex);
 
-    EVector<Connection>::iterator it = std::find_if(fConnections.begin(), fConnections.end(), [socketId](const Connection& con) -> bool{
-        return con.SocketId == socketId;
+    EVector<Connection*>::iterator it = std::find_if(fConnections.begin(), fConnections.end(), [socketId](Connection* con) -> bool{
+        return con->SocketId == socketId;
     });
     if (it != fConnections.end())
     {
-        E_INFO(EString("User disconnect: ") + inet_ntoa(it->Address->sin_addr));
+        E_INFO(EString("User disconnect: ") + inet_ntoa((*it)->Address->sin_addr));
         fConnections.erase(it);
+        delete *it;
     }
     else
     {
@@ -287,5 +313,15 @@ void ERegisterSocket::HandleDisconnect(int socketId)
 
 void ERegisterSocket::HandleRegisterEvent(EStructProperty* data) 
 {
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::REGISTER_EVENT;
+    packet.ID = 1;
+    
+    packet.Body["ValueDescription"] = ESerializer::WriteStorageDescriptionToJson(data->GetDescription());
+    packet.Body["Value"] = ESerializer::WritePropertyToJs(data);
 
+    for (Connection* con : fConnections)
+    {
+        con->SendPacket(packet);
+    }
 }

@@ -66,13 +66,13 @@ EResourceView::EResourceView()
 bool EResourceView::OnRender() 
 {
     ImGui::BeginChild("Resources", {150, 0});
-    for (EResourceData* data : EExtensionManager::instance().GetActiveScene()->GetResourceManager().GetAllResource())
+    /*for (EResourceData* data : EExtensionManager::instance().GetActiveScene()->GetResourceManager().GetAllResource())
     {
         if (ImGui::Selectable(data->Name.c_str()))
         {
             selectedResource = selectedResource == data->ID ? 0 : data->ID;
         }
-    }
+    }*/
     ImGui::EndChild();
     ImGui::SameLine();
     ImGui::BeginChild("ResourceDetail");
@@ -89,22 +89,35 @@ EObjectView::EObjectView()
 {
     fAddObjectButton = EMakeRef<EUIButton>("Add Object");
     fAddObjectButton->AddEventListener<events::EButtonEvent>([this](){
-        EExtensionManager::instance().GetActiveScene()->CreateEntity();
+        shared::CreateEntity();
+    });
+    shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<EntityCreateEvent>([this](EntityCreateEvent event){
+        fEntities.push_back(event.Handle);
+    });
+    shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<ComponentCreateEvent>([this](ComponentCreateEvent event){
+        if (event.Handle == fSelectedEntity)
+        {
+            fSelectedComponents.clear();
+            fSelectedComponents = shared::GetAllComponents(fSelectedEntity);
+        }
     });
 }
 
 bool EObjectView::OnRender() 
 {
-    if (!EExtensionManager::instance().GetActiveScene()) { return false; }
-
     ImGui::BeginChild("Entity Child", {100, 0});
-    for (ERegister::Entity entity : EExtensionManager::instance().GetActiveScene()->GetAllEntities())
+    for (ERegister::Entity entity : fEntities)
     {
         EString entityIdent = "Entity " + std::to_string(entity);
         bool selected = fSelectedEntity == entity;
         if (ImGui::Selectable(entityIdent.c_str(), &selected))
         {
             fSelectedEntity = fSelectedEntity == entity ? 0 : entity;
+            fSelectedComponents.clear();
+            if (fSelectedEntity)
+            {
+                fSelectedComponents = shared::GetAllComponents(fSelectedEntity);
+            }
         }
     }
     fAddObjectButton->Render();
@@ -113,10 +126,10 @@ bool EObjectView::OnRender()
     ImGui::BeginChild("ComponentChild");
     if (fSelectedEntity)
     {
-        for (EStructProperty* storage : EExtensionManager::instance().GetActiveScene()->GetAllComponents(fSelectedEntity))
+        /*for (EStructProperty* storage : EExtensionManager::instance().GetActiveScene()->GetAllComponents(fSelectedEntity))
         {
             RenderProperty(storage);
-        }
+        }*/
 
         if (ImGui::Button("Add Component"))
         {
@@ -127,12 +140,12 @@ bool EObjectView::OnRender()
             for (EValueDescription compDsc : EExtensionManager::instance().GetTypeRegister().GetAllItems())
             {
                 if (compDsc.GetType() != EValueType::STRUCT) { continue; }
-                bool hasComp = EExtensionManager::instance().GetActiveScene()->HasComponent(fSelectedEntity, compDsc);
+                bool hasComp = HasSelectedComponent(compDsc);
                 if (!hasComp)
                 {
                     if (ImGui::Selectable(compDsc.GetId().c_str()))
                     {
-                        EExtensionManager::instance().GetActiveScene()->AddComponent(fSelectedEntity, compDsc);
+                        shared::CreateComponent(compDsc, fSelectedEntity);
                     }
                 }
             }
@@ -287,6 +300,13 @@ void EObjectView::RenderString(Engine::EValueProperty<EString>* storage)
     ImGui::InputText(storage->GetPropertyName().c_str(), buf, 255);
     ImGui::PopID();
     storage->SetValue(buf);
+}
+
+bool EObjectView::HasSelectedComponent(Engine::EValueDescription dsc) 
+{
+    return std::find_if(fSelectedComponents.begin(), fSelectedComponents.end(), [dsc](ERef<Engine::EProperty> property){
+        return property->GetDescription() == dsc;
+    }) != fSelectedComponents.end();
 }
 
 ECommandLine::ECommandLine() 

@@ -74,9 +74,11 @@ TEST(RegisterTest, Basics)
 	ERegister scene;
 
 	bool componentCreated = false;
-
-	scene.AddComponentCreateEventListener(myTestComponent, [&componentCreated](ERegister::Entity entity){
-		componentCreated = true;
+	scene.GetEventDispatcher().Connect<ComponentCreateEvent>([&componentCreated, myTestComponent](ComponentCreateEvent event){
+		if (event.ValueId == myTestComponent.GetId())
+		{
+			componentCreated = true;
+		}
 	});
 
 	ERegister::Entity entity = scene.CreateEntity();
