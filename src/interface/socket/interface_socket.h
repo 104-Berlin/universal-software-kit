@@ -18,16 +18,9 @@ namespace Engine {
     struct ERegisterPacket
     {
         using PackId = u32;
-        EPacketType PacketType;
-        PackId      ID;
-        EJson       Body;
-
-        ERegisterPacket()
-        {
-            ID = 0;
-            PacketType = EPacketType::CREATE_ENTITY;
-            Body = EJson::object();
-        }
+        EPacketType PacketType = EPacketType::REGISTER_EVENT;
+        PackId      ID = 0;
+        EJson       Body = EJson::object();
     };
 
 

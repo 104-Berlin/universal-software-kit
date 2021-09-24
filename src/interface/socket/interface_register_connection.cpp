@@ -19,7 +19,7 @@ void ERegisterConnection::Send_CreateNewEntity()
     ERegisterPacket packet;
     packet.ID = GetNewPacketID();
     packet.PacketType = EPacketType::CREATE_ENTITY;
-    
+    _sock::send_packet(fSocketId, packet);
 }
 
 void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description) 
@@ -66,6 +66,8 @@ ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, con
     packet.PacketType = EPacketType::GET_VALUE;
     packet.ID = GetNewPacketID();
     packet.Body = request;
+
+    _sock::send_packet(fSocketId, packet);
 
     EJson result = WaitForRequest(packet.ID);
 
@@ -123,7 +125,18 @@ void ERegisterConnection::Run_ListenLoop()
     while (fListening)
     {
         ERegisterPacket packet;
-        _sock::read_packet(fSocketId, &packet);
+        int n = _sock::read_packet(fSocketId, &packet);
+        if (n <= 0)
+        {
+            if (n == 0)
+            {
+                E_WARN("Connection to Server lost!");
+                break;
+            }
+            _sock::print_last_socket_error();
+            continue;
+        }
+            
         GotPacket(packet);
     }
 }
@@ -134,8 +147,9 @@ EJson ERegisterConnection::WaitForRequest(ERegisterPacket::PackId id)
     std::unique_lock<std::mutex> lock(waitMutex);
     fRequests[id].GotResult.wait(lock);
     
-    
-    return EJson::object();
+    EJson result = fRequests[id].Json;
+    fRequests.erase(id);
+    return result;
 }
 
 bool ERegisterConnection::IsWaitingForRequest(ERegisterPacket::PackId id) 
@@ -150,14 +164,13 @@ void ERegisterConnection::GotPacket(const ERegisterPacket& packet)
         fRequests[packet.ID].Json = packet.Body;
 
         fRequests[packet.ID].GotResult.notify_all();
-        fRequests.erase(packet.ID);
     }
 }
 
 ERegisterPacket::PackId ERegisterConnection::GetNewPacketID() const
 {
     ERegisterPacket::PackId result = 0;
-    while (result != 0 && fRequests.find(result) != fRequests.end())
+    while (result == 0 || fRequests.find(result) != fRequests.end())
     {
         result = result + 7 * 3;
     }

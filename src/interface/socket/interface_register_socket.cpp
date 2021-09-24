@@ -153,6 +153,11 @@ void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address)
             HandleDisconnect(socketId);
             break;
         }
+        else if (n < 0)
+        {
+            _sock::print_last_socket_error();
+            continue;
+        }
 
         EJson responseJson = EJson::object();
 

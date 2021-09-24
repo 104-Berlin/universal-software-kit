@@ -60,17 +60,17 @@ int _sock::read_packet(int socketId, ERegisterPacket* outPacket)
     EPacketType type;
     ERegisterPacket::PackId ID;
     n = read(socketId, (u8*) &type, sizeof(EPacketType));
-    if (n == 0) { return n; }
+    if (n <= 0) { return n; }
     read(socketId, (u8*) &ID, sizeof(ERegisterPacket::PackId));
-    if (n == 0) { return n; }
+    if (n <= 0) { return n; }
 
     size_t dataLen = 0;
     read(socketId, (u8*)&dataLen, sizeof(size_t));
-    if (n == 0) { return n; }
+    if (n <= 0) { return n; }
     u8* bodyData = new u8[dataLen];
     memset(bodyData, 0, dataLen);
     read(socketId, bodyData, dataLen);
-    if (n == 0) { delete[] bodyData; return n; }
+    if (n <= 0) { delete[] bodyData; return n; }
 
     EString bodyAsString = EString((char*)bodyData);
     delete[] bodyData;
