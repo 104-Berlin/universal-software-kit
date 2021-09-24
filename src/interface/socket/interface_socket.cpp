@@ -48,7 +48,7 @@ void _sock::send_packet(int socketId, const ERegisterPacket& packet)
 
     EString bodyString = packet.Body.dump();
     const char* data = bodyString.c_str();
-    size_t dataLen = strlen(data);
+    size_t dataLen = strlen(data) + 1;
     send(socketId, (u8*)&dataLen, sizeof(size_t));
     send(socketId, (u8*)data, dataLen);
 }

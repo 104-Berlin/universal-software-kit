@@ -131,13 +131,17 @@ void ERegisterSocket::Run_AcceptConnections()
     while (fIsRunning)
     {
         sockaddr_in* client_address = new sockaddr_in();
-        socklen_t client_length = sizeof(client_address);
+        socklen_t client_length = sizeof(sockaddr_in);
 
         int newSocketId = accept(fSocketId, (sockaddr*)client_address, &client_length);
         if (newSocketId != -1)
         {
             E_INFO(EString("RegisterSocket: Got new connection from ") + inet_ntoa(client_address->sin_addr) + " port: " + std::to_string(ntohs(client_address->sin_port)));
             HandleConnection(newSocketId, client_address);
+        }
+        else
+        {
+            _sock::print_last_socket_error();
         }
     }
 }
@@ -158,6 +162,9 @@ void ERegisterSocket::Run_Connection(int socketId, sockaddr_in* address)
             _sock::print_last_socket_error();
             continue;
         }
+        
+        E_INFO("Register received packet: " + std::to_string(packet.ID));
+        if (packet.ID == 0) { continue; }
 
         EJson responseJson = EJson::object();
 

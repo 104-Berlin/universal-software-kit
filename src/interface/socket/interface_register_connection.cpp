@@ -169,7 +169,7 @@ void ERegisterConnection::GotPacket(const ERegisterPacket& packet)
 
 ERegisterPacket::PackId ERegisterConnection::GetNewPacketID() const
 {
-    ERegisterPacket::PackId result = 0;
+    static ERegisterPacket::PackId result = 0;
     while (result == 0 || fRequests.find(result) != fRequests.end())
     {
         result = result + 7 * 3;
@@ -179,6 +179,7 @@ ERegisterPacket::PackId ERegisterConnection::GetNewPacketID() const
 
 void ERegisterConnection::Connect(const EString& connectTo, int connectToPort) 
 {
+    E_INFO("Conecting to server " + connectTo);
     hostent* connect_to_server = gethostbyname(connectTo.c_str());
     if (connect_to_server == NULL)
     {
@@ -195,4 +196,5 @@ void ERegisterConnection::Connect(const EString& connectTo, int connectToPort)
         E_ERROR("Could not connect to server!");
         return;
     }
+    E_INFO("Connected");
 }
