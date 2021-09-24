@@ -337,7 +337,7 @@ void EObjectView::RenderString(Engine::EValueProperty<EString>* storage, EString
     ImGui::PushID(storage);
     if (ImGui::InputText(storage->GetPropertyName().c_str(), buf, 255, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        shared::SetValue<EString>(fSelectedEntity, nameIdent, value);
+        shared::SetValue<EString>(fSelectedEntity, nameIdent, buf);
     }
     ImGui::PopID();
 }
