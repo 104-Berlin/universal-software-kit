@@ -31,6 +31,10 @@
 #define BIT(x) (1 << x)
 #define DEG_TO_RAD (M_PI / 180.0)
 
+#define E_MIN(a, b) ((a < b) ? a : b)
+#define E_MAX(a, b) ((a > b) ? a : b)
+
+
 
 #ifdef EWIN
 #include <Windows.h>
