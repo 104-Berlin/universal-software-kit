@@ -40,7 +40,11 @@
 #include <Windows.h>
 #include <mutex>
 #include <atomic>
-#else
+#elif EUNI
+#include <sys/prctl.h>
+#include <dlfcn.h>
+#include <unistd.h>
+#else EMAC
 #include <dlfcn.h>
 #include <unistd.h>
 #endif
