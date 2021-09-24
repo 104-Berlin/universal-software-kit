@@ -7,6 +7,8 @@ namespace Engine {
     private:   
         int                 fSocketId;
 
+        std::condition_variable fConnected;
+
         std::atomic<bool>   fListening;
         std::thread         fListenThread;
         std::thread         fEventThread;

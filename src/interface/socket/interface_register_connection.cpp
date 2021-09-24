@@ -176,6 +176,11 @@ const EEventDispatcher& ERegisterConnection::GetEventDispatcher() const
 
 void ERegisterConnection::Run_ListenLoop() 
 {
+    {
+        std::mutex waitForConnect;
+        std::unique_lock<std::mutex> lk(waitForConnect);
+        fConnected.wait(lk);
+    }
     while (fListening)
     {
         ERegisterPacket packet;
@@ -274,5 +279,6 @@ void ERegisterConnection::Connect(const EString& connectTo, int connectToPort)
         E_ERROR("Could not connect to server!");
         return;
     }
+    fConnected.notify_all();
     E_INFO("Connected");
 }
