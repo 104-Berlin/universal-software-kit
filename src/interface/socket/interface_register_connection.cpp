@@ -19,7 +19,7 @@ void ERegisterConnection::Send_CreateNewEntity()
     ERegisterPacket packet;
     packet.ID = GetNewPacketID();
     packet.PacketType = EPacketType::CREATE_ENTITY;
-    _sock::send_packet(fSocketId, packet);
+    SendToServer(packet);
 }
 
 void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description) 
@@ -37,7 +37,7 @@ void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, cons
     packet.ID = GetNewPacketID();
     packet.Body = createJson;
     
-    _sock::send_packet(fSocketId, packet);
+    SendToServer(packet);
 }
 
 void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString) 
@@ -52,7 +52,7 @@ void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString&
     packet.ID = GetNewPacketID();
     packet.Body = requestJson;
 
-    _sock::send_packet(fSocketId, packet);
+    SendToServer(packet);
 }
 
 ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, const EString& valueIdent) 
@@ -67,11 +67,9 @@ ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, con
     packet.ID = GetNewPacketID();
     packet.Body = request;
 
-    _sock::send_packet(fSocketId, packet);
+    SendToServer(packet);
 
     EJson result = WaitForRequest(packet.ID);
-
-    E_INFO("GET_VALUE result: " + result.dump());
 
     EValueDescription propertyDescription;
     if (!result["ValueDescription"].is_null() && result["PropertyName"].is_string() && !result["Value"].is_null())
@@ -101,7 +99,7 @@ EVector<ERef<EProperty>> ERegisterConnection::Send_GetAllValues(ERegister::Entit
     packet.ID = GetNewPacketID();
     packet.Body = request;
 
-    _sock::send_packet(fSocketId, packet);
+    SendToServer(packet);
 
     EJson response = WaitForRequest(packet.ID);
 
@@ -169,6 +167,13 @@ const EEventDispatcher& ERegisterConnection::GetEventDispatcher() const
     return fEventDispatcher;
 }
 
+void ERegisterConnection::SendToServer(const ERegisterPacket& packet) 
+{
+    std::lock_guard<std::mutex> lk(fSendMutex);
+
+    _sock::send_packet(fSocketId, packet);
+}
+
 void ERegisterConnection::Run_ListenLoop() 
 {
     {
@@ -213,6 +218,7 @@ bool ERegisterConnection::IsWaitingForRequest(ERegisterPacket::PackId id)
 
 void ERegisterConnection::GotPacket(const ERegisterPacket& packet) 
 {
+    _sock::print_packet("CONNECTION", packet);
     if (IsWaitingForRequest(packet.ID))
     {
         fRequests[packet.ID].Json = packet.Body;

@@ -103,7 +103,6 @@ EObjectView::EObjectView()
             {
                 fSelectedComponents.push_back(newComponent);
             }
-            E_INFO("NEW COMPONENT: " + std::to_string(fSelectedComponents.size()));
         }
     });
     shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<ValueChangeEvent>([this](ValueChangeEvent event){

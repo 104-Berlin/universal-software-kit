@@ -16,6 +16,20 @@ namespace Engine {
         REGISTER_EVENT = 40,
     };
 
+    static const char* GetPacketTypeString(EPacketType type)
+    {
+        switch (type)
+        {
+            case EPacketType::CREATE_ENTITY: return "CREATE_ENTITY";
+            case EPacketType::CREATE_COMPONENT: return "CREATE_COMPONENT";
+            case EPacketType::SET_VALUE: return "SET_VALUE";
+            case EPacketType::GET_VALUE: return "GET_VALUE";
+            case EPacketType::GET_ALL_VALUES: return "GET_ALL_VALUES";
+            case EPacketType::REGISTER_EVENT: return "REGISTER_EVENT";
+        }
+        return "";
+    }
+
     struct ERegisterPacket
     {
         using PackId = u32;
@@ -34,5 +48,6 @@ namespace Engine {
         int read_packet(int socketId, ERegisterPacket* outPacket);
 
         void print_last_socket_error();
+        void print_packet(const EString& name, const ERegisterPacket& packet);
     }
 }

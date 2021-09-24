@@ -13,6 +13,7 @@ namespace Engine {
         std::atomic<bool>   fListening;
         std::thread         fListenThread;
         std::mutex          fNewIdMutex;
+        std::mutex          fSendMutex;
 
 
         struct Request
@@ -47,6 +48,8 @@ namespace Engine {
         EEventDispatcher& GetEventDispatcher();
         const EEventDispatcher& GetEventDispatcher() const;
     private:
+        void SendToServer(const ERegisterPacket& packet);
+
         void Run_ListenLoop();
 
         EJson WaitForRequest(ERegisterPacket::PackId id);

@@ -21,6 +21,9 @@ ERegisterSocket::Connection::~Connection()
 void ERegisterSocket::Connection::SendPacket(const ERegisterPacket& packet) 
 {
     std::lock_guard<std::mutex> lock(SendMutex);
+
+    _sock::print_packet(EString("SENDING TO ") + inet_ntoa(Address->sin_addr), packet);
+
     _sock::send_packet(SocketId, packet);
 }
 
@@ -178,7 +181,7 @@ void ERegisterSocket::Run_Connection(Connection* connection)
             continue;
         }
         
-        E_INFO("Register received packet: " + std::to_string(packet.ID));
+        _sock::print_packet(EString("REGISTER") + inet_ntoa(connection->Address->sin_addr), packet);
         if (packet.ID == 0) { continue; }
 
         EJson responseJson = EJson::object();
