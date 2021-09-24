@@ -467,3 +467,11 @@ void EUIModal::Open()
 {
     fOpen = true;
 }
+
+void EUIModal::Close() 
+{
+    if (fOpen)
+    {
+        ImGui::CloseCurrentPopup();
+    }
+}

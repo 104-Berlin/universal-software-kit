@@ -373,6 +373,7 @@ namespace events
         virtual void OnRenderEnd() override;
 
         void Open();
+        void Close();
     };
 
 }

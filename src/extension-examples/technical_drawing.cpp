@@ -66,30 +66,31 @@ APP_ENTRY
     drawingViewport.lock()->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
     drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
     
-    /*activeScene->AddEntityChangeEventListener("Plane.Position", [](ERegister::Entity entity, const EString& ident){
+    
+    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener("Plane.Position", [](ERegister::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity];
         if (!graphicsMesh) { return; }
-        EStructProperty* pos = static_cast<EStructProperty*>(activeScene->GetValueByIdentifier(entity, "Plane.Position"));
+        ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValue(entity, "Plane.Position"));
         EVec3 posVector;
         if (pos->GetValue<EVec3>(posVector))
         {
             graphicsMesh->SetPosition(posVector);
         }
     });
-    activeScene->AddEntityChangeEventListener("Plane.Rotation", [](ERegister::Entity entity, const EString& ident){
+    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener("Plane.Rotation", [](ERegister::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity];
         if (!graphicsMesh) { return; }
-        EStructProperty* pos = static_cast<EStructProperty*>(activeScene->GetValueByIdentifier(entity, "Plane.Rotation"));
+        ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValue(entity, "Plane.Rotation"));
         EVec3 posVector;
         if (pos->GetValue<EVec3>(posVector))
         {
             graphicsMesh->SetRotation(glm::vec3{glm::radians(posVector.x), glm::radians(posVector.y), glm::radians(posVector.z)});
         }
     });
-    activeScene->AddEntityChangeEventListener("Plane.Scale", [](ERegister::Entity entity, const EString& ident){
+    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener("Plane.Scale", [](ERegister::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity];
         if (!graphicsMesh) { return; }
-        EStructProperty* pos = static_cast<EStructProperty*>(activeScene->GetValueByIdentifier(entity, "Plane.Scale"));
+        ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValue(entity, "Plane.Scale"));
         EVec3 posVector;
         if (pos->GetValue<EVec3>(posVector))
         {
@@ -97,9 +98,10 @@ APP_ENTRY
         }
     });
 
-    activeScene->AddComponentCreateEventListener(PlaneDescription, [drawingViewport](ERegister::Entity entity){
+    shared::StaticSharedContext::instance().Events().AddComponentCreateEventListener(PlaneDescription, [drawingViewport](ERegister::Entity entity){
         // Create mesh in 3D Scene
-        EStructProperty* mesh = activeScene->GetComponent(entity, PlaneDescription);
+        ERef<EStructProperty> mesh = std::dynamic_pointer_cast<EStructProperty>(shared::GetValue(entity, PlaneDescription.GetId()));
+        if (!mesh) { return; }
         if (drawingViewport.expired()) { return; }
         RMesh* gMesh = new RMesh();
         meshes[entity] = gMesh;
@@ -113,8 +115,9 @@ APP_ENTRY
         {
             EStructProperty* scaleProp = static_cast<EStructProperty*>(sca);
             scaleProp->SetValue<EVec3>({1.0f, 1.0f, 1.0f});
+            shared::SetValue<EVec3>(entity, "Plane.Scale", {1.0f, 1.0f, 1.0f});
         }
-    });*/
+    });
 
 
 

@@ -1,34 +1,40 @@
 #pragma once
 
 namespace Engine {
+    class EProperty;
     class EStructProperty;
+
+    template <typename T>
+    class EValueProperty;
 }
 namespace convert {
 
     template <typename Value>
-    bool setter(Engine::EStructProperty* prop, const Value& value)
+    bool setter(Engine::EProperty* prop, const Value& value)
     {
         if constexpr (is_primitive<Value>)
         {
-            return false;
+            ((Engine::EValueProperty<Value>*)prop)->SetValue(value);
+            return true;
         }
         else
         {
-            return Value::ToProperty(value, prop);
+            return Value::ToProperty(value, (Engine::EStructProperty*)prop);
         }
     }
 
 
     template <typename Value>
-    bool getter(const Engine::EStructProperty* prop, Value* outValue)
+    bool getter(const Engine::EProperty* prop, Value* outValue)
     {
         if constexpr (is_primitive<Value>)
         {
-            return false;
+            *outValue = ((Engine::EValueProperty<Value>*)prop)->GetValue();
+            return true;
         }
         else
         {
-            return Value::FromProperty(*outValue, prop);
+            return Value::FromProperty(*outValue,(Engine::EStructProperty*) prop);
         }
     }
 };

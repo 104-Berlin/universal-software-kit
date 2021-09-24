@@ -1,9 +1,12 @@
 #include "editor_extension.h"
 
 template <>
-bool convert::setter<EVec2>(Engine::EStructProperty* property, const EVec2& vec)
+bool convert::setter<EVec2>(Engine::EProperty* prop, const EVec2& vec)
 {
     using namespace Engine;
+	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
+	EStructProperty* property = static_cast<EStructProperty*>(prop);
+
 	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
 	EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
 	if (xProp && yProp)
@@ -16,9 +19,12 @@ bool convert::setter<EVec2>(Engine::EStructProperty* property, const EVec2& vec)
 }
 
 template <>
-bool convert::getter<EVec2>(const Engine::EStructProperty* property, EVec2* outVec)
+bool convert::getter<EVec2>(const Engine::EProperty* prop, EVec2* outVec)
 {
     using namespace Engine;
+	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
+	const EStructProperty* property = static_cast<const EStructProperty*>(prop);
+
 	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
 	const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
 	if (xProp && yProp)
@@ -31,9 +37,12 @@ bool convert::getter<EVec2>(const Engine::EStructProperty* property, EVec2* outV
 }
 
 template <>
-bool convert::setter<EVec3>(Engine::EStructProperty* property, const EVec3& vec)
+bool convert::setter<EVec3>(Engine::EProperty* prop, const EVec3& vec)
 {
     using namespace Engine;
+	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
+	EStructProperty* property = static_cast<EStructProperty*>(prop);
+
 	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
 	EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
 	EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
@@ -48,9 +57,12 @@ bool convert::setter<EVec3>(Engine::EStructProperty* property, const EVec3& vec)
 }
 
 template <>
-bool convert::getter<EVec3>(const Engine::EStructProperty* property, EVec3* outVec)
+bool convert::getter<EVec3>(const Engine::EProperty* prop, EVec3* outVec)
 {
     using namespace Engine;
+	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
+	const EStructProperty* property = static_cast<const EStructProperty*>(prop);
+
 	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
 	const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
 	const EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
@@ -66,9 +78,12 @@ bool convert::getter<EVec3>(const Engine::EStructProperty* property, EVec3* outV
 
 
 template <>
-bool convert::setter<EVec4>(Engine::EStructProperty* property, const EVec4& vec)
+bool convert::setter<EVec4>(Engine::EProperty* prop, const EVec4& vec)
 {
     using namespace Engine;
+	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
+	EStructProperty* property = static_cast<EStructProperty*>(prop);
+
 	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
 	EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
 	EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
@@ -83,9 +98,12 @@ bool convert::setter<EVec4>(Engine::EStructProperty* property, const EVec4& vec)
 }
 
 template <>
-bool convert::getter<EVec4>(const Engine::EStructProperty* property, EVec4* outVec)
+bool convert::getter<EVec4>(const Engine::EProperty* prop, EVec4* outVec)
 {
     using namespace Engine;
+	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
+	const EStructProperty* property = static_cast<const EStructProperty*>(prop);
+
 	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
 	const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
 	const EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");

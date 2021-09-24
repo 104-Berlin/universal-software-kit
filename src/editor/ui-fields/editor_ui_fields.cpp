@@ -107,6 +107,7 @@ EObjectView::EObjectView()
             // For now we reload the complete properties
             fSelectedComponents.clear();
             fSelectedComponents = shared::GetAllComponents(fSelectedEntity);
+            E_INFO(EString("Size of components: ") + std::to_string(fSelectedComponents.size()));
         }
     });
 }
@@ -265,7 +266,7 @@ void EObjectView::RenderBool(Engine::EValueProperty<bool>* storage, EString name
     ImGui::PushID(storage);
     if (ImGui::Checkbox(storage->GetPropertyName().c_str(), &value))
     {
-        shared::SetValue(fSelectedEntity, nameIdent, value ? "true":"false");
+        shared::SetValue<bool>(fSelectedEntity, nameIdent, value);
     }
     ImGui::PopID();
 }
@@ -276,7 +277,7 @@ void EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage, EString na
     ImGui::PushID(storage);
     if (ImGui::InputInt(storage->GetPropertyName().c_str(), &value, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        shared::SetValue(fSelectedEntity, nameIdent, std::to_string(value));
+        shared::SetValue<i32>(fSelectedEntity, nameIdent, value);
     }
     ImGui::PopID();
 }
@@ -287,7 +288,7 @@ void EObjectView::RenderInteger(Engine::EValueProperty<u32>* storage, EString na
     ImGui::PushID(storage);
     if (ImGui::InputInt(storage->GetPropertyName().c_str(), (int*) &value, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        shared::SetValue(fSelectedEntity, nameIdent, std::to_string(value));
+        shared::SetValue<u32>(fSelectedEntity, nameIdent, value);
     }
     ImGui::PopID();
 }
@@ -298,7 +299,7 @@ void EObjectView::RenderInteger(Engine::EValueProperty<u64>* storage, EString na
     ImGui::PushID(storage);
     if (ImGui::InputInt(storage->GetPropertyName().c_str(), &value, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        shared::SetValue(fSelectedEntity, nameIdent, std::to_string(value));
+        shared::SetValue<int>(fSelectedEntity, nameIdent, value);
     }
     ImGui::PopID();
 }
@@ -309,7 +310,7 @@ void EObjectView::RenderDouble(Engine::EValueProperty<double>* storage, EString 
     ImGui::PushID(storage);
     if (ImGui::InputDouble(storage->GetPropertyName().c_str(), &value, 0.0, 0.0, "%.6f", ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        shared::SetValue(fSelectedEntity, nameIdent, std::to_string(value));
+        shared::SetValue<double>(fSelectedEntity, nameIdent, value);
     }
     ImGui::PopID();
 }
@@ -322,7 +323,7 @@ void EObjectView::RenderString(Engine::EValueProperty<EString>* storage, EString
     ImGui::PushID(storage);
     if (ImGui::InputText(storage->GetPropertyName().c_str(), buf, 255, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        shared::SetValue(fSelectedEntity, nameIdent, "\"" + value + "\"");
+        shared::SetValue<EString>(fSelectedEntity, nameIdent, value);
     }
     ImGui::PopID();
 }

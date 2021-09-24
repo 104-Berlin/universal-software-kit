@@ -29,13 +29,13 @@ namespace Engine {
 namespace convert
 {
 #ifdef EWIN
-    extern template E_API bool setter<Engine::EResourceLink>(Engine::EStructProperty*, const Engine::EResourceLink&);
-    extern template E_API bool getter<Engine::EResourceLink>(const Engine::EStructProperty*, Engine::EResourceLink*);
+    extern template E_API bool setter<Engine::EResourceLink>(Engine::EProperty*, const Engine::EResourceLink&);
+    extern template E_API bool getter<Engine::EResourceLink>(const Engine::EProperty*, Engine::EResourceLink*);
 #else
     template <>
-    bool setter<Engine::EResourceLink>(Engine::EStructProperty*, const Engine::EResourceLink&);
+    bool setter<Engine::EResourceLink>(Engine::EProperty*, const Engine::EResourceLink&);
     template <>
-    bool getter<Engine::EResourceLink>(const Engine::EStructProperty*, Engine::EResourceLink*);
+    bool getter<Engine::EResourceLink>(const Engine::EProperty*, Engine::EResourceLink*);
 #endif
 }
 

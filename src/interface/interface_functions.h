@@ -89,7 +89,19 @@ namespace Engine {
 
         ESharedError E_INTER_API SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
 
-
+        template <typename T>
+        ESharedError SetValue(ERegister::Entity entity, const EString& valueIdent, const T& value)
+        {
+            EValueDescription dsc = getdsc::GetDescription<T>();
+            if (dsc.Valid())
+            {
+                EProperty* property = EProperty::CreateFromDescription(dsc.GetId(), dsc);
+                convert::setter(property, value);
+                EString propertyValue = ESerializer::WritePropertyToJs(property).dump();
+                SetValue(entity, valueIdent, propertyValue);
+            }
+            return false;
+        }
         // Getter
         
        E_INTER_API ERef<EProperty> GetValue(ERegister::Entity entity, const EString& vlaueIdent);
