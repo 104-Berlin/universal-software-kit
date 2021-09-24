@@ -100,7 +100,7 @@ EValueDescription EValueDescription::CreateStruct(const t_ID& id, std::initializ
 
 bool EValueDescription::operator==(const EValueDescription& other) 
 {
-    return fID == other.fID && fType == other.fType;
+    return fID == other.fID && fType == other.fType && (fType != EValueType::ARRAY || *fArrayType == *other.fArrayType);
 }
 
 bool EValueDescription::operator!=(const EValueDescription& other) 

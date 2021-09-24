@@ -104,10 +104,24 @@ EObjectView::EObjectView()
     shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<ValueChangeEvent>([this](ValueChangeEvent event){
         if (event.Handle == fSelectedEntity)
         {
-            // For now we reload the complete properties
-            fSelectedComponents.clear();
-            fSelectedComponents = shared::GetAllComponents(fSelectedEntity);
-            E_INFO(EString("Size of components: ") + std::to_string(fSelectedComponents.size()));
+            EVector<EString> idents = EStringUtil::SplitString(event.Identifier, ".");
+            EVector<ERef<EProperty>>::iterator it = std::find_if(fSelectedComponents.begin(), fSelectedComponents.end(), [idents](ERef<EProperty> prop){return prop->GetDescription().GetId() == idents[0];});
+            if (it != fSelectedComponents.end())
+            {
+                ERef<EProperty> newValue = shared::GetValue(fSelectedEntity, event.Identifier);
+                if (idents.size() == 1)
+                {
+                    (*it)->Copy(newValue.get());
+                }          
+                else if ((*it)->GetDescription().GetType() == EValueType::STRUCT)
+                {
+                    EProperty* copyToProp = std::dynamic_pointer_cast<EStructProperty>((*it))->GetPropertyByIdentifier(event.Identifier.substr(idents[0].length() + 1));
+                    if (copyToProp)
+                    {
+                        copyToProp->Copy(newValue.get());
+                    }
+                }      
+            }
         }
     });
 }

@@ -185,51 +185,11 @@ EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identif
     identList.push_back(identifier.substr(start, identifier.length() - start));
     E_ASSERT(identList.size() > 0);
     // The first identifier is the component name
-    EProperty* currentProp = static_cast<EProperty*>(GetComponent(entity, identList[0]));
+    EStructProperty* currentProp = GetComponent(entity, identList[0]);
     // if we couldnt find the component return
     if (!currentProp) { return nullptr; }
 
-    for (size_t i = 1; i < identList.size(); i++)
-    {
-        if (!currentProp) { return nullptr; }
-        const EString& currentIdent = identList[i];
-        EValueDescription currentDsc = currentProp->GetDescription();
-        switch (currentDsc.GetType())
-        {
-        case EValueType::PRIMITIVE:
-        {
-            break;
-        }
-        case EValueType::ARRAY:
-        {
-            if (std::regex_match(currentIdent, std::regex("[0-9]+", std::regex::ECMAScript)))
-            {
-                size_t arrayIndex = std::atoi(currentIdent.c_str());
-                currentProp = static_cast<EArrayProperty*>(currentProp)->GetElement(arrayIndex);
-            }
-            else
-            {
-                currentProp = nullptr;
-            }
-            break;
-        }
-        case EValueType::STRUCT:
-        {
-            EStructProperty* structProp = static_cast<EStructProperty*>(currentProp);
-            currentProp = structProp->GetProperty(currentIdent);
-            break;
-        }
-        case EValueType::ENUM:
-        {
-            break;
-        }
-        case EValueType::UNKNOWN:
-        {
-            break;
-        }
-        }
-    }
-    return currentProp;
+    return currentProp->GetPropertyByIdentifier(identifier.substr(identList[0].length() + 1));
 }
 
 EVector<EStructProperty*> ERegister::GetAllComponents(Entity entity) 

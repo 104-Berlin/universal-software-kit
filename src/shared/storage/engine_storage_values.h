@@ -63,16 +63,21 @@ namespace Engine {
         EValueDescription GetDescription() const;
 
         EProperty* Clone();
+        void Copy(const EProperty* from);
+
         
         bool IsValid() const;
         bool operator()() const;
     protected:
+        virtual void OnCopy(const EProperty* from) = 0;
         virtual EProperty* OnClone() = 0;
         // Only used by register. Should stay this way
         // Register sends the events then
         void SetChangeFunc(ChangeFunc func);
         void ConnectChangeFunc(EProperty* other);
     public:
+        static void Copy(const EProperty* copyFrom, EProperty* copyTo);
+
         static EProperty* CreateFromDescription(const EString& name, EValueDescription description);
     private:
         static EProperty* CreatePropertyStruct(const EString& name, EValueDescription description);
@@ -111,6 +116,11 @@ namespace Engine {
         virtual EProperty* OnClone() override
         {
             return new EValueProperty(*this);
+        }
+
+        virtual void OnCopy(const EProperty* from) override
+        {
+            fValue = static_cast<const EValueProperty<ValueType>*>(from)->fValue;
         }
     };
 
@@ -152,8 +162,10 @@ namespace Engine {
         EProperty* GetProperty(const EString& propertyName);
         const EProperty* GetProperty(const EString& propertyName) const;
 
+        EProperty* GetPropertyByIdentifier(const EString& ident) const;
     protected:
         virtual EProperty* OnClone() override;
+        virtual void OnCopy(const EProperty* from) override;
     };
 
     
@@ -173,6 +185,7 @@ namespace Engine {
 
     protected:
         virtual EProperty* OnClone() override;
+        virtual void OnCopy(const EProperty* from) override;
     };
 
     class E_API EArrayProperty : public EProperty
@@ -314,6 +327,7 @@ namespace Engine {
         }
     protected:
         virtual EProperty* OnClone() override;
+        virtual void OnCopy(const EProperty* from) override;
     };
 
 }

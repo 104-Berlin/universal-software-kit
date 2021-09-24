@@ -26,6 +26,12 @@ EProperty* Engine::EProperty::Clone()
     return this->OnClone();
 }
 
+void EProperty::Copy(const EProperty* from) 
+{
+    if (GetDescription() != from->GetDescription()) { E_ERROR("Could not copy properties. They have different types!"); return;}
+    OnCopy(from);   
+}
+
 bool EProperty::IsValid() const
 {
     return !fName.empty() && fDescription.Valid();
@@ -49,6 +55,11 @@ void EProperty::ConnectChangeFunc(EProperty* other)
             fChangeFunc(GetPropertyName() + "." + ident);
         }
     });
+}
+
+void EProperty::Copy(const EProperty* copyFrom, EProperty* copyTo) 
+{
+    copyTo->Copy(copyFrom);
 }
 
 
@@ -177,9 +188,68 @@ const EProperty* EStructProperty::GetProperty(const EString& propertyName) const
     return nullptr;
 }
 
+EProperty* EStructProperty::GetPropertyByIdentifier(const EString& ident) const
+{
+    EVector<EString> identList = EStringUtil::SplitString(ident, ".");
+    EProperty* currentProp = (EProperty*) this;
+    for (size_t i = 0; i < identList.size(); i++)
+    {
+        if (!currentProp) { return nullptr; }
+        const EString& currentIdent = identList[i];
+        EValueDescription currentDsc = currentProp->GetDescription();
+        switch (currentDsc.GetType())
+        {
+        case EValueType::PRIMITIVE:
+        {
+            break;
+        }
+        case EValueType::ARRAY:
+        {
+            if (std::regex_match(currentIdent, std::regex("[0-9]+", std::regex::ECMAScript)))
+            {
+                size_t arrayIndex = std::atoi(currentIdent.c_str());
+                currentProp = static_cast<EArrayProperty*>(currentProp)->GetElement(arrayIndex);
+            }
+            else
+            {
+                currentProp = nullptr;
+            }
+            break;
+        }
+        case EValueType::STRUCT:
+        {
+            EStructProperty* structProp = static_cast<EStructProperty*>(currentProp);
+            currentProp = structProp->GetProperty(currentIdent);
+            break;
+        }
+        case EValueType::ENUM:
+        {
+            break;
+        }
+        case EValueType::UNKNOWN:
+        {
+            break;
+        }
+        }
+    }
+    return currentProp;
+}
+
 EProperty* Engine::EStructProperty::OnClone() 
 {
     return new EStructProperty(*this);
+}
+
+void EStructProperty::OnCopy(const EProperty* from) 
+{
+    for (EProperty* prop : fProperties)
+    {
+        const EProperty* copyFromField = static_cast<const EStructProperty*>(from)->GetProperty(prop->GetPropertyName());
+        if (copyFromField)
+        {
+            prop->Copy(copyFromField);
+        }
+    }
 }
 
 EEnumProperty::EEnumProperty(const EString& name, EValueDescription description, const EString& initValue)
@@ -226,6 +296,11 @@ const EString& EEnumProperty::GetCurrentValue() const
 EProperty* EEnumProperty::OnClone() 
 {
     return new EEnumProperty(*this);
+}
+
+void EEnumProperty::OnCopy(const EProperty* from) 
+{
+    fValue = static_cast<const EEnumProperty*>(from)->fValue;
 }
 
 EArrayProperty::EArrayProperty(const EString& name, EValueDescription description)
@@ -299,4 +374,13 @@ void EArrayProperty::Clear()
 EProperty* EArrayProperty::OnClone() 
 {
     return new EArrayProperty(*this);
+}
+
+void EArrayProperty::OnCopy(const EProperty* from) 
+{
+    size_t smallestSize = min(fElements.size(), static_cast<const EArrayProperty*>(from)->fElements.size());
+    for (size_t i = 0; i < smallestSize; i++)
+    {
+        fElements[i]->Copy(static_cast<const EArrayProperty*>(from)->fElements[i]);
+    }
 }
