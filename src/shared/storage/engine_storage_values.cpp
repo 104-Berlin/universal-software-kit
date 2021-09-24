@@ -378,7 +378,7 @@ EProperty* EArrayProperty::OnClone()
 
 void EArrayProperty::OnCopy(const EProperty* from) 
 {
-    size_t smallestSize = min(fElements.size(), static_cast<const EArrayProperty*>(from)->fElements.size());
+    size_t smallestSize = std::min(fElements.size(), static_cast<const EArrayProperty*>(from)->fElements.size());
     for (size_t i = 0; i < smallestSize; i++)
     {
         fElements[i]->Copy(static_cast<const EArrayProperty*>(from)->fElements[i]);
