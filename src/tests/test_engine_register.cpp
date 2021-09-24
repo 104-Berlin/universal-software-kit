@@ -13,7 +13,7 @@ struct Vector
 template <>
 bool convert::setter<Vector>(EProperty* prop, const Vector& vec)
 {
-	if (!prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
+	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
 	EStructProperty* property = static_cast<EStructProperty*>(prop);
 
 	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
@@ -32,8 +32,8 @@ bool convert::setter<Vector>(EProperty* prop, const Vector& vec)
 template <>
 bool convert::getter<Vector>(const EProperty* prop, Vector* outVec)
 {
-	if (!prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
-	EStructProperty* property = static_cast<EStructProperty*>(prop);
+	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
+	const EStructProperty* property = static_cast<const EStructProperty*>(prop);
 
 	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
 	const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
