@@ -133,10 +133,6 @@ void ERegisterConnection::Init()
         inter::SetCurrentThreadName("Connection_Listen");
         Run_ListenLoop();
     });
-    fEventThread = std::thread([this](){
-        inter::SetCurrentThreadName("Connection_Event_Loop");
-        Run_EventLoop();
-    });
 }
 
 void ERegisterConnection::CleanUp() 
@@ -160,12 +156,6 @@ void ERegisterConnection::CleanUp()
     if (fListenThread.joinable())
     {
         fListenThread.join();
-    }
-    // Do this to shut down the thread
-    fEventDispatcher.StopWaiting();
-    if (fEventThread.joinable())
-    {
-        fEventThread.join();
     }
 }
 
@@ -202,15 +192,6 @@ void ERegisterConnection::Run_ListenLoop()
         }
             
         GotPacket(packet);
-    }
-}
-
-void ERegisterConnection::Run_EventLoop() 
-{
-    while (fListening)
-    {
-        fEventDispatcher.WaitForEvent();
-        fEventDispatcher.Update();
     }
 }
 

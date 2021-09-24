@@ -192,6 +192,8 @@ void EApplication::RenderImGui()
 
     fCommandLine.UpdateEventDispatcher();
     fCommandLine.Render();
+
+    shared::StaticSharedContext::instance().GetRegisterConnection().GetEventDispatcher().Update();
 }
 
 void EApplication::RegisterDefaultPanels() 

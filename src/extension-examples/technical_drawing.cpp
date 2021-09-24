@@ -111,12 +111,8 @@ APP_ENTRY
         EProperty* rot = mesh->GetProperty("Rotation");
         EProperty* sca = mesh->GetProperty("Scale");
 
-        if (sca)
-        {
-            EStructProperty* scaleProp = static_cast<EStructProperty*>(sca);
-            scaleProp->SetValue<EVec3>({1.0f, 1.0f, 1.0f});
-            shared::SetValue<EVec3>(entity, "Plane.Scale", {1.0f, 1.0f, 1.0f});
-        }
+        
+        shared::SetValue<EVec3>(entity, "Plane.Scale", {1.0f, 1.0f, 1.0f});
     });
 
 
