@@ -309,9 +309,9 @@ bool EUITextField::OnRender()
     memcpy(text, fContent.c_str(), 255);
     if (ImGui::InputText(GetLabel().c_str(), text, 255, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        fContent = text;
         fEventDispatcher.Enqueue<events::ETextChangeEvent>({fContent});
     }
+    fContent = text;
     return true;
 }
 
