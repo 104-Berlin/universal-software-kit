@@ -171,7 +171,6 @@ namespace Engine {
             
             E_INFO("Connecting to " + address);
             fRegisterConnection.Connect(address, 420);
-            E_INFO("Connected!");
         }
 
 

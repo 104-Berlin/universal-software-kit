@@ -140,6 +140,8 @@ void ERegisterConnection::CleanUp()
 {
     fListening = false;
 
+    fConnected.notify_all();
+
     if (fSocketId > -1)
     {
         _sock::close(fSocketId);
@@ -277,6 +279,7 @@ void ERegisterConnection::Connect(const EString& connectTo, int connectToPort)
     if (connect(fSocketId, (sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
     {
         E_ERROR("Could not connect to server!");
+        _sock::print_last_socket_error();
         return;
     }
     fConnected.notify_all();
