@@ -252,7 +252,10 @@ void EObjectView::RenderArray(Engine::EArrayProperty* storage, EString nameIdent
 
     if (ImGui::Button("Add Element"))
     {
+        //storage->AddElement();
         storage->AddElement();
+        EJson property = ESerializer::WritePropertyToJs(storage);
+        shared::SetValue(fSelectedEntity, nameIdent, property.dump());
     }
 }
 
