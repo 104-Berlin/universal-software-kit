@@ -40,13 +40,12 @@
 #include <Windows.h>
 #include <mutex>
 #include <atomic>
-#elif EUNI
+#else
+#include <dlfcn.h>
+#include <unistd.h>
+#endif
+#if EUNI
 #include <sys/prctl.h>
-#include <dlfcn.h>
-#include <unistd.h>
-#else EMAC
-#include <dlfcn.h>
-#include <unistd.h>
 #endif
 
 #include "shared/json.hpp"
