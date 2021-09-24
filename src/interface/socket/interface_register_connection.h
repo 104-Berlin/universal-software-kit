@@ -9,6 +9,7 @@ namespace Engine {
 
         std::atomic<bool>   fListening;
         std::thread         fListenThread;
+        std::thread         fEventThread;
 
 
         struct Request
@@ -44,6 +45,7 @@ namespace Engine {
         const EEventDispatcher& GetEventDispatcher() const;
     private:
         void Run_ListenLoop();
+        void Run_EventLoop();
 
         EJson WaitForRequest(ERegisterPacket::PackId id);
         bool IsWaitingForRequest(ERegisterPacket::PackId id);

@@ -150,6 +150,7 @@ EJson ESerializer::WritePropertyToJs(EProperty* property, bool writeDescription)
         EJson result = EJson::object();
         result["Value"] = valueJson;
         result["ValueDescription"] = WriteStorageDescriptionToJson(property->GetDescription());
+        return result;
     }
 
     return 0;

@@ -55,7 +55,6 @@ namespace Engine {
         void Run_Connection(Connection* connection);
 
         void HandleConnection(int socketId, sockaddr_in* address);
-        void HandleDisconnect(int socketId);
 
 
         void HandleRegisterEvent(EStructProperty* data);

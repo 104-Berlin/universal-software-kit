@@ -56,3 +56,46 @@ void inter::PrintProperty(EProperty* prop)
     
     std::cout << std::endl;
 }
+
+void inter::SetCurrentThreadName(const EString& name) 
+{
+    
+}
+
+
+#ifdef EWIN
+    void SetThreadName(uint32_t dwThreadID, const char* threadName)
+    {
+
+    // DWORD dwThreadID = ::GetThreadId( static_cast<HANDLE>( t.native_handle() ) );
+
+    THREADNAME_INFO info;
+    info.dwType = 0x1000;
+    info.szName = threadName;
+    info.dwThreadID = dwThreadID;
+    info.dwFlags = 0;
+
+    __try
+    {
+        RaiseException( MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info );
+    }
+    __except(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
+    }
+    void SetCurrentThreadName( const LRString& name)
+    {
+        SetThreadName(GetCurrentThreadId(),name.c_str());
+    }
+
+#else
+    void SetCurrentThreadName( const EString& name)
+    {
+#ifdef EMAC
+        pthread_setname_np(name.c_str());
+#else
+        prctl(PR_SET_NAME,name.c_str(),0,0,0);
+#endif
+    }
+
+#endif

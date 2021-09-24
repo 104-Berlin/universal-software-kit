@@ -105,6 +105,7 @@ EVector<ERef<EProperty>> ERegisterConnection::Send_GetAllValues(ERegister::Entit
     EVector<ERef<EProperty>> result;
     for (EJson& valueJson : response)
     {
+        if (!valueJson.is_object()) { continue; }
         EProperty* property;
         if (EDeserializer::ReadPropertyFromJson_WithDescription(valueJson, &property))
         {
@@ -126,7 +127,12 @@ void ERegisterConnection::Init()
 
     fListening = true;
     fListenThread = std::thread([this](){
+        inter::SetCurrentThreadName("Connection_Listen");
         Run_ListenLoop();
+    });
+    fEventThread = std::thread([this](){
+        inter::SetCurrentThreadName("Connection_Event_Loop");
+        Run_EventLoop();
     });
 }
 
@@ -141,9 +147,20 @@ void ERegisterConnection::CleanUp()
         fSocketId = -1;
     }
 
+    for (auto& entry : fRequests)
+    {
+        entry.second.GotResult.notify_all();
+    }
+
     if (fListenThread.joinable())
     {
         fListenThread.join();
+    }
+    // Do this to shut down the thread
+    fEventDispatcher.StopWaiting();
+    if (fEventThread.joinable())
+    {
+        fEventThread.join();
     }
 }
 
@@ -175,6 +192,15 @@ void ERegisterConnection::Run_ListenLoop()
         }
             
         GotPacket(packet);
+    }
+}
+
+void ERegisterConnection::Run_EventLoop() 
+{
+    while (fListening)
+    {
+        fEventDispatcher.WaitForEvent();
+        fEventDispatcher.Update();
     }
 }
 
@@ -213,7 +239,7 @@ void ERegisterConnection::GotPacket(const ERegisterPacket& packet)
 
             if (EDeserializer::ReadPropertyFromJson(packet.Body["Value"], resProperty.get()))
             {
-                fEventDispatcher.Post_P(propertyDescription, resProperty.get());
+                fEventDispatcher.Enqueue_P(propertyDescription, resProperty.get());
             }
         }
     }

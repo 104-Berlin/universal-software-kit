@@ -78,9 +78,11 @@ void ERegisterSocket::Init()
 
     fIsRunning = true;
     fAcceptThread = std::thread([this](){
+        inter::SetCurrentThreadName("Socket_Accept_Connection");
         Run_AcceptConnections();
     });  
     fRegisterEventThread = std::thread([this](){
+        inter::SetCurrentThreadName("Dispatching_Events");
         while (fIsRunning)
         {
             // Wait for event
@@ -160,13 +162,14 @@ void ERegisterSocket::Run_AcceptConnections()
 
 void ERegisterSocket::Run_Connection(Connection* connection) 
 {
+    bool disconnect = false;
     while (fIsRunning)
     {
         ERegisterPacket packet;
         int n = _sock::read_packet(connection->SocketId, &packet);
         if (n == 0)
         {
-            HandleDisconnect(connection->SocketId);
+            disconnect = true;
             break;
         }
         else if (n < 0)
@@ -254,7 +257,8 @@ void ERegisterSocket::Run_Connection(Connection* connection)
             {
                 ERegister::Entity entity = packet.Body["Entity"].get<int>();
                 EJson propertyArrayJson = EJson::array();
-                for (EProperty* property : fLoadedRegister->GetAllComponents(entity))
+                EVector<EStructProperty*> properties = fLoadedRegister->GetAllComponents(entity);
+                for (EStructProperty* property : properties)
                 {
                     propertyArrayJson.push_back(ESerializer::WritePropertyToJs(property, true/*With description*/));
                 }
@@ -271,6 +275,10 @@ void ERegisterSocket::Run_Connection(Connection* connection)
 
         connection->SendPacket(responsePacket);
     }
+    if (disconnect)
+    {
+        E_INFO(EString("User disconnect: ") + inet_ntoa(connection->Address->sin_addr));
+    }
 }
 
 void ERegisterSocket::HandleConnection(int socketId, sockaddr_in* address) 
@@ -285,30 +293,12 @@ void ERegisterSocket::HandleConnection(int socketId, sockaddr_in* address)
     newConnection->Address = address;
     newConnection->SocketId = socketId;
     newConnection->Thread = std::thread([this, newConnection](){
+        inter::SetCurrentThreadName(EString("Handle_Connection") + inet_ntoa(newConnection->Address->sin_addr));
         Run_Connection(newConnection);
     });
 
     fConnections.push_back(newConnection);
     
-}
-
-void ERegisterSocket::HandleDisconnect(int socketId) 
-{
-    std::lock_guard<std::mutex> lock(fConnectionMutex);
-
-    EVector<Connection*>::iterator it = std::find_if(fConnections.begin(), fConnections.end(), [socketId](Connection* con) -> bool{
-        return con->SocketId == socketId;
-    });
-    if (it != fConnections.end())
-    {
-        E_INFO(EString("User disconnect: ") + inet_ntoa((*it)->Address->sin_addr));
-        fConnections.erase(it);
-        delete *it;
-    }
-    else
-    {
-        E_ERROR(EString("Could not disconnect user with SocketID: ") + std::to_string(socketId));
-    }
 }
 
 void ERegisterSocket::HandleRegisterEvent(EStructProperty* data) 

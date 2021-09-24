@@ -126,10 +126,10 @@ bool EObjectView::OnRender()
     ImGui::BeginChild("ComponentChild");
     if (fSelectedEntity)
     {
-        /*for (EStructProperty* storage : EExtensionManager::instance().GetActiveScene()->GetAllComponents(fSelectedEntity))
+        for (ERef<EProperty> storage : fSelectedComponents)
         {
-            RenderProperty(storage);
-        }*/
+            RenderProperty(storage.get());
+        }
 
         if (ImGui::Button("Add Component"))
         {
