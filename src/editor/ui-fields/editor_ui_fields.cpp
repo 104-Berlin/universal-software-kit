@@ -97,8 +97,13 @@ EObjectView::EObjectView()
     shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<ComponentCreateEvent>([this](ComponentCreateEvent event){
         if (event.Handle == fSelectedEntity)
         {
-            fSelectedComponents.clear();
-            fSelectedComponents = shared::GetAllComponents(fSelectedEntity);
+            std::lock_guard<std::mutex> lk(fChangeComponentsMtx);
+            ERef<EProperty> newComponent = shared::GetValue(event.Handle, event.ValueId);
+            if (newComponent)
+            {
+                fSelectedComponents.push_back(newComponent);
+            }
+            E_INFO("NEW COMPONENT: " + std::to_string(fSelectedComponents.size()));
         }
     });
     shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<ValueChangeEvent>([this](ValueChangeEvent event){
@@ -149,9 +154,13 @@ bool EObjectView::OnRender()
     ImGui::BeginChild("ComponentChild");
     if (fSelectedEntity)
     {
-        for (ERef<EProperty> storage : fSelectedComponents)
         {
-            RenderProperty(storage.get(), storage->GetPropertyName());
+            std::lock_guard<std::mutex> lk(fChangeComponentsMtx);
+            //E_INFO("Rendering components: " + std::to_string(fSelectedComponents.size()));
+            for (ERef<EProperty> storage : fSelectedComponents)
+            {
+                RenderProperty(storage.get(), storage->GetPropertyName());
+            }
         }
 
         if (ImGui::Button("Add Component"))

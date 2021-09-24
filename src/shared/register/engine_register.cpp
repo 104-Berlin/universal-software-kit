@@ -188,7 +188,7 @@ EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identif
     EStructProperty* currentProp = GetComponent(entity, identList[0]);
     // if we couldnt find the component return
     if (!currentProp) { return nullptr; }
-
+    if (identList.size() == 1) { return currentProp; }
     return currentProp->GetPropertyByIdentifier(identifier.substr(identList[0].length() + 1));
 }
 

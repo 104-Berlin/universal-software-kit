@@ -28,6 +28,8 @@ namespace Editor {
         Engine::ERegister::Entity           fSelectedEntity;
         EVector<Engine::ERegister::Entity>  fEntities;
         ERef<Engine::EUIButton>             fAddObjectButton;
+
+        std::mutex                          fChangeComponentsMtx;
     public:
         EObjectView();
 

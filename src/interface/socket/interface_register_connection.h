@@ -5,6 +5,7 @@ namespace Engine {
     class E_INTER_API ERegisterConnection
     {
     private:   
+        ERegisterPacket::PackId fLastPacketId;
         int                 fSocketId;
 
         std::condition_variable fConnected;
@@ -12,6 +13,7 @@ namespace Engine {
         std::atomic<bool>   fListening;
         std::thread         fListenThread;
         std::thread         fEventThread;
+        std::mutex          fNewIdMutex;
 
 
         struct Request
@@ -53,6 +55,6 @@ namespace Engine {
         bool IsWaitingForRequest(ERegisterPacket::PackId id);
         void GotPacket(const ERegisterPacket& packet);
 
-        ERegisterPacket::PackId GetNewPacketID() const;
+        ERegisterPacket::PackId GetNewPacketID();
     };
 }

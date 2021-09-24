@@ -4,7 +4,7 @@ using namespace Engine;
 
 
 ERegisterConnection::ERegisterConnection() 
-    : fSocketId(-1)
+    : fSocketId(-1), fLastPacketId(0)
 {
     fListening = false;
 }
@@ -71,10 +71,13 @@ ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, con
 
     EJson result = WaitForRequest(packet.ID);
 
+    E_INFO("GET_VALUE result: " + result.dump());
+
     EValueDescription propertyDescription;
     if (!result["ValueDescription"].is_null() && result["PropertyName"].is_string() && !result["Value"].is_null())
     {
         EDeserializer::ReadStorageDescriptionFromJson(result["ValueDescription"], &propertyDescription);
+
 
         ERef<EProperty> resProperty = ERef<EProperty>(EProperty::CreateFromDescription(result["PropertyName"].get<EString>(), propertyDescription));
 
@@ -252,14 +255,11 @@ void ERegisterConnection::GotPacket(const ERegisterPacket& packet)
     }
 }
 
-ERegisterPacket::PackId ERegisterConnection::GetNewPacketID() const
+ERegisterPacket::PackId ERegisterConnection::GetNewPacketID()
 {
-    static ERegisterPacket::PackId result = 0;
-    while (result == 0 || fRequests.find(result) != fRequests.end())
-    {
-        result = result + 7 * 3;
-    }
-    return result;
+    std::lock_guard<std::mutex> lk(fNewIdMutex);
+    while (fRequests.find(++fLastPacketId) != fRequests.end());
+    return fLastPacketId;
 }
 
 void ERegisterConnection::Connect(const EString& connectTo, int connectToPort) 
