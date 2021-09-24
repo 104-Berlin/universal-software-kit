@@ -8,7 +8,7 @@ APP_ENTRY
 {
     ERef<EUIPanel> showPanel = EMakeRef<EUIPanel>("Show Panel");
     ERef<EUITextField> textField = EMakeRef<EUITextField>("Name");
-    textField->AddEventListener<ETextChangeEvent>([](const ETextChangeEvent& evt){
+    textField->AddEventListener<events::ETextChangeEvent>([](const events::ETextChangeEvent& evt){
         E_INFO("Text changed: " + evt.Value);
     });
     ERef<EUIButton> button = EMakeRef<EUIButton>("Click Me");

@@ -97,7 +97,7 @@ void inter::SetCurrentThreadName(const EString& name)
     {
     }
     }
-    void SetCurrentThreadName( const LRString& name)
+    void SetCurrentThreadName( const EString& name)
     {
         SetThreadName(GetCurrentThreadId(),name.c_str());
     }

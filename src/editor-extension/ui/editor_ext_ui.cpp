@@ -310,9 +310,14 @@ bool EUITextField::OnRender()
     if (ImGui::InputText(GetLabel().c_str(), text, 255, ImGuiInputTextFlags_EnterReturnsTrue))
     {
         fContent = text;
-        fEventDispatcher.Enqueue<ETextChangeEvent>({fContent});
+        fEventDispatcher.Enqueue<events::ETextChangeEvent>({fContent});
     }
     return true;
+}
+
+EString EUITextField::GetContent() const
+{
+    return fContent;
 }
 
 // ----------------------------------------
@@ -429,4 +434,36 @@ bool EUIImageView::OnRender()
     
     ImGui::Image((ImTextureID)(u64)fTexture->GetID(), size);
     return true;
+}
+
+EUIModal::EUIModal(const EString& title) 
+    : EUIField(title)
+{
+    fOpen = false;
+    fEndPopup = false;
+}
+
+bool EUIModal::OnRender() 
+{
+    if (fOpen)
+    {
+        ImGui::OpenPopup(GetLabel().c_str());
+        fOpen = false;
+    }
+    bool open = true;
+    fEndPopup = ImGui::BeginPopupModal(GetLabel().c_str(), &open);
+    return fEndPopup;
+}
+
+void EUIModal::OnRenderEnd() 
+{
+    if (fEndPopup)
+    {
+        ImGui::EndPopup();
+    }
+}
+
+void EUIModal::Open() 
+{
+    fOpen = true;
 }

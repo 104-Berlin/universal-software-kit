@@ -283,10 +283,13 @@ namespace events {
 
         virtual bool OnRender() override;
     };
-
+namespace events
+{
     E_STORAGE_STRUCT(ETextChangeEvent,
         (EString, Value)
     )
+
+}
 
     class E_EDEXAPI EUITextField : public EUIField
     {
@@ -296,6 +299,8 @@ namespace events {
         EUITextField(const EString& label, const EString& content = "");
 
         virtual bool OnRender() override;
+
+        EString GetContent() const;
     };
 
 
@@ -353,6 +358,21 @@ namespace events {
         void SetTextureData(u8* data, size_t width, size_t height);
 
         virtual bool OnRender() override;
+    };
+
+
+    class E_EDEXAPI EUIModal : public EUIField
+    {
+    private:
+        bool fOpen;
+        bool fEndPopup;
+    public:
+        EUIModal(const EString& title);
+
+        virtual bool OnRender() override;
+        virtual void OnRenderEnd() override;
+
+        void Open();
     };
 
 }

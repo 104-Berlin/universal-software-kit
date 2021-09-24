@@ -125,8 +125,25 @@ void EApplication::RegenerateMainMenuBar()
         viewMenu->AddChild(menuItem);
     }
 
+    ERef<EUIMenu> connectionMenu = EMakeRef<EUIMenu>("Connection");
+    ERef<EUIModal> modal = EMakeRef<EUIModal>("Connect Modal");
+    ERef<EUIField> textField = modal->AddChild(EMakeRef<EUITextField>("IP Address"));
+    ERef<EUIField> connectButton = modal->AddChild(EMakeRef<EUIButton>("Connect"));
+    connectButton->AddEventListener<events::EButtonEvent>([textField](){
+        EString ip = std::dynamic_pointer_cast<EUITextField>(textField)->GetContent();
+        shared::StaticSharedContext::instance().ConnectTo(ip);
+    });
+    ERef<EUIMenuItem> connectToItem = EMakeRef<EUIMenuItem>("Connect To...");
+    connectToItem->AddEventListener<events::EButtonEvent>([modal](){
+        modal->Open();
+    });
+    connectionMenu->AddChild(connectToItem);
+
+    fMainMenu->AddChild(connectionMenu);
     fMainMenu->AddChild(fileMenu);
     fMainMenu->AddChild(viewMenu);
+
+    fMainMenu->AddChild(modal);
 }
 
 void EApplication::Init(Graphics::GContext* context) 
