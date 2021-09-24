@@ -101,6 +101,14 @@ EObjectView::EObjectView()
             fSelectedComponents = shared::GetAllComponents(fSelectedEntity);
         }
     });
+    shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<ValueChangeEvent>([this](ValueChangeEvent event){
+        if (event.Handle == fSelectedEntity)
+        {
+            // For now we reload the complete properties
+            fSelectedComponents.clear();
+            fSelectedComponents = shared::GetAllComponents(fSelectedEntity);
+        }
+    });
 }
 
 bool EObjectView::OnRender() 
@@ -128,7 +136,7 @@ bool EObjectView::OnRender()
     {
         for (ERef<EProperty> storage : fSelectedComponents)
         {
-            RenderProperty(storage.get());
+            RenderProperty(storage.get(), storage->GetPropertyName());
         }
 
         if (ImGui::Button("Add Component"))
@@ -163,22 +171,22 @@ void EObjectView::OnUpdateEventDispatcher()
     fAddObjectButton->UpdateEventDispatcher();
 }
 
-void EObjectView::RenderProperty(Engine::EProperty* storage) 
+void EObjectView::RenderProperty(Engine::EProperty* storage, EString nameIdent) 
 {
     EValueDescription propertyDsc = storage->GetDescription();
     EValueType type = propertyDsc.GetType();
 
     switch (type)
     {
-    case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage)); break;
-    case EValueType::ARRAY: RenderArray(static_cast<EArrayProperty*>(storage)); break;
-    case EValueType::PRIMITIVE: RenderPrimitive(storage); break;
-    case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage)); break;
+    case EValueType::STRUCT: RenderStruct(static_cast<EStructProperty*>(storage), nameIdent); break;
+    case EValueType::ARRAY: RenderArray(static_cast<EArrayProperty*>(storage), nameIdent); break;
+    case EValueType::PRIMITIVE: RenderPrimitive(storage, nameIdent); break;
+    case EValueType::ENUM: RenderEnum(static_cast<EEnumProperty*>(storage), nameIdent); break;
     case EValueType::UNKNOWN: break;
     }
 }
 
-void EObjectView::RenderStruct(EStructProperty* storage) 
+void EObjectView::RenderStruct(EStructProperty* storage, EString nameIdent) 
 {
     EValueDescription description = storage->GetDescription();
     if (ImGui::CollapsingHeader(storage->GetPropertyName().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
@@ -186,21 +194,21 @@ void EObjectView::RenderStruct(EStructProperty* storage)
         for (auto& entry : description.GetStructFields())
         {
             const EString& propertyName = entry.first;
-            RenderProperty(storage->GetProperty(propertyName));
+            RenderProperty(storage->GetProperty(propertyName), nameIdent + "." + propertyName);
         }
     }
 }
 
-void EObjectView::RenderPrimitive(Engine::EProperty* storage) 
+void EObjectView::RenderPrimitive(Engine::EProperty* storage, EString nameIdent) 
 {
     EValueDescription description = storage->GetDescription();
     const EString& primitiveId = description.GetId();
-    if (primitiveId == E_TYPEID_STRING) { RenderString(static_cast<EValueProperty<EString>*>(storage)); } 
-    else if (primitiveId == E_TYPEID_INTEGER) { RenderInteger(static_cast<EValueProperty<i32>*>(storage)); }
-    else if (primitiveId == E_TYPEID_UNSIGNED_INTEGER) { RenderInteger(static_cast<EValueProperty<u32>*>(storage)); }
-    else if (primitiveId == E_TYPEID_UNSIGNED_BIG_INTEGER) { RenderInteger(static_cast<EValueProperty<u64>*>(storage)); }
-    else if (primitiveId == E_TYPEID_DOUBLE) { RenderDouble(static_cast<EValueProperty<double>*>(storage)); }
-    else if (primitiveId == E_TYPEID_BOOL) { RenderBool(static_cast<EValueProperty<bool>*>(storage)); }
+    if (primitiveId == E_TYPEID_STRING) { RenderString(static_cast<EValueProperty<EString>*>(storage), nameIdent); } 
+    else if (primitiveId == E_TYPEID_INTEGER) { RenderInteger(static_cast<EValueProperty<i32>*>(storage), nameIdent); }
+    else if (primitiveId == E_TYPEID_UNSIGNED_INTEGER) { RenderInteger(static_cast<EValueProperty<u32>*>(storage), nameIdent); }
+    else if (primitiveId == E_TYPEID_UNSIGNED_BIG_INTEGER) { RenderInteger(static_cast<EValueProperty<u64>*>(storage), nameIdent); }
+    else if (primitiveId == E_TYPEID_DOUBLE) { RenderDouble(static_cast<EValueProperty<double>*>(storage), nameIdent); }
+    else if (primitiveId == E_TYPEID_BOOL) { RenderBool(static_cast<EValueProperty<bool>*>(storage), nameIdent); }
 }
 
 char* convert_str_to_chr(const std::string & s)
@@ -210,7 +218,7 @@ char* convert_str_to_chr(const std::string & s)
    return pc; 
 }
 
-void EObjectView::RenderEnum(Engine::EEnumProperty* storage) 
+void EObjectView::RenderEnum(Engine::EEnumProperty* storage, EString nameIdent) 
 {
     EValueDescription description = storage->GetDescription();
     int currentItem = -1;
@@ -233,11 +241,13 @@ void EObjectView::RenderEnum(Engine::EEnumProperty* storage)
     storage->SetCurrentValue(description.GetEnumOptions()[currentItem]);
 }
 
-void EObjectView::RenderArray(Engine::EArrayProperty* storage) 
+void EObjectView::RenderArray(Engine::EArrayProperty* storage, EString nameIdent) 
 {
-    for (EProperty* element : storage->GetElements())
+    EVector<EProperty*> elements = storage->GetElements();
+    for (size_t i = 0; i < elements.size(); i++)
     {
-        RenderProperty(element);
+        EProperty* element = elements[i];
+        RenderProperty(element, nameIdent + "." + std::to_string(i));
     }
 
     if (ImGui::Button("Add Element"))
@@ -246,60 +256,72 @@ void EObjectView::RenderArray(Engine::EArrayProperty* storage)
     }
 }
 
-void EObjectView::RenderBool(Engine::EValueProperty<bool>* storage) 
+void EObjectView::RenderBool(Engine::EValueProperty<bool>* storage, EString nameIdent) 
 {
     bool value = storage->GetValue();
     ImGui::PushID(storage);
-    ImGui::Checkbox(storage->GetPropertyName().c_str(), &value);
+    if (ImGui::Checkbox(storage->GetPropertyName().c_str(), &value))
+    {
+        shared::SetValue(fSelectedEntity, nameIdent, value ? "true":"false");
+    }
     ImGui::PopID();
-    storage->SetValue(value);
 }
 
-void EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage) 
+void EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage, EString nameIdent) 
 {
     i32 value = storage->GetValue();
     ImGui::PushID(storage);
-    ImGui::InputInt(storage->GetPropertyName().c_str(), &value);
+    if (ImGui::InputInt(storage->GetPropertyName().c_str(), &value, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        shared::SetValue(fSelectedEntity, nameIdent, std::to_string(value));
+    }
     ImGui::PopID();
-    storage->SetValue(value);
 }
 
-void EObjectView::RenderInteger(Engine::EValueProperty<u32>* storage) 
+void EObjectView::RenderInteger(Engine::EValueProperty<u32>* storage, EString nameIdent) 
 {
     u32 value = storage->GetValue();
     ImGui::PushID(storage);
-    ImGui::InputInt(storage->GetPropertyName().c_str(), (int*) &value);
+    if (ImGui::InputInt(storage->GetPropertyName().c_str(), (int*) &value, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        shared::SetValue(fSelectedEntity, nameIdent, std::to_string(value));
+    }
     ImGui::PopID();
-    storage->SetValue(value);
 }
 
-void EObjectView::RenderInteger(Engine::EValueProperty<u64>* storage) 
+void EObjectView::RenderInteger(Engine::EValueProperty<u64>* storage, EString nameIdent) 
 {
     int value = (int) storage->GetValue();
     ImGui::PushID(storage);
-    ImGui::InputInt(storage->GetPropertyName().c_str(), &value);
+    if (ImGui::InputInt(storage->GetPropertyName().c_str(), &value, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        shared::SetValue(fSelectedEntity, nameIdent, std::to_string(value));
+    }
     ImGui::PopID();
-    storage->SetValue(value);
 }
 
-void EObjectView::RenderDouble(Engine::EValueProperty<double>* storage) 
+void EObjectView::RenderDouble(Engine::EValueProperty<double>* storage, EString nameIdent) 
 {
     double value = storage->GetValue();
     ImGui::PushID(storage);
-    ImGui::InputDouble(storage->GetPropertyName().c_str(), &value);
+    if (ImGui::InputDouble(storage->GetPropertyName().c_str(), &value, 0.0, 0.0, "%.6f", ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        shared::SetValue(fSelectedEntity, nameIdent, std::to_string(value));
+    }
     ImGui::PopID();
-    storage->SetValue(value);
 }
 
-void EObjectView::RenderString(Engine::EValueProperty<EString>* storage) 
+void EObjectView::RenderString(Engine::EValueProperty<EString>* storage, EString nameIdent) 
 {
     EString value = storage->GetValue();
     char buf[255];
     strcpy(buf, value.c_str());
     ImGui::PushID(storage);
-    ImGui::InputText(storage->GetPropertyName().c_str(), buf, 255);
+    if (ImGui::InputText(storage->GetPropertyName().c_str(), buf, 255, ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        shared::SetValue(fSelectedEntity, nameIdent, "\"" + value + "\"");
+    }
     ImGui::PopID();
-    storage->SetValue(buf);
 }
 
 bool EObjectView::HasSelectedComponent(Engine::EValueDescription dsc) 
