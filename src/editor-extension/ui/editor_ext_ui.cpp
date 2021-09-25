@@ -147,6 +147,15 @@ void EUIField::UpdateEventDispatcher()
     }
 }
 
+void EUIField::DisconnectAllEvents() 
+{
+    fEventDispatcher.DisconnectEvents();
+    for (ERef<EUIField> child : fChildren)
+    {
+        child->DisconnectAllEvents();
+    }
+}
+
 const EString& EUIField::GetLabel() const
 {
     return fLabel;    

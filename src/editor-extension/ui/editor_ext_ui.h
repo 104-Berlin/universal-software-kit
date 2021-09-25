@@ -160,6 +160,11 @@ namespace events {
         virtual void OnUpdateEventDispatcher() {}
 
         /**
+         * Disconnect all events
+         */
+        void DisconnectAllEvents();
+
+        /**
          * Returns the current label of the field
          * @return The current label
          */
