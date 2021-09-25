@@ -85,7 +85,7 @@ void ERegisterSocket::Init()
         Run_AcceptConnections();
     });  
     fRegisterEventThread = std::thread([this](){
-        inter::SetCurrentThreadName("Dispatching_Events");
+        inter::SetCurrentThreadName("Socket_Dispatching_Events");
         while (fIsRunning)
         {
             // Wait for event
