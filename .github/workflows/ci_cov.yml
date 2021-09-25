@@ -31,10 +31,10 @@ jobs:
 
   cover:
     runs-on: ${{ matrix.os }}
-
-      strategy:
-        matrix:
-          os: [macos-latest, ubuntu-latest]
+    
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
 
     steps:
     - uses: actions/checkout@master
