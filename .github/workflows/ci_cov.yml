@@ -8,18 +8,7 @@ on:
 
 jobs:
   build-test:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-       matrix:
-         os: [macos-latest, windows-latest]
-         include:
-           - os: windows-latest
-             unit_test_exec: |
-                            cd Debug
-                            .\UnitTest.exe
-           - os: macos-latest
-             unit_test_exec: ./UnitTest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@master
@@ -37,10 +26,15 @@ jobs:
     - name: Test
       run: |
             cd bin
-            ${{ matrix.unit_test_exec }}
+            cd Debug
+            .\UnitTest.exe
 
   cover:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+      strategy:
+        matrix:
+          os: [macos-latest, ubuntu-latest]
 
     steps:
     - uses: actions/checkout@master
