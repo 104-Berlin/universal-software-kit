@@ -106,7 +106,6 @@ void EUIField::OnRenderEnd()
         {
             fEventDispatcher.Enqueue<events::EMouseMoveEvent>({mousePos, mouseDelta});
         }
-
         
         if (ImGui::IsMouseClicked(0))
         {
@@ -200,6 +199,7 @@ bool EUIPanel::OnRender()
     if (fOpen)
     {
         ImGui::Begin(GetLabel().c_str(), &fOpen);
+        ImGui::GetCurrentWindow()->Viewport->Flags &= ~ImGuiViewportFlags_NoDecoration;
         if (!fOpen) 
         {
             fWasJustClosed = true;
