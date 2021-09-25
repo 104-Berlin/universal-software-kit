@@ -4,18 +4,26 @@
 using namespace Engine;
 
 EValueDescription::EValueDescription(EValueType type, EValueDescription::t_ID id) 
-    : fType(type), fID(id), fIsArray(false)
+    : fType(type), fID(id), fArrayType(nullptr)
 {
-
+    if (type == EValueType::ARRAY)
+    {
+        fArrayType = new EValueDescription();
+    }
 }
 
 EValueDescription::EValueDescription(const EValueDescription& other)
-    : fType(other.fType), fID(other.fID), fIsArray(other.fIsArray), fEnumOptions(other.fEnumOptions)
+    : fType(other.fType), fID(other.fID), fArrayType(nullptr), fEnumOptions(other.fEnumOptions)
 {
     fStructFields.clear();
     for (auto& entry : other.fStructFields)
     {
         fStructFields[entry.first] = new EValueDescription(*entry.second);
+    }
+
+    if (other.fArrayType)
+    {
+        fArrayType = new EValueDescription(*other.fArrayType);
     }
 }
 
@@ -24,13 +32,17 @@ EValueDescription& EValueDescription::operator=(const EValueDescription& other)
 {
     fType = other.fType;
     fID = other.fID;
-    fIsArray = other.fIsArray;
     fEnumOptions = other.fEnumOptions;
 
     fStructFields.clear();
     for (auto& entry : other.fStructFields)
     {
         fStructFields[entry.first] = new EValueDescription(*entry.second);
+    }
+
+    if (other.fArrayType)
+    {
+        fArrayType = new EValueDescription(*other.fArrayType);
     }
     return *this;
 }
@@ -41,6 +53,10 @@ EValueDescription::~EValueDescription()
     for (auto& entry : fStructFields)
     {
         delete entry.second;
+    }
+    if (fArrayType)
+    {
+        delete fArrayType;
     }
 }
 
@@ -59,23 +75,17 @@ bool EValueDescription::Valid() const
     return fType != EValueType::UNKNOWN && !fID.empty();
 }
 
-bool EValueDescription::IsArray() const
-{
-    return fIsArray;
-}
 
 EValueDescription EValueDescription::GetAsArray() const
 {
-    EValueDescription result(*this);
-    result.fIsArray = true;
+    EValueDescription result(EValueType::ARRAY, GetId());
+    result.SetArrayType(*this);
     return result;
 }
 
 EValueDescription EValueDescription::GetAsPrimitive() const
 {
-    EValueDescription result(*this);
-    result.fIsArray = false;
-    return result;
+    return *fArrayType;
 }
 
 EValueDescription EValueDescription::CreateStruct(const t_ID& id, std::initializer_list<std::pair<EString, EValueDescription>> childs) 
@@ -90,7 +100,7 @@ EValueDescription EValueDescription::CreateStruct(const t_ID& id, std::initializ
 
 bool EValueDescription::operator==(const EValueDescription& other) 
 {
-    return fID == other.fID && fIsArray == other.fIsArray && fType == other.fType;
+    return fID == other.fID && fType == other.fType && (fType != EValueType::ARRAY || *fArrayType == *other.fArrayType);
 }
 
 bool EValueDescription::operator!=(const EValueDescription& other) 
@@ -128,5 +138,15 @@ EValueDescription& EValueDescription::AddEnumOption(const EString& option)
 const EVector<EString>& EValueDescription::GetEnumOptions() const
 {
     return fEnumOptions;
+}
+
+void EValueDescription::SetArrayType(const EValueDescription& type) 
+{
+    if (GetType() == EValueType::ARRAY)
+    {
+        if (!fArrayType) { fArrayType = new EValueDescription(); }
+
+        *fArrayType = type;
+    }
 }
 

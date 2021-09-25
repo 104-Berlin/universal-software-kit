@@ -106,7 +106,6 @@ void EUIField::OnRenderEnd()
         {
             fEventDispatcher.Enqueue<events::EMouseMoveEvent>({mousePos, mouseDelta});
         }
-
         
         if (ImGui::IsMouseClicked(0))
         {
@@ -144,6 +143,15 @@ void EUIField::UpdateEventDispatcher()
     for (ERef<EUIField> child : fChildren)
     {
         child->UpdateEventDispatcher();
+    }
+}
+
+void EUIField::DisconnectAllEvents() 
+{
+    fEventDispatcher.DisconnectEvents();
+    for (ERef<EUIField> child : fChildren)
+    {
+        child->DisconnectAllEvents();
     }
 }
 
@@ -200,6 +208,7 @@ bool EUIPanel::OnRender()
     if (fOpen)
     {
         ImGui::Begin(GetLabel().c_str(), &fOpen);
+        ImGui::GetCurrentWindow()->Viewport->Flags &= ~ImGuiViewportFlags_NoDecoration;
         if (!fOpen) 
         {
             fWasJustClosed = true;
@@ -309,10 +318,15 @@ bool EUITextField::OnRender()
     memcpy(text, fContent.c_str(), 255);
     if (ImGui::InputText(GetLabel().c_str(), text, 255, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        fContent = text;
-        fEventDispatcher.Enqueue<ETextChangeEvent>({fContent});
+        fEventDispatcher.Enqueue<events::ETextChangeEvent>({fContent});
     }
+    fContent = text;
     return true;
+}
+
+EString EUITextField::GetContent() const
+{
+    return fContent;
 }
 
 // ----------------------------------------
@@ -429,4 +443,44 @@ bool EUIImageView::OnRender()
     
     ImGui::Image((ImTextureID)(u64)fTexture->GetID(), size);
     return true;
+}
+
+EUIModal::EUIModal(const EString& title) 
+    : EUIField(title)
+{
+    fOpen = false;
+    fEndPopup = false;
+}
+
+bool EUIModal::OnRender() 
+{
+    if (fOpen)
+    {
+        ImGui::OpenPopup(GetLabel().c_str());
+        fOpen = false;
+    }
+    bool open = true;
+    fEndPopup = ImGui::BeginPopupModal(GetLabel().c_str(), &open);
+    return fEndPopup;
+}
+
+void EUIModal::OnRenderEnd() 
+{
+    if (fEndPopup)
+    {
+        ImGui::EndPopup();
+    }
+}
+
+void EUIModal::Open() 
+{
+    fOpen = true;
+}
+
+void EUIModal::Close() 
+{
+    if (fOpen)
+    {
+        ImGui::CloseCurrentPopup();
+    }
 }

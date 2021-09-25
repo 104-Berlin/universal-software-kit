@@ -38,11 +38,9 @@ namespace Engine {
     {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
-        ERegister*                          fLoadedScene;
         ETypeRegister                       fTypeRegister;
         EResourceRegister                   fResourceRegister;
         EEventDispatcher                    fEventDispatcher;
-        EChaiContext                        fChaiScriptContext;
     public:
         EExtensionManager();
         ~EExtensionManager();
@@ -75,11 +73,6 @@ namespace Engine {
         bool IsLoaded(const EString& extensionName);
 
         /**
-         * @return The active scene
-         */
-        ERegister* GetActiveScene() const;
-
-        /**
          * Gets a value description by name
          */
         EValueDescription GetValueDescriptionById(const EString& extensionName, const EString& typeId);
@@ -90,10 +83,6 @@ namespace Engine {
 
         EResourceRegister& GetResourceRegister();
         const EResourceRegister& GetResourceRegister() const;
-
-
-        EChaiContext& GetChaiContext();
-        const EChaiContext& GetChaiContext() const;
 
         static EExtensionManager& instance();
 

@@ -1,3 +1,4 @@
+
 #include "engine.h"
 #include "prefix_shared.h"
 
@@ -46,6 +47,7 @@ ERegister::Entity ERegister::CreateEntity()
         currentEntity++;
     }
     fAliveEntites.push_back(newEntity);
+    fEventDispatcher.Enqueue<EntityCreateEvent>({newEntity});
     return newEntity;
 }
 
@@ -58,7 +60,7 @@ void ERegister::DestroyEntity(Entity entity)
     }
     for (auto& entry : fComponentStorage)
     {
-        fEventDispatcher.Post<ComponentDeleteEvent>({entry.first, entity});
+        fEventDispatcher.Enqueue<ComponentDeleteEvent>({entry.first, entity});
         delete entry.second[entity];
         entry.second.erase(entity);
     }
@@ -77,7 +79,7 @@ void ERegister::Clear()
     {
         for (auto& storage : entry.second)
         {
-            fEventDispatcher.Post<ComponentDeleteEvent>({entry.first, storage.first});
+            fEventDispatcher.Enqueue<ComponentDeleteEvent>({entry.first, storage.first});
             delete storage.second;
         }
     }
@@ -101,12 +103,13 @@ EStructProperty* ERegister::AddComponent(Entity entity, const EValueDescription&
     {
         EStructProperty* storage = static_cast<EStructProperty*>(EProperty::CreateFromDescription(description.GetId(), description));
         storage->SetChangeFunc([this, entity](EString ident){
-            fEventDispatcher.Post<ValueChangeEvent>({ident, entity});
+            fEventDispatcher.Enqueue<ValueChangeEvent>({ident, entity});
         });
 
         fComponentStorage[description.GetId()][entity] = storage;
 
-        fEventDispatcher.Post<ComponentCreateEvent>({description.GetId(), entity});
+        fEventDispatcher.Enqueue<ComponentCreateEvent>({description.GetId(), entity});
+        return storage;
     }
     return nullptr;
 }
@@ -120,7 +123,7 @@ void ERegister::RemoveComponent(Entity entity, const EValueDescription& componen
     delete fComponentStorage[componentId.GetId()][entity];
     fComponentStorage[componentId.GetId()].erase(entity);
 
-    fEventDispatcher.Post<ComponentDeleteEvent>({componentId.GetId(), entity});
+    fEventDispatcher.Enqueue<ComponentDeleteEvent>({componentId.GetId(), entity});
 }
 
 bool ERegister::HasComponent(Entity entity, const EValueDescription& componentId) 
@@ -153,6 +156,21 @@ void Engine::ERegister::DisconnectEvents()
     fEventDispatcher.DisconnectEvents();
 }
 
+void Engine::ERegister::WaitForEvent() 
+{
+    fEventDispatcher.WaitForEvent();
+}
+
+EEventDispatcher& Engine::ERegister::GetEventDispatcher()
+{
+    return fEventDispatcher;
+}
+
+void Engine::ERegister::UpdateEvents() 
+{
+    fEventDispatcher.Update();
+}
+
 EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identifier) 
 {
     EVector<EString> identList;
@@ -167,54 +185,11 @@ EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identif
     identList.push_back(identifier.substr(start, identifier.length() - start));
     E_ASSERT(identList.size() > 0);
     // The first identifier is the component name
-    EProperty* currentProp = static_cast<EProperty*>(GetComponent(entity, identList[0]));
+    EStructProperty* currentProp = GetComponent(entity, identList[0]);
     // if we couldnt find the component return
     if (!currentProp) { return nullptr; }
-
-    for (size_t i = 1; i < identList.size(); i++)
-    {
-        if (!currentProp) { return nullptr; }
-        const EString& currentIdent = identList[i];
-        EValueDescription currentDsc = currentProp->GetDescription();
-
-        if (currentDsc.IsArray())
-        {
-            if (std::regex_match(currentIdent, std::regex("[0-9]+", std::regex::ECMAScript)))
-            {
-                size_t arrayIndex = std::atoi(currentIdent.c_str());
-                currentProp = static_cast<EArrayProperty*>(currentProp)->GetElement(arrayIndex);
-            }
-            else
-            {
-                currentProp = nullptr;
-            }
-        }
-        else
-        {
-            switch (currentDsc.GetType())
-            {
-            case EValueType::PRIMITIVE:
-            {
-                break;
-            }
-            case EValueType::STRUCT:
-            {
-                EStructProperty* structProp = static_cast<EStructProperty*>(currentProp);
-                currentProp = structProp->GetProperty(currentIdent);
-                break;
-            }
-            case EValueType::ENUM:
-            {
-                break;
-            }
-            case EValueType::UNKNOWN:
-            {
-                break;
-            }
-            }
-        }
-    }
-    return currentProp;
+    if (identList.size() == 1) { return currentProp; }
+    return currentProp->GetPropertyByIdentifier(identifier.substr(identList[0].length() + 1));
 }
 
 EVector<EStructProperty*> ERegister::GetAllComponents(Entity entity) 

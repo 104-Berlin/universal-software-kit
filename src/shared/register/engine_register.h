@@ -8,25 +8,10 @@
 namespace Engine {
 
 
-
     class E_API ERegister
     {
     public:
         using Entity = u64;
-        E_STORAGE_STRUCT(ComponentCreateEvent, 
-            (EValueDescription::t_ID, ValueId),
-            (Entity, Handle)
-        )
-
-        E_STORAGE_STRUCT(ComponentDeleteEvent,
-            (EValueDescription::t_ID, ValueId),
-            (Entity, Handle)
-        )
-
-        E_STORAGE_STRUCT(ValueChangeEvent,
-            (EString, Identifier),
-            (Entity, Handle)
-        )
     private:
     private:
         EString fName;
@@ -82,46 +67,42 @@ namespace Engine {
 
 
 
-
         template <typename Callback>
-        void AddComponentCreateEventListener(const EValueDescription& description, Callback cb)
+        void CatchAllEvents(Callback cb)
         {
-            fEventDispatcher.Connect<ComponentCreateEvent>([cb, description](ComponentCreateEvent event){
-                if (event.ValueId == description.GetId())
-                {
-                    cb(event.Handle);
-                }
-            });
-        }
-
-        template <typename Callback>
-        void AddComponentDeleteEventListener(const EValueDescription& description, Callback cb)
-        {
-            fEventDispatcher.Connect<ComponentDeleteEvent>([cb, description](ComponentDeleteEvent event){
-                if (description.GetId() == event.ValueId)
-                {
-                    std::invoke(cb, event.Handle);
-                }
-            });
-        }
-
-        template <typename Callback>
-        void AddEntityChangeEventListener(const EString& valueIdent, Callback cb)
-        {
-            fEventDispatcher.Connect<ValueChangeEvent>([cb, valueIdent](ValueChangeEvent event){
-                if (event.Identifier.length() < valueIdent.length()) {return;}
-                if (valueIdent == event.Identifier.substr(0, valueIdent.length()))
-                {
-                    cb(event.Handle, valueIdent);
-                }
-            });
+            fEventDispatcher.ConnectAll(cb);
         }
 
 
         // Do these between extension deletion and scene delete. 
         // If a lambda is defined in an extension the event dispatcher cant clean up the lambda, because the symbols are not loaded anymore
         void DisconnectEvents();
+        void WaitForEvent();
+
+        EEventDispatcher& GetEventDispatcher();
+
+        void UpdateEvents();
     };
+
+    
+    E_STORAGE_STRUCT(EntityCreateEvent,
+        (ERegister::Entity, Handle)
+    )
+
+    E_STORAGE_STRUCT(ComponentCreateEvent, 
+        (EValueDescription::t_ID, ValueId),
+        (ERegister::Entity, Handle)
+    )
+
+    E_STORAGE_STRUCT(ComponentDeleteEvent,
+        (EValueDescription::t_ID, ValueId),
+        (ERegister::Entity, Handle)
+    )
+
+    E_STORAGE_STRUCT(ValueChangeEvent,
+        (EString, Identifier),
+        (ERegister::Entity, Handle)
+    )
 
 
 

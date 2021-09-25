@@ -11,8 +11,11 @@ struct Vector
 };
 
 template <>
-bool convert::setter<Vector>(EStructProperty* property, const Vector& vec)
+bool convert::setter<Vector>(EProperty* prop, const Vector& vec)
 {
+	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
+	EStructProperty* property = static_cast<EStructProperty*>(prop);
+
 	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
 	EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
 	EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
@@ -27,8 +30,11 @@ bool convert::setter<Vector>(EStructProperty* property, const Vector& vec)
 }
 
 template <>
-bool convert::getter<Vector>(const EStructProperty* property, Vector* outVec)
+bool convert::getter<Vector>(const EProperty* prop, Vector* outVec)
 {
+	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
+	const EStructProperty* property = static_cast<const EStructProperty*>(prop);
+
 	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
 	const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
 	const EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
@@ -74,14 +80,17 @@ TEST(RegisterTest, Basics)
 	ERegister scene;
 
 	bool componentCreated = false;
-
-	scene.AddComponentCreateEventListener(myTestComponent, [&componentCreated](ERegister::Entity entity){
-		componentCreated = true;
+	scene.GetEventDispatcher().Connect<ComponentCreateEvent>([&componentCreated, myTestComponent](ComponentCreateEvent event){
+		if (event.ValueId == myTestComponent.GetId())
+		{
+			componentCreated = true;
+		}
 	});
 
 	ERegister::Entity entity = scene.CreateEntity();
 	EXPECT_FALSE(componentCreated);
 	scene.AddComponent(entity, myTestComponent);
+	scene.UpdateEvents();
 	EXPECT_TRUE(componentCreated);
 	scene.AddComponent(entity, vector);
 

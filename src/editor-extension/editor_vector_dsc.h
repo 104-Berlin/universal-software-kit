@@ -10,12 +10,12 @@
 
 namespace convert
 {
-    extern template E_EDEXAPI bool setter<EVec2>(Engine::EStructProperty*, const EVec2&);
-    extern template E_EDEXAPI bool getter<EVec2>(const Engine::EStructProperty*, EVec2*);
-    extern template E_EDEXAPI bool setter<EVec3>(Engine::EStructProperty*, const EVec3&);
-    extern template E_EDEXAPI bool getter<EVec3>(const Engine::EStructProperty*, EVec3*);
-    extern template E_EDEXAPI bool setter<EVec4>(Engine::EStructProperty*, const EVec4&);
-    extern template E_EDEXAPI bool getter<EVec4>(const Engine::EStructProperty*, EVec4*);
+    extern template E_EDEXAPI bool setter<EVec2>(Engine::EProperty*, const EVec2&);
+    extern template E_EDEXAPI bool getter<EVec2>(const Engine::EProperty*, EVec2*);
+    extern template E_EDEXAPI bool setter<EVec3>(Engine::EProperty*, const EVec3&);
+    extern template E_EDEXAPI bool getter<EVec3>(const Engine::EProperty*, EVec3*);
+    extern template E_EDEXAPI bool setter<EVec4>(Engine::EProperty*, const EVec4&);
+    extern template E_EDEXAPI bool getter<EVec4>(const Engine::EProperty*, EVec4*);
 }
 
 namespace Engine { namespace getdsc {
@@ -29,17 +29,17 @@ namespace Engine { namespace getdsc {
 namespace convert
 {
     template <>
-    bool setter<EVec2>(Engine::EStructProperty*, const EVec2&);
+    bool setter<EVec2>(Engine::EProperty*, const EVec2&);
     template <>
-    bool getter<EVec2>(const Engine::EStructProperty*, EVec2*);
+    bool getter<EVec2>(const Engine::EProperty*, EVec2*);
     template <>
-    bool setter<EVec3>(Engine::EStructProperty*, const EVec3&);
+    bool setter<EVec3>(Engine::EProperty*, const EVec3&);
     template <>
-    bool getter<EVec3>(const Engine::EStructProperty*, EVec3*);
+    bool getter<EVec3>(const Engine::EProperty*, EVec3*);
     template <>
-    bool setter<EVec4>(Engine::EStructProperty*, const EVec4&);
+    bool setter<EVec4>(Engine::EProperty*, const EVec4&);
     template <>
-    bool getter<EVec4>(const Engine::EStructProperty*, EVec4*);
+    bool getter<EVec4>(const Engine::EProperty*, EVec4*);
 
 }
 namespace Engine { namespace getdsc {

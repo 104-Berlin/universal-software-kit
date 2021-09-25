@@ -3,6 +3,46 @@
 
 using namespace Engine;
 
+EJson ESerializer::WriteStorageDescriptionToJson(const EValueDescription& description) 
+{
+    EJson result = EJson::object();
+
+    result["Type"] = description.GetType();
+    result["ID"] = description.GetId();
+    switch (description.GetType())
+    {
+        case EValueType::PRIMITIVE:
+        case EValueType::UNKNOWN: break;
+        case EValueType::ARRAY:
+        {
+            result["ArrayType"] = WriteStorageDescriptionToJson(description.GetAsPrimitive());
+            break;
+        }
+        case EValueType::STRUCT:
+        {
+            result["StructFields"] = EJson::object();
+            EJson& structFieldJson = result["StructFields"];
+            for (auto& entry : description.GetStructFields())
+            {
+                structFieldJson[entry.first.c_str()] = WriteStorageDescriptionToJson(*entry.second);
+            }
+            break;
+        }
+        case EValueType::ENUM:
+        {
+            EJson& enumOptions = result["EnumOptions"];
+            enumOptions = EJson::array();
+            for (const EString& option : description.GetEnumOptions())
+            {
+                enumOptions.push_back(option.c_str());
+            }
+            break;
+        }
+    }
+
+    return result;
+}
+
 EJson WriteStructToJs(EStructProperty* property);
 
 
@@ -87,24 +127,30 @@ EJson WriteArrayToJs(EArrayProperty* property)
     return result;
 }
 
-EJson ESerializer::WritePropertyToJs(EProperty* property) 
+EJson ESerializer::WritePropertyToJs(EProperty* property, bool writeDescription) 
 {
     EValueDescription description = property->GetDescription();
     EValueType type = description.GetType();
-
-    if (description.IsArray())
+    EJson valueJson = EJson::object();
+    switch (type)
     {
-        return WriteArrayToJs(static_cast<EArrayProperty*>(property));
+    case EValueType::PRIMITIVE: valueJson = WritePrimitiveToJs(property); break;
+    case EValueType::ARRAY: valueJson = WriteArrayToJs(static_cast<EArrayProperty*>(property)); break;
+    case EValueType::STRUCT: valueJson = WriteStructToJs(static_cast<EStructProperty*>(property)); break;
+    case EValueType::ENUM: valueJson = WriteEnumToJs(static_cast<EEnumProperty*>(property)); break;
+    case EValueType::UNKNOWN: return 0;
+    }
+
+    if (!writeDescription)
+    {
+        return valueJson;
     }
     else
     {
-        switch (type)
-        {
-        case EValueType::PRIMITIVE: return WritePrimitiveToJs(property);
-        case EValueType::STRUCT: return WriteStructToJs(static_cast<EStructProperty*>(property));
-        case EValueType::ENUM: return WriteEnumToJs(static_cast<EEnumProperty*>(property));
-        case EValueType::UNKNOWN: return 0;
-        }
+        EJson result = EJson::object();
+        result["Value"] = valueJson;
+        result["ValueDescription"] = WriteStorageDescriptionToJson(property->GetDescription());
+        return result;
     }
 
     return 0;

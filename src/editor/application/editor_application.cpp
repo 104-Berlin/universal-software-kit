@@ -17,7 +17,7 @@ E_STORAGE_STRUCT(MyType,
 )
 
 EApplication::EApplication() 
-    : fGraphicsContext(nullptr), fCommandLine(&EExtensionManager::instance().GetChaiContext())
+    : fGraphicsContext(nullptr), fCommandLine()
 {
     EExtensionManager::instance().AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent event) {
         EExtension* extension = EExtensionManager::instance().GetExtension(event.Extension);
@@ -37,6 +37,10 @@ EApplication::EApplication()
     });
 
     EExtensionManager::instance().AddEventListener<EExtensionUnloadEvent>([this](EExtensionUnloadEvent event){
+        for (ERef<EUIPanel> panel : fUIRegister.GetItems(event.ExtensionName))
+        {
+            panel->DisconnectAllEvents();
+        }
         fUIRegister.ClearRegisteredItems(event.ExtensionName);
     });
 
@@ -62,8 +66,8 @@ void EApplication::RegenerateMainMenuBar()
         if (!saveToPath.empty())
         {
             EFile file(saveToPath);
-            file.SetFileBuffer(ESerializer::WriteFullSceneBuffer(EExtensionManager::instance().GetActiveScene()));
-            file.SaveBufferToDisk();
+            //file.SetFileBuffer(ESerializer::WriteFullSceneBuffer(EExtensionManager::instance().GetActiveScene()));
+            //file.SaveBufferToDisk();
         }
     });
     ERef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open..."));
@@ -76,7 +80,7 @@ void EApplication::RegenerateMainMenuBar()
             if (!sceneFile.GetBuffer().IsNull())
             {
                 EExtensionManager::instance().Reload();
-                EDeserializer::ReadSceneFromFileBuffer(sceneFile.GetBuffer(), EExtensionManager::instance().GetActiveScene(), EExtensionManager::instance().GetTypeRegister().GetAllItems());
+                ///EDeserializer::ReadSceneFromFileBuffer(sceneFile.GetBuffer(), EExtensionManager::instance().GetActiveScene(), EExtensionManager::instance().GetTypeRegister().GetAllItems());
             }
         }
     });
@@ -89,10 +93,10 @@ void EApplication::RegenerateMainMenuBar()
 
             EString type = resourceFile.GetFileExtension();
             EResourceDescription foundDescription;
-            if (EExtensionManager::instance().GetResourceRegister().FindItem(FindResourceByType(type), &foundDescription) &&
+            if (EExtensionManager::instance().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
                 foundDescription.ImportFunction)
             {
-                EExtensionManager::instance().GetActiveScene()->GetResourceManager().ImportResourceFromFile(resourceFile, foundDescription);
+                //EExtensionManager::instance().GetActiveScene()->GetResourceManager().ImportResourceFromFile(resourceFile, foundDescription);
             }
             else
             {
@@ -125,8 +129,26 @@ void EApplication::RegenerateMainMenuBar()
         viewMenu->AddChild(menuItem);
     }
 
+    ERef<EUIMenu> connectionMenu = EMakeRef<EUIMenu>("Connection");
+    ERef<EUIModal> modal = EMakeRef<EUIModal>("Connect Modal");
+    ERef<EUIField> textField = modal->AddChild(EMakeRef<EUITextField>("IP Address"));
+    ERef<EUIField> connectButton = modal->AddChild(EMakeRef<EUIButton>("Connect"));
+    connectButton->AddEventListener<events::EButtonEvent>([textField, modal](){
+        EString ip = std::dynamic_pointer_cast<EUITextField>(textField)->GetContent();
+        shared::StaticSharedContext::instance().ConnectTo(ip);
+        modal->Close();
+    });
+    ERef<EUIMenuItem> connectToItem = EMakeRef<EUIMenuItem>("Connect To...");
+    connectToItem->AddEventListener<events::EButtonEvent>([modal](){
+        modal->Open();
+    });
+    connectionMenu->AddChild(connectToItem);
+
     fMainMenu->AddChild(fileMenu);
     fMainMenu->AddChild(viewMenu);
+    fMainMenu->AddChild(connectionMenu);
+
+    fMainMenu->AddChild(modal);
 }
 
 void EApplication::Init(Graphics::GContext* context) 
@@ -174,6 +196,8 @@ void EApplication::RenderImGui()
 
     fCommandLine.UpdateEventDispatcher();
     fCommandLine.Render();
+
+    shared::StaticSharedContext::instance().GetRegisterConnection().GetEventDispatcher().Update();
 }
 
 void EApplication::RegisterDefaultPanels() 

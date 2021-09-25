@@ -14,6 +14,12 @@ namespace Engine {
     private:
         EVector<EventData> fPostedEvents;
         EUnorderedMap<EValueDescription::t_ID, EVector<CallbackFunction>> fRegisteredCallbacks;
+        EVector<CallbackFunction> fCallAllways;
+
+        std::mutex  fEventMutex;
+
+        std::mutex              fWaitMutex;
+        std::condition_variable fNewEvent;
     public:
         ~EEventDispatcher()
         {
@@ -29,6 +35,7 @@ namespace Engine {
         auto Connect(const EValueDescription& dsc, Callback fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, void>
         {
+            std::lock_guard<std::mutex> lock(fEventMutex);
             fRegisteredCallbacks[dsc.GetId()].push_back([fn](EProperty*){fn();});
         }
 
@@ -36,6 +43,7 @@ namespace Engine {
         auto Connect(const EValueDescription& dsc, Callback fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn), EProperty*>::value, void>
         {
+            std::lock_guard<std::mutex> lock(fEventMutex);
             fRegisteredCallbacks[dsc.GetId()].push_back(fn);
         }
 
@@ -43,6 +51,7 @@ namespace Engine {
         auto Connect(const EValueDescription& dsc, Callback fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
         {
+            std::lock_guard<std::mutex> lock(fEventMutex);
             fRegisteredCallbacks[dsc.GetId()].push_back([fn](EProperty* property){
                 EStructProperty* structProp = static_cast<EStructProperty*>(property);
                 Event value;
@@ -58,6 +67,7 @@ namespace Engine {
         auto Connect(Callback fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
         {
+            std::lock_guard<std::mutex> lock(fEventMutex);
             fRegisteredCallbacks[Event::_dsc.GetId()].push_back([fn](EProperty* property){
                 EStructProperty* structProp = static_cast<EStructProperty*>(property);
                 Event value;
@@ -72,10 +82,21 @@ namespace Engine {
         auto Connect(Callback fn)
         -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, void>
         {
+            std::lock_guard<std::mutex> lock(fEventMutex);
             fRegisteredCallbacks[Event::_dsc.GetId()].push_back([fn](EProperty* property){
                 fn();
             });
         }
+
+        template <typename Callback>
+        auto ConnectAll(Callback fn)
+        -> std::enable_if_t<std::is_invocable<decltype(fn), EStructProperty*>::value, void>
+        {
+            std::unique_lock<std::mutex> lock(fEventMutex);
+            fCallAllways.push_back([fn](EProperty* prop){fn(static_cast<EStructProperty*>(prop)); });
+        }
+
+        void Enqueue_P(EValueDescription dsc, EProperty* property);
 
         template <typename T>
         void Enqueue(const EValueDescription& dsc, const T& data)
@@ -84,7 +105,7 @@ namespace Engine {
             EStructProperty* property = static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc));
             if (property->SetValue<T>(data))
             {
-                fPostedEvents.push_back({dsc.GetId(), property});
+                Enqueue_P(dsc, property);
             }
             else
             {
@@ -100,7 +121,8 @@ namespace Engine {
         {
             Enqueue<T>(getdsc::GetDescription<T>(), data);
         }
-        void Enqueue(EValueDescription dsc, EProperty* property);
+
+        void Post_P(const EValueDescription& dsc, EProperty* property);
 
         template <typename T>
         void Post(const EValueDescription& dsc, const T& data)
@@ -109,10 +131,7 @@ namespace Engine {
             EStructProperty* property = static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc));
             if (property->SetValue<T>(data))
             {
-                for (CallbackFunction func : fRegisteredCallbacks[dsc.GetId()])
-                {
-                    func(property);
-                }
+                Post_P(dsc, property);
             }
             delete property;
         }
@@ -122,11 +141,11 @@ namespace Engine {
         {
             Post<T>(getdsc::GetDescription<T>(), data);
         }
-        void Post(const EValueDescription& dsc, EProperty* property);
 
 
         void Update();
-
+        void WaitForEvent();
+        void StopWaiting();
 
         void DisconnectEvents();
     };

@@ -9,7 +9,7 @@ static EValueDescription dsc = EValueDescription::CreateStruct("SomeStruct", {{"
 TEST(SceneDelete, DeletingAScene)
 {
     ERegister* scene = new ERegister();
-    scene->AddComponentCreateEventListener(dsc, [](ERegister::Entity entity){});
+    //scene->AddComponentCreateEventListener(dsc, [](ERegister::Entity entity){});
 
     delete scene;
     scene = new ERegister();

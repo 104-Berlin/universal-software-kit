@@ -5,11 +5,15 @@ namespace Engine {
     class E_API EDeserializer
     {
     public:
-        static void ReadSceneFromJson(const EJson& json, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes);
+        static bool ReadStorageDescriptionFromJson(const EJson& json, EValueDescription* description);
 
-        static void ReadPropertyFromJson(const EJson& json, EProperty* property);
 
-        static void ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes);
+        static bool ReadSceneFromJson(const EJson& json, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes);
+
+        static bool ReadPropertyFromJson(const EJson& json, EProperty* property);
+        static bool ReadPropertyFromJson_WithDescription(const EJson& json, EProperty** property);
+
+        static bool ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes);
     };
 
 }
