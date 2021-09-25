@@ -26,8 +26,16 @@ void EEventDispatcher::Post_P(const EValueDescription& dsc, EProperty* property)
 
 void EEventDispatcher::Update() 
 {
-    std::unique_lock<std::mutex> lock(fEventMutex);
-    for (auto& entry : fPostedEvents)
+    EVector<EventData> copiedEvents;
+    {
+        std::unique_lock<std::mutex> lock(fEventMutex);
+        for (auto& entry : fPostedEvents)
+        {
+            copiedEvents.push_back({entry.Type, entry.Data});
+        }
+        fPostedEvents.clear();
+    }
+    for (auto& entry : copiedEvents)
     {
         for (auto& cb : fRegisteredCallbacks[entry.Type])
         {
@@ -39,7 +47,6 @@ void EEventDispatcher::Update()
         }
         delete entry.Data;
     }
-    fPostedEvents.clear();
 }
 
 void EEventDispatcher::WaitForEvent() 
