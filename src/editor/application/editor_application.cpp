@@ -37,6 +37,10 @@ EApplication::EApplication()
     });
 
     EExtensionManager::instance().AddEventListener<EExtensionUnloadEvent>([this](EExtensionUnloadEvent event){
+        for (ERef<EUIPanel> panel : fUIRegister.GetItems(event.ExtensionName))
+        {
+            panel->DisconnectAllEvents();
+        }
         fUIRegister.ClearRegisteredItems(event.ExtensionName);
     });
 
