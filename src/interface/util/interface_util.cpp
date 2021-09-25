@@ -71,11 +71,6 @@ void inter::PrintProperty(EProperty* prop)
     std::cout << std::endl;
 }
 
-void inter::SetCurrentThreadName(const EString& name) 
-{
-    
-}
-
 
 #ifdef EWIN
     void SetThreadName(uint32_t dwThreadID, const char* threadName)
@@ -97,13 +92,13 @@ void inter::SetCurrentThreadName(const EString& name)
     {
     }
     }
-    void SetCurrentThreadName( const EString& name)
+    void inter::SetCurrentThreadName( const EString& name)
     {
         SetThreadName(GetCurrentThreadId(),name.c_str());
     }
 
 #else
-    void SetCurrentThreadName( const EString& name)
+    void inter::SetCurrentThreadName( const EString& name)
     {
 #ifdef EMAC
         pthread_setname_np(name.c_str());
