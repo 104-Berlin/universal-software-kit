@@ -181,102 +181,7 @@ void ERegisterSocket::Run_Connection(Connection* connection)
             continue;
         }
         
-        _sock::print_packet(EString("REGISTER") + inet_ntoa(connection->Address->sin_addr), packet);
-        if (packet.ID == 0) { continue; }
-
-        EJson responseJson = EJson::object();
-
-        // Handle Command and send back something
-        switch (packet.PacketType)
-        {
-        case EPacketType::CREATE_ENTITY:
-        {
-            ERegister::Entity entity = fLoadedRegister->CreateEntity();
-            E_ERROR("CREATE ENTITY " + std::to_string(entity));
-            break;
-        }
-        case EPacketType::CREATE_COMPONENT:
-        {
-            const EJson& descriptionJson = packet.Body["ValueDescription"];
-            EValueDescription dsc;
-            if (!EDeserializer::ReadStorageDescriptionFromJson(descriptionJson, &dsc))
-            {
-                E_ERROR("Could not read storage description from parsed json!");
-                break;
-            }
-            
-            if (packet.Body["Entity"].is_number_integer())
-            {
-                ERegister::Entity entity = (ERegister::Entity) packet.Body["Entity"].get<int>();
-                EStructProperty* property = fLoadedRegister->AddComponent(entity, dsc);
-                if (property)
-                {
-                    E_INFO("Add Component " + dsc.GetId());
-                    inter::PrintProperty(property);
-                }
-            }
-            break;
-        }
-        case EPacketType::SET_VALUE:
-        {
-            if (packet.Body["Entity"].is_number_integer() && packet.Body["ValueIdent"].is_string() && packet.Body["Value"].is_string())
-            {
-                ERegister::Entity entity = packet.Body["Entity"].get<int>();
-                EString valueIdent = packet.Body["ValueIdent"].get<EString>();
-                EString value = packet.Body["Value"].get<EString>();
-
-                EProperty* foundProperty = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
-                if (!foundProperty)
-                {
-                    E_ERROR("Could not set value. Value not found!");
-                    return;
-                }
-                if (EDeserializer::ReadPropertyFromJson(EJson::parse(value), foundProperty))
-                {
-                    E_INFO("Value " + valueIdent + " setted on entity " + std::to_string(entity) + "!");
-                }
-            }
-            break;
-        }
-        case EPacketType::GET_VALUE:
-        {
-            if (packet.Body["Entity"].is_number_integer() && packet.Body["ValueIdent"].is_string())
-            {
-                ERegister::Entity entity = packet.Body["Entity"].get<int>();
-                EString valueIdent = packet.Body["ValueIdent"].get<EString>();
-                EProperty* foundValue = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
-
-                if (foundValue)
-                {
-                    responseJson = ESerializer::WritePropertyToJs(foundValue, true /* With Description*/);
-                    responseJson["PropertyName"] = foundValue->GetPropertyName();
-                }
-            }
-            break;
-        }
-        case EPacketType::GET_ALL_VALUES:
-        {
-            if (packet.Body["Entity"].is_number_integer())
-            {
-                ERegister::Entity entity = packet.Body["Entity"].get<int>();
-                EJson propertyArrayJson = EJson::array();
-                EVector<EStructProperty*> properties = fLoadedRegister->GetAllComponents(entity);
-                for (EStructProperty* property : properties)
-                {
-                    propertyArrayJson.push_back(ESerializer::WritePropertyToJs(property, true/*With description*/));
-                }
-                responseJson = propertyArrayJson;
-            }
-            break;
-        }
-        }
-
-        ERegisterPacket responsePacket;
-        responsePacket.ID = packet.ID;
-        responsePacket.PacketType = packet.PacketType;
-        responsePacket.Body = responseJson;
-
-        connection->SendPacket(responsePacket);
+        ConnectionGotPacket(connection, packet);
     }
     if (disconnect)
     {
@@ -304,6 +209,62 @@ void ERegisterSocket::HandleConnection(int socketId, sockaddr_in* address)
     
 }
 
+void ERegisterSocket::ConnectionGotPacket(Connection* connection, const ERegisterPacket& packet) 
+{
+    _sock::print_packet(EString("REGISTER") + inet_ntoa(connection->Address->sin_addr), packet);
+    if (packet.ID == 0) { return; }
+
+    EJson responseJson = EJson::object();
+
+    // Handle Command and send back something
+    switch (packet.PacketType)
+    {
+    case EPacketType::CREATE_ENTITY:
+    {
+        responseJson = Pk_HandleCreateEntity(packet);
+        break;
+    }
+    case EPacketType::CREATE_COMPONENT:
+    {
+        responseJson = Pk_HandleCreateComponent(packet);
+        break;
+    }
+    case EPacketType::SET_VALUE:
+    {
+        responseJson = Pk_HandleSetValue(packet);
+        break;
+    }
+    case EPacketType::GET_VALUE:
+    {
+        responseJson = Pk_HandleGetValue(packet);
+        break;
+    }
+    case EPacketType::GET_ALL_VALUES:
+    {
+        responseJson = Pk_HandleGetAllValues(packet);
+        break;
+    }
+    case EPacketType::GET_RESOURCE:
+    {
+        responseJson = Pk_HandleGetResource(packet);
+        break;
+    }
+    case EPacketType::GET_LOADED_RESOURCES:
+    {
+        responseJson = Pk_HandleGetLoadedResources(packet);
+        break;
+    }
+    case EPacketType::REGISTER_EVENT: break;
+    }
+
+    ERegisterPacket responsePacket;
+    responsePacket.ID = packet.ID;
+    responsePacket.PacketType = packet.PacketType;
+    responsePacket.Body = responseJson;
+
+    connection->SendPacket(responsePacket);
+}
+
 void ERegisterSocket::HandleRegisterEvent(EStructProperty* data) 
 {
     ERegisterPacket packet;
@@ -317,4 +278,109 @@ void ERegisterSocket::HandleRegisterEvent(EStructProperty* data)
     {
         con->SendPacket(packet);
     }
+}
+
+EJson ERegisterSocket::Pk_HandleCreateEntity(const ERegisterPacket& packet) 
+{
+    ERegister::Entity entity = fLoadedRegister->CreateEntity();
+    E_ERROR("CREATE ENTITY " + std::to_string(entity));
+}
+
+EJson ERegisterSocket::Pk_HandleCreateComponent(const ERegisterPacket& packet) 
+{
+    const EJson& descriptionJson = packet.Body["ValueDescription"];
+    EValueDescription dsc;
+    if (!EDeserializer::ReadStorageDescriptionFromJson(descriptionJson, &dsc))
+    {
+        E_ERROR("Could not read storage description from parsed json!");
+        return EJson::object();
+    }
+    
+    if (packet.Body["Entity"].is_number_integer())
+    {
+        ERegister::Entity entity = (ERegister::Entity) packet.Body["Entity"].get<int>();
+        EStructProperty* property = fLoadedRegister->AddComponent(entity, dsc);
+        if (property)
+        {
+            E_INFO("Add Component " + dsc.GetId());
+            inter::PrintProperty(property);
+        }
+    }
+    return EJson::object();
+}
+
+EJson ERegisterSocket::Pk_HandleAddResource(const ERegisterPacket& packet) 
+{
+    
+}
+
+EJson ERegisterSocket::Pk_HandleSetValue(const ERegisterPacket& packet) 
+{
+    if (packet.Body["Entity"].is_number_integer() && packet.Body["ValueIdent"].is_string() && packet.Body["Value"].is_string())
+    {
+        ERegister::Entity entity = packet.Body["Entity"].get<int>();
+        EString valueIdent = packet.Body["ValueIdent"].get<EString>();
+        EString value = packet.Body["Value"].get<EString>();
+
+        EProperty* foundProperty = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
+        if (!foundProperty)
+        {
+            E_ERROR("Could not set value. Value not found!");
+            return;
+        }
+        if (EDeserializer::ReadPropertyFromJson(EJson::parse(value), foundProperty))
+        {
+            E_INFO("Value " + valueIdent + " setted on entity " + std::to_string(entity) + "!");
+        }
+    }
+    return EJson::object();
+}
+
+EJson ERegisterSocket::Pk_HandleGetValue(const ERegisterPacket& packet) 
+{
+    EJson result = EJson::object();
+    if (packet.Body["Entity"].is_number_integer() && packet.Body["ValueIdent"].is_string())
+    {
+        ERegister::Entity entity = packet.Body["Entity"].get<int>();
+        EString valueIdent = packet.Body["ValueIdent"].get<EString>();
+        EProperty* foundValue = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
+
+        if (foundValue)
+        {
+            result = ESerializer::WritePropertyToJs(foundValue, true /* With Description*/);
+            result["PropertyName"] = foundValue->GetPropertyName();
+        }
+    }
+    return result;
+}
+
+EJson ERegisterSocket::Pk_HandleGetAllValues(const ERegisterPacket& packet) 
+{
+    EJson result = EJson::object();
+    if (packet.Body["Entity"].is_number_integer())
+    {
+        ERegister::Entity entity = packet.Body["Entity"].get<int>();
+        EJson propertyArrayJson = EJson::array();
+        EVector<EStructProperty*> properties = fLoadedRegister->GetAllComponents(entity);
+        for (EStructProperty* property : properties)
+        {
+            propertyArrayJson.push_back(ESerializer::WritePropertyToJs(property, true/*With description*/));
+        }
+        result = propertyArrayJson;
+    }
+    return result;
+}
+
+EJson ERegisterSocket::Pk_HandleGetResource(const ERegisterPacket& packet) 
+{
+    EJson result = EJson::object();
+
+    return result;
+}
+
+EJson ERegisterSocket::Pk_HandleGetLoadedResources(const ERegisterPacket& packet) 
+{
+    EJson result = EJson::object();
+
+    return result;
 }

@@ -7,13 +7,17 @@ namespace Engine {
     {
         CREATE_ENTITY = 0,
         CREATE_COMPONENT = 1,
+        ADD_RESOURCE = 2,
 
-        SET_VALUE = 2,
+        SET_VALUE = 10,
 
         GET_VALUE = 20,
         GET_ALL_VALUES = 21,
+        GET_RESOURCE = 22,
+        GET_LOADED_RESOURCES = 23, // This does not return the data
+        
 
-        REGISTER_EVENT = 40,
+        REGISTER_EVENT = 101,
     };
 
     static const char* GetPacketTypeString(EPacketType type)
@@ -22,9 +26,12 @@ namespace Engine {
         {
             case EPacketType::CREATE_ENTITY: return "CREATE_ENTITY";
             case EPacketType::CREATE_COMPONENT: return "CREATE_COMPONENT";
+            case EPacketType::ADD_RESOURCE: return "ADD_RESOURCE";
             case EPacketType::SET_VALUE: return "SET_VALUE";
             case EPacketType::GET_VALUE: return "GET_VALUE";
             case EPacketType::GET_ALL_VALUES: return "GET_ALL_VALUES";
+            case EPacketType::GET_RESOURCE: return "GET_RESOURCE";
+            case EPacketType::GET_LOADED_RESOURCES: return "GET_LOADED_RESOURCES";
             case EPacketType::REGISTER_EVENT: return "REGISTER_EVENT";
         }
         return "";
