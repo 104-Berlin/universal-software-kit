@@ -132,6 +132,11 @@ EString inter::EncodeBase64(const u8* data, size_t dataLen)
     {
         result += ConstructBase64FromTripple(data[i], data[i + 1], data[i + 2]);
     }
+    // Add padding 
+    for (size_t i = 0; i < (dataLen % 3); i++)
+    {
+        result += "=";
+    }
     return result;
 }
 
@@ -139,7 +144,7 @@ bool IsBase64(const EString& base64)
 {
     for (size_t i = 0; i < base64.length(); i++)
     {
-        if (!isalnum(base64[i]) && base64[i] != '+' && base64[i] != '/')
+        if (!isalnum(base64[i]) && base64[i] != '+' && base64[i] != '/' && base64[i] != '=')
         {
             return false;
         }
@@ -160,9 +165,18 @@ u8 Base64CharToIndex(const char base64)
 bool inter::DecodeBase64(const EString& base64, u8** data, size_t* dataLen) 
 {
     if (!IsBase64(base64)) { return false; }
-    size_t outLen = (base64.length() / 4) * 3;
+    size_t padding = 0;
+    while (base64[(base64.length() - 1) - padding] == '=')
+    {
+        padding++;
+    }
+    
+
+    size_t outLen = (base64.length() / 4) * 3 - (padding ? (3 - padding) : 0);
     u8* newData = new u8[outLen];
     size_t currIndex = 0;
+
+
     
     for (size_t i = 0; i < base64.length(); i += 4)
     {
@@ -177,9 +191,9 @@ bool inter::DecodeBase64(const EString& base64, u8** data, size_t* dataLen)
         u8 byteB = (bit_24_val >> 8) & 255;
         u8 byteC = (bit_24_val & 255);
 
-        newData[currIndex++] = byteA;
-        newData[currIndex++] = byteB;
-        newData[currIndex++] = byteC;
+        if (currIndex < outLen) { newData[currIndex++] = byteA; }
+        if (currIndex < outLen) { newData[currIndex++] = byteB; }
+        if (currIndex < outLen) { newData[currIndex++] = byteC; }
     }
     *data = newData;
     *dataLen = outLen;

@@ -10,7 +10,7 @@ E_STORAGE_STRUCT(CommandType,
 
 static EVector<u8> data = { 0xff, 0xad, 0xd4, 
                             0x20, 0xf4, 0xd3, 
-                            0x54};
+                            0x54, 0x34, 0x33};
 
 int main(int argc, char** argv)
 {  
