@@ -7,33 +7,8 @@ E_STORAGE_STRUCT(CommandType,
     (double, SomeDouble)
 )
 
-
-static EVector<u8> data = { 0xff, 0xad, 0xd4, 
-                            0x20, 0xf4, 0xd3, 
-                            0x54, 0x34, 0x33};
-
 int main(int argc, char** argv)
-{  
-    EString base64 = inter::EncodeBase64(data.data(), data.size());
-    E_INFO("BASE64: " + base64);
-    EFile file("TESTBIN.b");
-    ESharedBuffer buf;
-    buf.InitWith<u8>(data.data(), data.size());
-    file.SetFileBuffer(buf);
-    file.SaveBufferToDisk();
-
-    u8* decodeBuffer;
-    size_t decodeLen;
-    if (inter::DecodeBase64(base64, &decodeBuffer, &decodeLen))
-    {
-        for (size_t i = 0; i < decodeLen; i++)
-        {
-            printf("BYTE: 0x%02X\n", decodeBuffer[i]);
-        }
-        delete[] decodeBuffer;        
-    }
-
-
+{
     shared::StaticSharedContext::Start();
     
     shared::StaticSharedContext::instance().GetExtensionManager().GetTypeRegister().RegisterItem("CommandLine", CommandType::_dsc);

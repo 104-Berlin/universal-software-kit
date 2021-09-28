@@ -6,6 +6,7 @@ add_library(Util STATIC     file/engine_file_collection.cpp
                             file/engine_file.cpp
                             file/engine_folder.cpp
                             file/engine_shared_buffer.cpp
+                            file/engine_base64.cpp
                             string/util_string.cpp
                             logging/engine_logging.cpp)
 
