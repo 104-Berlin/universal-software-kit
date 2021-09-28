@@ -23,7 +23,7 @@ EString Base64::Encode(const u8* data, size_t dataLen)
     EString result;
     for (size_t i = 0; i < dataLen; i += 3)
     {
-        result += ConstructBase64FromTripple(data[i], data[i + 1], data[i + 2]);
+        result += ConstructBase64FromTripple(i < dataLen ? data[i] : 0, i + 1 < dataLen ? data[i + 1] : 0, i + 2 < dataLen ? data[i + 2] : 0);
     }
     // Add padding 
     for (size_t i = 0; i < (dataLen % 3); i++)
@@ -58,25 +58,27 @@ u8 Base64CharToIndex(const char base64)
 bool Base64::Decode(const EString& base64, u8** data, size_t* dataLen) 
 {
     if (!IsBase64(base64)) { return false; }
+    size_t base64_len = base64.length();
+
     size_t padding = 0;
-    while (base64[(base64.length() - 1) - padding] == '=')
+    while (base64[(base64_len - 1) - padding] == '=')
     {
         padding++;
     }
     
 
-    size_t outLen = (base64.length() / 4) * 3 - (padding ? (3 - padding) : 0);
+    size_t outLen = (base64_len / 4) * 3 - (padding ? (3 - padding) : 0);
     u8* newData = new u8[outLen];
     size_t currIndex = 0;
 
 
     
-    for (size_t i = 0; i < base64.length(); i += 4)
+    for (size_t i = 0; i < base64_len; i += 4)
     {
-        u8 first = Base64CharToIndex(base64[i]);
-        u8 second = Base64CharToIndex(base64[i + 1]);
-        u8 third = Base64CharToIndex(base64[i + 2]);
-        u8 fourth = Base64CharToIndex(base64[i + 3]);
+        u8 first = i < base64_len ? Base64CharToIndex(base64[i]) : 0;
+        u8 second = i + 1 < base64_len ? Base64CharToIndex(base64[i + 1]) : 0;
+        u8 third = i + 2 < base64_len ? Base64CharToIndex(base64[i + 2]) : 0;
+        u8 fourth = i + 3 < base64_len ? Base64CharToIndex(base64[i + 3]) : 0;
 
         u32 bit_24_val = (first << 18) + (second << 12) + (third << 6) + (fourth);
 
