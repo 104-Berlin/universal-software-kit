@@ -50,7 +50,7 @@ namespace Engine {
         EResourceData(t_ID id = 0)
             : ID(id), Type(), Name(), PathToFile(), Data(nullptr), DataSize(0), UserData(nullptr), UserDataSize(0)
         {
-            E_ASSERT_M(id, "Invalid id for resource data. Id cant be 0!");
+            
         }
 
         EResourceData(t_ID id, const EString& type, const EString& name, u8* data, size_t dataSize)

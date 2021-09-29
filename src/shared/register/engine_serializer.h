@@ -12,6 +12,8 @@ namespace Engine {
         static EJson WritePropertyToJs(EProperty* property, bool writeDescription = false);
         
         static ESharedBuffer WriteFullSceneBuffer(ERegister* reg);
+
+        static EJson WriteResourceDataToJson(const EResourceData& data, bool writeData);
     };
 
 }

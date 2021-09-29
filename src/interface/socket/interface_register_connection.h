@@ -35,6 +35,8 @@ namespace Engine {
 
         void Send_CreateNewEntity();
         void Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description);
+        void Send_AddResource(EResourceData* data);
+
         void Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
 
         ERef<EProperty> Send_GetValue(ERegister::Entity entity, const EString& valueIdent);

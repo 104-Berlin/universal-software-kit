@@ -216,3 +216,21 @@ ESharedBuffer ESerializer::WriteFullSceneBuffer(ERegister* reg)
     
     return fileCollection.GetCompleteBuffer();
 }
+
+EJson ESerializer::WriteResourceDataToJson(const EResourceData& data, bool writeData) 
+{
+    EJson result = EJson::object();
+
+    result["ID"] = data.ID;
+    result["Type"] = data.Type;
+    result["Name"] = data.Name;
+    result["PathToFile"] = data.PathToFile;
+
+    if (writeData)
+    {
+        result["Data"] = Base64::Encode(data.Data, data.DataSize);
+        result["UserData"] = Base64::Encode(data.UserData, data.UserDataSize);
+    }
+
+    return result;
+}

@@ -284,6 +284,7 @@ EJson ERegisterSocket::Pk_HandleCreateEntity(const ERegisterPacket& packet)
 {
     ERegister::Entity entity = fLoadedRegister->CreateEntity();
     E_ERROR("CREATE ENTITY " + std::to_string(entity));
+    return EJson::object();
 }
 
 EJson ERegisterSocket::Pk_HandleCreateComponent(const ERegisterPacket& packet) 
@@ -311,7 +312,7 @@ EJson ERegisterSocket::Pk_HandleCreateComponent(const ERegisterPacket& packet)
 
 EJson ERegisterSocket::Pk_HandleAddResource(const ERegisterPacket& packet) 
 {
-    
+    return EJson::object();
 }
 
 EJson ERegisterSocket::Pk_HandleSetValue(const ERegisterPacket& packet) 
@@ -326,7 +327,7 @@ EJson ERegisterSocket::Pk_HandleSetValue(const ERegisterPacket& packet)
         if (!foundProperty)
         {
             E_ERROR("Could not set value. Value not found!");
-            return;
+            return EJson::object();
         }
         if (EDeserializer::ReadPropertyFromJson(EJson::parse(value), foundProperty))
         {

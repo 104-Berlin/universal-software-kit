@@ -40,6 +40,16 @@ void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, cons
     SendToServer(packet);
 }
 
+void ERegisterConnection::Send_AddResource(EResourceData* data) 
+{
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::ADD_RESOURCE;
+    packet.ID = GetNewPacketID();
+    packet.Body = ESerializer::WriteResourceDataToJson(*data, true);
+
+    SendToServer(packet);
+}
+
 void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString) 
 {
     EJson requestJson = EJson::object();
