@@ -56,7 +56,6 @@ namespace Engine {
         EResourceData(t_ID id, const EString& type, const EString& name, u8* data, size_t dataSize)
             : ID(id), Type(type), Name(name), PathToFile(), UserData(nullptr), UserDataSize(0)
         {
-            E_ASSERT_M(id, "Invalid id for resource data. Id cant be 0!");
             Data = data;
             DataSize = dataSize;
         }
@@ -107,10 +106,19 @@ namespace Engine {
         }
     };
 
+    namespace events {
+
+        E_STORAGE_STRUCT(EResourceAddedEvent,
+            (EResourceData::t_ID, ResourceID)
+        )
+
+    }
+
     class E_API EResourceManager
     {
     private:
         EUnorderedMap<EResourceData::t_ID, EResourceData*> fLoadedResources;
+        EEventDispatcher                                   fEventDispacher;
     public:
         EResourceManager();
         ~EResourceManager();
@@ -129,6 +137,13 @@ namespace Engine {
         EVector<EResourceData*> GetAllResource(const EString& type) const;
 
         EResourceData::t_ID CreateNewId();
+
+        EEventDispatcher& GetEventDispatcher();
+        const EEventDispatcher& GetEventDispatcher() const;
+
+        static EResourceData* CreateResourceFromFile(EFile& file, const EResourceDescription& description);
+        static EResourceData* CreateResourceFromFile(const EString& filePath, const EResourceDescription& description);
+
     };
 
 }

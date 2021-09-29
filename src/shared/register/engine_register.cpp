@@ -10,7 +10,9 @@ using namespace Engine;
 ERegister::ERegister(const EString& name) 
     : fName(name)
 {
-    
+    fResourceManager.GetEventDispatcher().ConnectAll([this](EProperty* prop){
+        this->fEventDispatcher.Enqueue_P(prop->GetDescription(), prop);
+    });
 }
 
 Engine::ERegister::~ERegister() 

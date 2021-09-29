@@ -41,6 +41,8 @@ namespace Engine {
 
         ERef<EProperty> Send_GetValue(ERegister::Entity entity, const EString& valueIdent);
         EVector<ERef<EProperty>> Send_GetAllValues(ERegister::Entity entity);
+        ERef<EResourceData> Send_GetResourceData(EResourceData::t_ID resourceId);
+        EVector<ERef<EResourceData>> Send_GetAllResources();
 
         void Connect(const EString& connectTo, int connectToPort);
 

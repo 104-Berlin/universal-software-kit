@@ -50,7 +50,7 @@ void ERegisterSocket::Init()
     fLoadedRegister->CatchAllEvents([this](EStructProperty* data){
         HandleRegisterEvent(data);
     });
-
+    fLoadedRegister->GetResourceManager();
  
 
     // TODO: For single machine interface use AF_LOCAL
@@ -229,6 +229,11 @@ void ERegisterSocket::ConnectionGotPacket(Connection* connection, const ERegiste
         responseJson = Pk_HandleCreateComponent(packet);
         break;
     }
+    case EPacketType::ADD_RESOURCE:
+    {
+        responseJson = Pk_HandleAddResource(packet);
+        break;
+    }
     case EPacketType::SET_VALUE:
     {
         responseJson = Pk_HandleSetValue(packet);
@@ -312,6 +317,19 @@ EJson ERegisterSocket::Pk_HandleCreateComponent(const ERegisterPacket& packet)
 
 EJson ERegisterSocket::Pk_HandleAddResource(const ERegisterPacket& packet) 
 {
+    EResourceData* data = new EResourceData();
+    if (EDeserializer::ReadResourceFromJson(packet.Body, data, true))
+    {
+        if (!fLoadedRegister->GetResourceManager().AddResource(data))
+        {
+            delete data;
+        }
+    }
+    else
+    {
+        delete data;
+    }
+
     return EJson::object();
 }
 
@@ -376,12 +394,27 @@ EJson ERegisterSocket::Pk_HandleGetResource(const ERegisterPacket& packet)
 {
     EJson result = EJson::object();
 
+    if (packet.Body["ID"].is_number_integer())
+    {
+        EResourceData::t_ID id = packet.Body["ID"].get<EResourceData::t_ID>();
+        EResourceData* foundData = fLoadedRegister->GetResourceManager().GetResource(id);
+        if (foundData)
+        {
+            result = ESerializer::WriteResourceDataToJson(*foundData, true);
+        }
+    }
+
     return result;
 }
 
 EJson ERegisterSocket::Pk_HandleGetLoadedResources(const ERegisterPacket& packet) 
 {
-    EJson result = EJson::object();
+    EJson result = EJson::array();
+
+    for (EResourceData* data : fLoadedRegister->GetResourceManager().GetAllResource())
+    {
+        result.push_back(ESerializer::WriteResourceDataToJson(*data, false));
+    }
 
     return result;
 }

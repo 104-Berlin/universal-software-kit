@@ -247,9 +247,12 @@ bool EDeserializer::ReadResourceFromJson(const EJson& json, EResourceData* resDa
                 resData->DataSize = dataLen;
                 resData->UserData = userData;
                 resData->UserDataSize = userDataLen;
+                return true;
             }
         }
+        return !withData;
     }
+    return false;
 }
 
 bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes) 

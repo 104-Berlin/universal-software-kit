@@ -126,6 +126,55 @@ EVector<ERef<EProperty>> ERegisterConnection::Send_GetAllValues(ERegister::Entit
     return result;
 }
 
+ERef<EResourceData> ERegisterConnection::Send_GetResourceData(EResourceData::t_ID resourceId) 
+{
+    EJson req = EJson::object();
+    req["ID"] = resourceId;
+
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::GET_RESOURCE;
+    packet.ID = GetNewPacketID();
+    packet.Body = req;
+
+    SendToServer(packet);
+
+    EJson response = WaitForRequest(packet.ID);
+
+    ERef<EResourceData> resourceData = EMakeRef<EResourceData>();
+    if (!EDeserializer::ReadResourceFromJson(response, resourceData.get(), true))
+    {
+        return nullptr;
+    }
+    return resourceData;
+}
+
+EVector<ERef<EResourceData>> ERegisterConnection::Send_GetAllResources() 
+{
+    EVector<ERef<EResourceData>> result;
+
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::GET_LOADED_RESOURCES;
+    packet.ID = GetNewPacketID();
+
+    SendToServer(packet);
+
+    EJson res = WaitForRequest(packet.ID);
+
+    if (res.is_array())
+    {
+        for (EJson& arrayEntry : res)
+        {
+            ERef<EResourceData> newData = EMakeRef<EResourceData>();
+            if (EDeserializer::ReadResourceFromJson(arrayEntry, newData.get(), false))
+            {
+                result.push_back(newData);
+            }
+        }
+    }
+
+    return result;
+}
+
 void ERegisterConnection::Init() 
 {
     int socketDomain = AF_INET;
