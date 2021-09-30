@@ -57,21 +57,16 @@ shared::ESharedError shared::CreateComponent(const EValueDescription& componentI
     return false;
 }
 
+shared::ESharedError shared::CreateResource(EResourceData* data) 
+{
+    StaticSharedContext::instance().GetRegisterConnection().Send_AddResource(data);
+    return false;
+}
+
 shared::ESharedError  shared::SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString)
 {
     StaticSharedContext::instance().GetRegisterConnection().Send_SetValue(entity, valueIdent, valueString);
-    /*StaticSharedContext::instance().RunInMainThread([valueIdent, entity, valueString](){
-        EProperty* prop = ACTIVE_SCENE->GetValueByIdentifier(entity, valueIdent);
-        if (!prop)
-        {
-            return;
-        }
 
-        EValueDescription desc = prop->GetDescription();
-        
-
-        EDeserializer::ReadPropertyFromJson(EJson::parse(valueString, [](int depth, EJson::parse_event_t event, EJson& parsed) -> bool { return true; }, false), prop);
-    });*/
     return false;
 }
 
@@ -90,6 +85,16 @@ ERef<EProperty> shared::GetValue(ERegister::Entity entity, const EString& valueI
 EVector<ERef<EProperty>> shared::GetAllComponents(ERegister::Entity entity) 
 {
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllValues(entity);
+}
+
+ERef<EResourceData> shared::GetResource(EResourceData::t_ID id) 
+{
+    return StaticSharedContext::instance().GetRegisterConnection().Send_GetResourceData(id);
+}
+
+EVector<ERef<EResourceData>> shared::GetLoadedResource() 
+{
+    return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllResources();
 }
 
 namespace Engine {

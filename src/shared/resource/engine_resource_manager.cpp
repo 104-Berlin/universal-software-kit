@@ -20,11 +20,14 @@ bool EResourceManager::HasResource(const EResourceData::t_ID& id) const
 
 bool EResourceManager::AddResource(EResourceData* data) 
 {
+    if (data->ID == 0) { data->ID = CreateNewId(); }
+
     if (HasResource(data->ID))
     {
         return false;
     }
     fLoadedResources.insert({data->ID, data});
+    fEventDispacher.Post<events::EResourceAddedEvent>({data->ID});
     return true;
 }
 
@@ -47,8 +50,7 @@ bool EResourceManager::ImportResource(const EString& name, const EResourceDescri
     {
         newData->SetUserData(buffer.UserData, buffer.UserDataSize);
     }
-    fLoadedResources.insert({newData->ID, newData});
-    return true;
+    return AddResource(newData);
 }
 
 bool EResourceManager::ImportResourceFromFile(const EString& filePath, const EResourceDescription& description) 
@@ -134,4 +136,44 @@ EResourceData::t_ID EResourceManager::CreateNewId()
         result = result << 2; // Just something kinda random. Maybe we find something better if needed
     }
     return result;
+}
+
+EEventDispatcher& EResourceManager::GetEventDispatcher() 
+{
+    return fEventDispacher;
+}
+
+const EEventDispatcher& EResourceManager::GetEventDispatcher() const
+{
+    return fEventDispacher;
+}
+
+EResourceData* EResourceManager::CreateResourceFromFile(EFile& file, const EResourceDescription& description) 
+{
+    if (!file.Exist()) { return nullptr; }
+    file.LoadToMemory();
+
+    EResourceData* result = nullptr;
+
+    if (description.ImportFunction)
+    {
+        EResourceDescription::ResBuffer buffer = description.ImportFunction({file.GetBuffer().Data<u8>(), file.GetBuffer().GetSizeInByte()});
+
+        result = new EResourceData(0, description.ResourceName, file.GetFileName(), buffer.Data, buffer.Size);
+        result->SetUserData(buffer.UserData, buffer.UserDataSize);
+    }
+    else
+    {
+        size_t bufferLen = file.GetBuffer().GetSizeInByte();
+        u8* copiedFileBuffer = new u8[bufferLen];
+        memcpy(copiedFileBuffer, file.GetBuffer().Data(), bufferLen);
+        result = new EResourceData(0, description.ResourceName, file.GetFileName(), copiedFileBuffer, bufferLen);
+    }
+    return result;
+}
+
+EResourceData* EResourceManager::CreateResourceFromFile(const EString& filePath, const EResourceDescription& description) 
+{
+    EFile file(filePath);
+    return CreateResourceFromFile(file, description);
 }

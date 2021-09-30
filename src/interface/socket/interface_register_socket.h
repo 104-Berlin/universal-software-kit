@@ -56,8 +56,20 @@ namespace Engine {
 
         void HandleConnection(int socketId, sockaddr_in* address);
 
+        void ConnectionGotPacket(Connection* connection, const ERegisterPacket& packet);
+
 
         void HandleRegisterEvent(EStructProperty* data);
+
+        // All packet type functions
+        EJson Pk_HandleCreateEntity(const ERegisterPacket& packet);
+        EJson Pk_HandleCreateComponent(const ERegisterPacket& packet);
+        EJson Pk_HandleAddResource(const ERegisterPacket& packet);
+        EJson Pk_HandleSetValue(const ERegisterPacket& packet);
+        EJson Pk_HandleGetValue(const ERegisterPacket& packet);
+        EJson Pk_HandleGetAllValues(const ERegisterPacket& packet);
+        EJson Pk_HandleGetResource(const ERegisterPacket& packet);
+        EJson Pk_HandleGetLoadedResources(const ERegisterPacket& packet); // This just returns the descriptions of the resources. Not the actual data
     };
 
 }
