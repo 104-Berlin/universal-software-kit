@@ -8,7 +8,7 @@ E_STORAGE_STRUCT(CommandType,
 )
 
 int main(int argc, char** argv)
-{  
+{
     shared::StaticSharedContext::Start();
     
     shared::StaticSharedContext::instance().GetExtensionManager().GetTypeRegister().RegisterItem("CommandLine", CommandType::_dsc);
