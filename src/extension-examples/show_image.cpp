@@ -52,20 +52,16 @@ public:
     ImageLayerView()
         : EUIField("ImageView")
     {
-        /*activeScene->AddComponentCreateEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
-            
-            EStructProperty* imageLayer = activeScene->GetComponent(handle, ImageLayer::_dsc);
-            if (imageLayer)
-            {
-                convert::setter<ImageLayer>(imageLayer, ImageLayer());
-            }
+        shared::StaticSharedContext::instance().Events().AddComponentCreateEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
+            ImageLayer imageLayer = shared::GetValue<ImageLayer>(handle);
+
             ERef<EUIImageView> newImageView = EMakeRef<EUIImageView>();
             newImageView->SetSize(250, 250);
             fImageViews[handle] = newImageView;
             AddChild(newImageView);
         });
 
-        activeScene->AddComponentDeleteEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
+        shared::StaticSharedContext::instance().Events().AddComponentDeleteEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
             EUnorderedMap<ERegister::Entity, EWeakRef<EUIImageView>>::iterator it = fImageViews.find(handle);
             if (it != fImageViews.end())
             {
@@ -74,10 +70,10 @@ public:
             }
         });
 
-        activeScene->AddEntityChangeEventListener("ImageLayer.resourceLink",[this](ERegister::Entity handle, const EString&){
-            ImageLayer imageLayer = activeScene->GetComponent<ImageLayer>(handle);
-
-            EResourceData* data = EExtensionManager::instance().GetActiveScene()->GetResourceManager().GetResource(imageLayer.resourceLink.ResourceId);
+        shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener("ImageLayer.resourceLink", [this](ERegister::Entity handle, const EString&){
+            ImageLayer imageLayer = shared::GetValue<ImageLayer>(handle);
+            ERef<EResourceData> data = shared::GetResource(imageLayer.resourceLink.ResourceId);
+            
             if (data && fImageViews.find(handle) != fImageViews.end())
             {
                 ImageUserData* userData = (ImageUserData*)data->UserData;
@@ -86,6 +82,17 @@ public:
                     fImageViews[handle].lock()->SetTextureData(data->Data, userData->width, userData->height);
                 }
             }
+        });
+        /*activeScene->AddComponentCreateEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
+            
+        });
+
+        activeScene->AddComponentDeleteEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
+            
+        });
+
+        activeScene->AddEntityChangeEventListener("ImageLayer.resourceLink",[this](ERegister::Entity handle, const EString&){
+            
         });*/
     }
 };

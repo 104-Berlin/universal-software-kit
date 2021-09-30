@@ -6,6 +6,7 @@ add_executable(UnitTest test_engine_file.cpp
                         test_engine_extension.cpp
                         test_engine_resource.cpp
                         test_engine_events.cpp
+                        test_engine_base64.cpp
                         test_scene_deletion.cpp)
 
 

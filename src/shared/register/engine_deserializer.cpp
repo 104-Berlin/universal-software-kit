@@ -215,6 +215,46 @@ bool EDeserializer::ReadPropertyFromJson_WithDescription(const EJson& json, EPro
     return false;
 }
 
+bool EDeserializer::ReadResourceFromJson(const EJson& json, EResourceData* resData, bool withData) 
+{
+    if (!json.is_object()) { return false; }
+    if (json["ID"].is_number_integer() && json["Type"].is_string() && json["Name"].is_string() && json["PathToFile"].is_string())
+    {
+        resData->ID = json["ID"].get<EResourceData::t_ID>();
+        resData->Type = json["Type"].get<EString>();
+        resData->Name = json["Name"].get<EString>();
+        resData->PathToFile = json["PathToFile"].get<EString>();
+        if (withData && json["Data"].is_string() && json["UserData"].is_string())
+        {
+            u8* data;
+            size_t dataLen;
+            u8* userData;
+            size_t userDataLen;
+            if (Base64::Decode(json["Data"].get<EString>(), &data, &dataLen) &&
+                Base64::Decode(json["UserData"].get<EString>(), &userData, &userDataLen))
+            {
+                if (resData->Data)
+                {
+                    delete resData->Data;
+                    resData->Data = nullptr;
+                }
+                if (resData->UserData)
+                {
+                    delete resData->UserData;
+                    resData->UserData = nullptr;
+                }
+                resData->Data = data;
+                resData->DataSize = dataLen;
+                resData->UserData = userData;
+                resData->UserDataSize = userDataLen;
+                return true;
+            }
+        }
+        return !withData;
+    }
+    return false;
+}
+
 bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes) 
 {
     EFileCollection fileCollection;

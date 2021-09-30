@@ -86,6 +86,7 @@ namespace Engine {
 
         ESharedError E_INTER_API CreateComponent(const EString& componentId, ERegister::Entity entity);
         ESharedError E_INTER_API CreateComponent(const EValueDescription& componentId, ERegister::Entity entity);
+        ESharedError E_INTER_API CreateResource(EResourceData* data);
 
         ESharedError E_INTER_API SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
 
@@ -105,7 +106,26 @@ namespace Engine {
         // Getter
         
        E_INTER_API ERef<EProperty> GetValue(ERegister::Entity entity, const EString& vlaueIdent);
+
+        template <typename T>
+        T GetValue(ERegister::Entity entity)
+        {
+            T result;
+            EValueDescription dsc = getdsc::GetDescription<T>();
+            if (dsc.Valid())
+            {
+                ERef<EProperty> foundProp = GetValue(entity, dsc.GetId());
+                if (foundProp)
+                {
+                    convert::getter(foundProp.get(), &result);
+                }
+            }
+            return result;
+        }
+
        E_INTER_API EVector<ERef<EProperty>> GetAllComponents(ERegister::Entity entity);
+       E_INTER_API ERef<EResourceData> GetResource(EResourceData::t_ID id);
+       E_INTER_API EVector<ERef<EResourceData>> GetLoadedResource(); // This wont return the data of the resource. Fetch them manuel
     }
 
 }

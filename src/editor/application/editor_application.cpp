@@ -96,6 +96,12 @@ void EApplication::RegenerateMainMenuBar()
             if (EExtensionManager::instance().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
                 foundDescription.ImportFunction)
             {
+                EResourceData* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
+                if (data)
+                {
+                    shared::CreateResource(data);
+                    delete data;
+                }
                 //EExtensionManager::instance().GetActiveScene()->GetResourceManager().ImportResourceFromFile(resourceFile, foundDescription);
             }
             else
