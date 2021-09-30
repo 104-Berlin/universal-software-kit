@@ -371,6 +371,7 @@ namespace events
     private:
         bool fOpen;
         bool fEndPopup;
+        bool fPopupShouldOpen;
     public:
         EUIModal(const EString& title);
 

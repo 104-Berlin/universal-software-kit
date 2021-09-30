@@ -450,17 +450,19 @@ EUIModal::EUIModal(const EString& title)
 {
     fOpen = false;
     fEndPopup = false;
+    fPopupShouldOpen = false;
+    SetWidth(300);
 }
 
 bool EUIModal::OnRender() 
 {
-    if (fOpen)
+    if (fPopupShouldOpen)
     {
         ImGui::OpenPopup(GetLabel().c_str());
-        fOpen = false;
+        fPopupShouldOpen = false;
     }
-    bool open = true;
-    fEndPopup = ImGui::BeginPopupModal(GetLabel().c_str(), &open);
+    ImGui::SetNextWindowSize({fWidthOverride, fHeightOverride});
+    fEndPopup = ImGui::BeginPopupModal(GetLabel().c_str(), &fOpen);
     return fEndPopup;
 }
 
@@ -475,12 +477,10 @@ void EUIModal::OnRenderEnd()
 void EUIModal::Open() 
 {
     fOpen = true;
+    fPopupShouldOpen = true;
 }
 
 void EUIModal::Close() 
 {
-    if (fOpen)
-    {
-        ImGui::CloseCurrentPopup();
-    }
+    fOpen = false;
 }
