@@ -316,9 +316,14 @@ bool EUITextField::OnRender()
 {
     char text[255];
     memcpy(text, fContent.c_str(), 255);
-    if (ImGui::InputText(GetLabel().c_str(), text, 255, ImGuiInputTextFlags_EnterReturnsTrue))
+
+    if (ImGui::InputText(GetLabel().c_str(), text, 255))
     {
         fEventDispatcher.Enqueue<events::ETextChangeEvent>({fContent});
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        fEventDispatcher.Enqueue<events::ETextCompleteEvent>({fContent});
     }
     fContent = text;
     return true;
@@ -327,6 +332,60 @@ bool EUITextField::OnRender()
 EString EUITextField::GetContent() const
 {
     return fContent;
+}
+
+EUIFloatEdit::EUIFloatEdit(const EString& label) 
+    : EUIField(label), fStep(0.1), fMin(0), fMax(100000), fValue(0)
+{
+    
+}
+
+bool EUIFloatEdit::OnRender() 
+{
+    if (ImGui::DragFloat(GetLabel().c_str(), &fValue, fStep, fMin, fMax, "%.3f", 1.0f))
+    {
+        fEventDispatcher.Enqueue<events::EFloatChangeEvent>({fValue});
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        fEventDispatcher.Enqueue<events::EFloatCompleteEvent>({fValue});
+    }
+
+    return true;
+}
+
+EUIIntegerEdit::EUIIntegerEdit(const EString& label) 
+    : EUIField(label), fValue(0), fMin(-10000), fMax(10000)
+{
+    
+}
+
+bool EUIIntegerEdit::OnRender() 
+{
+    if (ImGui::DragInt(GetLabel().c_str(), &fValue, 1.0f, fMin, fMax))
+    {
+        fEventDispatcher.Enqueue<events::EIntegerChangeEvent>({fValue});
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        fEventDispatcher.Enqueue<events::EIntegerCompleteEvent>({fValue});
+    }
+    return true;
+}
+
+EUICheckbox::EUICheckbox(const EString& label) 
+    : EUIField(label), fChecked(false)
+{
+    
+}
+
+bool EUICheckbox::OnRender() 
+{
+    if (ImGui::Checkbox(GetLabel().c_str(), &fChecked))
+    {
+        fEventDispatcher.Enqueue<events::ECheckboxEvent>({fChecked});
+    }
+    return true;
 }
 
 // ----------------------------------------

@@ -8,7 +8,7 @@ APP_ENTRY
 {
     ERef<EUIPanel> showPanel = EMakeRef<EUIPanel>("Show Panel");
     ERef<EUITextField> textField = EMakeRef<EUITextField>("Name");
-    textField->AddEventListener<events::ETextChangeEvent>([](const events::ETextChangeEvent& evt){
+    textField->AddEventListener<events::ETextCompleteEvent>([](const events::ETextCompleteEvent& evt){
         E_INFO("Text changed: " + evt.Value);
     });
     ERef<EUIButton> button = EMakeRef<EUIButton>("Click Me");
@@ -18,8 +18,11 @@ APP_ENTRY
     button->AddEventListener<events::EMouseDownEvent>([](){
         E_INFO("MOUSE CLICK");
     });
+    ERef<EUIFloatEdit> floatField = EMakeRef<EUIFloatEdit>("Float");
+    
     showPanel->AddChild(textField);
     showPanel->AddChild(button);
+    showPanel->AddChild(floatField);
 
 
 

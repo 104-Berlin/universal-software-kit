@@ -290,8 +290,32 @@ namespace events {
     };
 namespace events
 {
+    E_STORAGE_STRUCT(ETextCompleteEvent,
+        (EString, Value)
+    )
+
     E_STORAGE_STRUCT(ETextChangeEvent,
         (EString, Value)
+    )
+
+    E_STORAGE_STRUCT(EFloatChangeEvent,
+        (float, Value)
+    )
+
+    E_STORAGE_STRUCT(EFloatCompleteEvent,
+        (float, Value)
+    )
+
+    E_STORAGE_STRUCT(EIntegerChangeEvent,
+        (i32, Value)
+    )
+
+    E_STORAGE_STRUCT(EIntegerCompleteEvent,
+        (i32, Value)
+    )
+
+    E_STORAGE_STRUCT(ECheckboxEvent,
+        (bool, Checked)
     )
 
 }
@@ -306,6 +330,41 @@ namespace events
         virtual bool OnRender() override;
 
         EString GetContent() const;
+    };
+
+    class E_EDEXAPI EUIFloatEdit : public EUIField
+    {
+    private:
+        float fValue;
+        float fStep;
+        float fMin;
+        float fMax;
+    public:
+        EUIFloatEdit(const EString& label);
+
+        virtual bool OnRender() override;
+    };
+
+    class E_EDEXAPI EUIIntegerEdit : public EUIField
+    {
+    private:
+        i32 fValue;
+        i32 fMin;
+        i32 fMax;
+    public:
+        EUIIntegerEdit(const EString& label);
+
+        virtual bool OnRender() override;
+    };
+
+    class E_EDEXAPI EUICheckbox : public EUIField
+    {
+    private:
+        bool fChecked;
+    public:
+        EUICheckbox(const EString& label);
+
+        virtual bool OnRender() override;
     };
 
 
