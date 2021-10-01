@@ -218,6 +218,7 @@ bool EDeserializer::ReadPropertyFromJson_WithDescription(const EJson& json, EPro
 bool EDeserializer::ReadResourceFromJson(const EJson& json, EResourceData* resData, bool withData) 
 {
     if (!json.is_object()) { return false; }
+    if (json.size() == 0)  { return false;}
     if (json["ID"].is_number_integer() && json["Type"].is_string() && json["Name"].is_string() && json["PathToFile"].is_string())
     {
         resData->ID = json["ID"].get<EResourceData::t_ID>();
