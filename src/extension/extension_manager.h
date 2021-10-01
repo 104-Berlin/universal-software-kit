@@ -84,9 +84,6 @@ namespace Engine {
         EResourceRegister& GetResourceRegister();
         const EResourceRegister& GetResourceRegister() const;
 
-        static EExtensionManager& instance();
-
-
         void Reload();
         void ReloadExtension(const EString& extensionName);
         void ReloadExtension(EExtension* extension);

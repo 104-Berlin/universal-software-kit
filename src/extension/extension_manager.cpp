@@ -164,12 +164,6 @@ const EResourceRegister& EExtensionManager::GetResourceRegister() const
     return fResourceRegister;
 }
 
-EExtensionManager& EExtensionManager::instance() 
-{
-    static EExtensionManager theManager;
-    return theManager;
-}
-
 void EExtensionManager::Reload() 
 {
     // Cache pointers to extension, because map will change with reload
