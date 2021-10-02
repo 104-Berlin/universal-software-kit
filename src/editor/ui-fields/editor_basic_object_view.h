@@ -8,7 +8,8 @@ namespace Editor {
         EVector<ERef<Engine::EProperty>>    fSelectedComponents;
         Engine::ERegister::Entity           fSelectedEntity;
         EVector<Engine::ERegister::Entity>  fEntities;
-        ERef<Engine::EUIButton>             fAddObjectButton;
+        EWeakRef<Engine::EUITable>          fEntitiesTable;
+        EUnorderedMap<Engine::ERegister::Entity, EWeakRef<Engine::EUITableRow>> fEntityRows;
 
         std::mutex                          fChangeComponentsMtx;
     public:

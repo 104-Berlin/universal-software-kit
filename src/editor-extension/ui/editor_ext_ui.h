@@ -111,7 +111,7 @@ namespace events {
          * @param child The UI Field thats gets added to the list
          * @return The added child
          */
-        ERef<EUIField> AddChild(const ERef<EUIField>& child);
+        EWeakRef<EUIField> AddChild(const ERef<EUIField>& child);
 
         /**
          * Removes a child from the list
@@ -148,6 +148,17 @@ namespace events {
          * This can be usefull in some cases
          */
         virtual void OnRenderEnd();
+
+        /**
+         * @brief called before child is rendered
+         */
+        virtual void OnBeforeChildRender() {}
+
+
+        /**
+         * @brief called after child is rendered
+         */
+        virtual void OnAfterChildRender() {}
 
         /**
          * This calls all registered event listener and clear the event loop
@@ -288,6 +299,14 @@ namespace events {
 
         virtual bool OnRender() override;
     };
+
+    class E_EDEXAPI EUILabel : public EUIField
+    {
+    public:
+        EUILabel(const EString& label);
+
+        virtual bool OnRender() override;
+    };
 namespace events
 {
     E_STORAGE_STRUCT(ETextCompleteEvent,
@@ -316,6 +335,10 @@ namespace events
 
     E_STORAGE_STRUCT(ECheckboxEvent,
         (bool, Checked)
+    )
+
+    E_STORAGE_STRUCT(ESelectionChangeEvent,
+        (bool, Selected)
     )
 
 }
@@ -439,6 +462,54 @@ namespace events
 
         void Open();
         void Close();
+    };
+
+    class E_EDEXAPI EUIContainer : public EUIField
+    {
+    public:
+        EUIContainer(const EString& name);
+
+        virtual bool OnRender() override;
+        virtual void OnRenderEnd() override;
+    };
+
+
+    class E_EDEXAPI EUISelectable : public EUIField
+    {
+    private:
+        bool fStretchToAllColumns;
+        bool fIsSelected;
+    public:
+        EUISelectable(const EString& label);
+
+        virtual bool OnRender() override;
+
+        void SetStretchToAllColumns(bool stretch);
+    };
+
+    class E_EDEXAPI EUITable : public EUIField
+    {
+    private:
+        bool fEndTable; // For ImGui
+        EVector<EString> fHeaderCells;
+    public:
+        EUITable(const EString& name = "Table");
+
+        virtual bool OnRender() override;
+        virtual void OnRenderEnd() override;
+
+        void SetHeaderCells(const EVector<EString>& headerCells);
+    };
+
+    class E_EDEXAPI EUITableRow : public EUIField
+    {
+    private:
+        i32 fCurrentTableIndex;
+    public:
+        EUITableRow();
+
+        virtual void OnBeforeChildRender() override;
+        virtual bool OnRender() override;
     };
 
 }

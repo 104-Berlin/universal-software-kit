@@ -23,7 +23,7 @@ EUIField::EUIField(const EString& label)
     
 }
 
-ERef<EUIField> EUIField::AddChild(const ERef<EUIField>& child) 
+EWeakRef<EUIField> EUIField::AddChild(const ERef<EUIField>& child) 
 {
     fChildren.push_back(child);
     return fChildren.back();
@@ -62,7 +62,9 @@ void EUIField::Render()
     {
         for (ERef<EUIField> uiField : fChildren)
         {
+            OnBeforeChildRender();
             uiField->Render();
+            OnAfterChildRender();
         }
     }
     OnRenderEnd();
@@ -79,7 +81,7 @@ void EUIField::OnRenderEnd()
     ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
     ImGuiWindow* window = g.CurrentWindow;
 
-    ImRect itemRect = window->DC.LastItemRect;
+    ImRect itemRect = g.LastItemData.Rect;
     
     fCalculatedSize.x = itemRect.GetWidth();
     fCalculatedSize.y = itemRect.GetHeight();
@@ -303,6 +305,18 @@ bool EUIButton::OnRender()
     {
         fEventDispatcher.Enqueue<events::EButtonEvent>(events::EButtonEvent());
     }
+    return true;
+}
+
+EUILabel::EUILabel(const EString& label) 
+    : EUIField(label)
+{
+    
+}
+
+bool EUILabel::OnRender() 
+{
+    ImGui::Text("%s", GetLabel().c_str());
     return true;
 }
 
@@ -542,4 +556,97 @@ void EUIModal::Open()
 void EUIModal::Close() 
 {
     fOpen = false;
+}
+
+EUIContainer::EUIContainer(const EString& name) 
+    : EUIField(name)
+{
+    
+}
+
+bool EUIContainer::OnRender() 
+{
+    ImGui::BeginChild(GetLabel().c_str(), {fWidthOverride, fHeightOverride});
+    return true;
+}
+
+void EUIContainer::OnRenderEnd() 
+{
+    ImGui::EndChild();
+}
+
+EUISelectable::EUISelectable(const EString& label) 
+    : EUIField(label), fStretchToAllColumns(false), fIsSelected(false)
+{
+    
+}
+
+bool EUISelectable::OnRender() 
+{
+    ImGuiSelectableFlags flags = fStretchToAllColumns ? ImGuiSelectableFlags_SpanAllColumns : 0;
+
+    if (ImGui::Selectable(GetLabel().c_str(), &fIsSelected, flags))
+    {
+        fEventDispatcher.Enqueue<events::ESelectionChangeEvent>({fIsSelected});
+    }
+    return true;
+}
+
+void EUISelectable::SetStretchToAllColumns(bool stretch) 
+{
+    fStretchToAllColumns = stretch;
+}
+
+EUITable::EUITable(const EString& name) 
+    : EUIField(name)
+{
+    
+}
+
+bool EUITable::OnRender() 
+{
+    if (fHeaderCells.size() == 0) { return fEndTable = false; }
+    ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit |
+                            ImGuiTableFlags_Resizable;
+
+    if ((fEndTable = ImGui::BeginTable(GetLabel().c_str(), fHeaderCells.size(), flags)))
+    {
+        for (const EString& header : fHeaderCells)
+        {
+            ImGui::TableSetupColumn(header.c_str());
+        }
+        ImGui::TableHeadersRow();
+    }
+    return fEndTable;
+}
+
+void EUITable::OnRenderEnd() 
+{
+    if (fEndTable)
+    {
+        ImGui::EndTable();
+    }
+}
+
+void EUITable::SetHeaderCells(const EVector<EString>& headerCells) 
+{
+    fHeaderCells = headerCells;
+}
+
+EUITableRow::EUITableRow()
+    : EUIField("TR"), fCurrentTableIndex(0)
+{
+    
+}
+
+void EUITableRow::OnBeforeChildRender() 
+{
+    ImGui::TableSetColumnIndex(fCurrentTableIndex++);
+}
+
+bool EUITableRow::OnRender() 
+{
+    fCurrentTableIndex = 0;
+    ImGui::TableNextRow();
+    return true;
 }

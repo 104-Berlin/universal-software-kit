@@ -121,7 +121,14 @@ bool ECommandLine::OnRender()
     memset(buffer, 0, 255);
     if (ImGui::InputText("##COMMAND_LINE_INPUT", buffer, 255, ImGuiInputTextFlags_EnterReturnsTrue))
     {
+        EString command = EStringUtil::ToLower(buffer);
+        
         //fChaiContext->Execute(buffer);
+        if (command == "add")
+        {
+            E_INFO("NEW ENTITY");
+            shared::CreateEntity();
+        }
     }
     ImGui::PopItemWidth();
     ImGui::End();

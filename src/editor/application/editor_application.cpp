@@ -60,8 +60,8 @@ void EApplication::RegenerateMainMenuBar()
     fMainMenu->Clear();
 
     ERef<EUIMenu> fileMenu = EMakeRef<EUIMenu>("File");
-    ERef<EUIField> saveScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Save"));
-    saveScene->AddEventListener<events::EButtonEvent>([this](){
+    EWeakRef<EUIField> saveScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Save"));
+    saveScene.lock()->AddEventListener<events::EButtonEvent>([this](){
         EString saveToPath = Wrapper::SaveFileDialog("Save To", {"esc"});
         if (!saveToPath.empty())
         {
@@ -70,8 +70,8 @@ void EApplication::RegenerateMainMenuBar()
             //file.SaveBufferToDisk();
         }
     });
-    ERef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open..."));
-    openScene->AddEventListener<events::EButtonEvent>([this](){
+    EWeakRef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open..."));
+    openScene.lock()->AddEventListener<events::EButtonEvent>([this](){
         EVector<EString> openScene = Wrapper::OpenFileDialog("Open", {"esc"});
         if (openScene.size() > 0)
         {
@@ -84,8 +84,8 @@ void EApplication::RegenerateMainMenuBar()
             }
         }
     });
-    ERef<EUIField> importResource = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Import..."));
-    importResource->AddEventListener<events::EButtonEvent>([this](){
+    EWeakRef<EUIField> importResource = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Import..."));
+    importResource.lock()->AddEventListener<events::EButtonEvent>([this](){
         EVector<EString> resourcesToOpen = Wrapper::OpenFileDialog("Import");
         for (const EString& resourcePath : resourcesToOpen)
         {
@@ -136,10 +136,10 @@ void EApplication::RegenerateMainMenuBar()
 
     ERef<EUIMenu> connectionMenu = EMakeRef<EUIMenu>("Connection");
     ERef<EUIModal> modal = EMakeRef<EUIModal>("Connect Modal");
-    ERef<EUIField> textField = modal->AddChild(EMakeRef<EUITextField>("IP Address"));
-    ERef<EUIField> connectButton = modal->AddChild(EMakeRef<EUIButton>("Connect"));
-    connectButton->AddEventListener<events::EButtonEvent>([textField, modal](){
-        EString ip = std::dynamic_pointer_cast<EUITextField>(textField)->GetContent();
+    EWeakRef<EUIField> textField = modal->AddChild(EMakeRef<EUITextField>("IP Address"));
+    EWeakRef<EUIField> connectButton = modal->AddChild(EMakeRef<EUIButton>("Connect"));
+    connectButton.lock()->AddEventListener<events::EButtonEvent>([textField, modal](){
+        EString ip = std::dynamic_pointer_cast<EUITextField>(textField.lock())->GetContent();
         shared::StaticSharedContext::instance().ConnectTo(ip);
         modal->Close();
     });
@@ -201,6 +201,8 @@ void EApplication::RenderImGui()
 
     fCommandLine.UpdateEventDispatcher();
     fCommandLine.Render();
+
+    ImGui::ShowDemoWindow();
 
     shared::StaticSharedContext::instance().GetRegisterConnection().GetEventDispatcher().Update();
 }

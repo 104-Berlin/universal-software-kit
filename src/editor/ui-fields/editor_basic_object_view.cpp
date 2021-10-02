@@ -6,12 +6,18 @@ using namespace Engine;
 EObjectView::EObjectView()
     : EUIField("OBJECTVIEW"), fSelectedEntity(0)
 {
-    fAddObjectButton = EMakeRef<EUIButton>("Add Object");
-    fAddObjectButton->AddEventListener<events::EButtonEvent>([this](){
-        shared::CreateEntity();
-    });
+    
     shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<EntityCreateEvent>([this](EntityCreateEvent event){
         fEntities.push_back(event.Handle);
+        if (!fEntitiesTable.expired())
+        {
+            ERef<EUITableRow> newRow = EMakeRef<EUITableRow>();
+            EWeakRef<EUISelectable> selectabe = std::dynamic_pointer_cast<EUISelectable>(newRow->AddChild(EMakeRef<EUISelectable>(std::to_string(event.Handle))).lock());
+            selectabe.lock()->SetStretchToAllColumns(true);
+            newRow->AddChild(EMakeRef<EUILabel>("Some Text"));
+            fEntitiesTable.lock()->AddChild(newRow);
+            fEntityRows.insert({event.Handle, newRow});
+        }
     });
     shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<ComponentCreateEvent>([this](ComponentCreateEvent event){
         if (event.Handle == fSelectedEntity)
@@ -47,70 +53,29 @@ EObjectView::EObjectView()
             }
         }
     });
+
+    ERef<EUIContainer> entitiesList = EMakeRef<EUIContainer>("Entities");
+    EWeakRef<EUIField> addObjectButton = entitiesList->AddChild(EMakeRef<EUIButton>("Add Object"));
+    addObjectButton.lock()->AddEventListener<events::EButtonEvent>(&shared::CreateEntity);
+
+    fEntitiesTable = std::dynamic_pointer_cast<EUITable>(entitiesList->AddChild(EMakeRef<EUITable>()).lock());
+    fEntitiesTable.lock()->SetHeaderCells({
+        "ID",
+        "More Info"
+    });
+
+
+
+    AddChild(entitiesList);
 }
 
 bool EObjectView::OnRender() 
 {
-    ImGui::BeginChild("Entity Child", {100, 0});
-    for (ERegister::Entity entity : fEntities)
-    {
-        EString entityIdent = "Entity " + std::to_string(entity);
-        bool selected = fSelectedEntity == entity;
-        if (ImGui::Selectable(entityIdent.c_str(), &selected))
-        {
-            fSelectedEntity = fSelectedEntity == entity ? 0 : entity;
-            fSelectedComponents.clear();
-            if (fSelectedEntity)
-            {
-                fSelectedComponents = shared::GetAllComponents(fSelectedEntity);
-            }
-        }
-    }
-    fAddObjectButton->Render();
-    ImGui::EndChild();
-    ImGui::SameLine();
-    ImGui::BeginChild("ComponentChild");
-    if (fSelectedEntity)
-    {
-        {
-            std::lock_guard<std::mutex> lk(fChangeComponentsMtx);
-            //E_INFO("Rendering components: " + std::to_string(fSelectedComponents.size()));
-            for (ERef<EProperty> storage : fSelectedComponents)
-            {
-                RenderProperty(storage.get(), storage->GetPropertyName());
-            }
-        }
-
-        if (ImGui::Button("Add Component"))
-        {
-            ImGui::OpenPopup("add-component-popup");
-        }
-        if (ImGui::BeginPopup("add-component-popup"))
-        {
-            for (EValueDescription compDsc : shared::StaticSharedContext::instance().GetExtensionManager().GetTypeRegister().GetAllItems())
-            {
-                if (compDsc.GetType() != EValueType::STRUCT) { continue; }
-                bool hasComp = HasSelectedComponent(compDsc);
-                if (!hasComp)
-                {
-                    if (ImGui::Selectable(compDsc.GetId().c_str()))
-                    {
-                        shared::CreateComponent(compDsc, fSelectedEntity);
-                    }
-                }
-            }
-            ImGui::EndPopup();
-        }
-    }
-    ImGui::EndChild();
-
-
     return true;
 }
 
 void EObjectView::OnUpdateEventDispatcher()
 {
-    fAddObjectButton->UpdateEventDispatcher();
 }
 
 void EObjectView::RenderProperty(Engine::EProperty* storage, EString nameIdent) 
