@@ -103,6 +103,10 @@ namespace Engine {
             }
             return false;
         }
+
+        ESharedError E_INTER_API AddArrayEntry(ERegister::Entity entity, const EString& ident);
+
+
         // Getter
         
        E_INTER_API ERef<EProperty> GetValue(ERegister::Entity entity, const EString& vlaueIdent);

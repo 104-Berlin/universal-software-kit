@@ -65,6 +65,20 @@ void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString&
     SendToServer(packet);
 }
 
+void ERegisterConnection::Send_AddArrayEntry(ERegister::Entity entity, const EString& valueIdent) 
+{
+    EJson requestJson = EJson::object();
+    requestJson["Entity"] = entity;
+    requestJson["ValueIdent"] = valueIdent;
+
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::ADD_ARRAY_ENTRY;
+    packet.ID = GetNewPacketID();
+    packet.Body = requestJson;
+
+    SendToServer(packet);
+}
+
 ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, const EString& valueIdent) 
 {
     EJson request = EJson::object();

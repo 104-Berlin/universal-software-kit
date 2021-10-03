@@ -15,6 +15,7 @@ EUIField::EUIField(const EString& label)
         fID(next_ui_id()), 
         fVisible(true), 
         fDirty(false), 
+        fIsContextMenuOpen(false),
         fWidthOverride(0),
         fHeightOverride(0),
         fCalculatedSize(),
@@ -25,8 +26,19 @@ EUIField::EUIField(const EString& label)
 
 EWeakRef<EUIField> EUIField::AddChild(const ERef<EUIField>& child) 
 {
+    if (!child) { return ERef<EUIField>(nullptr); }
     fChildren.push_back(child);
     return fChildren.back();
+}
+
+EWeakRef<EUIField> EUIField::GetChildAt(u32 index) const
+{
+    if (index < fChildren.size())
+    {
+        return fChildren[index];
+    }
+    E_WARN("Could not get child of index " + std::to_string(index));
+    return ERef<EUIField>(nullptr);
 }
 
 void EUIField::RemoveChild(const EWeakRef<EUIField>& child) 
@@ -56,6 +68,7 @@ void EUIField::Render()
     if (fDirty && fCustomUpdateFunction)
     {
         fCustomUpdateFunction();
+        fDirty = false;
     }
     ImGui::PushID(fID);
     if (OnRender())
@@ -80,6 +93,17 @@ void EUIField::OnRenderEnd()
 {
     ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
     ImGuiWindow* window = g.CurrentWindow;
+
+    if (fContextMenu)
+    {
+        fIsContextMenuOpen = false;
+        if (ImGui::BeginPopupContextItem())
+        {
+            fIsContextMenuOpen = true;
+            fContextMenu->Render();
+            ImGui::EndPopup();
+        }
+    }
 
     ImRect itemRect = g.LastItemData.Rect;
     
@@ -199,6 +223,21 @@ float EUIField::GetHeight() const
     return fCalculatedSize.y;
 }
 
+void EUIField::SetContextMenu(const ERef<EUIField>& menu) 
+{
+    fContextMenu = menu;   
+}
+
+bool EUIField::IsContextMenuOpen() const
+{
+    return fIsContextMenuOpen;
+}
+
+void EUIField::SetDirty() 
+{
+    fDirty = true;
+}
+
 EUIPanel::EUIPanel(const EString& title) 
     : EUIField(title), fOpen(true)
 {
@@ -278,6 +317,18 @@ const Renderer::RCamera& EUIViewport::GetCamera() const
 Renderer::RCamera& EUIViewport::GetCamera() 
 {
     return fCamera;
+}
+
+EUISameLine::EUISameLine() 
+    : EUIField("OL")
+{
+    
+}
+
+bool EUISameLine::OnRender() 
+{
+    ImGui::SameLine();
+    return false;
 }
 
 bool EUIViewport::OnRender() 
@@ -595,6 +646,16 @@ bool EUISelectable::OnRender()
 void EUISelectable::SetStretchToAllColumns(bool stretch) 
 {
     fStretchToAllColumns = stretch;
+}
+
+void EUISelectable::SetSelected(bool selected) 
+{
+    fIsSelected = selected;
+}
+
+bool EUISelectable::IsSelected() const
+{
+    return fIsSelected;
 }
 
 EUITable::EUITable(const EString& name) 

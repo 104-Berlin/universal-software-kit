@@ -67,6 +67,11 @@ namespace events {
         bool fDirty;
 
         /**
+         * Is Context Menu open
+         */
+        bool fIsContextMenuOpen;
+
+        /**
          * Width of the field.
          * If 0 default size will be calculated.
          */
@@ -103,6 +108,11 @@ namespace events {
          * Last mouse pos to get mouse delta when moved
          */
         EVec2 fLastMousePos;
+
+        /**
+         * The Context Menu. Should be type of EUIMenu
+         */
+        ERef<EUIField>  fContextMenu;
     public:
         EUIField(const EString& label);
 
@@ -112,6 +122,13 @@ namespace events {
          * @return The added child
          */
         EWeakRef<EUIField> AddChild(const ERef<EUIField>& child);
+
+        /**
+         * @brief Get Child at sertain index
+         * @param index 
+         * @return The Found child. nullptr if not found
+         */
+        EWeakRef<EUIField> GetChildAt(u32 index) const;
 
         /**
          * Removes a child from the list
@@ -219,6 +236,22 @@ namespace events {
          */
         float GetHeight() const;
 
+        /**
+         * @brief Set the context menu. Use nullptr for no context menu on this field
+         * @param menu The Context menu. Should be type of EUIMenu
+         */
+        void SetContextMenu(const ERef<EUIField>& menu);
+
+        /**
+         * @brief Check if context menu is open
+         * @return Is Context Open
+         */
+        bool IsContextMenuOpen() const;
+
+        /**
+         * @brief Mark the Field dirty, so it will call CustomUpdateFunction on next render
+         */
+        void SetDirty();
 
         /**
          * Adds a listener to specified EventType
@@ -283,6 +316,14 @@ namespace events {
 
         const Renderer::RCamera& GetCamera() const;
         Renderer::RCamera& GetCamera();
+    };
+
+    class E_EDEXAPI EUISameLine : public EUIField
+    {
+    public:
+        EUISameLine();
+
+        virtual bool OnRender() override;
     };
 
 
@@ -485,6 +526,8 @@ namespace events
         virtual bool OnRender() override;
 
         void SetStretchToAllColumns(bool stretch);
+        void SetSelected(bool selected);
+        bool IsSelected() const;
     };
 
     class E_EDEXAPI EUITable : public EUIField

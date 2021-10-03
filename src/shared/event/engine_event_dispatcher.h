@@ -33,26 +33,29 @@ namespace Engine {
 
         template <typename Callback>
         auto Connect(const EValueDescription& dsc, Callback fn)
-        -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, void>
+        -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, EVector<CallbackFunction>::iterator>
         {
             std::lock_guard<std::mutex> lock(fEventMutex);
             fRegisteredCallbacks[dsc.GetId()].push_back([fn](EProperty*){fn();});
+            fRegisteredCallbacks[dsc.GetId()].back();
         }
 
         template <typename Callback>
         auto Connect(const EValueDescription& dsc, Callback fn)
-        -> std::enable_if_t<std::is_invocable<decltype(fn), EProperty*>::value, void>
+        -> std::enable_if_t<std::is_invocable<decltype(fn), EProperty*>::value, EVector<CallbackFunction>::iterator>
         {
             std::lock_guard<std::mutex> lock(fEventMutex);
             fRegisteredCallbacks[dsc.GetId()].push_back(fn);
+            fRegisteredCallbacks[dsc.GetId()].back();
         }
 
         template <typename Event, typename Callback>
         auto Connect(const EValueDescription& dsc, Callback fn)
-        -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
+        -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, EVector<CallbackFunction>::iterator>
         {
             std::lock_guard<std::mutex> lock(fEventMutex);
-            fRegisteredCallbacks[dsc.GetId()].push_back([fn](EProperty* property){
+            EValueDescription::t_ID valueId = getdsc::GetDescription<Event>().GetId();
+            fRegisteredCallbacks[valueId].push_back([fn](EProperty* property){
                 EStructProperty* structProp = static_cast<EStructProperty*>(property);
                 Event value;
                 if (structProp->GetValue<Event>(value))
@@ -60,15 +63,17 @@ namespace Engine {
                     fn(value);
                 }
             });
+            return fRegisteredCallbacks[valueId].back();
         }
 
 
         template <typename Event, typename Callback>
         auto Connect(Callback fn)
-        -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
+        -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, EVector<CallbackFunction>::iterator>
         {
             std::lock_guard<std::mutex> lock(fEventMutex);
-            fRegisteredCallbacks[Event::_dsc.GetId()].push_back([fn](EProperty* property){
+            EValueDescription::t_ID valueId = getdsc::GetDescription<Event>().GetId();
+            fRegisteredCallbacks[valueId].push_back([fn](EProperty* property){
                 EStructProperty* structProp = static_cast<EStructProperty*>(property);
                 Event value;
                 if (structProp->GetValue<Event>(value))
@@ -76,24 +81,28 @@ namespace Engine {
                     fn(value);
                 }
             });
+            fRegisteredCallbacks[valueId].back();
         }
 
         template <typename Event, typename Callback>
         auto Connect(Callback fn)
-        -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, void>
+        -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, EVector<CallbackFunction>::iterator>
         {
             std::lock_guard<std::mutex> lock(fEventMutex);
-            fRegisteredCallbacks[Event::_dsc.GetId()].push_back([fn](EProperty* property){
+            EValueDescription::t_ID valueId = getdsc::GetDescription<Event>().GetId();
+            fRegisteredCallbacks[valueId].push_back([fn](EProperty* property){
                 fn();
             });
+            return fRegisteredCallbacks[valueId].back();
         }
 
         template <typename Callback>
         auto ConnectAll(Callback fn)
-        -> std::enable_if_t<std::is_invocable<decltype(fn), EStructProperty*>::value, void>
+        -> std::enable_if_t<std::is_invocable<decltype(fn), EStructProperty*>::value, EVector<CallbackFunction>::iterator>
         {
             std::unique_lock<std::mutex> lock(fEventMutex);
             fCallAllways.push_back([fn](EProperty* prop){fn(static_cast<EStructProperty*>(prop)); });
+            return fCallAllways.back();
         }
 
         void Enqueue_P(EValueDescription dsc, EProperty* property);

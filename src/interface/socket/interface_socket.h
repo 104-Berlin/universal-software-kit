@@ -10,6 +10,7 @@ namespace Engine {
         ADD_RESOURCE = 2,
 
         SET_VALUE = 10,
+        ADD_ARRAY_ENTRY = 11,
 
         GET_VALUE = 20,
         GET_ALL_VALUES = 21,
@@ -28,6 +29,7 @@ namespace Engine {
             case EPacketType::CREATE_COMPONENT: return "CREATE_COMPONENT";
             case EPacketType::ADD_RESOURCE: return "ADD_RESOURCE";
             case EPacketType::SET_VALUE: return "SET_VALUE";
+            case EPacketType::ADD_ARRAY_ENTRY: return "ADD_ARRAY_ENTRY";
             case EPacketType::GET_VALUE: return "GET_VALUE";
             case EPacketType::GET_ALL_VALUES: return "GET_ALL_VALUES";
             case EPacketType::GET_RESOURCE: return "GET_RESOURCE";
