@@ -163,7 +163,7 @@ static ERef<TestUiField> testUiField = nullptr;
 APP_ENTRY
 {
     ERef<Engine::EUIPanel> uiPanel = EMakeRef<Engine::EUIPanel>("First panel");
-    viewport = std::dynamic_pointer_cast<Engine::EUIViewport>(uiPanel->AddChild(EMakeRef<Engine::EUIViewport>()));
+    viewport = std::dynamic_pointer_cast<Engine::EUIViewport>(uiPanel->AddChild(EMakeRef<Engine::EUIViewport>()).lock());
     mesh = new Renderer::RMesh();
     mesh->SetData(vertices, indices);
     viewport.lock()->GetScene().Add(mesh);

@@ -155,6 +155,11 @@ namespace events {
         void Render();
 
         /**
+         * @brief Handles the end of rendering
+         */
+        void HandleRenderEnd(); // We want a non virtual OnRenderEnd function
+
+        /**
          * Virtual function for custom rendering behaviour.
          * @return Wether the children of this field should be rendered or not
          */

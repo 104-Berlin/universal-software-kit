@@ -86,13 +86,18 @@ EObjectView::EObjectView()
 
 
     ERef<EUIContainer> componentsList = EMakeRef<EUIContainer>("Components");
-    componentsList->SetCustomUpdateFunction([this](){RegenComponentsView();});
-
     fComponentsView = componentsList;
+
+    componentsList->SetHeight(250);
+    componentsList->SetWidth(250);
+    //fComponentsView->SetCustomUpdateFunction([this](){RegenComponentsView();});
 
     AddChild(entitiesList);
     AddChild(EMakeRef<EUISameLine>());
     AddChild(componentsList);
+
+
+    RegenAddComponentMenu();
 }
 
 bool EObjectView::OnRender() 
@@ -273,4 +278,22 @@ void EObjectView::RegenComponentsView()
     {
         fComponentsView.lock()->AddChild(RenderProperty(component.get(), component->GetPropertyName()));
     }
+}
+
+void EObjectView::RegenAddComponentMenu() 
+{
+    ERef<EUIMenu> componentContextMenu = EMakeRef<EUIMenu>();
+    ERef<EUIMenu> addMenu = EMakeRef<EUIMenu>("Add Component");
+
+    EVector<EValueDescription> allComponents = shared::StaticSharedContext::instance().GetExtensionManager().GetTypeRegister().GetAllItems();
+    for (const EValueDescription& dsc : allComponents)
+    {
+        EWeakRef<EUIField> item = addMenu->AddChild(EMakeRef<EUIMenuItem>(dsc.GetId()));
+        item.lock()->AddEventListener<events::EButtonEvent>([this, dsc](){
+            shared::CreateComponent(dsc, fSelectedEntity);
+        });
+    }
+
+    componentContextMenu->AddChild(addMenu);
+    fComponentsView.lock()->SetContextMenu(componentContextMenu);
 }

@@ -37,6 +37,7 @@ namespace Editor {
         bool HasSelectedComponent(Engine::EValueDescription dsc);
 
         void RegenComponentsView();
+        void RegenAddComponentMenu();
     };
 
 }

@@ -80,6 +80,7 @@ void EUIField::Render()
             OnAfterChildRender();
         }
     }
+    HandleRenderEnd();
     OnRenderEnd();
     ImGui::PopID();
 }
@@ -89,15 +90,15 @@ bool EUIField::OnRender()
     return true;
 }
 
-void EUIField::OnRenderEnd() 
+void EUIField::HandleRenderEnd()
 {
     ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
     ImGuiWindow* window = g.CurrentWindow;
 
+    fIsContextMenuOpen = false;
     if (fContextMenu)
     {
-        fIsContextMenuOpen = false;
-        if (ImGui::BeginPopupContextItem())
+        if (ImGui::BeginPopupContextItem(GetLabel().c_str()))
         {
             fIsContextMenuOpen = true;
             fContextMenu->Render();
@@ -157,7 +158,11 @@ void EUIField::OnRenderEnd()
         {
             fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag2, 2});
         }
-    }
+    }    
+}
+
+void EUIField::OnRenderEnd() 
+{
     
 }
 
@@ -169,6 +174,11 @@ void EUIField::UpdateEventDispatcher()
     for (ERef<EUIField> child : fChildren)
     {
         child->UpdateEventDispatcher();
+    }
+
+    if (fIsContextMenuOpen)
+    {
+        fContextMenu->UpdateEventDispatcher();
     }
 }
 
