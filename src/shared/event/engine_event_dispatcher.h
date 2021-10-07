@@ -52,8 +52,7 @@ namespace Engine {
         -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
         {
             std::lock_guard<std::mutex> lock(fEventMutex);
-            EValueDescription::t_ID valueId = getdsc::GetDescription<Event>().GetId();
-            fRegisteredCallbacks[valueId].push_back([fn](EProperty* property){
+            fRegisteredCallbacks[dsc.GetId()].push_back([fn](EProperty* property){
                 EStructProperty* structProp = static_cast<EStructProperty*>(property);
                 Event value;
                 if (structProp->GetValue<Event>(value))
@@ -69,8 +68,7 @@ namespace Engine {
         -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
         {
             std::lock_guard<std::mutex> lock(fEventMutex);
-            EValueDescription::t_ID valueId = getdsc::GetDescription<Event>().GetId();
-            fRegisteredCallbacks[valueId].push_back([fn](EProperty* property){
+            fRegisteredCallbacks[Event::_dsc.GetId()].push_back([fn](EProperty* property){
                 EStructProperty* structProp = static_cast<EStructProperty*>(property);
                 Event value;
                 if (structProp->GetValue<Event>(value))
