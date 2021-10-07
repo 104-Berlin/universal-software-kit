@@ -80,8 +80,8 @@ void EUIField::Render()
             OnAfterChildRender();
         }
     }
-    HandleRenderEnd();
     OnRenderEnd();
+    HandleRenderEnd();
     ImGui::PopID();
 }
 
