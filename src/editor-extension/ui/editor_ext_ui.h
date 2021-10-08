@@ -398,6 +398,7 @@ namespace events
 
         virtual bool OnRender() override;
 
+        void SetValue(const EString& value);
         EString GetContent() const;
     };
 
@@ -412,6 +413,9 @@ namespace events
         EUIFloatEdit(const EString& label);
 
         virtual bool OnRender() override;
+
+        void SetValue(float value);
+        float GetValue() const;
     };
 
     class E_EDEXAPI EUIIntegerEdit : public EUIField
@@ -424,6 +428,9 @@ namespace events
         EUIIntegerEdit(const EString& label);
 
         virtual bool OnRender() override;
+
+        void SetValue(i32 value);
+        i32 GetValue() const;
     };
 
     class E_EDEXAPI EUICheckbox : public EUIField
@@ -434,6 +441,9 @@ namespace events
         EUICheckbox(const EString& label);
 
         virtual bool OnRender() override;
+
+        void SetValue(bool checked);
+        bool GetValue() const;
     };
 
 

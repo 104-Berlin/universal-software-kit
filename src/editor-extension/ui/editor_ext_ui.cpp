@@ -404,6 +404,11 @@ bool EUITextField::OnRender()
     return true;
 }
 
+void EUITextField::SetValue(const EString& value)
+{
+    fContent = value;
+}
+
 EString EUITextField::GetContent() const
 {
     return fContent;
@@ -429,6 +434,17 @@ bool EUIFloatEdit::OnRender()
     return true;
 }
 
+void EUIFloatEdit::SetValue(float value)
+{
+    fValue = value;
+}
+
+float EUIFloatEdit::GetValue() const
+{
+    return fValue;
+}
+
+
 EUIIntegerEdit::EUIIntegerEdit(const EString& label) 
     : EUIField(label), fValue(0), fMin(-10000), fMax(10000)
 {
@@ -448,6 +464,17 @@ bool EUIIntegerEdit::OnRender()
     return true;
 }
 
+void EUIIntegerEdit::SetValue(i32 value)
+{
+    fValue = value;
+}
+
+i32 EUIIntegerEdit::GetValue() const
+{
+    return fValue;
+}
+
+
 EUICheckbox::EUICheckbox(const EString& label) 
     : EUIField(label), fChecked(false)
 {
@@ -462,6 +489,17 @@ bool EUICheckbox::OnRender()
     }
     return true;
 }
+
+void EUICheckbox::SetValue(bool checked)
+{
+    fChecked = checked;
+}
+
+bool EUICheckbox::GetValue() const
+{
+    return fChecked;
+}
+
 
 // ----------------------------------------
 // Main Menu Bar

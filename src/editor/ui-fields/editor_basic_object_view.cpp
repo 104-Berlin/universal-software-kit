@@ -46,6 +46,7 @@ EObjectView::EObjectView()
             {
                 fSelectedComponents.push_back(newComponent);
             }
+            fComponentsView.lock()->SetDirty();
         }
     });
     shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<ValueChangeEvent>([this](ValueChangeEvent event){
@@ -90,7 +91,7 @@ EObjectView::EObjectView()
 
     componentsList->SetHeight(250);
     componentsList->SetWidth(250);
-    //fComponentsView->SetCustomUpdateFunction([this](){RegenComponentsView();});
+    fComponentsView.lock()->SetCustomUpdateFunction([this](){RegenComponentsView();});
 
     AddChild(entitiesList);
     AddChild(EMakeRef<EUISameLine>());
@@ -202,6 +203,7 @@ ERef<EUIField> EObjectView::RenderArray(Engine::EArrayProperty* storage, EString
 ERef<EUIField> EObjectView::RenderBool(Engine::EValueProperty<bool>* storage, EString nameIdent) 
 {
     ERef<EUICheckbox> result = EMakeRef<EUICheckbox>(storage->GetPropertyName().c_str());
+    result->SetValue(storage->GetValue());
 
     result->AddEventListener<events::ECheckboxEvent>([this, nameIdent](events::ECheckboxEvent event){
         shared::SetValue<bool>(fSelectedEntity, nameIdent, event.Checked);
@@ -212,6 +214,7 @@ ERef<EUIField> EObjectView::RenderBool(Engine::EValueProperty<bool>* storage, ES
 ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage, EString nameIdent) 
 {
     ERef<EUIIntegerEdit> result = EMakeRef<EUIIntegerEdit>(storage->GetPropertyName().c_str());
+    result->SetValue(storage->GetValue());
 
     result->AddEventListener<events::EIntegerCompleteEvent>([this, nameIdent](events::EIntegerCompleteEvent event){
         shared::SetValue<i32>(fSelectedEntity, nameIdent, event.Value);
@@ -222,6 +225,7 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage, 
 ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u32>* storage, EString nameIdent) 
 {
     ERef<EUIIntegerEdit> result = EMakeRef<EUIIntegerEdit>(storage->GetPropertyName().c_str());
+    result->SetValue(storage->GetValue());
 
     result->AddEventListener<events::EIntegerCompleteEvent>([this, nameIdent](events::EIntegerCompleteEvent event){
         shared::SetValue<i32>(fSelectedEntity, nameIdent, event.Value);
@@ -232,6 +236,7 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u32>* storage, 
 ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u64>* storage, EString nameIdent) 
 {
     ERef<EUIIntegerEdit> result = EMakeRef<EUIIntegerEdit>(storage->GetPropertyName().c_str());
+    result->SetValue(storage->GetValue());
 
     result->AddEventListener<events::EIntegerCompleteEvent>([this, nameIdent](events::EIntegerCompleteEvent event){
         shared::SetValue<i32>(fSelectedEntity, nameIdent, event.Value);
@@ -242,6 +247,7 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u64>* storage, 
 ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<double>* storage, EString nameIdent) 
 {
     ERef<EUIFloatEdit> result = EMakeRef<EUIFloatEdit>(storage->GetPropertyName().c_str());
+    result->SetValue(storage->GetValue());
 
     result->AddEventListener<events::EFloatCompleteEvent>([this, nameIdent](events::EFloatCompleteEvent event){
         shared::SetValue<float>(fSelectedEntity, nameIdent, event.Value);
@@ -252,6 +258,7 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<double>* storage
 ERef<EUIField> EObjectView::RenderString(Engine::EValueProperty<EString>* storage, EString nameIdent) 
 {
     ERef<EUITextField> result = EMakeRef<EUITextField>(storage->GetPropertyName().c_str());
+    result->SetValue(storage->GetValue());
 
     result->AddEventListener<events::ETextCompleteEvent>([this, nameIdent](events::ETextCompleteEvent event){
         shared::SetValue<EString>(fSelectedEntity, nameIdent, event.Value);
