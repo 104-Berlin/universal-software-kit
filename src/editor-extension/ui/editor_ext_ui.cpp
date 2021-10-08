@@ -79,7 +79,7 @@ void EUIField::OnRenderEnd()
     ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
     ImGuiWindow* window = g.CurrentWindow;
 
-    ImRect itemRect = window->DC.LastItemRect;
+    ImRect itemRect = g.LastItemData.Rect;
     
     fCalculatedSize.x = itemRect.GetWidth();
     fCalculatedSize.y = itemRect.GetHeight();
