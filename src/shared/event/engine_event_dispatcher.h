@@ -13,7 +13,7 @@ namespace Engine {
         using CallbackFunction = std::function<void(EProperty*)>;
     private:
         EVector<EventData> fPostedEvents;
-        EUnorderedMap<EValueDescription::t_ID, EVector<CallbackFunction>> fRegisteredCallbacks;
+        EUnorderedMap<void*, EUnorderedMap<EValueDescription::t_ID, EVector<CallbackFunction>>> fRegisteredCallbacks;
         EVector<CallbackFunction> fCallAllways;
 
         std::mutex  fEventMutex;
@@ -32,43 +32,27 @@ namespace Engine {
         }
 
         template <typename Callback>
-        auto Connect(const EValueDescription& dsc, Callback fn)
+        auto Connect(const EValueDescription& dsc, Callback fn, void* key = 0)
         -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, void>
         {
             std::lock_guard<std::mutex> lock(fEventMutex);
-            fRegisteredCallbacks[dsc.GetId()].push_back([fn](EProperty*){fn();});
+            fRegisteredCallbacks[key][dsc.GetId()].push_back([fn](EProperty*){fn();});
         }
 
         template <typename Callback>
-        auto Connect(const EValueDescription& dsc, Callback fn)
+        auto Connect(const EValueDescription& dsc, Callback fn, void* key = 0)
         -> std::enable_if_t<std::is_invocable<decltype(fn), EProperty*>::value, void>
         {
             std::lock_guard<std::mutex> lock(fEventMutex);
-            fRegisteredCallbacks[dsc.GetId()].push_back(fn);
+            fRegisteredCallbacks[key][dsc.GetId()].push_back(fn);
         }
 
         template <typename Event, typename Callback>
-        auto Connect(const EValueDescription& dsc, Callback fn)
+        auto Connect(Callback fn, void* key = 0)
         -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
         {
             std::lock_guard<std::mutex> lock(fEventMutex);
-            fRegisteredCallbacks[dsc.GetId()].push_back([fn](EProperty* property){
-                EStructProperty* structProp = static_cast<EStructProperty*>(property);
-                Event value;
-                if (structProp->GetValue<Event>(value))
-                {
-                    fn(value);
-                }
-            });
-        }
-
-
-        template <typename Event, typename Callback>
-        auto Connect(Callback fn)
-        -> std::enable_if_t<std::is_invocable<decltype(fn), Event>::value, void>
-        {
-            std::lock_guard<std::mutex> lock(fEventMutex);
-            fRegisteredCallbacks[Event::_dsc.GetId()].push_back([fn](EProperty* property){
+            fRegisteredCallbacks[key][Event::_dsc.GetId()].push_back([fn](EProperty* property){
                 EStructProperty* structProp = static_cast<EStructProperty*>(property);
                 Event value;
                 if (structProp->GetValue<Event>(value))
@@ -79,14 +63,19 @@ namespace Engine {
         }
 
         template <typename Event, typename Callback>
-        auto Connect(Callback fn)
+        auto Connect(Callback fn, void* key = 0)
         -> std::enable_if_t<std::is_invocable<decltype(fn)>::value, void>
         {
             std::lock_guard<std::mutex> lock(fEventMutex);
             EValueDescription::t_ID valueId = getdsc::GetDescription<Event>().GetId();
-            fRegisteredCallbacks[valueId].push_back([fn](EProperty* property){
+            fRegisteredCallbacks[key][valueId].push_back([fn](EProperty* property){
                 fn();
             });
+        }
+
+        void Disconnect(void* key)
+        {
+            fRegisteredCallbacks[key].clear();
         }
 
         template <typename Callback>

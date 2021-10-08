@@ -41,7 +41,7 @@ namespace events {
     /**
      * Most Basic UI Element
      */
-    class E_EDEXAPI EUIField
+    class E_EDEXAPI EUIField : public shared::EAutoContextEventRelease
     {
         using UpdateFunction = std::function<void()>;
     protected:

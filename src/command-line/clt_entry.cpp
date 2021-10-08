@@ -7,18 +7,6 @@ E_STORAGE_STRUCT(CommandType,
     (double, SomeDouble)
 )
 
-class TestClass
-{
-public:
-    void CallThis();
-};
-
-void TestClass::CallThis()
-{
-
-}
-
-
 int main(int argc, char** argv)
 {
     shared::StaticSharedContext::Start();
