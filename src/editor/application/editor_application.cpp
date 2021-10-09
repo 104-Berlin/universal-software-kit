@@ -1,5 +1,7 @@
 #include "editor.h"
 
+#include "editor_icons_material_design.h"
+
 using namespace Editor;
 using namespace Graphics;
 using namespace Engine;
@@ -168,15 +170,21 @@ void EApplication::Init(Graphics::GContext* context)
     fMainMenu = EMakeRef<EUIMainMenuBar>();
     RegisterDefaultPanels();
 
-    // Load the extensions
-
-
 
 
     RegenerateMainMenuBar();
 
     // For ImGui dll linkage
     Engine::intern::InitUI();
+
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->AddFontDefault();
+    
+    // merge in icons from Font Awesome
+    static const ImWchar icons_ranges[] = { ICON_MIN_MD, ICON_MAX_MD, 0 };
+    ImFontConfig icons_config; icons_config.MergeMode = true; icons_config.PixelSnapH = false; icons_config.GlyphOffset = {0.0f, 4.0f};
+    io.Fonts->AddFontFromFileTTF( FONT_ICON_FILE_NAME_MD, 16.0f, &icons_config, icons_ranges );
 }
 
 void EApplication::CleanUp() 
