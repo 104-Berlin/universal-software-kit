@@ -136,6 +136,9 @@ namespace Engine {
             fRegisterConnection.GetEventDispatcher().ConnectAll([this](EStructProperty* property){
                 fRegisterEventDispatcher.GetEventDispatcher().Post_P(property->GetDescription(), property);
             });
+            fExtensionManager.GetEventDispatcher().ConnectAll([this](EStructProperty* property){
+                fRegisterEventDispatcher.GetEventDispatcher().Post_P(property->GetDescription(), property);
+            });
 
 
             // For now we create local socket

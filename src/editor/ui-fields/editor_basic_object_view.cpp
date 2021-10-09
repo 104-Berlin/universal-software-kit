@@ -36,7 +36,7 @@ EObjectView::EObjectView()
             fEntitiesTable.lock()->AddChild(newRow);
             fEntityRows.insert({event.Handle, newRow});
         }
-    });
+    }, this);
     shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<ComponentCreateEvent>([this](ComponentCreateEvent event){
         if (event.Handle == fSelectedEntity)
         {
@@ -48,7 +48,7 @@ EObjectView::EObjectView()
             }
             fComponentsView.lock()->SetDirty();
         }
-    });
+    }, this);
     shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<ValueChangeEvent>([this](ValueChangeEvent event){
         if (event.Handle == fSelectedEntity)
         {
@@ -71,7 +71,10 @@ EObjectView::EObjectView()
                 }      
             }
         }
-    });
+    }, this);
+    shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent e){
+        RegenAddComponentMenu();
+    }, this);
 
     ERef<EUIContainer> entitiesList = EMakeRef<EUIContainer>("Entities");
     entitiesList->SetWidth(100);
@@ -290,7 +293,7 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<double>* storage
     shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener(nameIdent, [weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (weakResult.expired()) { return; }
         ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
-        weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<double>>(prop)->GetValue());
+        weakResult.lock()->SetValue((float)std::static_pointer_cast<EValueProperty<double>>(prop)->GetValue());
     }, result.get());
     return result;
 }

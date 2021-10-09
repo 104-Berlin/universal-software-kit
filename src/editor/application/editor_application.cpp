@@ -11,7 +11,7 @@ E_STORAGE_STRUCT(MySubType,
 
 E_STORAGE_STRUCT(MyType, 
     (int, SomeInteger),
-    (int, Other),
+    (double, Other),
     (EString, SomeString),
     (EVector<MySubType>, Working)
 )
@@ -19,7 +19,7 @@ E_STORAGE_STRUCT(MyType,
 EApplication::EApplication() 
     : fGraphicsContext(nullptr), fCommandLine()
 {
-    shared::StaticSharedContext::instance().GetExtensionManager().AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent event) {
+    shared::StaticSharedContext::instance().GetExtensionManager().AddEventListener<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent event) {
         EExtension* extension = shared::StaticSharedContext::instance().GetExtensionManager().GetExtension(event.Extension);
         auto entry = (void(*)(const char*, Engine::EAppInit))extension->GetFunction("app_entry");
         if (entry)
@@ -36,7 +36,7 @@ EApplication::EApplication()
         }
     });
 
-    shared::StaticSharedContext::instance().GetExtensionManager().AddEventListener<EExtensionUnloadEvent>([this](EExtensionUnloadEvent event){
+    shared::StaticSharedContext::instance().GetExtensionManager().AddEventListener<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
         for (ERef<EUIPanel> panel : fUIRegister.GetItems(event.ExtensionName))
         {
             panel->DisconnectAllEvents();
@@ -201,8 +201,6 @@ void EApplication::RenderImGui()
 
     fCommandLine.UpdateEventDispatcher();
     fCommandLine.Render();
-
-    ImGui::ShowDemoWindow();
 
     shared::StaticSharedContext::instance().GetRegisterConnection().GetEventDispatcher().Update();
 }

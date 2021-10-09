@@ -106,7 +106,7 @@ bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
     }
     fLoadedExtensions[newExtension->GetName()] = newExtension;
 
-    fEventDispatcher.Post<EExtensionLoadedEvent>({newExtension->GetName()});
+    fEventDispatcher.Post<events::EExtensionLoadedEvent>({newExtension->GetName()});
     return true;
 }
 
@@ -164,6 +164,16 @@ const EResourceRegister& EExtensionManager::GetResourceRegister() const
     return fResourceRegister;
 }
 
+EEventDispatcher& EExtensionManager::GetEventDispatcher()
+{
+    return fEventDispatcher;
+}
+
+const EEventDispatcher& EExtensionManager::GetEventDispatcher() const
+{
+    return fEventDispatcher;
+}
+
 void EExtensionManager::Reload() 
 {
     // Cache pointers to extension, because map will change with reload
@@ -211,7 +221,7 @@ void EExtensionManager::UnloadExtension(EExtension* extension)
 
     fTypeRegister.ClearRegisteredItems(extensionName);
     fResourceRegister.ClearRegisteredItems(extensionName);
-    fEventDispatcher.Post<EExtensionUnloadEvent>({extensionName, extensionPath});
+    fEventDispatcher.Post<events::EExtensionUnloadEvent>({extensionName, extensionPath});
 
     fLoadedExtensions.erase(extensionName);
     delete extension;
