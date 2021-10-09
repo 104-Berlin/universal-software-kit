@@ -9,4 +9,13 @@ EResourceView::EResourceView()
     shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<events::EResourceAddedEvent>([this](events::EResourceAddedEvent event){
         fResources.push_back({event.ResourceID, event.Name, event.PathToFile});
     });
+
+    EWeakRef<EUIField> resourceTypeContainer = AddChild(EMakeRef<EUIContainer>());
+    resourceTypeContainer.lock()->SetWidth(150);
+    
+    resourceTypeContainer.lock()->SetCustomUpdateFunction([resourceTypeContainer](){
+        if (resourceTypeContainer.expired()) { return; }
+        resourceTypeContainer.lock()->Clear();
+        
+    });
 }
