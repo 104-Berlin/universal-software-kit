@@ -64,27 +64,19 @@ void EApplication::RegenerateMainMenuBar()
 
     ERef<EUIMenu> fileMenu = EMakeRef<EUIMenu>("File");
     EWeakRef<EUIField> saveScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Save"));
-    saveScene.lock()->AddEventListener<events::EButtonEvent>([this](){
+    saveScene.lock()->AddEventListener<events::EButtonEvent>([](){
         EString saveToPath = Wrapper::SaveFileDialog("Save To", {"esc"});
         if (!saveToPath.empty())
         {
-            EFile file(saveToPath);
-            file.SetFileBuffer(shared::GetRegisterAsBuffer());
-            file.SaveBufferToDisk();
+            SaveRegisterToFile(saveToPath);
         }
     });
     EWeakRef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open..."));
-    openScene.lock()->AddEventListener<events::EButtonEvent>([this](){
+    openScene.lock()->AddEventListener<events::EButtonEvent>([](){
         EVector<EString> openScene = Wrapper::OpenFileDialog("Open", {"esc"});
         if (openScene.size() > 0)
         {
-            EFile sceneFile(openScene[0]);
-            sceneFile.LoadToMemory();
-            if (!sceneFile.GetBuffer().IsNull())
-            {
-                shared::StaticSharedContext::instance().GetExtensionManager().Reload();
-                shared::LoadRegisterFromBuffer(sceneFile.GetBuffer());
-            }
+            LoadRegisterFromFile(openScene[0]);
         }
     });
     EWeakRef<EUIField> importResource = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Import..."));
@@ -165,6 +157,63 @@ void EApplication::RegenerateMainMenuBar()
     fMainMenu->AddChild(modal);
 }
 
+bool EApplication::LoadRegisterFromFile(const EString& path) 
+{
+    EFile sceneFile(path);
+    if (!sceneFile.Exist()) { return false; }
+    
+    sceneFile.LoadToMemory();
+    if (sceneFile.GetBuffer().IsNull()) { return false; }
+
+    EFileCollection collection;
+    collection.SetFromCompleteBuffer(sceneFile.GetBuffer());
+
+
+    shared::StaticSharedContext::instance().GetExtensionManager().UnloadAll();
+    bool foundRegister = false;
+    for (auto& entry : collection)
+    {
+        if (entry.first == "Register.esc") { foundRegister = true; continue; }
+        EFile saveExtension(entry.first);
+        saveExtension.SetFileBuffer(entry.second);
+        saveExtension.SaveBufferToDisk();
+        shared::StaticSharedContext::instance().GetExtensionManager().LoadExtension(saveExtension.GetFullPath());
+    }
+
+    if (!foundRegister) { return false; }
+    ESharedBuffer registerBuffer;
+    if (collection.GetFileAt("Register.esc", &registerBuffer))
+    {
+        shared::LoadRegisterFromBuffer(registerBuffer);
+        return true;
+    }
+    return false;
+}
+
+bool EApplication::SaveRegisterToFile(const EString& path) 
+{
+    EFile file(path);
+
+    
+    EFileCollection fileCollection;
+    fileCollection.AddFile("Register.esc", shared::GetRegisterAsBuffer());
+
+    for (EExtension* extension : shared::StaticSharedContext::instance().GetExtensionManager().GetLoadedExtensions())
+    {
+        EFile extensionFile(extension->GetFilePath());
+        if (extensionFile.Exist())
+        {
+            extensionFile.LoadToMemory();
+            fileCollection.AddFile(extension->GetName() + ".uex", extensionFile.GetBuffer());
+        }
+    }
+
+
+    file.SetFileBuffer(fileCollection.GetCompleteBuffer());
+    file.SaveBufferToDisk();
+    return true;
+}
+
 void EApplication::Init(Graphics::GContext* context) 
 {
     fGraphicsContext = context;
@@ -193,12 +242,7 @@ void EApplication::Init(Graphics::GContext* context)
 
     if (!fLoadOnStartRegister.empty())
     {
-        EFile registerFile(fLoadOnStartRegister);
-        if (registerFile.Exist())
-        {
-            registerFile.LoadToMemory();
-            shared::LoadRegisterFromBuffer(registerFile.GetBuffer());
-        }
+        LoadRegisterFromFile(fLoadOnStartRegister);
     }
 }
 

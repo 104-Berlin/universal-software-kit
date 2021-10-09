@@ -191,6 +191,15 @@ void EExtensionManager::Reload()
     }
 }
 
+void EExtensionManager::UnloadAll()
+{
+    EVector<EExtension*> allExtensions = GetLoadedExtensions();
+    for (EExtension* ext : allExtensions)
+    {
+        UnloadExtension(ext);
+    }
+}
+
 void EExtensionManager::ReloadExtension(const EString& extensionName) 
 {
     EExtension* toReload = GetExtension(extensionName);

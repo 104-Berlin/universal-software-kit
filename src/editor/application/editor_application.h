@@ -17,6 +17,9 @@ namespace Editor {
 
         void Start(const EString& defaultRegisterPath = "");
         void RegenerateMainMenuBar();
+
+        static bool LoadRegisterFromFile(const EString& path);
+        static bool SaveRegisterToFile(const EString& path);
     private:
         void Init(Graphics::GContext* context);
         void CleanUp();

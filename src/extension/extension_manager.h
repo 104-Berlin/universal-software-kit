@@ -94,6 +94,7 @@ namespace events {
         void ReloadExtension(const EString& extensionName);
         void ReloadExtension(EExtension* extension);
 
+        void UnloadAll();
         void UnloadExtension(EExtension* extension);
 
         template <typename EventType, typename CB>
