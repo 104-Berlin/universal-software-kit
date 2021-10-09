@@ -11,10 +11,6 @@ namespace Editor {
         EUnorderedMap<Engine::ERegister::Entity, EWeakRef<Engine::EUITableRow>> fEntityRows;
     public:
         EObjectView();
-
-        virtual bool OnRender() override;
-
-        virtual void OnUpdateEventDispatcher() override;
     private:
         ERef<EUIField> RenderProperty(Engine::EProperty* storage, EString nameIdent);
 

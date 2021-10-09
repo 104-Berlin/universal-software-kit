@@ -75,15 +75,6 @@ EObjectView::EObjectView()
     RegenAddComponentMenu();
 }
 
-bool EObjectView::OnRender() 
-{
-    return true;
-}
-
-void EObjectView::OnUpdateEventDispatcher()
-{
-}
-
 ERef<EUIField> EObjectView::RenderProperty(Engine::EProperty* storage, EString nameIdent) 
 {
     EValueDescription propertyDsc = storage->GetDescription();

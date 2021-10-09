@@ -17,21 +17,5 @@ EResourceView::EResourceView()
 
 bool EResourceView::OnRender() 
 {
-    ImGui::BeginChild("Resources", {150, 0});
-    for (Resource& data : fResources)
-    {
-        if (ImGui::Selectable(data.Name.c_str()))
-        {
-            selectedResource = selectedResource == data.ID ? 0 : data.ID;
-        }
-    }
-    ImGui::EndChild();
-    ImGui::SameLine();
-    ImGui::BeginChild("ResourceDetail");
-    if (selectedResource)
-    {
-        ImGui::LabelText("ID: ", "%llu", selectedResource);
-    }
-    ImGui::EndChild();
     return true;
 }
