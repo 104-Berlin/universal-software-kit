@@ -32,12 +32,20 @@ shared::ESharedError shared::LoadExtension(const EString& pathToExtension)
 shared::ESharedError shared::CreateEntity() 
 {
     StaticSharedContext::instance().GetRegisterConnection().Send_CreateNewEntity();
-    /*StaticSharedContext::instance().RunInMainThread([](){
-        ERegister::Entity ent = ACTIVE_SCENE->CreateEntity();
-        E_INFO("Created entity " + std::to_string(ent));
-    });*/
     return false;
 }
+
+shared::ESharedError shared::LoadRegisterFromBuffer(ESharedBuffer buffer)
+{
+    if (buffer.IsNull())
+    {
+        E_ERROR("Cant load register from empty buffer!");
+        return true;
+    }
+    StaticSharedContext::instance().GetRegisterConnection().Send_LoadRegister(buffer);
+    return false;
+}
+
 
 shared::ESharedError shared::CreateComponent(const EString& componentId, ERegister::Entity entity) 
 {
@@ -102,6 +110,12 @@ EVector<ERef<EResourceData>> shared::GetLoadedResource()
 {
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllResources();
 }
+
+ESharedBuffer shared::GetRegisterAsBuffer()
+{
+    return StaticSharedContext::instance().GetRegisterConnection().Send_GetRegisterBuffer();
+}
+
 
 namespace Engine {
     

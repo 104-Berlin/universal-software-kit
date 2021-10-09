@@ -66,11 +66,13 @@ namespace Engine {
         EJson Pk_HandleCreateComponent(const ERegisterPacket& packet);
         EJson Pk_HandleAddResource(const ERegisterPacket& packet);
         EJson Pk_HandleSetValue(const ERegisterPacket& packet);
+        EJson Pk_HandleLoadRegister(const ERegisterPacket& packet);
         EJson Pk_HandleAddArrayEntry(const ERegisterPacket& packet);
         EJson Pk_HandleGetValue(const ERegisterPacket& packet);
         EJson Pk_HandleGetAllValues(const ERegisterPacket& packet);
         EJson Pk_HandleGetResource(const ERegisterPacket& packet);
         EJson Pk_HandleGetLoadedResources(const ERegisterPacket& packet); // This just returns the descriptions of the resources. Not the actual data
+        EJson Pk_HandleGetRegisterBuffer(const ERegisterPacket& packet);
     };
 
 }

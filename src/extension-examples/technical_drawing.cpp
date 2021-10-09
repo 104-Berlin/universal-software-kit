@@ -17,11 +17,15 @@ EVector<u32> planeIndices = {
 
 static EUnorderedMap<ERegister::Entity, RMesh*> meshes;
 
-static EValueDescription TechnicalMeshDsc = EValueDescription::CreateStruct("TechnicalDrawing", {{"Positions", EVec3_dsc.GetAsArray()}});
+E_STORAGE_STRUCT(Plane,
+    (EVec3, Position),
+    (EVec3, Rotation),
+    (EVec3, Scale)
+)
 
-static EValueDescription PlaneDescription = EValueDescription::CreateStruct("Plane", {{"Position", EVec3_dsc},
-                                                                                      {"Rotation", EVec3_dsc},
-                                                                                      {"Scale", EVec3_dsc}});
+E_STORAGE_STRUCT(TechnicalMesh,
+    (EVector<EVec3>, Positions)
+)
 
 struct ExtensionData
 {
@@ -76,7 +80,7 @@ APP_ENTRY
         {
             graphicsMesh->SetPosition(posVector);
         }
-    });
+    }, drawingViewport.lock().get());
     shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener("Plane.Rotation", [](ERegister::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity];
         if (!graphicsMesh) { return; }
@@ -86,7 +90,7 @@ APP_ENTRY
         {
             graphicsMesh->SetRotation(glm::vec3{glm::radians(posVector.x), glm::radians(posVector.y), glm::radians(posVector.z)});
         }
-    });
+    }, drawingViewport.lock().get());
     shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener("Plane.Scale", [](ERegister::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity];
         if (!graphicsMesh) { return; }
@@ -96,24 +100,22 @@ APP_ENTRY
         {
             graphicsMesh->SetScale(posVector);
         }
-    });
+    }, drawingViewport.lock().get());
 
-    shared::StaticSharedContext::instance().Events().AddComponentCreateEventListener(PlaneDescription, [drawingViewport](ERegister::Entity entity){
+    shared::StaticSharedContext::instance().Events().AddComponentCreateEventListener(Plane::_dsc, [drawingViewport](ERegister::Entity entity){
         // Create mesh in 3D Scene
-        ERef<EStructProperty> mesh = std::dynamic_pointer_cast<EStructProperty>(shared::GetValue(entity, PlaneDescription.GetId()));
-        if (!mesh) { return; }
         if (drawingViewport.expired()) { return; }
+        Plane mesh = shared::GetValue<Plane>(entity);
         RMesh* gMesh = new RMesh();
         meshes[entity] = gMesh;
         gMesh->SetData(planeVertices, planeIndices);
         drawingViewport.lock()->GetScene().Add(gMesh);
-        EProperty* pos = mesh->GetProperty("Position");
-        EProperty* rot = mesh->GetProperty("Rotation");
-        EProperty* sca = mesh->GetProperty("Scale");
 
-        
-        shared::SetValue<EVec3>(entity, "Plane.Scale", {1.0f, 1.0f, 1.0f});
-    });
+        if (mesh.Scale.length() == 0)
+        {
+            shared::SetValue<EVec3>(entity, "Plane.Scale", {1.0f, 1.0f, 1.0f});
+        }
+    }, drawingViewport.lock().get());
 
 
 
@@ -123,6 +125,6 @@ APP_ENTRY
 
 EXT_ENTRY
 {
-    info.GetTypeRegister().RegisterItem(extensionName, TechnicalMeshDsc);
-    info.GetTypeRegister().RegisterItem(extensionName, PlaneDescription);
+    info.GetTypeRegister().RegisterItem(extensionName, TechnicalMesh::_dsc);
+    info.GetTypeRegister().RegisterItem(extensionName, Plane::_dsc);
 }

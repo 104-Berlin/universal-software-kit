@@ -95,6 +95,8 @@ namespace Engine {
         ESharedError E_INTER_API LoadExtension(const EString& pathToExtension);
         ESharedError E_INTER_API CreateEntity();
 
+        ESharedError E_INTER_API LoadRegisterFromBuffer(ESharedBuffer buffer);
+        
         ESharedError E_INTER_API CreateComponent(const EString& componentId, ERegister::Entity entity);
         ESharedError E_INTER_API CreateComponent(const EValueDescription& componentId, ERegister::Entity entity);
         ESharedError E_INTER_API CreateResource(EResourceData* data);
@@ -141,6 +143,7 @@ namespace Engine {
        E_INTER_API EVector<ERef<EProperty>> GetAllComponents(ERegister::Entity entity);
        E_INTER_API ERef<EResourceData> GetResource(EResourceData::t_ID id);
        E_INTER_API EVector<ERef<EResourceData>> GetLoadedResource(); // This wont return the data of the resource. Fetch them manuel
+       E_INTER_API ESharedBuffer GetRegisterAsBuffer();
     }
 
 }
