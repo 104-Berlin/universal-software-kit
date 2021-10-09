@@ -77,7 +77,7 @@ EObjectView::EObjectView()
     }, this);
 
     ERef<EUIContainer> entitiesList = EMakeRef<EUIContainer>("Entities");
-    entitiesList->SetWidth(100);
+    entitiesList->SetWidth(200);
     EWeakRef<EUIField> addObjectButton = entitiesList->AddChild(EMakeRef<EUIButton>("Add Object"));
     addObjectButton.lock()->AddEventListener<events::EButtonEvent>(&shared::CreateEntity);
 
@@ -92,8 +92,6 @@ EObjectView::EObjectView()
     ERef<EUIContainer> componentsList = EMakeRef<EUIContainer>("Components");
     fComponentsView = componentsList;
 
-    componentsList->SetHeight(250);
-    componentsList->SetWidth(250);
     fComponentsView.lock()->SetCustomUpdateFunction([this](){RegenComponentsView();});
 
     AddChild(entitiesList);
@@ -188,19 +186,37 @@ ERef<EUIField> EObjectView::RenderEnum(Engine::EEnumProperty* storage, EString n
 
 ERef<EUIField> EObjectView::RenderArray(Engine::EArrayProperty* storage, EString nameIdent) 
 {
-    EVector<EProperty*> elements = storage->GetElements();
     ERef<EUIField> field = EMakeRef<EUIField>("Some Label");
-    
-    for (size_t i = 0; i < elements.size(); i++)
-    {
-        EProperty* element = elements[i];
-        field->AddChild(RenderProperty(element, nameIdent + "." + std::to_string(i)));
-    }
+    EWeakRef<EUIField> weakRef = field;
 
-    EWeakRef<EUIField> addElemButton = field->AddChild(EMakeRef<EUIButton>("Add Element"));
-    addElemButton.lock()->AddEventListener<events::EButtonEvent>([this, nameIdent](){
-        shared::AddArrayEntry(fSelectedEntity, nameIdent);
+    field->SetDirty();
+    field->SetCustomUpdateFunction([this, weakRef, nameIdent](){
+        ERef<EProperty> foundProp = shared::GetValue(fSelectedEntity, nameIdent);
+        if (foundProp->GetDescription().GetType() != EValueType::ARRAY) { return; }
+        weakRef.lock()->Clear();
+
+        
+        Engine::EArrayProperty* storage = (EArrayProperty*)foundProp.get();
+        EVector<EProperty*> elements = storage->GetElements();
+
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+            EProperty* element = elements[i];
+            weakRef.lock()->AddChild(RenderProperty(element, nameIdent + "." + std::to_string(i)));
+        }
+
+        EWeakRef<EUIField> addElemButton = weakRef.lock()->AddChild(EMakeRef<EUIButton>("Add Element"));
+        addElemButton.lock()->AddEventListener<events::EButtonEvent>([this, nameIdent](){
+            shared::AddArrayEntry(fSelectedEntity, nameIdent);
+        });
     });
+
+
+
+    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener(nameIdent, [weakRef](ERegister::Entity entity, const EString& valueIdent){
+        if (weakRef.expired()) { return;}
+        weakRef.lock()->SetDirty();
+    }, field.get());
     return field;
 }
 
@@ -366,7 +382,7 @@ void EObjectView::RegenComponentsView()
 
 void EObjectView::RegenAddComponentMenu() 
 {
-    ERef<EUIMenu> componentContextMenu = EMakeRef<EUIMenu>();
+    ERef<EUIField> componentContextMenu = EMakeRef<EUIField>("Context Menu");
     ERef<EUIMenu> addMenu = EMakeRef<EUIMenu>("Add Component");
 
     EVector<EValueDescription> allComponents = shared::StaticSharedContext::instance().GetExtensionManager().GetTypeRegister().GetAllItems();
