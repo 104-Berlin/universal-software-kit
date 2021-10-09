@@ -19,7 +19,7 @@ E_STORAGE_STRUCT(MyType,
 )
 
 EApplication::EApplication() 
-    : fGraphicsContext(nullptr), fCommandLine()
+    : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
 {
     shared::StaticSharedContext::instance().GetExtensionManager().AddEventListener<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent event) {
         EExtension* extension = shared::StaticSharedContext::instance().GetExtensionManager().GetExtension(event.Extension);
@@ -52,8 +52,9 @@ EApplication::EApplication()
     shared::StaticSharedContext::instance().GetExtensionManager().GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
 }
 
-void EApplication::Start() 
+void EApplication::Start(const EString& defaultRegisterPath) 
 {
+    fLoadOnStartRegister = defaultRegisterPath;
     Wrapper::RunApplicationLoop(std::bind(&EApplication::Init, this, std::placeholders::_1), std::bind(&EApplication::Render, this), std::bind(&EApplication::RenderImGui, this), std::bind(&EApplication::CleanUp, this), &Wrapper::SetImGuiContext);
 }
 
@@ -68,8 +69,8 @@ void EApplication::RegenerateMainMenuBar()
         if (!saveToPath.empty())
         {
             EFile file(saveToPath);
-            //file.SetFileBuffer(ESerializer::WriteFullSceneBuffer(EExtensionManager::instance().GetActiveScene()));
-            //file.SaveBufferToDisk();
+            file.SetFileBuffer(shared::GetRegisterAsBuffer());
+            file.SaveBufferToDisk();
         }
     });
     EWeakRef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open..."));
@@ -82,7 +83,7 @@ void EApplication::RegenerateMainMenuBar()
             if (!sceneFile.GetBuffer().IsNull())
             {
                 shared::StaticSharedContext::instance().GetExtensionManager().Reload();
-                ///EDeserializer::ReadSceneFromFileBuffer(sceneFile.GetBuffer(), EExtensionManager::instance().GetActiveScene(), EExtensionManager::instance().GetTypeRegister().GetAllItems());
+                shared::LoadRegisterFromBuffer(sceneFile.GetBuffer());
             }
         }
     });
@@ -181,10 +182,24 @@ void EApplication::Init(Graphics::GContext* context)
     ImGuiIO& io = ImGui::GetIO();
     io.Fonts->AddFontDefault();
     
-    // merge in icons from Font Awesome
-    static const ImWchar icons_ranges[] = { ICON_MIN_MD, ICON_MAX_MD, 0 };
-    ImFontConfig icons_config; icons_config.MergeMode = true; icons_config.PixelSnapH = false; icons_config.GlyphOffset = {0.0f, 4.0f};
-    io.Fonts->AddFontFromFileTTF( FONT_ICON_FILE_NAME_MD, 16.0f, &icons_config, icons_ranges );
+    EFile fontFile(FONT_ICON_FILE_NAME_MD);
+    if (fontFile.Exist())
+    {
+        // merge in icons from Font Awesome
+        static const ImWchar icons_ranges[] = { ICON_MIN_MD, ICON_MAX_MD, 0 };
+        ImFontConfig icons_config; icons_config.MergeMode = true; icons_config.PixelSnapH = false; icons_config.GlyphOffset = {0.0f, 4.0f};
+        io.Fonts->AddFontFromFileTTF( FONT_ICON_FILE_NAME_MD, 16.0f, &icons_config, icons_ranges );
+    }
+
+    if (!fLoadOnStartRegister.empty())
+    {
+        EFile registerFile(fLoadOnStartRegister);
+        if (registerFile.Exist())
+        {
+            registerFile.LoadToMemory();
+            shared::LoadRegisterFromBuffer(registerFile.GetBuffer());
+        }
+    }
 }
 
 void EApplication::CleanUp() 

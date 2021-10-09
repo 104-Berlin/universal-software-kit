@@ -50,6 +50,20 @@ void ERegisterConnection::Send_AddResource(EResourceData* data)
     SendToServer(packet);
 }
 
+void ERegisterConnection::Send_LoadRegister(ESharedBuffer buffer) 
+{
+    if (buffer.IsNull()) { return; }
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::LOAD_REGISTER;
+    packet.ID = GetNewPacketID();
+    
+    EJson body = EJson::object();
+    body["Data"] = Base64::Encode(buffer.Data<u8>(), buffer.GetSizeInByte());
+    packet.Body = body;
+
+    SendToServer(packet);
+}
+
 void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString) 
 {
     EJson requestJson = EJson::object();
@@ -186,6 +200,30 @@ EVector<ERef<EResourceData>> ERegisterConnection::Send_GetAllResources()
         }
     }
 
+    return result;
+}
+
+ESharedBuffer ERegisterConnection::Send_GetRegisterBuffer() 
+{
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::GET_REGISTER_BUFFER;
+    packet.ID = GetNewPacketID();
+
+    SendToServer(packet);
+    EJson res = WaitForRequest(packet.ID);
+
+    ESharedBuffer result;
+    if (res["Data"].is_string())
+    {
+        u8* data;
+        size_t dataLen;
+        EString base64 = res["Data"].get<EString>();
+        if (Base64::Decode(base64, &data, &dataLen))
+        {
+            result.InitWith<u8>(data, dataLen);
+            delete[] data;
+        }
+    }
     return result;
 }
 

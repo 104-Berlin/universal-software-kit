@@ -59,7 +59,7 @@ public:
             newImageView->SetSize(250, 250);
             fImageViews[handle] = newImageView;
             AddChild(newImageView);
-        });
+        }, this);
 
         shared::StaticSharedContext::instance().Events().AddComponentDeleteEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
             EUnorderedMap<ERegister::Entity, EWeakRef<EUIImageView>>::iterator it = fImageViews.find(handle);
@@ -68,7 +68,7 @@ public:
                 RemoveChild(it->second);
                 fImageViews.erase(it);
             }
-        });
+        }, this);
 
         shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener("ImageLayer.resourceLink", [this](ERegister::Entity handle, const EString&){
             ImageLayer imageLayer = shared::GetValue<ImageLayer>(handle);
@@ -82,7 +82,7 @@ public:
                     fImageViews[handle].lock()->SetTextureData(data->Data, userData->width, userData->height);
                 }
             }
-        });
+        }, this);
     }
 };
 

@@ -48,6 +48,7 @@ EJson WriteStructToJs(EStructProperty* property);
 
 EJson ESerializer::WriteSceneToJson(ERegister* scene) 
 {
+    EUnorderedMap<EValueDescription::t_ID, EValueDescription> valueTypes;
     EJson result = EJson::object();
 
     EJson entityArray = EJson::array();
@@ -56,11 +57,25 @@ EJson ESerializer::WriteSceneToJson(ERegister* scene)
         EJson entityObject = EJson::object();
         for (EStructProperty* component : scene->GetAllComponents(entity))
         {
+            EValueDescription dsc = component->GetDescription();
+            if (valueTypes.find(dsc.GetId()) == valueTypes.end())
+            {
+                valueTypes[dsc.GetId()] = dsc;
+            }
             entityObject[component->GetPropertyName()] = WriteStructToJs(component);
         }
         entityArray.push_back(entityObject);
     }
     result["Objects"] = entityArray;
+
+
+    EJson valueTypeArray = EJson::array();
+    for (auto& entry : valueTypes)
+    {
+        valueTypeArray.push_back(WriteStorageDescriptionToJson(entry.second));
+    }
+
+    result["ValueTypes"] = valueTypeArray;
 
     return result;
 }

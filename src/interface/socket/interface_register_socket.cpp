@@ -229,6 +229,11 @@ void ERegisterSocket::ConnectionGotPacket(Connection* connection, const ERegiste
         responseJson = Pk_HandleCreateComponent(packet);
         break;
     }
+    case EPacketType::LOAD_REGISTER:
+    {
+        responseJson = Pk_HandleLoadRegister(packet);
+        break;
+    }
     case EPacketType::ADD_RESOURCE:
     {
         responseJson = Pk_HandleAddResource(packet);
@@ -264,6 +269,11 @@ void ERegisterSocket::ConnectionGotPacket(Connection* connection, const ERegiste
         responseJson = Pk_HandleGetLoadedResources(packet);
         break;
     }
+    case EPacketType::GET_REGISTER_BUFFER:
+    {
+        responseJson = Pk_HandleGetRegisterBuffer(packet);
+        break;
+    }
     case EPacketType::REGISTER_EVENT: break;
     }
 
@@ -279,7 +289,7 @@ void ERegisterSocket::HandleRegisterEvent(EStructProperty* data)
 {
     ERegisterPacket packet;
     packet.PacketType = EPacketType::REGISTER_EVENT;
-    packet.ID = 1;
+    packet.ID = 0;
     
     packet.Body["ValueDescription"] = ESerializer::WriteStorageDescriptionToJson(data->GetDescription());
     packet.Body["Value"] = ESerializer::WritePropertyToJs(data);
@@ -396,6 +406,25 @@ EJson ERegisterSocket::Pk_HandleGetValue(const ERegisterPacket& packet)
     return result;
 }
 
+EJson ERegisterSocket::Pk_HandleLoadRegister(const ERegisterPacket& packet) 
+{
+    if (packet.Body["Data"].is_string())
+    {
+        EString base64 = packet.Body["Data"].get<EString>();
+        u8* bufferData;
+        size_t bufferLen;
+        if (Base64::Decode(base64, &bufferData, &bufferLen))
+        {
+            ESharedBuffer buffer;
+            buffer.InitWith<u8>(bufferData, bufferLen);
+            EDeserializer::ReadSceneFromFileBuffer(buffer, fLoadedRegister);
+            delete[] bufferData;
+        }
+    }
+    return EJson::object();
+}
+
+
 EJson ERegisterSocket::Pk_HandleGetAllValues(const ERegisterPacket& packet) 
 {
     EJson result = EJson::object();
@@ -437,6 +466,20 @@ EJson ERegisterSocket::Pk_HandleGetLoadedResources(const ERegisterPacket& packet
     for (EResourceData* data : fLoadedRegister->GetResourceManager().GetAllResource())
     {
         result.push_back(ESerializer::WriteResourceDataToJson(*data, false));
+    }
+
+    return result;
+}
+
+
+EJson ERegisterSocket::Pk_HandleGetRegisterBuffer(const ERegisterPacket& packet)
+{
+    EJson result = EJson::object();
+
+    ESharedBuffer buffer = ESerializer::WriteFullSceneBuffer(fLoadedRegister);
+    if (!buffer.IsNull())
+    {
+        result["Data"] = Base64::Encode(buffer.Data<u8>(), buffer.GetSizeInByte());
     }
 
     return result;

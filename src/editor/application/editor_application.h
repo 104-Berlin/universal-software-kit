@@ -11,10 +11,11 @@ namespace Editor {
 
         Engine::EUIRegister         fUIRegister;
         ECommandLine                fCommandLine;
+        EString                     fLoadOnStartRegister;
     public:
         EApplication();
 
-        void Start();
+        void Start(const EString& defaultRegisterPath = "");
         void RegenerateMainMenuBar();
     private:
         void Init(Graphics::GContext* context);

@@ -57,20 +57,23 @@ bool EDeserializer::ReadStorageDescriptionFromJson(const EJson& json, EValueDesc
     return true;
 }
 
-bool EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes) 
+bool EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene) 
 {
-    auto findType = [&registeredTypes](const EString& id) -> EValueDescription {
-        for (EValueDescription dsc : registeredTypes)
-        {
-            if (dsc.GetId() == id)
-            {
-                return dsc;
-            }
-        }
-        return EValueDescription();
-    };
-
     saveToScene->Clear();
+    if (!json["ValueTypes"].is_array()) { E_ERROR("Reading Register from json. No found storage types!"); return false; }
+
+    EUnorderedMap<EValueDescription::t_ID, EValueDescription> registeredTypes;
+    for (auto& entry : json["ValueTypes"])
+    {
+        EValueDescription dsc;
+        if (!ReadStorageDescriptionFromJson(entry, &dsc))
+        {
+            E_ERROR("Reading scene. Json has wrong format!");
+            return false;
+        }
+        registeredTypes[dsc.GetId()] = dsc;
+    }
+
     
     if (!json["Objects"].is_null())
     {
@@ -80,7 +83,7 @@ bool EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene,
             for (const auto& it : entityObject.items())
             {
                 EString id = it.key();
-                EValueDescription description = findType(id);
+                EValueDescription description = registeredTypes[id];
                 if (description.Valid())
                 {
                     saveToScene->AddComponent(entity, description);
@@ -264,7 +267,7 @@ bool EDeserializer::ReadResourceFromJson(const EJson& json, EResourceData* resDa
     return false;
 }
 
-bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene, const EVector<EValueDescription>& registeredTypes) 
+bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene) 
 {
     EFileCollection fileCollection;
     fileCollection.SetFromCompleteBuffer(buffer);
@@ -319,5 +322,5 @@ bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* sav
         }
     }
 
-    return ReadSceneFromJson(sceneJson, saveToScene, registeredTypes);
+    return ReadSceneFromJson(sceneJson, saveToScene);
 }

@@ -36,6 +36,7 @@ namespace Engine {
         void Send_CreateNewEntity();
         void Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description);
         void Send_AddResource(EResourceData* data);
+        void Send_LoadRegister(ESharedBuffer buffer);
 
         void Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
         void Send_AddArrayEntry(ERegister::Entity entity, const EString& valueIdent);
@@ -44,6 +45,7 @@ namespace Engine {
         EVector<ERef<EProperty>> Send_GetAllValues(ERegister::Entity entity);
         ERef<EResourceData> Send_GetResourceData(EResourceData::t_ID resourceId);
         EVector<ERef<EResourceData>> Send_GetAllResources();
+        ESharedBuffer Send_GetRegisterBuffer();
 
         void Connect(const EString& connectTo, int connectToPort);
 
