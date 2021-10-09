@@ -5,14 +5,10 @@ namespace Editor {
     class EObjectView : public Engine::EUIField
     {
     private:
-        EVector<ERef<Engine::EProperty>>    fSelectedComponents;
         Engine::ERegister::Entity           fSelectedEntity;
-        EVector<Engine::ERegister::Entity>  fEntities;
         EWeakRef<Engine::EUITable>          fEntitiesTable;
         EWeakRef<Engine::EUIContainer>      fComponentsView;
         EUnorderedMap<Engine::ERegister::Entity, EWeakRef<Engine::EUITableRow>> fEntityRows;
-
-        std::mutex                          fChangeComponentsMtx;
     public:
         EObjectView();
 
@@ -34,8 +30,6 @@ namespace Editor {
         ERef<EUIField> RenderDouble(Engine::EValueProperty<double>* storage, EString nameIdent);
         ERef<EUIField> RenderDouble(Engine::EValueProperty<float>* storage, EString nameIdent);
         ERef<EUIField> RenderString(Engine::EValueProperty<EString>* storage, EString nameIdent);
-
-        bool HasSelectedComponent(Engine::EValueDescription dsc);
 
         void RegenComponentsView();
         void RegenAddComponentMenu();

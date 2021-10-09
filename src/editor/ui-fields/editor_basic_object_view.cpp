@@ -8,68 +8,38 @@ EObjectView::EObjectView()
 {
     
     shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<EntityCreateEvent>([this](EntityCreateEvent event){
-        fEntities.push_back(event.Handle);
-        if (!fEntitiesTable.expired())
-        {
-            ERef<EUITableRow> newRow = EMakeRef<EUITableRow>();
-            EWeakRef<EUISelectable> selectabe = std::dynamic_pointer_cast<EUISelectable>(newRow->AddChild(EMakeRef<EUISelectable>(std::to_string(event.Handle))).lock());
-            selectabe.lock()->SetStretchToAllColumns(true);
+        if (fEntitiesTable.expired()) { return; }
+    
+        ERef<EUITableRow> newRow = EMakeRef<EUITableRow>();
+        fEntityRows.insert({event.Handle, newRow});
+        fEntitiesTable.lock()->AddChild(newRow);
 
-            selectabe.lock()->AddEventListener<events::ESelectionChangeEvent>([this, event](events::ESelectionChangeEvent se){
-                if (se.Selected)
+        EWeakRef<EUISelectable> selectabe = std::dynamic_pointer_cast<EUISelectable>(newRow->AddChild(EMakeRef<EUISelectable>(std::to_string(event.Handle))).lock());
+        selectabe.lock()->SetStretchToAllColumns(true);
+
+        selectabe.lock()->AddEventListener<events::ESelectionChangeEvent>([this, event](events::ESelectionChangeEvent se){
+            if (se.Selected)
+            {
+                if (fSelectedEntity)
                 {
-                    if (fSelectedEntity)
-                    {
-                        std::dynamic_pointer_cast<EUISelectable>(fEntityRows[fSelectedEntity].lock()->GetChildAt(0).lock())->SetSelected(false);
-                    }
-
-                    fSelectedEntity = event.Handle;
+                    std::dynamic_pointer_cast<EUISelectable>(fEntityRows[fSelectedEntity].lock()->GetChildAt(0).lock())->SetSelected(false);
                 }
-                else
-                {
-                    fSelectedEntity = 0;
-                }
-                fComponentsView.lock()->SetDirty();
-            });
 
-            newRow->AddChild(EMakeRef<EUILabel>("Some Text"));
-            fEntitiesTable.lock()->AddChild(newRow);
-            fEntityRows.insert({event.Handle, newRow});
-        }
+                fSelectedEntity = event.Handle;
+            }
+            else
+            {
+                fSelectedEntity = 0;
+            }
+            fComponentsView.lock()->SetDirty();
+        });
+
+        //newRow->AddChild(EMakeRef<EUILabel>("Some Text"));
     }, this);
     shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<ComponentCreateEvent>([this](ComponentCreateEvent event){
         if (event.Handle == fSelectedEntity)
         {
-            std::lock_guard<std::mutex> lk(fChangeComponentsMtx);
-            ERef<EProperty> newComponent = shared::GetValue(event.Handle, event.ValueId);
-            if (newComponent)
-            {
-                fSelectedComponents.push_back(newComponent);
-            }
             fComponentsView.lock()->SetDirty();
-        }
-    }, this);
-    shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<ValueChangeEvent>([this](ValueChangeEvent event){
-        if (event.Handle == fSelectedEntity)
-        {
-            EVector<EString> idents = EStringUtil::SplitString(event.Identifier, ".");
-            EVector<ERef<EProperty>>::iterator it = std::find_if(fSelectedComponents.begin(), fSelectedComponents.end(), [idents](ERef<EProperty> prop){return prop->GetDescription().GetId() == idents[0];});
-            if (it != fSelectedComponents.end())
-            {
-                ERef<EProperty> newValue = shared::GetValue(fSelectedEntity, event.Identifier);
-                if (idents.size() == 1)
-                {
-                    (*it)->Copy(newValue.get());
-                }          
-                else if ((*it)->GetDescription().GetType() == EValueType::STRUCT)
-                {
-                    EProperty* copyToProp = std::dynamic_pointer_cast<EStructProperty>((*it))->GetPropertyByIdentifier(event.Identifier.substr(idents[0].length() + 1));
-                    if (copyToProp)
-                    {
-                        copyToProp->Copy(newValue.get());
-                    }
-                }      
-            }
         }
     }, this);
     shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent e){
@@ -81,11 +51,14 @@ EObjectView::EObjectView()
     EWeakRef<EUIField> addObjectButton = entitiesList->AddChild(EMakeRef<EUIButton>("Add Object"));
     addObjectButton.lock()->AddEventListener<events::EButtonEvent>(&shared::CreateEntity);
 
-    fEntitiesTable = std::dynamic_pointer_cast<EUITable>(entitiesList->AddChild(EMakeRef<EUITable>()).lock());
-    fEntitiesTable.lock()->SetHeaderCells({
+    ERef<EUITable> table = EMakeRef<EUITable>();
+    fEntitiesTable = table;
+    table->SetHeaderCells({
         "ID",
         "More Info"
     });
+    
+    entitiesList->AddChild(table);
 
 
 
@@ -357,13 +330,6 @@ ERef<EUIField> EObjectView::RenderString(Engine::EValueProperty<EString>* storag
         weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<EString>>(prop)->GetValue());
     }, result.get());
     return result;
-}
-
-bool EObjectView::HasSelectedComponent(Engine::EValueDescription dsc) 
-{
-    return std::find_if(fSelectedComponents.begin(), fSelectedComponents.end(), [dsc](ERef<Engine::EProperty> property){
-        return property->GetDescription() == dsc;
-    }) != fSelectedComponents.end();
 }
 
 void EObjectView::RegenComponentsView() 
