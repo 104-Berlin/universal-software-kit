@@ -113,6 +113,14 @@ bool ReadPrimitiveFromJson(const EJson& json, EProperty* property)
             return true;
         }
     }
+    else if (primitiveType == E_TYPEID_FLOAT)
+    {
+        if (json.is_number_float())
+        {
+            static_cast<EValueProperty<float>*>(property)->SetValue(json.get<float>());
+            return true;
+        }
+    }
     else if (primitiveType == E_TYPEID_INTEGER)
     {
         if (json.is_number_integer())

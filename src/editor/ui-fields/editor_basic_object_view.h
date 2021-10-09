@@ -32,6 +32,7 @@ namespace Editor {
         ERef<EUIField> RenderInteger(Engine::EValueProperty<u32>* storage, EString nameIdent);
         ERef<EUIField> RenderInteger(Engine::EValueProperty<u64>* storage, EString nameIdent);
         ERef<EUIField> RenderDouble(Engine::EValueProperty<double>* storage, EString nameIdent);
+        ERef<EUIField> RenderDouble(Engine::EValueProperty<float>* storage, EString nameIdent);
         ERef<EUIField> RenderString(Engine::EValueProperty<EString>* storage, EString nameIdent);
 
         bool HasSelectedComponent(Engine::EValueDescription dsc);

@@ -11,7 +11,7 @@ E_STORAGE_STRUCT(MySubType,
 
 E_STORAGE_STRUCT(MyType, 
     (int, SomeInteger),
-    (double, Other),
+    (float, Other),
     (EString, SomeString),
     (EVector<MySubType>, Working)
 )
