@@ -25,6 +25,7 @@ void PrintProperty_Prim(EProperty* primitive)
     else if (primitiveId == E_TYPEID_UNSIGNED_INTEGER) { std::cout << (static_cast<EValueProperty<u32>*>(primitive))->GetValue(); }
     else if (primitiveId == E_TYPEID_UNSIGNED_BIG_INTEGER) { std::cout << (static_cast<EValueProperty<u64>*>(primitive))->GetValue(); }
     else if (primitiveId == E_TYPEID_DOUBLE) { std::cout << (static_cast<EValueProperty<double>*>(primitive))->GetValue(); }
+    else if (primitiveId == E_TYPEID_FLOAT) { std::cout << (static_cast<EValueProperty<float>*>(primitive))->GetValue(); }
     else if (primitiveId == E_TYPEID_BOOL) { std::cout << (static_cast<EValueProperty<bool>*>(primitive))->GetValue(); }
 }
 

@@ -66,6 +66,7 @@ namespace Engine {
         EJson Pk_HandleCreateComponent(const ERegisterPacket& packet);
         EJson Pk_HandleAddResource(const ERegisterPacket& packet);
         EJson Pk_HandleSetValue(const ERegisterPacket& packet);
+        EJson Pk_HandleAddArrayEntry(const ERegisterPacket& packet);
         EJson Pk_HandleGetValue(const ERegisterPacket& packet);
         EJson Pk_HandleGetAllValues(const ERegisterPacket& packet);
         EJson Pk_HandleGetResource(const ERegisterPacket& packet);

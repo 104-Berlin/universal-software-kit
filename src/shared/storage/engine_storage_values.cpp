@@ -102,6 +102,7 @@ EProperty* EProperty::CreatePropertyPrimitive(const EString& name, EValueDescrip
     else if (primitiveId == E_TYPEID_UNSIGNED_INTEGER) { return new EValueProperty<u32>(name, description); }
     else if (primitiveId == E_TYPEID_UNSIGNED_BIG_INTEGER) { return new EValueProperty<u64>(name, description); }
     else if (primitiveId == E_TYPEID_DOUBLE) { return new EValueProperty<double>(name, description); }
+    else if (primitiveId == E_TYPEID_FLOAT) { return new EValueProperty<float>(name, description); }
     else if (primitiveId == E_TYPEID_BOOL) { return new EValueProperty<bool>(name, description); }
     return nullptr;
 }

@@ -113,6 +113,14 @@ bool ReadPrimitiveFromJson(const EJson& json, EProperty* property)
             return true;
         }
     }
+    else if (primitiveType == E_TYPEID_FLOAT)
+    {
+        if (json.is_number_float())
+        {
+            static_cast<EValueProperty<float>*>(property)->SetValue(json.get<float>());
+            return true;
+        }
+    }
     else if (primitiveType == E_TYPEID_INTEGER)
     {
         if (json.is_number_integer())
@@ -218,6 +226,7 @@ bool EDeserializer::ReadPropertyFromJson_WithDescription(const EJson& json, EPro
 bool EDeserializer::ReadResourceFromJson(const EJson& json, EResourceData* resData, bool withData) 
 {
     if (!json.is_object()) { return false; }
+    if (json.size() == 0)  { return false;}
     if (json["ID"].is_number_integer() && json["Type"].is_string() && json["Name"].is_string() && json["PathToFile"].is_string())
     {
         resData->ID = json["ID"].get<EResourceData::t_ID>();

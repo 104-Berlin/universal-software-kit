@@ -82,6 +82,12 @@ ERef<EProperty> shared::GetValue(ERegister::Entity entity, const EString& valueI
     return result;
 }
 
+shared::ESharedError shared::AddArrayEntry(ERegister::Entity entity, const EString& ident) 
+{
+    StaticSharedContext::instance().GetRegisterConnection().Send_AddArrayEntry(entity, ident);
+    return false;
+}
+
 EVector<ERef<EProperty>> shared::GetAllComponents(ERegister::Entity entity) 
 {
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllValues(entity);
@@ -128,6 +134,9 @@ namespace Engine {
         #endif
 
             fRegisterConnection.GetEventDispatcher().ConnectAll([this](EStructProperty* property){
+                fRegisterEventDispatcher.GetEventDispatcher().Post_P(property->GetDescription(), property);
+            });
+            fExtensionManager.GetEventDispatcher().ConnectAll([this](EStructProperty* property){
                 fRegisterEventDispatcher.GetEventDispatcher().Post_P(property->GetDescription(), property);
             });
 

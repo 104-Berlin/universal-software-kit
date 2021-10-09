@@ -25,6 +25,8 @@ namespace Engine {
 #endif
     };
 
+namespace events {
+
     E_STORAGE_STRUCT(EExtensionLoadedEvent,
         (EString, Extension)
     )
@@ -33,6 +35,7 @@ namespace Engine {
         (EString, ExtensionName),
         (EString, PathToExtension)
     )
+}
 
     class E_EXTAPI EExtensionManager
     {
@@ -84,8 +87,8 @@ namespace Engine {
         EResourceRegister& GetResourceRegister();
         const EResourceRegister& GetResourceRegister() const;
 
-        static EExtensionManager& instance();
-
+        EEventDispatcher& GetEventDispatcher();
+        const EEventDispatcher& GetEventDispatcher() const;
 
         void Reload();
         void ReloadExtension(const EString& extensionName);

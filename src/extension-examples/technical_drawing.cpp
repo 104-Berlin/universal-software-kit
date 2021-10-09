@@ -60,7 +60,7 @@ void ViewportDrag(events::EMouseDragEvent e)
 APP_ENTRY
 {
     ERef<EUIPanel> someDrawingPanel = EMakeRef<EUIPanel>("Drawing Canvas");
-    EWeakRef<EUIViewport> drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()));
+    EWeakRef<EUIViewport> drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()).lock());
     
     drawingViewport.lock()->AddEventListener<events::EMouseDownEvent>(&ViewportClicked);
     drawingViewport.lock()->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);

@@ -14,9 +14,12 @@ void EEventDispatcher::Enqueue_P(EValueDescription dsc, EProperty* property)
 void EEventDispatcher::Post_P(const EValueDescription& dsc, EProperty* property) 
 {
     std::lock_guard<std::mutex> lock(fEventMutex);
-    for (CallbackFunction func : fRegisteredCallbacks[dsc.GetId()])
+    for (auto& entry : fRegisteredCallbacks)
     {
-        func(property);
+        for (CallbackFunction func : entry.second[dsc.GetId()])
+        {
+            func(property);
+        }
     }
     for (CallbackFunction func : fCallAllways)
     {
@@ -37,10 +40,14 @@ void EEventDispatcher::Update()
     }
     for (auto& entry : copiedEvents)
     {
-        for (auto& cb : fRegisteredCallbacks[entry.Type])
+        for (auto& cbentry : fRegisteredCallbacks)
         {
-            cb(entry.Data);
+            for (auto& cb : cbentry.second[entry.Type])
+            {
+                cb(entry.Data);
+            }
         }
+        
         for (auto& cb : fCallAllways)
         {
             cb(entry.Data);

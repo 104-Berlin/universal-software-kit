@@ -234,6 +234,11 @@ void ERegisterSocket::ConnectionGotPacket(Connection* connection, const ERegiste
         responseJson = Pk_HandleAddResource(packet);
         break;
     }
+    case EPacketType::ADD_ARRAY_ENTRY:
+    {
+        responseJson = Pk_HandleAddArrayEntry(packet);
+        break;
+    }
     case EPacketType::SET_VALUE:
     {
         responseJson = Pk_HandleSetValue(packet);
@@ -351,6 +356,24 @@ EJson ERegisterSocket::Pk_HandleSetValue(const ERegisterPacket& packet)
         {
             E_INFO("Value " + valueIdent + " setted on entity " + std::to_string(entity) + "!");
         }
+    }
+    return EJson::object();
+}
+
+EJson ERegisterSocket::Pk_HandleAddArrayEntry(const ERegisterPacket& packet) 
+{
+    if (packet.Body["Entity"].is_number_integer() && packet.Body["ValueIdent"].is_string())
+    {
+        ERegister::Entity entity = packet.Body["Entity"].get<int>();
+        EString valueIdent = packet.Body["ValueIdent"].get<EString>();
+        EProperty* foundProperty = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
+        if (!foundProperty || foundProperty->GetDescription().GetType() != EValueType::ARRAY)
+        {
+            E_ERROR("Could not add array entry. Value not found or is not array!");
+            return EJson::object();
+        }
+        EArrayProperty* asArray = static_cast<EArrayProperty*>(foundProperty);
+        asArray->AddElement();
     }
     return EJson::object();
 }

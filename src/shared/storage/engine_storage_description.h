@@ -66,6 +66,7 @@ namespace Engine {
     #define E_TYPEID_UNSIGNED_INTEGER "uint"
     #define E_TYPEID_UNSIGNED_BIG_INTEGER "ulonglong"
     #define E_TYPEID_DOUBLE "double"
+    #define E_TYPEID_FLOAT "float"
     #define E_TYPEID_BOOL "bool"
 
     #define StringDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_STRING)
@@ -73,6 +74,7 @@ namespace Engine {
     #define UnsignedIntegerDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_UNSIGNED_INTEGER)
     #define UnsignedBigIntegerDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_UNSIGNED_BIG_INTEGER)
     #define DoubleDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_DOUBLE)
+    #define FloatDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_FLOAT)
     #define BoolDescription ::Engine::EValueDescription(::Engine::EValueType::PRIMITIVE, E_TYPEID_BOOL)
 
 
@@ -90,13 +92,13 @@ namespace Engine {
             {
                 return StringDescription;
             }
-            else if constexpr (std::is_same<T, double>())
+            else if constexpr (is_one_of<T, double>())
             {
                 return DoubleDescription;
             }
             else if constexpr (std::is_same<T, float>())
             {
-                return DoubleDescription;
+                return FloatDescription;
             }
             else if constexpr (std::is_same<T, bool>())
             {

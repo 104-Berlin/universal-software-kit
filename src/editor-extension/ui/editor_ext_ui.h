@@ -41,7 +41,7 @@ namespace events {
     /**
      * Most Basic UI Element
      */
-    class E_EDEXAPI EUIField
+    class E_EDEXAPI EUIField : public shared::EAutoContextEventRelease
     {
         using UpdateFunction = std::function<void()>;
     protected:
@@ -65,6 +65,11 @@ namespace events {
          * Wether the field should be updated or not
          */
         bool fDirty;
+
+        /**
+         * Is Context Menu open
+         */
+        bool fIsContextMenuOpen;
 
         /**
          * Width of the field.
@@ -103,6 +108,11 @@ namespace events {
          * Last mouse pos to get mouse delta when moved
          */
         EVec2 fLastMousePos;
+
+        /**
+         * The Context Menu. Should be type of EUIMenu
+         */
+        ERef<EUIField>  fContextMenu;
     public:
         EUIField(const EString& label);
 
@@ -111,7 +121,14 @@ namespace events {
          * @param child The UI Field thats gets added to the list
          * @return The added child
          */
-        ERef<EUIField> AddChild(const ERef<EUIField>& child);
+        EWeakRef<EUIField> AddChild(const ERef<EUIField>& child);
+
+        /**
+         * @brief Get Child at sertain index
+         * @param index 
+         * @return The Found child. nullptr if not found
+         */
+        EWeakRef<EUIField> GetChildAt(u32 index) const;
 
         /**
          * Removes a child from the list
@@ -138,6 +155,11 @@ namespace events {
         void Render();
 
         /**
+         * @brief Handles the end of rendering
+         */
+        void HandleRenderEnd(); // We want a non virtual OnRenderEnd function
+
+        /**
          * Virtual function for custom rendering behaviour.
          * @return Wether the children of this field should be rendered or not
          */
@@ -148,6 +170,17 @@ namespace events {
          * This can be usefull in some cases
          */
         virtual void OnRenderEnd();
+
+        /**
+         * @brief called before child is rendered
+         */
+        virtual void OnBeforeChildRender() {}
+
+
+        /**
+         * @brief called after child is rendered
+         */
+        virtual void OnAfterChildRender() {}
 
         /**
          * This calls all registered event listener and clear the event loop
@@ -208,6 +241,22 @@ namespace events {
          */
         float GetHeight() const;
 
+        /**
+         * @brief Set the context menu. Use nullptr for no context menu on this field
+         * @param menu The Context menu. Should be type of EUIMenu
+         */
+        void SetContextMenu(const ERef<EUIField>& menu);
+
+        /**
+         * @brief Check if context menu is open
+         * @return Is Context Open
+         */
+        bool IsContextMenuOpen() const;
+
+        /**
+         * @brief Mark the Field dirty, so it will call CustomUpdateFunction on next render
+         */
+        void SetDirty();
 
         /**
          * Adds a listener to specified EventType
@@ -274,6 +323,14 @@ namespace events {
         Renderer::RCamera& GetCamera();
     };
 
+    class E_EDEXAPI EUISameLine : public EUIField
+    {
+    public:
+        EUISameLine();
+
+        virtual bool OnRender() override;
+    };
+
 
 namespace events {
     E_STORAGE_STRUCT(EButtonEvent,
@@ -288,10 +345,46 @@ namespace events {
 
         virtual bool OnRender() override;
     };
+
+    class E_EDEXAPI EUILabel : public EUIField
+    {
+    public:
+        EUILabel(const EString& label);
+
+        virtual bool OnRender() override;
+    };
 namespace events
 {
+    E_STORAGE_STRUCT(ETextCompleteEvent,
+        (EString, Value)
+    )
+
     E_STORAGE_STRUCT(ETextChangeEvent,
         (EString, Value)
+    )
+
+    E_STORAGE_STRUCT(EFloatChangeEvent,
+        (float, Value)
+    )
+
+    E_STORAGE_STRUCT(EFloatCompleteEvent,
+        (float, Value)
+    )
+
+    E_STORAGE_STRUCT(EIntegerChangeEvent,
+        (i32, Value)
+    )
+
+    E_STORAGE_STRUCT(EIntegerCompleteEvent,
+        (i32, Value)
+    )
+
+    E_STORAGE_STRUCT(ECheckboxEvent,
+        (bool, Checked)
+    )
+
+    E_STORAGE_STRUCT(ESelectionChangeEvent,
+        (bool, Selected)
     )
 
 }
@@ -305,7 +398,52 @@ namespace events
 
         virtual bool OnRender() override;
 
+        void SetValue(const EString& value);
         EString GetContent() const;
+    };
+
+    class E_EDEXAPI EUIFloatEdit : public EUIField
+    {
+    private:
+        float fValue;
+        float fStep;
+        float fMin;
+        float fMax;
+    public:
+        EUIFloatEdit(const EString& label);
+
+        virtual bool OnRender() override;
+
+        void SetValue(float value);
+        float GetValue() const;
+    };
+
+    class E_EDEXAPI EUIIntegerEdit : public EUIField
+    {
+    private:
+        i32 fValue;
+        i32 fMin;
+        i32 fMax;
+    public:
+        EUIIntegerEdit(const EString& label);
+
+        virtual bool OnRender() override;
+
+        void SetValue(i32 value);
+        i32 GetValue() const;
+    };
+
+    class E_EDEXAPI EUICheckbox : public EUIField
+    {
+    private:
+        bool fChecked;
+    public:
+        EUICheckbox(const EString& label);
+
+        virtual bool OnRender() override;
+
+        void SetValue(bool checked);
+        bool GetValue() const;
     };
 
 
@@ -371,6 +509,7 @@ namespace events
     private:
         bool fOpen;
         bool fEndPopup;
+        bool fPopupShouldOpen;
     public:
         EUIModal(const EString& title);
 
@@ -379,6 +518,56 @@ namespace events
 
         void Open();
         void Close();
+    };
+
+    class E_EDEXAPI EUIContainer : public EUIField
+    {
+    public:
+        EUIContainer(const EString& name);
+
+        virtual bool OnRender() override;
+        virtual void OnRenderEnd() override;
+    };
+
+
+    class E_EDEXAPI EUISelectable : public EUIField
+    {
+    private:
+        bool fStretchToAllColumns;
+        bool fIsSelected;
+    public:
+        EUISelectable(const EString& label);
+
+        virtual bool OnRender() override;
+
+        void SetStretchToAllColumns(bool stretch);
+        void SetSelected(bool selected);
+        bool IsSelected() const;
+    };
+
+    class E_EDEXAPI EUITable : public EUIField
+    {
+    private:
+        bool fEndTable; // For ImGui
+        EVector<EString> fHeaderCells;
+    public:
+        EUITable(const EString& name = "Table");
+
+        virtual bool OnRender() override;
+        virtual void OnRenderEnd() override;
+
+        void SetHeaderCells(const EVector<EString>& headerCells);
+    };
+
+    class E_EDEXAPI EUITableRow : public EUIField
+    {
+    private:
+        i32 fCurrentTableIndex;
+    public:
+        EUITableRow();
+
+        virtual void OnBeforeChildRender() override;
+        virtual bool OnRender() override;
     };
 
 }

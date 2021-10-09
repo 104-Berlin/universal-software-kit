@@ -11,7 +11,7 @@ E_STORAGE_STRUCT(MySubType,
 
 E_STORAGE_STRUCT(MyType, 
     (int, SomeInteger),
-    (int, Other),
+    (float, Other),
     (EString, SomeString),
     (EVector<MySubType>, Working)
 )
@@ -19,8 +19,8 @@ E_STORAGE_STRUCT(MyType,
 EApplication::EApplication() 
     : fGraphicsContext(nullptr), fCommandLine()
 {
-    EExtensionManager::instance().AddEventListener<EExtensionLoadedEvent>([this](EExtensionLoadedEvent event) {
-        EExtension* extension = EExtensionManager::instance().GetExtension(event.Extension);
+    shared::StaticSharedContext::instance().GetExtensionManager().AddEventListener<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent event) {
+        EExtension* extension = shared::StaticSharedContext::instance().GetExtensionManager().GetExtension(event.Extension);
         auto entry = (void(*)(const char*, Engine::EAppInit))extension->GetFunction("app_entry");
         if (entry)
         {
@@ -36,7 +36,7 @@ EApplication::EApplication()
         }
     });
 
-    EExtensionManager::instance().AddEventListener<EExtensionUnloadEvent>([this](EExtensionUnloadEvent event){
+    shared::StaticSharedContext::instance().GetExtensionManager().AddEventListener<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
         for (ERef<EUIPanel> panel : fUIRegister.GetItems(event.ExtensionName))
         {
             panel->DisconnectAllEvents();
@@ -47,7 +47,7 @@ EApplication::EApplication()
     fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
         this->RegenerateMainMenuBar();
     });
-    EExtensionManager::instance().GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
+    shared::StaticSharedContext::instance().GetExtensionManager().GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
 }
 
 void EApplication::Start() 
@@ -60,8 +60,8 @@ void EApplication::RegenerateMainMenuBar()
     fMainMenu->Clear();
 
     ERef<EUIMenu> fileMenu = EMakeRef<EUIMenu>("File");
-    ERef<EUIField> saveScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Save"));
-    saveScene->AddEventListener<events::EButtonEvent>([this](){
+    EWeakRef<EUIField> saveScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Save"));
+    saveScene.lock()->AddEventListener<events::EButtonEvent>([this](){
         EString saveToPath = Wrapper::SaveFileDialog("Save To", {"esc"});
         if (!saveToPath.empty())
         {
@@ -70,8 +70,8 @@ void EApplication::RegenerateMainMenuBar()
             //file.SaveBufferToDisk();
         }
     });
-    ERef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open..."));
-    openScene->AddEventListener<events::EButtonEvent>([this](){
+    EWeakRef<EUIField> openScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Open..."));
+    openScene.lock()->AddEventListener<events::EButtonEvent>([this](){
         EVector<EString> openScene = Wrapper::OpenFileDialog("Open", {"esc"});
         if (openScene.size() > 0)
         {
@@ -79,13 +79,13 @@ void EApplication::RegenerateMainMenuBar()
             sceneFile.LoadToMemory();
             if (!sceneFile.GetBuffer().IsNull())
             {
-                EExtensionManager::instance().Reload();
+                shared::StaticSharedContext::instance().GetExtensionManager().Reload();
                 ///EDeserializer::ReadSceneFromFileBuffer(sceneFile.GetBuffer(), EExtensionManager::instance().GetActiveScene(), EExtensionManager::instance().GetTypeRegister().GetAllItems());
             }
         }
     });
-    ERef<EUIField> importResource = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Import..."));
-    importResource->AddEventListener<events::EButtonEvent>([this](){
+    EWeakRef<EUIField> importResource = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Import..."));
+    importResource.lock()->AddEventListener<events::EButtonEvent>([this](){
         EVector<EString> resourcesToOpen = Wrapper::OpenFileDialog("Import");
         for (const EString& resourcePath : resourcesToOpen)
         {
@@ -93,7 +93,7 @@ void EApplication::RegenerateMainMenuBar()
 
             EString type = resourceFile.GetFileExtension();
             EResourceDescription foundDescription;
-            if (EExtensionManager::instance().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
+            if (shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
                 foundDescription.ImportFunction)
             {
                 EResourceData* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
@@ -102,7 +102,6 @@ void EApplication::RegenerateMainMenuBar()
                     shared::CreateResource(data);
                     delete data;
                 }
-                //EExtensionManager::instance().GetActiveScene()->GetResourceManager().ImportResourceFromFile(resourceFile, foundDescription);
             }
             else
             {
@@ -137,13 +136,19 @@ void EApplication::RegenerateMainMenuBar()
 
     ERef<EUIMenu> connectionMenu = EMakeRef<EUIMenu>("Connection");
     ERef<EUIModal> modal = EMakeRef<EUIModal>("Connect Modal");
-    ERef<EUIField> textField = modal->AddChild(EMakeRef<EUITextField>("IP Address"));
-    ERef<EUIField> connectButton = modal->AddChild(EMakeRef<EUIButton>("Connect"));
-    connectButton->AddEventListener<events::EButtonEvent>([textField, modal](){
-        EString ip = std::dynamic_pointer_cast<EUITextField>(textField)->GetContent();
+    EWeakRef<EUIField> textField = modal->AddChild(EMakeRef<EUITextField>("IP Address"));
+    EWeakRef<EUIField> connectButton = modal->AddChild(EMakeRef<EUIButton>("Connect"));
+
+    // Setup connect callback
+    auto connectFun = [textField, modal](){
+        EString ip = std::dynamic_pointer_cast<EUITextField>(textField.lock())->GetContent();
         shared::StaticSharedContext::instance().ConnectTo(ip);
         modal->Close();
-    });
+    };
+    textField.lock()->AddEventListener<events::ETextCompleteEvent>(connectFun);
+    connectButton.lock()->AddEventListener<events::EButtonEvent>(connectFun);
+
+
     ERef<EUIMenuItem> connectToItem = EMakeRef<EUIMenuItem>("Connect To...");
     connectToItem->AddEventListener<events::EButtonEvent>([modal](){
         modal->Open();

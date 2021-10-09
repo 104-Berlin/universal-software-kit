@@ -83,17 +83,6 @@ public:
                 }
             }
         });
-        /*activeScene->AddComponentCreateEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
-            
-        });
-
-        activeScene->AddComponentDeleteEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
-            
-        });
-
-        activeScene->AddEntityChangeEventListener("ImageLayer.resourceLink",[this](ERegister::Entity handle, const EString&){
-            
-        });*/
     }
 };
 

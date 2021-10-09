@@ -78,6 +78,10 @@ EJson WritePrimitiveToJs(EProperty* property)
     {
         return static_cast<EValueProperty<double>*>(property)->GetValue();
     }
+    else if (primitiveType == E_TYPEID_FLOAT)
+    {
+        return static_cast<EValueProperty<float>*>(property)->GetValue();
+    }
     else if (primitiveType == E_TYPEID_INTEGER)
     {
         return static_cast<EValueProperty<i32>*>(property)->GetValue();
