@@ -633,8 +633,10 @@ bool EUIModal::OnRender()
         ImGui::OpenPopup(GetLabel().c_str());
         fPopupShouldOpen = false;
     }
-    ImGui::SetNextWindowSize({fWidthOverride, fHeightOverride});
-    fEndPopup = ImGui::BeginPopupModal(GetLabel().c_str(), &fOpen);
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    fEndPopup = ImGui::BeginPopupModal(GetLabel().c_str(), &fOpen, ImGuiWindowFlags_AlwaysAutoResize);
     return fEndPopup;
 }
 
@@ -715,8 +717,12 @@ EUITable::EUITable(const EString& name)
 bool EUITable::OnRender() 
 {
     if (fHeaderCells.size() == 0) { return fEndTable = false; }
-    ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit |
-                            ImGuiTableFlags_Resizable;
+    static ImGuiTableFlags flags = ImGuiTableFlags_Resizable;
+    //ImGui::CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
+    //ImGui::CheckboxFlags("ImGuiTableFlags_Reorderable", &flags, ImGuiTableFlags_Reorderable);
+    //ImGui::CheckboxFlags("ImGuiTableFlags_Hideable", &flags, ImGuiTableFlags_Hideable);
+    //ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &flags, ImGuiTableFlags_NoBordersInBody);
+    //ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBodyUntilResize", &flags, ImGuiTableFlags_NoBordersInBodyUntilResize);
 
     if ((fEndTable = ImGui::BeginTable(GetLabel().c_str(), fHeaderCells.size(), flags)))
     {

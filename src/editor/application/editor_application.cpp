@@ -138,11 +138,17 @@ void EApplication::RegenerateMainMenuBar()
     ERef<EUIModal> modal = EMakeRef<EUIModal>("Connect Modal");
     EWeakRef<EUIField> textField = modal->AddChild(EMakeRef<EUITextField>("IP Address"));
     EWeakRef<EUIField> connectButton = modal->AddChild(EMakeRef<EUIButton>("Connect"));
-    connectButton.lock()->AddEventListener<events::EButtonEvent>([textField, modal](){
+
+    // Setup connect callback
+    auto connectFun = [textField, modal](){
         EString ip = std::dynamic_pointer_cast<EUITextField>(textField.lock())->GetContent();
         shared::StaticSharedContext::instance().ConnectTo(ip);
         modal->Close();
-    });
+    };
+    textField.lock()->AddEventListener<events::ETextCompleteEvent>(connectFun);
+    connectButton.lock()->AddEventListener<events::EButtonEvent>(connectFun);
+
+
     ERef<EUIMenuItem> connectToItem = EMakeRef<EUIMenuItem>("Connect To...");
     connectToItem->AddEventListener<events::EButtonEvent>([modal](){
         modal->Open();
@@ -201,6 +207,8 @@ void EApplication::RenderImGui()
 
     fCommandLine.UpdateEventDispatcher();
     fCommandLine.Render();
+
+    ImGui::ShowDemoWindow();
 
     shared::StaticSharedContext::instance().GetRegisterConnection().GetEventDispatcher().Update();
 }

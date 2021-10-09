@@ -329,6 +329,7 @@ void ERegisterConnection::Connect(const EString& connectTo, int connectToPort)
     if (connect_to_server == NULL)
     {
         E_ERROR("Could not find Server " + connectTo);
+        return;
     }
 
     sockaddr_in serverAddr;
