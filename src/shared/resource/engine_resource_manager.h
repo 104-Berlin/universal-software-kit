@@ -109,7 +109,9 @@ namespace Engine {
     namespace events {
 
         E_STORAGE_STRUCT(EResourceAddedEvent,
-            (EResourceData::t_ID, ResourceID)
+            (EResourceData::t_ID, ResourceID),
+            (EString, Name),
+            (EString, PathToFile)
         )
 
     }

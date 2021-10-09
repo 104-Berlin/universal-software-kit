@@ -27,7 +27,7 @@ bool EResourceManager::AddResource(EResourceData* data)
         return false;
     }
     fLoadedResources.insert({data->ID, data});
-    fEventDispacher.Post<events::EResourceAddedEvent>({data->ID});
+    fEventDispacher.Post<events::EResourceAddedEvent>({data->ID, data->Name, data->PathToFile});
     return true;
 }
 

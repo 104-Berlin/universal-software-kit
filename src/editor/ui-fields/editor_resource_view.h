@@ -14,7 +14,5 @@ namespace Editor {
         EVector<Resource>           fResources;
     public:
         EResourceView();
-
-        virtual bool OnRender() override;
     };
 }
