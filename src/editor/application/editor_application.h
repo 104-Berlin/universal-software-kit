@@ -24,6 +24,7 @@ namespace Editor {
         void RenderImGui();
 
         void RegisterDefaultPanels();
+        void RegisterDefaultResources();
     };
 
 }

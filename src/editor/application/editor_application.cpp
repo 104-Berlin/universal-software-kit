@@ -87,33 +87,37 @@ void EApplication::RegenerateMainMenuBar()
             }
         }
     });
-    EWeakRef<EUIField> importResource = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Import..."));
-    importResource.lock()->AddEventListener<events::EButtonEvent>([this](){
-        EVector<EString> resourcesToOpen = Wrapper::OpenFileDialog("Import");
-        for (const EString& resourcePath : resourcesToOpen)
-        {
-            EFile resourceFile(resourcePath);
-
-            EString type = resourceFile.GetFileExtension();
-            EResourceDescription foundDescription;
-            if (shared::ExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
-                foundDescription.ImportFunction)
+    EWeakRef<EUIField> importResource = fileMenu->AddChild(EMakeRef<EUIMenu>("Import"));
+    for (const EResourceDescription& resourceType : shared::ExtensionManager().GetResourceRegister().GetAllItems())
+    {
+        EWeakRef<EUIField> importItem = importResource.lock()->AddChild(EMakeRef<EUIMenuItem>(resourceType.ResourceName));
+        importItem.lock()->AddEventListener<events::EButtonEvent>([this, resourceType](){
+            EVector<EString> resourcesToOpen = Wrapper::OpenFileDialog("Import", resourceType.AcceptedFileEndings);
+            for (const EString& resourcePath : resourcesToOpen)
             {
-                EResourceData* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
-                if (data)
+                EFile resourceFile(resourcePath);
+
+                EString type = resourceFile.GetFileExtension();
+                EResourceDescription foundDescription;
+                if (shared::ExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
+                    foundDescription.ImportFunction)
                 {
-                    shared::CreateResource(data);
-                    delete data;
+                    EResourceData* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
+                    if (data)
+                    {
+                        shared::CreateResource(data);
+                        delete data;
+                    }
                 }
-            }
-            else
-            {
-                // TODO: Show modal
-                E_ERROR("Could not find converter for resource with file ending " + type);
-            }
+                else
+                {
+                    // TODO: Show modal
+                    E_ERROR("Could not find converter for resource with file ending " + type);
+                }
 
-        }
-    });
+            }
+        });
+    }
 
 
     ERef<EUIMenu> viewMenu = EMakeRef<EUIMenu>("View");
@@ -170,6 +174,7 @@ void EApplication::Init(Graphics::GContext* context)
     fGraphicsContext = context;
     fMainMenu = EMakeRef<EUIMainMenuBar>();
     RegisterDefaultPanels();
+    RegisterDefaultResources();
 
 
 
@@ -263,4 +268,11 @@ void EApplication::RegisterDefaultPanels()
     fUIRegister.RegisterItem("Core", universalSceneView4);
     fUIRegister.RegisterItem("Core", resourcePanel);
     fUIRegister.RegisterItem("Core", extensionPanel);
+}
+
+void EApplication::RegisterDefaultResources() 
+{
+    EResourceDescription imageDsc("Image",{"png", "jpeg", "bmp"});
+    imageDsc.ImportFunction = &ResImage::ImportImage;
+    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", imageDsc);
 }
