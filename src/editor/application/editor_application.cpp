@@ -28,6 +28,7 @@ EApplication::EApplication()
         {
             EAppInit init;
             init.PanelRegister = &fUIRegister;
+            init.ValueFieldRegister = &fUIValueRegister;
             E_INFO("Running APP_INIT for plugtin \"" + extension->GetName() + "\"");
             entry(extension->GetName().c_str(), init);
         }
@@ -175,6 +176,7 @@ void EApplication::Init(Graphics::GContext* context)
     fMainMenu = EMakeRef<EUIMainMenuBar>();
     RegisterDefaultPanels();
     RegisterDefaultResources();
+    RegisterDefaultComponentRender();
 
 
 
@@ -254,13 +256,13 @@ void EApplication::RegisterDefaultPanels()
 
 
     ERef<EUIPanel> universalSceneView1 = EMakeRef<EUIPanel>("Basic Scene View 1");
-    universalSceneView1->AddChild(EMakeRef<EObjectView>());
+    universalSceneView1->AddChild(EMakeRef<EObjectView>(&fUIValueRegister));
     ERef<EUIPanel> universalSceneView2 = EMakeRef<EUIPanel>("Basic Scene View 2");
-    universalSceneView2->AddChild(EMakeRef<EObjectView>());
+    universalSceneView2->AddChild(EMakeRef<EObjectView>(&fUIValueRegister));
     ERef<EUIPanel> universalSceneView3 = EMakeRef<EUIPanel>("Basic Scene View 3");
-    universalSceneView3->AddChild(EMakeRef<EObjectView>());
+    universalSceneView3->AddChild(EMakeRef<EObjectView>(&fUIValueRegister));
     ERef<EUIPanel> universalSceneView4 = EMakeRef<EUIPanel>("Basic Scene View 4");
-    universalSceneView4->AddChild(EMakeRef<EObjectView>());
+    universalSceneView4->AddChild(EMakeRef<EObjectView>(&fUIValueRegister));
 
     fUIRegister.RegisterItem("Core", universalSceneView1);
     fUIRegister.RegisterItem("Core", universalSceneView2);
@@ -284,4 +286,17 @@ void EApplication::RegisterDefaultResources()
     EResourceDescription textDescription("Text", {".txt"});
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", textDescription);
     
+}
+
+void EApplication::RegisterDefaultComponentRender() 
+{
+    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop){
+        ERef<EUIField> result = EMakeRef<EUIField>("ResourceLink");
+        EResourceLink resourceLink;
+        if (convert::getter(prop, &resourceLink))
+        {
+            result->AddChild(EMakeRef<EUISelectable>(resourceLink.Type));
+        }
+        return result;
+    }});
 }

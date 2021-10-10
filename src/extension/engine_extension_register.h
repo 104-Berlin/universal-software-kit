@@ -202,7 +202,7 @@ namespace Engine {
         }
     };
 
-     class EFindResourceByType
+    class EFindResourceByType
     {
     private:
         EString fType;

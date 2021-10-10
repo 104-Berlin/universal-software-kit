@@ -3,8 +3,8 @@
 using namespace Editor;
 using namespace Engine;
 
-EObjectView::EObjectView()
-    : EUIField("OBJECTVIEW"), fSelectedEntity(0)
+EObjectView::EObjectView(Engine::EUIValueRegister* valueFieldRegister)
+    : EUIField("OBJECTVIEW"), fSelectedEntity(0), fUIValueRegister(valueFieldRegister)
 {
     
     shared::Events().Connect<EntityCreateEvent>([this](EntityCreateEvent event){
@@ -79,6 +79,12 @@ ERef<EUIField> EObjectView::RenderProperty(Engine::EProperty* storage, EString n
 {
     EValueDescription propertyDsc = storage->GetDescription();
     EValueType type = propertyDsc.GetType();
+
+    EUIValueRegisterEntry valueRender;
+    if (fUIValueRegister && fUIValueRegister->FindItem(EFindValueFieldByType(propertyDsc.GetId()), &valueRender))
+    {
+        return valueRender.second(storage);
+    }
 
     switch (type)
     {
