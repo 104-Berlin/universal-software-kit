@@ -147,7 +147,40 @@ namespace Engine {
         }
     };
 
-    using ETypeRegister = EExtensionRegister<EValueDescription>;
+
+    struct EComponentRegisterEntry
+    {
+        EValueDescription Description;
+        ERef<EStructProperty> DefaultValue;
+    };
+
+    class EComponentRegister : public EExtensionRegister<EComponentRegisterEntry>
+    {
+    public:
+        /**
+         * Register a new type for extension. Use this function to make the default initilization work.
+         * @param extensionName The name of the extension.
+         */
+        template <typename T>
+        void RegisterStruct(const EString& extensionName)
+        {
+            EValueDescription dsc = getdsc::GetDescription<T>();
+            if (dsc.Valid() && dsc.GetType() == EValueType::STRUCT)
+            {
+                T initValue = T();
+                ERef<EStructProperty> initProperty = ERef<EStructProperty>(static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc)));
+                if (convert::setter<T>(initProperty.get(), initValue))
+                {
+                    E_WARN("Could not register the correct default value for type " + dsc.GetId());
+                }
+                RegisterItem(extensionName, {dsc, initProperty});
+            }
+        }
+    };
+
+
+
+
     using EResourceRegister = EExtensionRegister<EResourceDescription>;
 
 
@@ -163,9 +196,9 @@ namespace Engine {
             : fName(name)
         {}
 
-        bool operator()(EValueDescription other) const
+        bool operator()(EComponentRegisterEntry other) const
         {
-            return other.GetId() == fName;
+            return other.Description.GetId() == fName;
         }
     };
 

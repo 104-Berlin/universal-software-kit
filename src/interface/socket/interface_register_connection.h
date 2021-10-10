@@ -34,7 +34,7 @@ namespace Engine {
         ~ERegisterConnection();
 
         void Send_CreateNewEntity();
-        void Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description);
+        void Send_CreateNewComponent(ERegister::Entity entity, EStructProperty* initValue);
         void Send_AddResource(EResourceData* data);
         void Send_LoadRegister(ESharedBuffer buffer);
 

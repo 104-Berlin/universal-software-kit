@@ -67,5 +67,5 @@ APP_ENTRY
 
 EXT_ENTRY
 {
-   info.GetTypeRegister().RegisterItem(extensionName, ImageLayer::_dsc);
+   info.GetComponentRegister().RegisterStruct<ImageLayer>(extensionName);
 }

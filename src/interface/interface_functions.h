@@ -97,6 +97,7 @@ namespace Engine {
         
         ESharedError E_INTER_API CreateComponent(const EString& componentId, ERegister::Entity entity);
         ESharedError E_INTER_API CreateComponent(const EValueDescription& componentId, ERegister::Entity entity);
+        ESharedError E_INTER_API CreateComponent(EStructProperty* componentValue, ERegister::Entity entity);
         ESharedError E_INTER_API CreateResource(EResourceData* data);
 
         ESharedError E_INTER_API SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);

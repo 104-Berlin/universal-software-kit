@@ -125,6 +125,6 @@ APP_ENTRY
 
 EXT_ENTRY
 {
-    info.GetTypeRegister().RegisterItem(extensionName, TechnicalMesh::_dsc);
-    info.GetTypeRegister().RegisterItem(extensionName, Plane::_dsc);
+    info.GetComponentRegister().RegisterStruct<TechnicalMesh>(extensionName);
+    info.GetComponentRegister().RegisterStruct<Plane>(extensionName);
 }

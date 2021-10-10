@@ -49,7 +49,7 @@ EApplication::EApplication()
     fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
         this->RegenerateMainMenuBar();
     });
-    shared::ExtensionManager().GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
+    shared::ExtensionManager().GetComponentRegister().RegisterStruct<MyType>("Core");
 }
 
 void EApplication::Start(const EString& defaultRegisterPath) 

@@ -342,12 +342,19 @@ void EObjectView::RegenAddComponentMenu()
     ERef<EUIField> componentContextMenu = EMakeRef<EUIField>("Context Menu");
     ERef<EUIMenu> addMenu = EMakeRef<EUIMenu>("Add Component");
 
-    EVector<EValueDescription> allComponents = shared::ExtensionManager().GetTypeRegister().GetAllItems();
-    for (const EValueDescription& dsc : allComponents)
+    EVector<EComponentRegisterEntry> allComponents = shared::ExtensionManager().GetComponentRegister().GetAllItems();
+    for (const EComponentRegisterEntry& dsc : allComponents)
     {
-        EWeakRef<EUIField> item = addMenu->AddChild(EMakeRef<EUIMenuItem>(dsc.GetId()));
+        EWeakRef<EUIField> item = addMenu->AddChild(EMakeRef<EUIMenuItem>(dsc.Description.GetId()));
         item.lock()->AddEventListener<events::EButtonEvent>([this, dsc](){
-            shared::CreateComponent(dsc, fSelectedEntity);
+            if (dsc.DefaultValue)
+            {
+                shared::CreateComponent(dsc.DefaultValue.get(), fSelectedEntity);
+            }
+            else
+            {
+                shared::CreateComponent(dsc.Description, fSelectedEntity);
+            }
         });
     }
 
