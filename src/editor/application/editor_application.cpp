@@ -64,7 +64,7 @@ void EApplication::RegenerateMainMenuBar()
     fMainMenu->Clear();
 
     ERef<EUIMenu> fileMenu = EMakeRef<EUIMenu>("File");
-    EWeakRef<EUIField> saveScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Save"));
+    EWeakRef<EUIField> saveScene = fileMenu->AddChild(EMakeRef<EUIMenuItem>("Save" ICON_MD_ALARM));
     saveScene.lock()->AddEventListener<events::EButtonEvent>([this](){
         EString saveToPath = Wrapper::SaveFileDialog("Save To", {"esc"});
         if (!saveToPath.empty())
@@ -189,14 +189,15 @@ void EApplication::Init(Graphics::GContext* context)
     ImGuiIO& io = ImGui::GetIO();
     io.Fonts->AddFontDefault();
     
-    EFile fontFile(FONT_ICON_FILE_NAME_MD);
-    if (fontFile.Exist())
-    {
-        // merge in icons from Font Awesome
-        static const ImWchar icons_ranges[] = { ICON_MIN_MD, ICON_MAX_MD, 0 };
-        ImFontConfig icons_config; icons_config.MergeMode = true; icons_config.PixelSnapH = false; icons_config.GlyphOffset = {0.0f, 4.0f};
-        io.Fonts->AddFontFromFileTTF( FONT_ICON_FILE_NAME_MD, 16.0f, &icons_config, icons_ranges );
-    }
+#include "MaterialIcons-Regular.h"
+
+    // merge in icons from Font Awesome
+    static const ImWchar icons_ranges[] = { ICON_MIN_MD, ICON_MAX_MD, 0 };
+    ImFontConfig icons_config; icons_config.FontDataOwnedByAtlas = false; icons_config.MergeMode = true; icons_config.PixelSnapH = false; icons_config.GlyphOffset = {0.0f, 4.0f};
+    io.Fonts->AddFontFromMemoryTTF((void*)MaterialIcons_Regular_buffer, MaterialIcons_Regular_size, 16.0f, &icons_config, icons_ranges);
+
+
+
 
     if (!fLoadOnStartRegister.empty())
     {
