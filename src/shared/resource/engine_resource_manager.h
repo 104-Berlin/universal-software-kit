@@ -111,7 +111,8 @@ namespace Engine {
         E_STORAGE_STRUCT(EResourceAddedEvent,
             (EResourceData::t_ID, ResourceID),
             (EString, Name),
-            (EString, PathToFile)
+            (EString, PathToFile),
+            (EString, ResourceType)
         )
 
     }

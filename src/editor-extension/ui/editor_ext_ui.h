@@ -72,6 +72,11 @@ namespace events {
         bool fIsContextMenuOpen;
 
         /**
+         * Is Tooltip open
+         */
+        bool fIsTooltipOpen;
+
+        /**
          * Width of the field.
          * If 0 default size will be calculated.
          */
@@ -113,6 +118,11 @@ namespace events {
          * The Context Menu. Should be type of EUIMenu
          */
         ERef<EUIField>  fContextMenu;
+
+        /**
+         * The tooltip
+         */
+        ERef<EUIField> fToolTip;
     public:
         EUIField(const EString& label);
 
@@ -243,15 +253,27 @@ namespace events {
 
         /**
          * @brief Set the context menu. Use nullptr for no context menu on this field
-         * @param menu The Context menu. Should be type of EUIMenu
+         * @param menu The Context menu. Any Content
          */
         void SetContextMenu(const ERef<EUIField>& menu);
+
+        /**
+         * @brief Set the tooltip. Use nullptr for no tooltip on this field
+         * @param menu The tooltip. Can be any content
+         */
+        void SetTooltip(const ERef<EUIField>& tooltip);
 
         /**
          * @brief Check if context menu is open
          * @return Is Context Open
          */
         bool IsContextMenuOpen() const;
+
+        /**
+         * @brief Check if tooltip is open
+         * @return Is Tooltip Open
+         */
+        bool IsTooltipOpen() const;
 
         /**
          * @brief Mark the Field dirty, so it will call CustomUpdateFunction on next render
@@ -523,7 +545,7 @@ namespace events
     class E_EDEXAPI EUIContainer : public EUIField
     {
     public:
-        EUIContainer(const EString& name);
+        EUIContainer(const EString& name = "CONTAINER");
 
         virtual bool OnRender() override;
         virtual void OnRenderEnd() override;

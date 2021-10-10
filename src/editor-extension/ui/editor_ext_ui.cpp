@@ -16,6 +16,7 @@ EUIField::EUIField(const EString& label)
         fVisible(true), 
         fDirty(false), 
         fIsContextMenuOpen(false),
+        fIsTooltipOpen(false),
         fWidthOverride(0),
         fHeightOverride(0),
         fCalculatedSize(),
@@ -111,8 +112,17 @@ void EUIField::HandleRenderEnd()
     fCalculatedSize.x = itemRect.GetWidth();
     fCalculatedSize.y = itemRect.GetHeight();
 
+    fIsTooltipOpen = false;
     if (ImGui::IsItemHovered())
     {
+        if (fToolTip)
+        {
+            fIsTooltipOpen = true;
+            ImGui::BeginTooltip();
+            fToolTip->Render();
+            ImGui::EndTooltip();
+        }
+
         EVec2 mousePos(ImGui::GetMousePos().x, ImGui::GetMousePos().y);
         mousePos -= EVec2(itemRect.Min.x, itemRect.Min.y);
 
@@ -180,6 +190,10 @@ void EUIField::UpdateEventDispatcher()
     {
         fContextMenu->UpdateEventDispatcher();
     }
+    if (fIsTooltipOpen)
+    {
+        fToolTip->UpdateEventDispatcher();
+    }
 }
 
 void EUIField::DisconnectAllEvents() 
@@ -238,9 +252,19 @@ void EUIField::SetContextMenu(const ERef<EUIField>& menu)
     fContextMenu = menu;   
 }
 
+void EUIField::SetTooltip(const ERef<EUIField>& tooltip)
+{
+    fToolTip = tooltip;
+}
+
 bool EUIField::IsContextMenuOpen() const
 {
     return fIsContextMenuOpen;
+}
+
+bool EUIField::IsTooltipOpen() const
+{
+    return fIsTooltipOpen;
 }
 
 void EUIField::SetDirty() 

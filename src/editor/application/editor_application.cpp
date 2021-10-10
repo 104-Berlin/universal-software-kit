@@ -275,4 +275,13 @@ void EApplication::RegisterDefaultResources()
     EResourceDescription imageDsc("Image",{"png", "jpeg", "bmp"});
     imageDsc.ImportFunction = &ResImage::ImportImage;
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", imageDsc);
+
+
+    // FOR TESTING PURPOSES
+    EResourceDescription pdfDescription("PDF", {"pdf"});
+    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", pdfDescription);
+
+    EResourceDescription textDescription("Text", {".txt"});
+    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", textDescription);
+    
 }
