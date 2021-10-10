@@ -36,7 +36,19 @@ namespace events {
         (u32,     MouseButton)
     )
 
+    E_STORAGE_STRUCT(EDropEvent, 
+        (EString, DragType),
+        (u64, DragDataAsID),
+        (EString, DragDataAsString)
+    )
+
 }
+
+    struct EUIDragData
+    {
+        u64 Data_ID;
+        EString Data_String;
+    };
 
     /**
      * Most Basic UI Element
@@ -123,6 +135,24 @@ namespace events {
          * The tooltip
          */
         ERef<EUIField> fToolTip;
+
+        /**
+         * The drag type of the field.
+         * If set to empty string no drag function is applied
+         * If set to some string you can drag the field. Use SetDragData() to specify specific data
+         */
+        EString fDragType;
+
+        /**
+         * The Drag data. You can set this to psh some more data to the drag source
+         */
+        EUIDragData fDragData;
+
+
+        /**
+         * The Drag type you can drop on this field
+         */
+        EString fAcceptDragType;
     public:
         EUIField(const EString& label);
 
@@ -163,6 +193,12 @@ namespace events {
          * Some kind of HTML representation could be possible
          */
         void Render();
+
+
+        /**
+         * @brief Handles end of rendering before OnRenderEnd() got called
+         */
+        void HandleRenderEndBefore();
 
         /**
          * @brief Handles the end of rendering
@@ -279,6 +315,25 @@ namespace events {
          * @brief Mark the Field dirty, so it will call CustomUpdateFunction on next render
          */
         void SetDirty();
+
+        
+        /**
+         * @brief Sets the type of the drag source. Specify empty string to disable dragging
+         * @param type Some String identifier for the drag source
+         */
+        void SetDragType(const EString& type);
+
+        /**
+         * @brief Set the drag data. You need to set the DragType to in order to make this field a drag source
+         * @param data The Extra data you provide to the drag source
+         */
+        void SetDragData(EUIDragData data);
+
+        /**
+         * @brief Set the type for the accepted drops
+         * @param type Thte type of the DragSource. Setted by SetDragType() from anouther UIField
+         */
+        void AcceptDrag(const EString& type);
 
         /**
          * Adds a listener to specified EventType

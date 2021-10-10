@@ -187,9 +187,11 @@ void EApplication::Init(Graphics::GContext* context)
 
 
     ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->AddFontDefault();
     
 #include "MaterialIcons-Regular.h"
+#include "Roboto-Regular.h"
+    ImFontConfig icons_config_01; icons_config_01.FontDataOwnedByAtlas = false;
+    io.Fonts->AddFontFromMemoryTTF((void*)Roboto_Regular_buffer, Roboto_Regular_size, 16.0f, &icons_config_01);
 
     // merge in icons from Font Awesome
     static const ImWchar icons_ranges[] = { ICON_MIN_MD, ICON_MAX_MD, 0 };
@@ -291,12 +293,17 @@ void EApplication::RegisterDefaultResources()
 
 void EApplication::RegisterDefaultComponentRender() 
 {
-    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop){
+    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, ERegister::Entity entity, const EString& nameIdent){
         ERef<EUIField> result = EMakeRef<EUIField>("ResourceLink");
         EResourceLink resourceLink;
         if (convert::getter(prop, &resourceLink))
         {
-            result->AddChild(EMakeRef<EUISelectable>(resourceLink.Type));
+            EWeakRef<EUIField> resource = result->AddChild(EMakeRef<EUISelectable>(resourceLink.Type));
+            resource.lock()->AcceptDrag("ResourceImage");
+            resource.lock()->AddEventListener<events::EDropEvent>([resource, entity, nameIdent](events::EDropEvent e){
+
+                shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink("Image", e.DragDataAsID));
+            });
         }
         return result;
     }});

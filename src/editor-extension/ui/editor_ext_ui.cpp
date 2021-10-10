@@ -20,7 +20,9 @@ EUIField::EUIField(const EString& label)
         fWidthOverride(0),
         fHeightOverride(0),
         fCalculatedSize(),
-        fLastMousePos(0.0f, 0.0f)
+        fLastMousePos(0.0f, 0.0f),
+        fDragType(),
+        fDragData()
 {
     
 }
@@ -72,6 +74,7 @@ void EUIField::Render()
         fDirty = false;
     }
     ImGui::PushID(fID);
+
     if (OnRender())
     {
         for (ERef<EUIField> uiField : fChildren)
@@ -81,6 +84,8 @@ void EUIField::Render()
             OnAfterChildRender();
         }
     }
+    
+    HandleRenderEndBefore();
     OnRenderEnd();
     HandleRenderEnd();
     ImGui::PopID();
@@ -91,11 +96,52 @@ bool EUIField::OnRender()
     return true;
 }
 
+void EUIField::HandleRenderEndBefore()
+{
+    if (ImGui::IsItemHovered())
+    {
+        if (fToolTip)
+        {
+            fIsTooltipOpen = true;
+            ImGui::BeginTooltip();
+            fToolTip->Render();
+            ImGui::EndTooltip();
+        }
+    }
+    
+    if (!fAcceptDragType.empty())
+    {
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(fAcceptDragType.c_str()))
+            {
+                EUIDragData dragData = *(EUIDragData*)payload->Data;
+                fEventDispatcher.Enqueue<events::EDropEvent>({fAcceptDragType, dragData.Data_ID, dragData.Data_String});
+            }
+            ImGui::EndDragDropTarget();
+        }
+    }
+
+    if (!fDragType.empty())
+    {
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+        {
+
+            ImGui::SetDragDropPayload(fDragType.c_str(), &fDragData, sizeof(EUIDragData));
+            ImGui::Text(fDragType.c_str());
+            ImGui::EndDragDropSource();
+        }
+    }
+    
+}
+
 void EUIField::HandleRenderEnd()
 {
     ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
     ImGuiWindow* window = g.CurrentWindow;
 
+
+    
     fIsContextMenuOpen = false;
     if (fContextMenu)
     {
@@ -107,6 +153,7 @@ void EUIField::HandleRenderEnd()
         }
     }
 
+
     ImRect itemRect = g.LastItemData.Rect;
     
     fCalculatedSize.x = itemRect.GetWidth();
@@ -115,14 +162,6 @@ void EUIField::HandleRenderEnd()
     fIsTooltipOpen = false;
     if (ImGui::IsItemHovered())
     {
-        if (fToolTip)
-        {
-            fIsTooltipOpen = true;
-            ImGui::BeginTooltip();
-            fToolTip->Render();
-            ImGui::EndTooltip();
-        }
-
         EVec2 mousePos(ImGui::GetMousePos().x, ImGui::GetMousePos().y);
         mousePos -= EVec2(itemRect.Min.x, itemRect.Min.y);
 
@@ -270,6 +309,21 @@ bool EUIField::IsTooltipOpen() const
 void EUIField::SetDirty() 
 {
     fDirty = true;
+}
+
+void EUIField::SetDragType(const EString& type)
+{
+    fDragType = type;
+}
+
+void EUIField::SetDragData(EUIDragData data)
+{
+    fDragData = data;
+}
+
+void EUIField::AcceptDrag(const EString& type)
+{
+    fAcceptDragType = type;
 }
 
 EUIPanel::EUIPanel(const EString& title) 

@@ -67,7 +67,10 @@ EResourceView::EResourceView()
         if (fSelectedResourceType.empty()) { return; }
         for (const Resource& res : fResources[fSelectedResourceType])
         {
-            resourceList.lock()->AddChild(EMakeRef<EUISelectable>(res.Name)).lock()->SetTooltip(EMakeRef<EUILabel>(std::to_string(res.ID)));
+            EWeakRef<EUIField> resourceField = resourceList.lock()->AddChild(EMakeRef<EUISelectable>(res.Name));
+            resourceList.lock()->SetTooltip(EMakeRef<EUILabel>(std::to_string(res.ID)));
+            resourceList.lock()->SetDragType("Resource" + fSelectedResourceType);
+            resourceList.lock()->SetDragData({res.ID});
         }
     });
 

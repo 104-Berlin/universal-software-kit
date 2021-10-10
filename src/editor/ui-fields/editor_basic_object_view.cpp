@@ -83,7 +83,7 @@ ERef<EUIField> EObjectView::RenderProperty(Engine::EProperty* storage, EString n
     EUIValueRegisterEntry valueRender;
     if (fUIValueRegister && fUIValueRegister->FindItem(EFindValueFieldByType(propertyDsc.GetId()), &valueRender))
     {
-        return valueRender.second(storage);
+        return valueRender.second(storage, fSelectedEntity, nameIdent);
     }
 
     switch (type)

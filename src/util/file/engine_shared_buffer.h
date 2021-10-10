@@ -111,23 +111,27 @@ namespace Engine {
 
         void* Data()
         {
+            if (!fBuffer) { return nullptr; }
             return fBuffer->Get();
         }
 
         const void* Data() const
         {
+            if (!fBuffer) { return nullptr; }
             return fBuffer->Get();
         }
 
         template <typename T>
         T* Data()
         {
+            if (!fBuffer) { return nullptr; }
             return (T*)fBuffer->Get();
         }
 
         template <typename T>
         const T* Data() const
         {
+            if (!fBuffer) { return nullptr; }
             return (T*)fBuffer->Get();
         }
 
