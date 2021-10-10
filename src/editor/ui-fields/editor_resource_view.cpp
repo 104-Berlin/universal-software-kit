@@ -15,7 +15,7 @@ EResourceView::EResourceView()
     resourceTypeContainer.lock()->SetCustomUpdateFunction([resourceTypeContainer](){
         if (resourceTypeContainer.expired()) { return; }
         resourceTypeContainer.lock()->Clear();
-        auto allResources = shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().GetAllItems();
+        auto allResources = shared::ExtensionManager().GetResourceRegister().GetAllItems();
         for (auto res : allResources)
         {
             EWeakRef<EUIField> selectField = resourceTypeContainer.lock()->AddChild(EMakeRef<EUISelectable>(res.ResourceName));
