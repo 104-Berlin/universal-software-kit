@@ -138,10 +138,7 @@ void EUIField::HandleRenderEndBefore()
 void EUIField::HandleRenderEnd()
 {
     ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
-    ImGuiWindow* window = g.CurrentWindow;
 
-
-    
     fIsContextMenuOpen = false;
     if (fContextMenu)
     {
