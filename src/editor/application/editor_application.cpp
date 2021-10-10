@@ -21,8 +21,8 @@ E_STORAGE_STRUCT(MyType,
 EApplication::EApplication() 
     : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
 {
-    shared::StaticSharedContext::instance().GetExtensionManager().AddEventListener<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent event) {
-        EExtension* extension = shared::StaticSharedContext::instance().GetExtensionManager().GetExtension(event.Extension);
+    shared::ExtensionManager().AddEventListener<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent event) {
+        EExtension* extension = shared::ExtensionManager().GetExtension(event.Extension);
         auto entry = (void(*)(const char*, Engine::EAppInit))extension->GetFunction("app_entry");
         if (entry)
         {
@@ -38,7 +38,7 @@ EApplication::EApplication()
         }
     });
 
-    shared::StaticSharedContext::instance().GetExtensionManager().AddEventListener<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
+    shared::ExtensionManager().AddEventListener<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
         for (ERef<EUIPanel> panel : fUIRegister.GetItems(event.ExtensionName))
         {
             panel->DisconnectAllEvents();
@@ -49,7 +49,7 @@ EApplication::EApplication()
     fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
         this->RegenerateMainMenuBar();
     });
-    shared::StaticSharedContext::instance().GetExtensionManager().GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
+    shared::ExtensionManager().GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
 }
 
 void EApplication::Start(const EString& defaultRegisterPath) 
@@ -82,7 +82,7 @@ void EApplication::RegenerateMainMenuBar()
             sceneFile.LoadToMemory();
             if (!sceneFile.GetBuffer().IsNull())
             {
-                shared::StaticSharedContext::instance().GetExtensionManager().Reload();
+                shared::ExtensionManager().Reload();
                 shared::LoadRegisterFromBuffer(sceneFile.GetBuffer());
             }
         }
@@ -96,7 +96,7 @@ void EApplication::RegenerateMainMenuBar()
 
             EString type = resourceFile.GetFileExtension();
             EResourceDescription foundDescription;
-            if (shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
+            if (shared::ExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
                 foundDescription.ImportFunction)
             {
                 EResourceData* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);

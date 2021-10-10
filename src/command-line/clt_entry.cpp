@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 {
     shared::StaticSharedContext::Start();
     
-    shared::StaticSharedContext::instance().GetExtensionManager().GetTypeRegister().RegisterItem("CommandLine", CommandType::_dsc);
+    shared::ExtensionManager().GetTypeRegister().RegisterItem("CommandLine", CommandType::_dsc);
 
     EString input;
     do

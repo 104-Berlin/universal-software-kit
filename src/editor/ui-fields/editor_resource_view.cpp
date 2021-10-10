@@ -6,16 +6,36 @@ using namespace Engine;
 EResourceView::EResourceView() 
     : EUIField("RESOURCE_MANAGER"), selectedResource(0)
 {
-    shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<events::EResourceAddedEvent>([this](events::EResourceAddedEvent event){
-        fResources.push_back({event.ResourceID, event.Name, event.PathToFile});
-    });
 
     EWeakRef<EUIField> resourceTypeContainer = AddChild(EMakeRef<EUIContainer>());
     resourceTypeContainer.lock()->SetWidth(150);
+    resourceTypeContainer.lock()->SetDirty();
     
+
     resourceTypeContainer.lock()->SetCustomUpdateFunction([resourceTypeContainer](){
         if (resourceTypeContainer.expired()) { return; }
         resourceTypeContainer.lock()->Clear();
+        auto allResources = shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().GetAllItems();
+        for (auto res : allResources)
+        {
+            EWeakRef<EUIField> selectField = resourceTypeContainer.lock()->AddChild(EMakeRef<EUISelectable>(res.ResourceName));
+            selectField.lock()->AddEventListener<events::ESelectionChangeEvent>([](events::ESelectionChangeEvent event){
+                if (event.Selected)
+                {
+
+                }
+                else
+                {
+
+                }
+            });
+        }
+    });
+
+    shared::Events().Connect<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent e){
+        RegenAddComponentMenu();
+    }, this);
+    shared::Events().Connect<events::EResourceAddedEvent>([](events::EResourceAddedEvent event){
         
     });
 }

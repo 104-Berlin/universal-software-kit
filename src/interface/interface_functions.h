@@ -4,19 +4,13 @@ namespace Engine {
 
     namespace shared {
 
-        class E_INTER_API ERegisterEventDispatcher
+        class E_INTER_API ERegisterEventDispatcher : public EEventDispatcher
         {
-        private:
-            EEventDispatcher fEventDispatcher;
-
         public:
-            EEventDispatcher& GetEventDispatcher();
-            const EEventDispatcher& GetEventDispatcher() const;
-
             template <typename Callback>
             void AddComponentCreateEventListener(const EValueDescription& description, Callback cb, void* key = 0)
             {
-                fEventDispatcher.Connect<ComponentCreateEvent>([cb, description](ComponentCreateEvent event){
+                Connect<ComponentCreateEvent>([cb, description](ComponentCreateEvent event){
                     if (event.ValueId == description.GetId())
                     {
                         cb(event.Handle);
@@ -27,7 +21,7 @@ namespace Engine {
             template <typename Callback>
             void AddComponentDeleteEventListener(const EValueDescription& description, Callback cb, void* key = 0)
             {
-                fEventDispatcher.Connect<ComponentDeleteEvent>([cb, description](ComponentDeleteEvent event){
+                Connect<ComponentDeleteEvent>([cb, description](ComponentDeleteEvent event){
                     if (description.GetId() == event.ValueId)
                     {
                         std::invoke(cb, event.Handle);
@@ -38,7 +32,7 @@ namespace Engine {
             template <typename Callback>
             void AddEntityChangeEventListener(const EString& valueIdent, Callback cb, void* key = 0)
             {
-                fEventDispatcher.Connect<ValueChangeEvent>([cb, valueIdent](ValueChangeEvent event){
+                Connect<ValueChangeEvent>([cb, valueIdent](ValueChangeEvent event){
                     if (event.Identifier.length() < valueIdent.length()) {return;}
                     if (valueIdent == event.Identifier.substr(0, valueIdent.length()))
                     {
@@ -81,9 +75,13 @@ namespace Engine {
         public:
             virtual ~EAutoContextEventRelease()
             {
-                StaticSharedContext::instance().Events().GetEventDispatcher().Disconnect(this);
+                StaticSharedContext::instance().Events().Disconnect(this);
             }
         };
+
+        E_INTER_API ERegisterEventDispatcher& Events();
+        E_INTER_API EExtensionManager& ExtensionManager();
+
         
         // ERROR:
         // false = NO ERROR

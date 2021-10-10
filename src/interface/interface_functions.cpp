@@ -8,6 +8,17 @@ using namespace Engine;
 
 shared::StaticSharedContext* shared::StaticSharedContext::fInstance = nullptr;
 
+
+shared::ERegisterEventDispatcher& shared::Events()
+{
+    return shared::StaticSharedContext::instance().Events();
+}
+
+EExtensionManager& shared::ExtensionManager()
+{
+    return shared::StaticSharedContext::instance().GetExtensionManager();
+}
+
 shared::ESharedError shared::LoadExtension(const EString& pathToExtension) 
 {
     
@@ -120,16 +131,6 @@ ESharedBuffer shared::GetRegisterAsBuffer()
 namespace Engine {
     
     namespace shared {
-        EEventDispatcher& ERegisterEventDispatcher::GetEventDispatcher() 
-        {
-            return fEventDispatcher;
-        }
-        
-        const EEventDispatcher& ERegisterEventDispatcher::GetEventDispatcher() const
-        {
-            return fEventDispatcher;
-        }
-    
 
         StaticSharedContext::StaticSharedContext() 
             : fRegisterSocket(nullptr)
@@ -148,10 +149,10 @@ namespace Engine {
         #endif
 
             fRegisterConnection.GetEventDispatcher().ConnectAll([this](EStructProperty* property){
-                fRegisterEventDispatcher.GetEventDispatcher().Post_P(property->GetDescription(), property);
+                fRegisterEventDispatcher.Post_P(property->GetDescription(), property);
             });
             fExtensionManager.GetEventDispatcher().ConnectAll([this](EStructProperty* property){
-                fRegisterEventDispatcher.GetEventDispatcher().Post_P(property->GetDescription(), property);
+                fRegisterEventDispatcher.Post_P(property->GetDescription(), property);
             });
 
 

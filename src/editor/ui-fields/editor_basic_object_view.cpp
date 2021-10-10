@@ -7,7 +7,7 @@ EObjectView::EObjectView()
     : EUIField("OBJECTVIEW"), fSelectedEntity(0)
 {
     
-    shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<EntityCreateEvent>([this](EntityCreateEvent event){
+    shared::Events().Connect<EntityCreateEvent>([this](EntityCreateEvent event){
         if (fEntitiesTable.expired()) { return; }
     
         ERef<EUITableRow> newRow = EMakeRef<EUITableRow>();
@@ -36,13 +36,13 @@ EObjectView::EObjectView()
 
         //newRow->AddChild(EMakeRef<EUILabel>("Some Text"));
     }, this);
-    shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<ComponentCreateEvent>([this](ComponentCreateEvent event){
+    shared::Events().Connect<ComponentCreateEvent>([this](ComponentCreateEvent event){
         if (event.Handle == fSelectedEntity)
         {
             fComponentsView.lock()->SetDirty();
         }
     }, this);
-    shared::StaticSharedContext::instance().Events().GetEventDispatcher().Connect<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent e){
+    shared::Events().Connect<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent e){
         RegenAddComponentMenu();
     }, this);
 
@@ -177,7 +177,7 @@ ERef<EUIField> EObjectView::RenderArray(Engine::EArrayProperty* storage, EString
 
 
 
-    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener(nameIdent, [weakRef](ERegister::Entity entity, const EString& valueIdent){
+    shared::Events().AddEntityChangeEventListener(nameIdent, [weakRef](ERegister::Entity entity, const EString& valueIdent){
         if (weakRef.expired()) { return;}
         weakRef.lock()->SetDirty();
     }, field.get());
@@ -194,7 +194,7 @@ ERef<EUIField> EObjectView::RenderBool(Engine::EValueProperty<bool>* storage, ES
     result->AddEventListener<events::ECheckboxEvent>([this, nameIdent](events::ECheckboxEvent event){
         shared::SetValue<bool>(fSelectedEntity, nameIdent, event.Checked);
     });
-    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
+    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (entity != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
         ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
@@ -214,7 +214,7 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage, 
         shared::SetValue<i32>(fSelectedEntity, nameIdent, event.Value);
     });
 
-    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
+    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (entity != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
         ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
@@ -234,7 +234,7 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u32>* storage, 
         shared::SetValue<i32>(fSelectedEntity, nameIdent, event.Value);
     });
 
-    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
+    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (entity != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
         ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
@@ -254,7 +254,7 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u64>* storage, 
     });
 
 
-    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
+    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (entity != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
         ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
@@ -275,7 +275,7 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<double>* storage
     });
 
 
-    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
+    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (entity != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
         ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
@@ -296,7 +296,7 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<float>* storage,
     });
 
 
-    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
+    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (entity != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
         ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
@@ -315,7 +315,7 @@ ERef<EUIField> EObjectView::RenderString(Engine::EValueProperty<EString>* storag
         shared::SetValue<EString>(fSelectedEntity, nameIdent, event.Value);
     });
 
-    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener(nameIdent, [weakResult](ERegister::Entity entity, const EString& valueIdent){
+    shared::Events().AddEntityChangeEventListener(nameIdent, [weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (weakResult.expired()) { return; }
         ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
         weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<EString>>(prop)->GetValue());
@@ -342,7 +342,7 @@ void EObjectView::RegenAddComponentMenu()
     ERef<EUIField> componentContextMenu = EMakeRef<EUIField>("Context Menu");
     ERef<EUIMenu> addMenu = EMakeRef<EUIMenu>("Add Component");
 
-    EVector<EValueDescription> allComponents = shared::StaticSharedContext::instance().GetExtensionManager().GetTypeRegister().GetAllItems();
+    EVector<EValueDescription> allComponents = shared::ExtensionManager().GetTypeRegister().GetAllItems();
     for (const EValueDescription& dsc : allComponents)
     {
         EWeakRef<EUIField> item = addMenu->AddChild(EMakeRef<EUIMenuItem>(dsc.GetId()));
