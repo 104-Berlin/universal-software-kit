@@ -4,7 +4,7 @@ using namespace Editor;
 using namespace Engine;
 
 EResourceView::EResourceView() 
-    : EUIField("RESOURCE_MANAGER"), fLastSelected(nullptr), fPreviewSize(24.0f)
+    : EUIField("RESOURCE_MANAGER"), fLastSelected(nullptr), fPreviewSize(64.0f)
 {
 
     EWeakRef<EUIField> resourceTypeContainer = AddChild(EMakeRef<EUIContainer>());
