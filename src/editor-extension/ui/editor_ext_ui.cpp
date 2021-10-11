@@ -44,6 +44,17 @@ EWeakRef<EUIField> EUIField::GetChildAt(u32 index) const
     return ERef<EUIField>(nullptr);
 }
 
+
+EVector<EWeakRef<EUIField>> EUIField::GetChildren() const
+{
+    EVector<EWeakRef<EUIField>> result;
+    for (auto& entry : fChildren)
+    {
+        result.push_back(entry);
+    }
+    return result;
+}
+
 void EUIField::RemoveChild(const EWeakRef<EUIField>& child) 
 {
     if (child.expired()) {return;}
@@ -839,4 +850,61 @@ bool EUITableRow::OnRender()
     fCurrentTableIndex = 0;
     ImGui::TableNextRow();
     return true;
+}
+
+EUIGrid::EUIGrid(float size)
+    : EUIGrid(size, size)
+{
+
+}
+
+EUIGrid::EUIGrid(float cellWidth, float cellHeight)
+    : EUIField("GRID"), fCellWidth(cellWidth), fCellHeight(cellHeight), fCurrentChildCount(0)
+{
+
+}
+
+void EUIGrid::SetCellSize(float size)
+{
+    SetCellWidth(size);
+    SetCellHeight(size);
+}
+
+void EUIGrid::SetCellWidth(float width)
+{
+    fCellWidth = width;
+}
+
+void EUIGrid::SetCellHeight(float height)
+{
+    fCellHeight = height;
+}
+
+
+bool EUIGrid::OnRender()
+{
+    fCurrentChildCount = 0;
+    
+    fCurrentWidthAvail = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+    return true;
+}
+
+void EUIGrid::OnBeforeChildRender()
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (fCurrentChildCount != 0)
+    {
+        float last_button_x2 = ImGui::GetItemRectMax().x;
+        float next_button_x2 = last_button_x2 + style.ItemSpacing.x + fCellWidth; // Expected position if next button was on same line
+        if (fCurrentChildCount + 1 < fChildren.size() && next_button_x2 < fCurrentWidthAvail)
+        {
+            ImGui::SameLine();
+        }
+    }
+    fCurrentChildCount++;
+    ImGui::SetNextItemWidth(fCellWidth);
+}
+
+void EUIGrid::OnAfterChildRender()
+{
 }

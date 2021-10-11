@@ -4,7 +4,7 @@ using namespace Editor;
 using namespace Engine;
 
 EResourceView::EResourceView() 
-    : EUIField("RESOURCE_MANAGER"), fLastSelected(nullptr)
+    : EUIField("RESOURCE_MANAGER"), fLastSelected(nullptr), fPreviewSize(24.0f)
 {
 
     EWeakRef<EUIField> resourceTypeContainer = AddChild(EMakeRef<EUIContainer>());
@@ -63,14 +63,30 @@ EResourceView::EResourceView()
     resourceList.lock()->SetCustomUpdateFunction([this, resourceList](){
         if (resourceList.expired()) { return; }
         resourceList.lock()->Clear();
+        EWeakRef<EUIField> changeSize = resourceList.lock()->AddChild(EMakeRef<EUIFloatEdit>("Size"));
+        static_cast<EUIFloatEdit*>(changeSize.lock().get())->SetValue(fPreviewSize);
+        EWeakRef<EUIField> resourceGrid = resourceList.lock()->AddChild(EMakeRef<EUIGrid>(fPreviewSize));
+
+
+        changeSize.lock()->AddEventListener<events::EFloatChangeEvent>([this, resourceGrid](events::EFloatChangeEvent event){
+            if (resourceGrid.expired()) { return; }
+            static_cast<EUIGrid*>(resourceGrid.lock().get())->SetCellSize(event.Value);
+            for (EWeakRef<EUIField> gridItem : resourceGrid.lock()->GetChildren())
+            {
+                gridItem.lock()->SetWidth(event.Value);
+                gridItem.lock()->SetHeight(event.Value);
+            }
+        });
 
         if (fSelectedResourceType.empty()) { return; }
         for (const Resource& res : fResources[fSelectedResourceType])
         {
-            EWeakRef<EUIField> resourceField = resourceList.lock()->AddChild(EMakeRef<EUISelectable>(res.Name));
-            resourceList.lock()->SetTooltip(EMakeRef<EUILabel>(std::to_string(res.ID)));
-            resourceList.lock()->SetDragType("Resource" + fSelectedResourceType);
-            resourceList.lock()->SetDragData({res.ID});
+            EWeakRef<EUIField> resourceField = resourceGrid.lock()->AddChild(EMakeRef<EUIButton>(res.Name));
+            resourceField.lock()->SetWidth(fPreviewSize);
+            resourceField.lock()->SetHeight(fPreviewSize);
+            resourceField.lock()->SetTooltip(EMakeRef<EUILabel>(std::to_string(res.ID)));
+            resourceField.lock()->SetDragType("Resource" + fSelectedResourceType);
+            resourceField.lock()->SetDragData({res.ID});
         }
     });
 

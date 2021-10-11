@@ -171,6 +171,12 @@ namespace events {
         EWeakRef<EUIField> GetChildAt(u32 index) const;
 
         /**
+         * @brief Get all children
+         * @return List of children
+         */
+        EVector<EWeakRef<EUIField>> GetChildren() const;
+
+        /**
          * Removes a child from the list
          * @param child Weak pointer to field which gets deleted.
          */
@@ -647,5 +653,25 @@ namespace events
         virtual bool OnRender() override;
     };
 
+    class E_EDEXAPI EUIGrid : public EUIField
+    {
+    private:
+        float fCellWidth;
+        float fCellHeight;
+
+        float fCurrentWidthAvail;
+        u32 fCurrentChildCount;
+    public:
+        EUIGrid(float size = 24.0f);
+        EUIGrid(float cellWidth, float cellHeight);
+
+        void SetCellSize(float size);
+        void SetCellWidth(float width);
+        void SetCellHeight(float height);
+
+        virtual bool OnRender() override;
+        virtual void OnBeforeChildRender() override;
+        virtual void OnAfterChildRender() override;
+    };
 
 }

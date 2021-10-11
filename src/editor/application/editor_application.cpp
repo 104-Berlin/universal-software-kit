@@ -112,8 +112,6 @@ void EApplication::RegenerateMainMenuBar()
                 }
                 else
                 {
-                    // TODO: Show modal
-                    E_ERROR("Could not find converter for resource with file ending " + type);
                 }
 
             }
@@ -286,7 +284,7 @@ void EApplication::RegisterDefaultResources()
     EResourceDescription pdfDescription("PDF", {"pdf"});
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", pdfDescription);
 
-    EResourceDescription textDescription("Text", {".txt"});
+    EResourceDescription textDescription("Text", {"txt", "cpp"});
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", textDescription);
     
 }
@@ -298,7 +296,7 @@ void EApplication::RegisterDefaultComponentRender()
         EResourceLink resourceLink;
         if (convert::getter(prop, &resourceLink))
         {
-            EWeakRef<EUIField> resource = result->AddChild(EMakeRef<EUISelectable>(resourceLink.Type));
+            EWeakRef<EUIField> resource = result->AddChild(EMakeRef<EUIButton>(resourceLink.Type));
             resource.lock()->AcceptDrag("ResourceImage");
             resource.lock()->AddEventListener<events::EDropEvent>([resource, entity, nameIdent](events::EDropEvent e){
 

@@ -13,6 +13,7 @@ namespace Editor {
         EUnorderedMap<EString, EVector<Resource>>    fResources;
         EUIField*                  fLastSelected;
 
+        float fPreviewSize;
         EString                             fSelectedResourceType;
     public:
         EResourceView();
