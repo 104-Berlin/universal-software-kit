@@ -47,6 +47,11 @@ shared::ESharedError shared::LoadRegisterFromBuffer(ESharedBuffer buffer)
 }
 
 
+shared::ESharedError shared::CreateComponent_c_str(const char* componentId, ERegister::Entity entity) 
+{
+    return CreateComponent(EString(componentId), entity);
+}
+
 shared::ESharedError shared::CreateComponent(const EString& componentId, ERegister::Entity entity) 
 {
     EValueDescription desc;

@@ -91,17 +91,39 @@ namespace Engine {
         using ESharedError = bool; // Error is bool for now. Replace with actual errors
 
 
-        // Setter
-        ESharedError E_INTER_API LoadExtension(const EString& pathToExtension);
-        ESharedError E_INTER_API CreateEntity();
-
-        ESharedError E_INTER_API LoadRegisterFromBuffer(ESharedBuffer buffer);
         
-        ESharedError E_INTER_API CreateComponent(const EString& componentId, ERegister::Entity entity);
-        ESharedError E_INTER_API CreateComponent(const EValueDescription& componentId, ERegister::Entity entity);
-        ESharedError E_INTER_API CreateResource(EResourceData* data);
+        extern "C" ESharedError E_INTER_API CreateComponent_c_str(const char* componentId, ERegister::Entity entity);
 
-        ESharedError E_INTER_API SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
+
+            // Setter
+            ESharedError E_INTER_API LoadExtension(const EString& pathToExtension);
+            ESharedError E_INTER_API CreateEntity();
+
+            ESharedError E_INTER_API LoadRegisterFromBuffer(ESharedBuffer buffer);
+            
+            ESharedError E_INTER_API CreateComponent(const EString& componentId, ERegister::Entity entity);
+            ESharedError E_INTER_API CreateComponent(const EValueDescription& componentId, ERegister::Entity entity);
+            ESharedError E_INTER_API CreateResource(EResourceData* data);
+
+            ESharedError E_INTER_API SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
+
+
+            ESharedError E_INTER_API AddArrayEntry(ERegister::Entity entity, const EString& ident);
+
+
+            // Getter
+            
+            E_INTER_API ERef<EProperty> GetValue(ERegister::Entity entity, const EString& vlaueIdent);
+
+                
+
+            E_INTER_API EVector<ERef<EProperty>> GetAllComponents(ERegister::Entity entity);
+            E_INTER_API ERef<EResourceData> GetResource(EResourceData::t_ID id);
+            E_INTER_API EVector<ERef<EResourceData>> GetLoadedResource(); // This wont return the data of the resource. Fetch them manuel
+            E_INTER_API ESharedBuffer GetRegisterAsBuffer();
+
+
+       // Templates for easy c access
 
         template <typename T>
         ESharedError SetValue(ERegister::Entity entity, const EString& valueIdent, const T& value)
@@ -116,13 +138,6 @@ namespace Engine {
             }
             return false;
         }
-
-        ESharedError E_INTER_API AddArrayEntry(ERegister::Entity entity, const EString& ident);
-
-
-        // Getter
-        
-       E_INTER_API ERef<EProperty> GetValue(ERegister::Entity entity, const EString& vlaueIdent);
 
         template <typename T>
         T GetValue(ERegister::Entity entity)
@@ -139,11 +154,6 @@ namespace Engine {
             }
             return result;
         }
-
-       E_INTER_API EVector<ERef<EProperty>> GetAllComponents(ERegister::Entity entity);
-       E_INTER_API ERef<EResourceData> GetResource(EResourceData::t_ID id);
-       E_INTER_API EVector<ERef<EResourceData>> GetLoadedResource(); // This wont return the data of the resource. Fetch them manuel
-       E_INTER_API ESharedBuffer GetRegisterAsBuffer();
     }
 
 }
