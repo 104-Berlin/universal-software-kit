@@ -169,7 +169,7 @@ namespace Engine {
             {
                 T initValue = T();
                 ERef<EStructProperty> initProperty = ERef<EStructProperty>(static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc)));
-                if (convert::setter<T>(initProperty.get(), initValue))
+                if (!convert::setter<T>(initProperty.get(), initValue))
                 {
                     E_WARN("Could not register the correct default value for type " + dsc.GetId());
                 }
