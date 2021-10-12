@@ -139,7 +139,7 @@ void EUIField::HandleRenderEndBefore()
         {
 
             ImGui::SetDragDropPayload(fDragType.c_str(), &fDragData, sizeof(EUIDragData));
-            ImGui::Text(fDragType.c_str());
+            ImGui::Text("%s", fDragType.c_str());
             ImGui::EndDragDropSource();
         }
     }
