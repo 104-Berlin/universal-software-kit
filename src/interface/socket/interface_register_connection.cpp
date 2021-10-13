@@ -22,13 +22,12 @@ void ERegisterConnection::Send_CreateNewEntity()
     SendToServer(packet);
 }
 
-void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, const EValueDescription& description) 
+void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, EStructProperty* initValue) 
 {
-    E_ASSERT(description.Valid());
-    if (!description.Valid()) { return; }
+    E_ASSERT(initValue);
+    if (!initValue) { return; }
 
-    EJson createJson = EJson::object();
-    createJson["ValueDescription"] = ESerializer::WriteStorageDescriptionToJson(description);
+    EJson createJson = ESerializer::WritePropertyToJs(initValue, true);
     createJson["Entity"] = entity;
 
 

@@ -27,10 +27,10 @@
 #define E_COMPLETE_CONSTRUCTOR2(type, name, ...) name = EXPAND ( E_CONCATENATE(_, name) );
 #define E_COMPLETE_CONSTRUCTOR(typename) EXPAND ( E_COMPLETE_CONSTRUCTOR2 typename )
 
-#define E_CONSTRUCTOR_ARG2(type, name, ...) const type& EXPAND ( E_CONCATENATE(_, name) ),
+#define E_CONSTRUCTOR_ARG2(type, name, ...) const type& EXPAND ( E_CONCATENATE(_, name) ) = type ( __VA_ARGS__ ),
 #define E_CONSTRUCTOR_ARG(typename) EXPAND ( E_CONSTRUCTOR_ARG2 typename )
 
-#define E_CONSTRUCTOR_ARG_L2(type, name, ...) const type& EXPAND ( E_CONCATENATE(_, name) )
+#define E_CONSTRUCTOR_ARG_L2(type, name, ...) const type& EXPAND ( E_CONCATENATE(_, name) ) = type ( __VA_ARGS__ )
 #define E_CONSTRUCTOR_ARG_LAST(typename) EXPAND ( E_CONSTRUCTOR_ARG_L2 typename )
 
 
@@ -103,10 +103,6 @@
                                             EXPAND (E_LOOP_ARGS(E_CREATE_STRUCT_DSC, __VA_ARGS__))\
                                         });\
                                         \
-                                        name()\
-                                        {\
-                                            EXPAND ( E_LOOP_ARGS ( E_DEFAULT_CONSTRUCTUR, __VA_ARGS__ ) )\
-                                        }\
                                         name ( EXPAND ( E_LOOP_ARGS_L( E_CONSTRUCTOR_ARG, __VA_ARGS__ ) ) )\
                                         {\
                                             EXPAND ( E_LOOP_ARGS ( E_COMPLETE_CONSTRUCTOR, __VA_ARGS__ ) )\

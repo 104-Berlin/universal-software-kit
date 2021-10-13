@@ -17,7 +17,7 @@ EExtensionView::~EExtensionView()
 bool EExtensionView::OnRender() 
 {
     {
-        EVector<EExtension*> loadedExtensions = shared::StaticSharedContext::instance().GetExtensionManager().GetLoadedExtensions();
+        EVector<EExtension*> loadedExtensions = shared::ExtensionManager().GetLoadedExtensions();
         for (EExtension* ext : loadedExtensions)
         {
             EString name = ext->GetName();
@@ -26,21 +26,21 @@ bool EExtensionView::OnRender()
             ImGui::SameLine();
             if (ImGui::Button("Reload"))
             {
-                shared::StaticSharedContext::instance().GetExtensionManager().ReloadExtension(ext);
+                shared::ExtensionManager().ReloadExtension(ext);
                 // The ext ptr is invald after here. 
                 break; // For now we just break. Cases other extensions to disappear for one frame 
             }
             ImGui::SameLine();
-            bool isLoaded = shared::StaticSharedContext::instance().GetExtensionManager().IsLoaded(name);
+            bool isLoaded = shared::ExtensionManager().IsLoaded(name);
             if (ImGui::Checkbox("Loaded", &isLoaded))
             {
                 if (isLoaded)
                 {
-                    shared::StaticSharedContext::instance().GetExtensionManager().LoadExtension(fullPath);
+                    shared::ExtensionManager().LoadExtension(fullPath);
                 }
                 else
                 {
-                    shared::StaticSharedContext::instance().GetExtensionManager().UnloadExtension(ext);
+                    shared::ExtensionManager().UnloadExtension(ext);
                 }
             }
         }
@@ -51,7 +51,7 @@ bool EExtensionView::OnRender()
         EVector<EString> loadingPaths = Graphics::Wrapper::OpenFileDialog("Load Extension", {"uex"});
         for (const EString& extPath : loadingPaths)
         {
-            shared::StaticSharedContext::instance().GetExtensionManager().LoadExtension(extPath);
+            shared::ExtensionManager().LoadExtension(extPath);
         }
     }
     return true;

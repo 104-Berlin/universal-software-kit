@@ -55,5 +55,7 @@ EXT_ENTRY
         .AddStructField("InfoArray", _electricalInfoDsc.GetAsArray());
 
 
-    info.GetTypeRegister().RegisterItem(extensionName, _electricalDescription);
+    EComponentRegisterEntry entry;
+    entry.Description = _electricalDescription;
+    info.GetComponentRegister().RegisterItem(extensionName, entry);
 }

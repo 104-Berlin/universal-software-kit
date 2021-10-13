@@ -69,6 +69,9 @@ using ESet = std::set<T>;
 template <typename K, typename V>
 using EMap = std::map<K, V>;
 
+template <typename A, typename B>
+using EPair = std::pair<A, B>;
+
 template <typename K, typename V, class Hash = std::hash<K>, class Pred = std::equal_to<K>, class Alloc = std::allocator<std::pair<const K, V>>>
 using EUnorderedMap = std::unordered_map<K, V, Hash, Pred, Alloc>;
 

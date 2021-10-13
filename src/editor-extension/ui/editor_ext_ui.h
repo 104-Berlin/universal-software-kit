@@ -36,7 +36,19 @@ namespace events {
         (u32,     MouseButton)
     )
 
+    E_STORAGE_STRUCT(EDropEvent, 
+        (EString, DragType),
+        (u64, DragDataAsID),
+        (EString, DragDataAsString)
+    )
+
 }
+
+    struct EUIDragData
+    {
+        u64 Data_ID;
+        EString Data_String;
+    };
 
     /**
      * Most Basic UI Element
@@ -70,6 +82,11 @@ namespace events {
          * Is Context Menu open
          */
         bool fIsContextMenuOpen;
+
+        /**
+         * Is Tooltip open
+         */
+        bool fIsTooltipOpen;
 
         /**
          * Width of the field.
@@ -113,6 +130,29 @@ namespace events {
          * The Context Menu. Should be type of EUIMenu
          */
         ERef<EUIField>  fContextMenu;
+
+        /**
+         * The tooltip
+         */
+        ERef<EUIField> fToolTip;
+
+        /**
+         * The drag type of the field.
+         * If set to empty string no drag function is applied
+         * If set to some string you can drag the field. Use SetDragData() to specify specific data
+         */
+        EString fDragType;
+
+        /**
+         * The Drag data. You can set this to psh some more data to the drag source
+         */
+        EUIDragData fDragData;
+
+
+        /**
+         * The Drag type you can drop on this field
+         */
+        EString fAcceptDragType;
     public:
         EUIField(const EString& label);
 
@@ -129,6 +169,12 @@ namespace events {
          * @return The Found child. nullptr if not found
          */
         EWeakRef<EUIField> GetChildAt(u32 index) const;
+
+        /**
+         * @brief Get all children
+         * @return List of children
+         */
+        EVector<EWeakRef<EUIField>> GetChildren() const;
 
         /**
          * Removes a child from the list
@@ -153,6 +199,12 @@ namespace events {
          * Some kind of HTML representation could be possible
          */
         void Render();
+
+
+        /**
+         * @brief Handles end of rendering before OnRenderEnd() got called
+         */
+        void HandleRenderEndBefore();
 
         /**
          * @brief Handles the end of rendering
@@ -243,9 +295,15 @@ namespace events {
 
         /**
          * @brief Set the context menu. Use nullptr for no context menu on this field
-         * @param menu The Context menu. Should be type of EUIMenu
+         * @param menu The Context menu. Any Content
          */
         void SetContextMenu(const ERef<EUIField>& menu);
+
+        /**
+         * @brief Set the tooltip. Use nullptr for no tooltip on this field
+         * @param menu The tooltip. Can be any content
+         */
+        void SetTooltip(const ERef<EUIField>& tooltip);
 
         /**
          * @brief Check if context menu is open
@@ -254,9 +312,34 @@ namespace events {
         bool IsContextMenuOpen() const;
 
         /**
+         * @brief Check if tooltip is open
+         * @return Is Tooltip Open
+         */
+        bool IsTooltipOpen() const;
+
+        /**
          * @brief Mark the Field dirty, so it will call CustomUpdateFunction on next render
          */
         void SetDirty();
+
+        
+        /**
+         * @brief Sets the type of the drag source. Specify empty string to disable dragging
+         * @param type Some String identifier for the drag source
+         */
+        void SetDragType(const EString& type);
+
+        /**
+         * @brief Set the drag data. You need to set the DragType to in order to make this field a drag source
+         * @param data The Extra data you provide to the drag source
+         */
+        void SetDragData(EUIDragData data);
+
+        /**
+         * @brief Set the type for the accepted drops
+         * @param type Thte type of the DragSource. Setted by SetDragType() from anouther UIField
+         */
+        void AcceptDrag(const EString& type);
 
         /**
          * Adds a listener to specified EventType
@@ -523,7 +606,7 @@ namespace events
     class E_EDEXAPI EUIContainer : public EUIField
     {
     public:
-        EUIContainer(const EString& name);
+        EUIContainer(const EString& name = "CONTAINER");
 
         virtual bool OnRender() override;
         virtual void OnRenderEnd() override;
@@ -568,6 +651,27 @@ namespace events
 
         virtual void OnBeforeChildRender() override;
         virtual bool OnRender() override;
+    };
+
+    class E_EDEXAPI EUIGrid : public EUIField
+    {
+    private:
+        float fCellWidth;
+        float fCellHeight;
+
+        float fCurrentWidthAvail;
+        u32 fCurrentChildCount;
+    public:
+        EUIGrid(float size = 24.0f);
+        EUIGrid(float cellWidth, float cellHeight);
+
+        void SetCellSize(float size);
+        void SetCellWidth(float width);
+        void SetCellHeight(float height);
+
+        virtual bool OnRender() override;
+        virtual void OnBeforeChildRender() override;
+        virtual void OnAfterChildRender() override;
     };
 
 }

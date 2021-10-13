@@ -133,23 +133,23 @@ bool EExtensionManager::IsLoaded(const EString& extensionName)
 
 EValueDescription EExtensionManager::GetValueDescriptionById(const EString& extensionName, const EString& typeId) 
 {
-    const EVector<EValueDescription>& registeredTypes = fTypeRegister.GetItems(extensionName);
-    for (EValueDescription dsc : registeredTypes)
+    const EVector<EComponentRegisterEntry>& registeredTypes = fTypeRegister.GetItems(extensionName);
+    for (EComponentRegisterEntry dsc : registeredTypes)
     {
-        if (dsc.GetId() == typeId)
+        if (dsc.Description.GetId() == typeId)
         {
-            return dsc;
+            return dsc.Description;
         }
     }
     return EValueDescription();
 }
 
-ETypeRegister& EExtensionManager::GetTypeRegister() 
+EComponentRegister& EExtensionManager::GetComponentRegister() 
 {
     return fTypeRegister;
 }
 
-const ETypeRegister& EExtensionManager::GetTypeRegister() const
+const EComponentRegister& EExtensionManager::GetComponentRegister() const
 {
     return fTypeRegister;
 }

@@ -9,8 +9,10 @@ namespace Editor {
         EWeakRef<Engine::EUITable>          fEntitiesTable;
         EWeakRef<Engine::EUIContainer>      fComponentsView;
         EUnorderedMap<Engine::ERegister::Entity, EWeakRef<Engine::EUITableRow>> fEntityRows;
+
+        Engine::EUIValueRegister* fUIValueRegister;
     public:
-        EObjectView();
+        EObjectView(Engine::EUIValueRegister* valueFieldRegister = nullptr);
     private:
         ERef<EUIField> RenderProperty(Engine::EProperty* storage, EString nameIdent);
 

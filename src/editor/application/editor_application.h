@@ -10,6 +10,8 @@ namespace Editor {
         ERef<Engine::EUIMainMenuBar>            fMainMenu;
 
         Engine::EUIRegister         fUIRegister;
+        Engine::EUIValueRegister    fUIValueRegister;
+
         ECommandLine                fCommandLine;
         EString                     fLoadOnStartRegister;
     public:
@@ -25,6 +27,7 @@ namespace Editor {
 
         void RegisterDefaultPanels();
         void RegisterDefaultResources();
+        void RegisterDefaultComponentRender();
     };
 
 }

@@ -71,7 +71,7 @@ APP_ENTRY
     drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
     
     
-    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener("Plane.Position", [](ERegister::Entity entity, const EString& ident){
+    shared::Events().AddEntityChangeEventListener("Plane.Position", [](ERegister::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity];
         if (!graphicsMesh) { return; }
         ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValue(entity, "Plane.Position"));
@@ -81,7 +81,7 @@ APP_ENTRY
             graphicsMesh->SetPosition(posVector);
         }
     }, drawingViewport.lock().get());
-    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener("Plane.Rotation", [](ERegister::Entity entity, const EString& ident){
+    shared::Events().AddEntityChangeEventListener("Plane.Rotation", [](ERegister::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity];
         if (!graphicsMesh) { return; }
         ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValue(entity, "Plane.Rotation"));
@@ -91,7 +91,7 @@ APP_ENTRY
             graphicsMesh->SetRotation(glm::vec3{glm::radians(posVector.x), glm::radians(posVector.y), glm::radians(posVector.z)});
         }
     }, drawingViewport.lock().get());
-    shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener("Plane.Scale", [](ERegister::Entity entity, const EString& ident){
+    shared::Events().AddEntityChangeEventListener("Plane.Scale", [](ERegister::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity];
         if (!graphicsMesh) { return; }
         ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValue(entity, "Plane.Scale"));
@@ -102,7 +102,7 @@ APP_ENTRY
         }
     }, drawingViewport.lock().get());
 
-    shared::StaticSharedContext::instance().Events().AddComponentCreateEventListener(Plane::_dsc, [drawingViewport](ERegister::Entity entity){
+    shared::Events().AddComponentCreateEventListener(Plane::_dsc, [drawingViewport](ERegister::Entity entity){
         // Create mesh in 3D Scene
         if (drawingViewport.expired()) { return; }
         Plane mesh = shared::GetValue<Plane>(entity);
@@ -125,6 +125,6 @@ APP_ENTRY
 
 EXT_ENTRY
 {
-    info.GetTypeRegister().RegisterItem(extensionName, TechnicalMesh::_dsc);
-    info.GetTypeRegister().RegisterItem(extensionName, Plane::_dsc);
+    info.GetComponentRegister().RegisterStruct<TechnicalMesh>(extensionName);
+    info.GetComponentRegister().RegisterStruct<Plane>(extensionName);
 }

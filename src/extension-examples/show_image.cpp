@@ -24,7 +24,7 @@ public:
     ImageLayerView()
         : EUIField("ImageView")
     {
-        shared::StaticSharedContext::instance().Events().AddComponentCreateEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
+        shared::Events().AddComponentCreateEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
             ImageLayer imageLayer = shared::GetValue<ImageLayer>(handle);
 
             ERef<EUIImageView> newImageView = EMakeRef<EUIImageView>();
@@ -33,7 +33,7 @@ public:
             AddChild(newImageView);
         }, this);
 
-        shared::StaticSharedContext::instance().Events().AddComponentDeleteEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
+        shared::Events().AddComponentDeleteEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
             EUnorderedMap<ERegister::Entity, EWeakRef<EUIImageView>>::iterator it = fImageViews.find(handle);
             if (it != fImageViews.end())
             {
@@ -42,7 +42,7 @@ public:
             }
         }, this);
 
-        shared::StaticSharedContext::instance().Events().AddEntityChangeEventListener("ImageLayer.resourceLink", [this](ERegister::Entity handle, const EString&){
+        shared::Events().AddEntityChangeEventListener("ImageLayer.resourceLink", [this](ERegister::Entity handle, const EString&){
             ImageLayer imageLayer = shared::GetValue<ImageLayer>(handle);
             ERef<EResourceData> data = shared::GetResource(imageLayer.resourceLink.ResourceId);
             
@@ -67,5 +67,5 @@ APP_ENTRY
 
 EXT_ENTRY
 {
-   info.GetTypeRegister().RegisterItem(extensionName, ImageLayer::_dsc);
+   info.GetComponentRegister().RegisterStruct<ImageLayer>(extensionName);
 }

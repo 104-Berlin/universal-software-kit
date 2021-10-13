@@ -21,13 +21,14 @@ E_STORAGE_STRUCT(MyType,
 EApplication::EApplication() 
     : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
 {
-    shared::StaticSharedContext::instance().GetExtensionManager().AddEventListener<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent event) {
-        EExtension* extension = shared::StaticSharedContext::instance().GetExtensionManager().GetExtension(event.Extension);
+    shared::ExtensionManager().AddEventListener<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent event) {
+        EExtension* extension = shared::ExtensionManager().GetExtension(event.Extension);
         auto entry = (void(*)(const char*, Engine::EAppInit))extension->GetFunction("app_entry");
         if (entry)
         {
             EAppInit init;
             init.PanelRegister = &fUIRegister;
+            init.ValueFieldRegister = &fUIValueRegister;
             E_INFO("Running APP_INIT for plugtin \"" + extension->GetName() + "\"");
             entry(extension->GetName().c_str(), init);
         }
@@ -38,7 +39,7 @@ EApplication::EApplication()
         }
     });
 
-    shared::StaticSharedContext::instance().GetExtensionManager().AddEventListener<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
+    shared::ExtensionManager().AddEventListener<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
         for (ERef<EUIPanel> panel : fUIRegister.GetItems(event.ExtensionName))
         {
             panel->DisconnectAllEvents();
@@ -49,7 +50,7 @@ EApplication::EApplication()
     fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
         this->RegenerateMainMenuBar();
     });
-    shared::StaticSharedContext::instance().GetExtensionManager().GetTypeRegister().RegisterItem("CORE", MyType::_dsc);
+    shared::ExtensionManager().GetComponentRegister().RegisterStruct<MyType>("Core");
 }
 
 void EApplication::Start(const EString& defaultRegisterPath) 
@@ -82,13 +83,13 @@ void EApplication::RegenerateMainMenuBar()
             sceneFile.LoadToMemory();
             if (!sceneFile.GetBuffer().IsNull())
             {
-                shared::StaticSharedContext::instance().GetExtensionManager().Reload();
+                shared::ExtensionManager().Reload();
                 shared::LoadRegisterFromBuffer(sceneFile.GetBuffer());
             }
         }
     });
     EWeakRef<EUIField> importResource = fileMenu->AddChild(EMakeRef<EUIMenu>("Import"));
-    for (const EResourceDescription& resourceType : shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().GetAllItems())
+    for (const EResourceDescription& resourceType : shared::ExtensionManager().GetResourceRegister().GetAllItems())
     {
         EWeakRef<EUIField> importItem = importResource.lock()->AddChild(EMakeRef<EUIMenuItem>(resourceType.ResourceName));
         importItem.lock()->AddEventListener<events::EButtonEvent>([this, resourceType](){
@@ -99,7 +100,7 @@ void EApplication::RegenerateMainMenuBar()
 
                 EString type = resourceFile.GetFileExtension();
                 EResourceDescription foundDescription;
-                if (shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
+                if (shared::ExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
                     foundDescription.ImportFunction)
                 {
                     EResourceData* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
@@ -111,8 +112,6 @@ void EApplication::RegenerateMainMenuBar()
                 }
                 else
                 {
-                    // TODO: Show modal
-                    E_ERROR("Could not find converter for resource with file ending " + type);
                 }
 
             }
@@ -175,6 +174,7 @@ void EApplication::Init(Graphics::GContext* context)
     fMainMenu = EMakeRef<EUIMainMenuBar>();
     RegisterDefaultPanels();
     RegisterDefaultResources();
+    RegisterDefaultComponentRender();
 
 
 
@@ -185,9 +185,11 @@ void EApplication::Init(Graphics::GContext* context)
 
 
     ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->AddFontDefault();
     
 #include "MaterialIcons-Regular.h"
+#include "Roboto-Regular.h"
+    ImFontConfig icons_config_01; icons_config_01.FontDataOwnedByAtlas = false;
+    io.Fonts->AddFontFromMemoryTTF((void*)Roboto_Regular_buffer, Roboto_Regular_size, 16.0f, &icons_config_01);
 
     // merge in icons from Font Awesome
     static const ImWchar icons_ranges[] = { ICON_MIN_MD, ICON_MAX_MD, 0 };
@@ -237,6 +239,8 @@ void EApplication::RenderImGui()
     fCommandLine.UpdateEventDispatcher();
     fCommandLine.Render();
 
+    ImGui::ShowDemoWindow();
+
     shared::StaticSharedContext::instance().GetRegisterConnection().GetEventDispatcher().Update();
 }
 
@@ -253,13 +257,13 @@ void EApplication::RegisterDefaultPanels()
 
 
     ERef<EUIPanel> universalSceneView1 = EMakeRef<EUIPanel>("Basic Scene View 1");
-    universalSceneView1->AddChild(EMakeRef<EObjectView>());
+    universalSceneView1->AddChild(EMakeRef<EObjectView>(&fUIValueRegister));
     ERef<EUIPanel> universalSceneView2 = EMakeRef<EUIPanel>("Basic Scene View 2");
-    universalSceneView2->AddChild(EMakeRef<EObjectView>());
+    universalSceneView2->AddChild(EMakeRef<EObjectView>(&fUIValueRegister));
     ERef<EUIPanel> universalSceneView3 = EMakeRef<EUIPanel>("Basic Scene View 3");
-    universalSceneView3->AddChild(EMakeRef<EObjectView>());
+    universalSceneView3->AddChild(EMakeRef<EObjectView>(&fUIValueRegister));
     ERef<EUIPanel> universalSceneView4 = EMakeRef<EUIPanel>("Basic Scene View 4");
-    universalSceneView4->AddChild(EMakeRef<EObjectView>());
+    universalSceneView4->AddChild(EMakeRef<EObjectView>(&fUIValueRegister));
 
     fUIRegister.RegisterItem("Core", universalSceneView1);
     fUIRegister.RegisterItem("Core", universalSceneView2);
@@ -274,4 +278,31 @@ void EApplication::RegisterDefaultResources()
     EResourceDescription imageDsc("Image",{"png", "jpeg", "bmp"});
     imageDsc.ImportFunction = &ResImage::ImportImage;
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", imageDsc);
+
+
+    // FOR TESTING PURPOSES
+    EResourceDescription pdfDescription("PDF", {"pdf"});
+    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", pdfDescription);
+
+    EResourceDescription textDescription("Text", {"txt", "cpp"});
+    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", textDescription);
+    
+}
+
+void EApplication::RegisterDefaultComponentRender() 
+{
+    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, ERegister::Entity entity, const EString& nameIdent){
+        ERef<EUIField> result = EMakeRef<EUIField>("ResourceLink");
+        EResourceLink resourceLink;
+        if (convert::getter(prop, &resourceLink))
+        {
+            EWeakRef<EUIField> resource = result->AddChild(EMakeRef<EUIButton>(resourceLink.Type));
+            resource.lock()->AcceptDrag("ResourceImage");
+            resource.lock()->AddEventListener<events::EDropEvent>([resource, entity, nameIdent](events::EDropEvent e){
+
+                shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink("Image", e.DragDataAsID));
+            });
+        }
+        return result;
+    }});
 }

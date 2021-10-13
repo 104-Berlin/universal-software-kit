@@ -41,7 +41,7 @@ namespace events {
     {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
-        ETypeRegister                       fTypeRegister;
+        EComponentRegister                       fTypeRegister;
         EResourceRegister                   fResourceRegister;
         EEventDispatcher                    fEventDispatcher;
     public:
@@ -81,8 +81,8 @@ namespace events {
         EValueDescription GetValueDescriptionById(const EString& extensionName, const EString& typeId);
 
 
-        ETypeRegister& GetTypeRegister();
-        const ETypeRegister& GetTypeRegister() const;
+        EComponentRegister& GetComponentRegister();
+        const EComponentRegister& GetComponentRegister() const;
 
         EResourceRegister& GetResourceRegister();
         const EResourceRegister& GetResourceRegister() const;

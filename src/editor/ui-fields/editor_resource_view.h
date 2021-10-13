@@ -10,8 +10,11 @@ namespace Editor {
             EString                     Path;
         };
     private:
-        Engine::EResourceData::t_ID selectedResource;
-        EVector<Resource>           fResources;
+        EUnorderedMap<EString, EVector<Resource>>    fResources;
+        EUIField*                  fLastSelected;
+
+        float fPreviewSize;
+        EString                             fSelectedResourceType;
     public:
         EResourceView();
     };

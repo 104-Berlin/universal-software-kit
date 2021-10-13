@@ -8,8 +8,7 @@ add_library(Shared SHARED   event/engine_event_dispatcher.cpp
                             register/engine_register.cpp
                             register/engine_serializer.cpp
                             register/engine_deserializer.cpp
-                            resource/engine_resource_manager.cpp
-                            resource/engine_resource_storage_link.cpp)
+                            resource/engine_resource_manager.cpp)
 
 target_include_directories(Shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(Shared PRIVATE SHARED_EXPORT)

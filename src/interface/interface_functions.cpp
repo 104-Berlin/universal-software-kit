@@ -8,6 +8,17 @@ using namespace Engine;
 
 shared::StaticSharedContext* shared::StaticSharedContext::fInstance = nullptr;
 
+
+shared::ERegisterEventDispatcher& shared::Events()
+{
+    return shared::StaticSharedContext::instance().Events();
+}
+
+EExtensionManager& shared::ExtensionManager()
+{
+    return shared::StaticSharedContext::instance().GetExtensionManager();
+}
+
 shared::ESharedError shared::LoadExtension(const EString& pathToExtension) 
 {
     
@@ -49,21 +60,46 @@ shared::ESharedError shared::LoadRegisterFromBuffer(ESharedBuffer buffer)
 
 shared::ESharedError shared::CreateComponent(const EString& componentId, ERegister::Entity entity) 
 {
-    EValueDescription desc;
-    if (!EXTENSION_MANAGER.GetTypeRegister().FindItem(EFindTypeDescByName(componentId), &desc))
+    EComponentRegisterEntry desc;
+    if (!EXTENSION_MANAGER.GetComponentRegister().FindItem(EFindTypeDescByName(componentId), &desc))
     {
         E_ERROR("Could not find type" + componentId);
         return true; // ERROR
     }
-    CreateComponent(desc, entity);
+    if (desc.DefaultValue)
+    {
+        CreateComponent(desc.DefaultValue.get(), entity);
+    }
+    else
+    {
+        CreateComponent(desc.Description, entity);
+    }    
+    
     return false;
 }
 
 shared::ESharedError shared::CreateComponent(const EValueDescription& componentId, ERegister::Entity entity) 
 {
-    StaticSharedContext::instance().GetRegisterConnection().Send_CreateNewComponent(entity, componentId);
+    if (componentId.GetType() != EValueType::STRUCT)
+    {
+        E_ERROR("You have to add struct as component");
+        return true;
+    }
+    StaticSharedContext::instance().GetRegisterConnection().Send_CreateNewComponent(entity, static_cast<EStructProperty*>(EProperty::CreateFromDescription(componentId.GetId(), componentId)));
     return false;
 }
+
+shared::ESharedError shared::CreateComponent(EStructProperty* componentValue, ERegister::Entity entity)
+{
+    if (!componentValue)
+    {
+        E_ERROR("Invalid init value to create!");
+        return true;
+    }
+    StaticSharedContext::instance().GetRegisterConnection().Send_CreateNewComponent(entity, componentValue);
+    return false;
+}
+
 
 shared::ESharedError shared::CreateResource(EResourceData* data) 
 {
@@ -120,16 +156,6 @@ ESharedBuffer shared::GetRegisterAsBuffer()
 namespace Engine {
     
     namespace shared {
-        EEventDispatcher& ERegisterEventDispatcher::GetEventDispatcher() 
-        {
-            return fEventDispatcher;
-        }
-        
-        const EEventDispatcher& ERegisterEventDispatcher::GetEventDispatcher() const
-        {
-            return fEventDispatcher;
-        }
-    
 
         StaticSharedContext::StaticSharedContext() 
             : fRegisterSocket(nullptr)
@@ -148,10 +174,10 @@ namespace Engine {
         #endif
 
             fRegisterConnection.GetEventDispatcher().ConnectAll([this](EStructProperty* property){
-                fRegisterEventDispatcher.GetEventDispatcher().Post_P(property->GetDescription(), property);
+                fRegisterEventDispatcher.Post_P(property->GetDescription(), property);
             });
             fExtensionManager.GetEventDispatcher().ConnectAll([this](EStructProperty* property){
-                fRegisterEventDispatcher.GetEventDispatcher().Post_P(property->GetDescription(), property);
+                fRegisterEventDispatcher.Post_P(property->GetDescription(), property);
             });
 
 

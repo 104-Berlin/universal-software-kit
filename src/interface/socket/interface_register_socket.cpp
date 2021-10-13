@@ -309,23 +309,21 @@ EJson ERegisterSocket::Pk_HandleCreateEntity(const ERegisterPacket& packet)
 
 EJson ERegisterSocket::Pk_HandleCreateComponent(const ERegisterPacket& packet) 
 {
-    const EJson& descriptionJson = packet.Body["ValueDescription"];
-    EValueDescription dsc;
-    if (!EDeserializer::ReadStorageDescriptionFromJson(descriptionJson, &dsc))
+    EProperty* initValue;
+    if (EDeserializer::ReadPropertyFromJson_WithDescription(packet.Body, &initValue))
     {
-        E_ERROR("Could not read storage description from parsed json!");
-        return EJson::object();
-    }
-    
-    if (packet.Body["Entity"].is_number_integer())
-    {
-        ERegister::Entity entity = (ERegister::Entity) packet.Body["Entity"].get<int>();
-        EStructProperty* property = fLoadedRegister->AddComponent(entity, dsc);
-        if (property)
+        if (packet.Body["Entity"].is_number_integer())
         {
-            E_INFO("Add Component " + dsc.GetId());
-            inter::PrintProperty(property);
+            ERegister::Entity entity = (ERegister::Entity) packet.Body["Entity"].get<int>();
+            EStructProperty* property = fLoadedRegister->AddComponent(entity, initValue->GetDescription());
+            if (property)
+            {
+                E_INFO("Add Component " + initValue->GetDescription().GetId());
+                property->Copy(initValue);
+                inter::PrintProperty(property);
+            }
         }
+        delete initValue;
     }
     return EJson::object();
 }

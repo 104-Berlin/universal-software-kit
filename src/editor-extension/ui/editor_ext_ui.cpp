@@ -16,10 +16,13 @@ EUIField::EUIField(const EString& label)
         fVisible(true), 
         fDirty(false), 
         fIsContextMenuOpen(false),
+        fIsTooltipOpen(false),
         fWidthOverride(0),
         fHeightOverride(0),
         fCalculatedSize(),
-        fLastMousePos(0.0f, 0.0f)
+        fLastMousePos(0.0f, 0.0f),
+        fDragType(),
+        fDragData()
 {
     
 }
@@ -39,6 +42,17 @@ EWeakRef<EUIField> EUIField::GetChildAt(u32 index) const
     }
     E_WARN("Could not get child of index " + std::to_string(index));
     return ERef<EUIField>(nullptr);
+}
+
+
+EVector<EWeakRef<EUIField>> EUIField::GetChildren() const
+{
+    EVector<EWeakRef<EUIField>> result;
+    for (auto& entry : fChildren)
+    {
+        result.push_back(entry);
+    }
+    return result;
 }
 
 void EUIField::RemoveChild(const EWeakRef<EUIField>& child) 
@@ -71,6 +85,7 @@ void EUIField::Render()
         fDirty = false;
     }
     ImGui::PushID(fID);
+
     if (OnRender())
     {
         for (ERef<EUIField> uiField : fChildren)
@@ -80,6 +95,8 @@ void EUIField::Render()
             OnAfterChildRender();
         }
     }
+    
+    HandleRenderEndBefore();
     OnRenderEnd();
     HandleRenderEnd();
     ImGui::PopID();
@@ -90,10 +107,48 @@ bool EUIField::OnRender()
     return true;
 }
 
+void EUIField::HandleRenderEndBefore()
+{
+    if (ImGui::IsItemHovered())
+    {
+        if (fToolTip)
+        {
+            fIsTooltipOpen = true;
+            ImGui::BeginTooltip();
+            fToolTip->Render();
+            ImGui::EndTooltip();
+        }
+    }
+    
+    if (!fAcceptDragType.empty())
+    {
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(fAcceptDragType.c_str()))
+            {
+                EUIDragData dragData = *(EUIDragData*)payload->Data;
+                fEventDispatcher.Enqueue<events::EDropEvent>({fAcceptDragType, dragData.Data_ID, dragData.Data_String});
+            }
+            ImGui::EndDragDropTarget();
+        }
+    }
+
+    if (!fDragType.empty())
+    {
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+        {
+
+            ImGui::SetDragDropPayload(fDragType.c_str(), &fDragData, sizeof(EUIDragData));
+            ImGui::Text("%s", fDragType.c_str());
+            ImGui::EndDragDropSource();
+        }
+    }
+    
+}
+
 void EUIField::HandleRenderEnd()
 {
     ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
-    ImGuiWindow* window = g.CurrentWindow;
 
     fIsContextMenuOpen = false;
     if (fContextMenu)
@@ -106,11 +161,13 @@ void EUIField::HandleRenderEnd()
         }
     }
 
+
     ImRect itemRect = g.LastItemData.Rect;
     
     fCalculatedSize.x = itemRect.GetWidth();
     fCalculatedSize.y = itemRect.GetHeight();
 
+    fIsTooltipOpen = false;
     if (ImGui::IsItemHovered())
     {
         EVec2 mousePos(ImGui::GetMousePos().x, ImGui::GetMousePos().y);
@@ -180,6 +237,10 @@ void EUIField::UpdateEventDispatcher()
     {
         fContextMenu->UpdateEventDispatcher();
     }
+    if (fIsTooltipOpen)
+    {
+        fToolTip->UpdateEventDispatcher();
+    }
 }
 
 void EUIField::DisconnectAllEvents() 
@@ -238,14 +299,39 @@ void EUIField::SetContextMenu(const ERef<EUIField>& menu)
     fContextMenu = menu;   
 }
 
+void EUIField::SetTooltip(const ERef<EUIField>& tooltip)
+{
+    fToolTip = tooltip;
+}
+
 bool EUIField::IsContextMenuOpen() const
 {
     return fIsContextMenuOpen;
 }
 
+bool EUIField::IsTooltipOpen() const
+{
+    return fIsTooltipOpen;
+}
+
 void EUIField::SetDirty() 
 {
     fDirty = true;
+}
+
+void EUIField::SetDragType(const EString& type)
+{
+    fDragType = type;
+}
+
+void EUIField::SetDragData(EUIDragData data)
+{
+    fDragData = data;
+}
+
+void EUIField::AcceptDrag(const EString& type)
+{
+    fAcceptDragType = type;
 }
 
 EUIPanel::EUIPanel(const EString& title) 
@@ -764,4 +850,61 @@ bool EUITableRow::OnRender()
     fCurrentTableIndex = 0;
     ImGui::TableNextRow();
     return true;
+}
+
+EUIGrid::EUIGrid(float size)
+    : EUIGrid(size, size)
+{
+
+}
+
+EUIGrid::EUIGrid(float cellWidth, float cellHeight)
+    : EUIField("GRID"), fCellWidth(cellWidth), fCellHeight(cellHeight), fCurrentChildCount(0)
+{
+
+}
+
+void EUIGrid::SetCellSize(float size)
+{
+    SetCellWidth(size);
+    SetCellHeight(size);
+}
+
+void EUIGrid::SetCellWidth(float width)
+{
+    fCellWidth = width;
+}
+
+void EUIGrid::SetCellHeight(float height)
+{
+    fCellHeight = height;
+}
+
+
+bool EUIGrid::OnRender()
+{
+    fCurrentChildCount = 0;
+    
+    fCurrentWidthAvail = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+    return true;
+}
+
+void EUIGrid::OnBeforeChildRender()
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (fCurrentChildCount != 0)
+    {
+        float last_button_x2 = ImGui::GetItemRectMax().x;
+        float next_button_x2 = last_button_x2 + style.ItemSpacing.x + fCellWidth; // Expected position if next button was on same line
+        if (fCurrentChildCount + 1 < fChildren.size() && next_button_x2 < fCurrentWidthAvail)
+        {
+            ImGui::SameLine();
+        }
+    }
+    fCurrentChildCount++;
+    ImGui::SetNextItemWidth(fCellWidth);
+}
+
+void EUIGrid::OnAfterChildRender()
+{
 }
