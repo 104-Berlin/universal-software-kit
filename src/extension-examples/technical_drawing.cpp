@@ -23,6 +23,12 @@ E_STORAGE_STRUCT(Plane,
     (EVec3, Scale)
 )
 
+E_STORAGE_STRUCT(Line, 
+    (float, Thickness, 8.0f),
+    (EVec3, Start),
+    (EVec3, End)
+)
+
 E_STORAGE_STRUCT(TechnicalMesh,
     (EVector<EVec3>, Positions)
 )
@@ -70,6 +76,26 @@ APP_ENTRY
     drawingViewport.lock()->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
     drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
     
+    shared::Events().AddEntityChangeEventListener(Line::_dsc.GetId(), [](ERegister::Entity entity, const EString& nameIdent){
+        Line l = shared::GetValue<Line>(entity);
+        RLine* entityLine = (RLine*) meshes[entity];
+        if (entityLine)
+        {
+            entityLine->SetStart(l.Start);
+            entityLine->SetEnd(l.End);
+            entityLine->SetThickness(l.Thickness);
+        }
+    }, drawingViewport.lock().get());
+
+    shared::Events().AddComponentCreateEventListener(Line::_dsc, [drawingViewport](ERegister::Entity entity){
+        Line line = shared::GetValue<Line>(entity);
+        RLine* newLine = new RLine();
+        meshes[entity] = newLine;
+        newLine->SetStart(line.Start);
+        newLine->SetEnd(line.End);
+        drawingViewport.lock()->GetScene().Add(newLine);
+    }, drawingViewport.lock().get());
+
     
     shared::Events().AddEntityChangeEventListener("Plane.Position", [](ERegister::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity];
@@ -127,4 +153,5 @@ EXT_ENTRY
 {
     info.GetComponentRegister().RegisterStruct<TechnicalMesh>(extensionName);
     info.GetComponentRegister().RegisterStruct<Plane>(extensionName);
+    info.GetComponentRegister().RegisterStruct<Line>(extensionName);
 }

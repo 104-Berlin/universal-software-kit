@@ -13,7 +13,7 @@ namespace Engine {
                 Connect<ComponentCreateEvent>([cb, description](ComponentCreateEvent event){
                     if (event.ValueId == description.GetId())
                     {
-                        cb(event.Handle);
+                        std::invoke(cb, event.Handle);
                     }
                 }, key);
             }
