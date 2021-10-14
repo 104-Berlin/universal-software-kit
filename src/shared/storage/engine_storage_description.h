@@ -16,6 +16,9 @@ namespace Engine {
     {
     public:
         using t_ID = EString;
+        using StructField = EPair<EString, EValueDescription>;
+        using StructStorage = EPair<EString, EValueDescription*>;
+
     private:
         EValueType  fType;
         t_ID        fID;
@@ -26,7 +29,7 @@ namespace Engine {
         EValueDescription* fArrayType;
         
         // For struct
-        EUnorderedMap<EString, EValueDescription*> fStructFields;
+        EVector<StructStorage> fStructFields;
     public:
         EValueDescription(EValueType type = EValueType::UNKNOWN, t_ID id = "");
         EValueDescription(const EValueDescription&);
@@ -40,7 +43,7 @@ namespace Engine {
 
         // For structs
         EValueDescription& AddStructField(const EString& name, EValueDescription description);
-        const EUnorderedMap<EString, EValueDescription*>& GetStructFields() const;
+        EVector<StructField> GetStructFields() const;
 
         // For enums
         EValueDescription& AddEnumOption(const EString& option);
@@ -54,7 +57,7 @@ namespace Engine {
 
 
 
-        static EValueDescription CreateStruct(const t_ID& id, std::initializer_list<std::pair<EString, EValueDescription>> childs);
+        static EValueDescription CreateStruct(const t_ID& id, EVector<StructField> childs);
 
         bool operator==(const EValueDescription& other);
         bool operator!=(const EValueDescription& other);

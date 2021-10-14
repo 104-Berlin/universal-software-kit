@@ -31,12 +31,16 @@ bool EDeserializer::ReadStorageDescriptionFromJson(const EJson& json, EValueDesc
         case EValueType::STRUCT:
         {
             const EJson& structFieldsJson = json["StructFields"];
-            if (!structFieldsJson.is_object() || structFieldsJson.size() == 0) { return false; }
-            for (const auto& entry : structFieldsJson.items())
+            if (!structFieldsJson.is_array() || structFieldsJson.size() == 0) { return false; }
+            for (const auto& entry : structFieldsJson)
             {
-                EValueDescription fieldDesc;
-                if (!ReadStorageDescriptionFromJson(entry.value(), &fieldDesc)) { return false; }
-                newValueType.AddStructField(entry.key(), fieldDesc);
+                if (entry.is_object() && entry["PropertyName"].is_string() && entry["Description"].is_object())
+                {
+                    EValueDescription fieldDesc;
+                    if (!ReadStorageDescriptionFromJson(entry["Description"], &fieldDesc)) { return false; }
+                    EString propertyName = entry["PropertyName"].get<EString>();
+                    newValueType.AddStructField(propertyName, fieldDesc);
+                }
             }
             break;
         }
@@ -187,7 +191,7 @@ bool ReadStructFromJson(const EJson& json, EStructProperty* property)
     
     for (auto& entry : description.GetStructFields())
     {
-        EValueType fieldType = entry.second->GetType();
+        EValueType fieldType = entry.second.GetType();
 
         EDeserializer::ReadPropertyFromJson(json[entry.first], property->GetProperty(entry.first));
     }

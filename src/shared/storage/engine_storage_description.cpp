@@ -18,7 +18,7 @@ EValueDescription::EValueDescription(const EValueDescription& other)
     fStructFields.clear();
     for (auto& entry : other.fStructFields)
     {
-        fStructFields[entry.first] = new EValueDescription(*entry.second);
+        fStructFields.push_back({entry.first, new EValueDescription(*entry.second)});
     }
 
     if (other.fArrayType)
@@ -37,7 +37,7 @@ EValueDescription& EValueDescription::operator=(const EValueDescription& other)
     fStructFields.clear();
     for (auto& entry : other.fStructFields)
     {
-        fStructFields[entry.first] = new EValueDescription(*entry.second);
+        fStructFields.push_back({entry.first, new EValueDescription(*entry.second)});
     }
 
     if (other.fArrayType)
@@ -88,10 +88,10 @@ EValueDescription EValueDescription::GetAsPrimitive() const
     return *fArrayType;
 }
 
-EValueDescription EValueDescription::CreateStruct(const t_ID& id, std::initializer_list<std::pair<EString, EValueDescription>> childs) 
+EValueDescription EValueDescription::CreateStruct(const t_ID& id,  EVector<StructField> childs) 
 {
     EValueDescription result(EValueType::STRUCT, id);
-    for (const std::pair<EString, EValueDescription>& entry : childs)
+    for (const StructField& entry : childs)
     {
         result.AddStructField(entry.first, entry.second);
     }
@@ -115,13 +115,18 @@ EValueDescription& EValueDescription::AddStructField(const EString& name, EValue
         E_WARN("WARN: Can't add a field to a non struct");
         return *this;
     }
-    fStructFields[name] = new EValueDescription(description);
+    fStructFields.push_back({name, new EValueDescription(description)});
     return *this;
 }
 
-const EUnorderedMap<EString, EValueDescription*>& EValueDescription::GetStructFields() const
+EVector<EValueDescription::StructField> EValueDescription::GetStructFields() const
 {
-    return fStructFields;    
+    EVector<StructField> result;
+    for (auto& entry : fStructFields)
+    {
+        result.push_back({entry.first, *entry.second});
+    }
+    return result;    
 }
 
 EValueDescription& EValueDescription::AddEnumOption(const EString& option) 
