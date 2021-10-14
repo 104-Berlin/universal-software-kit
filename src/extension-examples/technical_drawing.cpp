@@ -110,18 +110,22 @@ APP_ENTRY
         RBezierCurve* entityLine = (RBezierCurve*) meshes[entity];
         if (entityLine)
         {
-            entityLine->SetStart(l.Start);
-            entityLine->SetEnd(l.End);
+            entityLine->SetStartPos(l.Start);
+            entityLine->SetEndPos(l.End);
             entityLine->SetThickness(l.Thickness);
+            entityLine->SetControll1(l.Controll1);
+            entityLine->SetControll2(l.Controll2);
         }
     }, drawingViewport.lock().get());
 
     shared::Events().AddComponentCreateEventListener(Curve::_dsc, [drawingViewport](ERegister::Entity entity){
         Curve line = shared::GetValue<Curve>(entity);
-        RLine* newLine = new RLine();
+        RBezierCurve* newLine = new RBezierCurve();
         meshes[entity] = newLine;
-        newLine->SetStart(line.Start);
-        newLine->SetEnd(line.End);
+        newLine->SetStartPos(line.Start);
+        newLine->SetEndPos(line.End);
+        newLine->SetControll1(line.Controll1);
+        newLine->SetControll2(line.Controll2);
         drawingViewport.lock()->GetScene().Add(newLine);
     }, drawingViewport.lock().get());
 
