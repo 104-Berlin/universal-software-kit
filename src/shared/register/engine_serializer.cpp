@@ -20,11 +20,14 @@ EJson ESerializer::WriteStorageDescriptionToJson(const EValueDescription& descri
         }
         case EValueType::STRUCT:
         {
-            result["StructFields"] = EJson::object();
+            result["StructFields"] = EJson::array();
             EJson& structFieldJson = result["StructFields"];
             for (auto& entry : description.GetStructFields())
             {
-                structFieldJson[entry.first.c_str()] = WriteStorageDescriptionToJson(*entry.second);
+                EJson fieldObject = EJson::object();
+                fieldObject["PropertyName"] = entry.first;
+                fieldObject["Description"] = WriteStorageDescriptionToJson(entry.second);
+                structFieldJson.push_back(fieldObject);
             }
             break;
         }

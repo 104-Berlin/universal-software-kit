@@ -84,7 +84,7 @@ EProperty* EProperty::CreatePropertyStruct(const EString& name, EValueDescriptio
     EVector<EProperty*> fields;
     for (auto& entry : description.GetStructFields())
     {
-        EProperty* newField = CreateFromDescription(entry.first, *entry.second);
+        EProperty* newField = CreateFromDescription(entry.first, entry.second);
         if (newField)
         {
             fields.push_back(newField);

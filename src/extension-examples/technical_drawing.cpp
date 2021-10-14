@@ -15,7 +15,7 @@ EVector<u32> planeIndices = {
     0, 1, 2, 2, 3, 0
 };
 
-static EUnorderedMap<ERegister::Entity, RMesh*> meshes;
+static EUnorderedMap<ERegister::Entity, EUnorderedMap<EValueDescription::t_ID, RMesh*>> meshes;
 
 E_STORAGE_STRUCT(Plane,
     (EVec3, Position),
@@ -78,7 +78,7 @@ APP_ENTRY
     
     shared::Events().AddEntityChangeEventListener(Line::_dsc.GetId(), [](ERegister::Entity entity, const EString& nameIdent){
         Line l = shared::GetValue<Line>(entity);
-        RLine* entityLine = (RLine*) meshes[entity];
+        RLine* entityLine = (RLine*) meshes[entity][Line::_dsc.GetId()];
         if (entityLine)
         {
             entityLine->SetStart(l.Start);
@@ -90,7 +90,7 @@ APP_ENTRY
     shared::Events().AddComponentCreateEventListener(Line::_dsc, [drawingViewport](ERegister::Entity entity){
         Line line = shared::GetValue<Line>(entity);
         RLine* newLine = new RLine();
-        meshes[entity] = newLine;
+        meshes[entity][Line::_dsc.GetId()] = newLine;
         newLine->SetStart(line.Start);
         newLine->SetEnd(line.End);
         drawingViewport.lock()->GetScene().Add(newLine);
@@ -98,7 +98,7 @@ APP_ENTRY
 
     
     shared::Events().AddEntityChangeEventListener("Plane.Position", [](ERegister::Entity entity, const EString& ident){
-        RMesh* graphicsMesh = meshes[entity];
+        RMesh* graphicsMesh = meshes[entity][Plane::_dsc.GetId()];
         if (!graphicsMesh) { return; }
         ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValue(entity, "Plane.Position"));
         EVec3 posVector;
@@ -108,7 +108,7 @@ APP_ENTRY
         }
     }, drawingViewport.lock().get());
     shared::Events().AddEntityChangeEventListener("Plane.Rotation", [](ERegister::Entity entity, const EString& ident){
-        RMesh* graphicsMesh = meshes[entity];
+        RMesh* graphicsMesh = meshes[entity][Plane::_dsc.GetId()];
         if (!graphicsMesh) { return; }
         ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValue(entity, "Plane.Rotation"));
         EVec3 posVector;
@@ -118,7 +118,7 @@ APP_ENTRY
         }
     }, drawingViewport.lock().get());
     shared::Events().AddEntityChangeEventListener("Plane.Scale", [](ERegister::Entity entity, const EString& ident){
-        RMesh* graphicsMesh = meshes[entity];
+        RMesh* graphicsMesh = meshes[entity][Plane::_dsc.GetId()];
         if (!graphicsMesh) { return; }
         ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValue(entity, "Plane.Scale"));
         EVec3 posVector;
@@ -133,7 +133,7 @@ APP_ENTRY
         if (drawingViewport.expired()) { return; }
         Plane mesh = shared::GetValue<Plane>(entity);
         RMesh* gMesh = new RMesh();
-        meshes[entity] = gMesh;
+        meshes[entity][Plane::_dsc.GetId()] = gMesh;
         gMesh->SetData(planeVertices, planeIndices);
         drawingViewport.lock()->GetScene().Add(gMesh);
 
