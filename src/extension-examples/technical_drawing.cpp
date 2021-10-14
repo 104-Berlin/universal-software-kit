@@ -34,7 +34,8 @@ E_STORAGE_STRUCT(Curve,
     (EVec3, Start, 200.0f, 200.0f, 0.0f),
     (EVec3, End, 400.0f, 200.0f, 0.0f),
     (EVec3, Controll1, 200.0f, 100.0f, 0.0f),
-    (EVec3, Controll2, 400.0f, 100.0f, 0.0f)
+    (EVec3, Controll2, 400.0f, 100.0f, 0.0f),
+    (int, Steps, 10)
 )
 
 E_STORAGE_STRUCT(TechnicalMesh,
@@ -107,7 +108,7 @@ APP_ENTRY
 
     shared::Events().AddEntityChangeEventListener(Curve::_dsc.GetId(), [](ERegister::Entity entity, const EString& nameIdent){
         Curve l = shared::GetValue<Curve>(entity);
-        RBezierCurve* entityLine = (RBezierCurve*) meshes[entity];
+        RBezierCurve* entityLine = (RBezierCurve*) meshes[entity][Curve::_dsc.GetId()];
         if (entityLine)
         {
             entityLine->SetStartPos(l.Start);
@@ -115,17 +116,19 @@ APP_ENTRY
             entityLine->SetThickness(l.Thickness);
             entityLine->SetControll1(l.Controll1);
             entityLine->SetControll2(l.Controll2);
+            entityLine->SetSteps(l.Steps);
         }
     }, drawingViewport.lock().get());
 
     shared::Events().AddComponentCreateEventListener(Curve::_dsc, [drawingViewport](ERegister::Entity entity){
         Curve line = shared::GetValue<Curve>(entity);
         RBezierCurve* newLine = new RBezierCurve();
-        meshes[entity] = newLine;
+        meshes[entity][Curve::_dsc.GetId()] = newLine;
         newLine->SetStartPos(line.Start);
         newLine->SetEndPos(line.End);
         newLine->SetControll1(line.Controll1);
         newLine->SetControll2(line.Controll2);
+        newLine->SetSteps(line.Steps);
         drawingViewport.lock()->GetScene().Add(newLine);
     }, drawingViewport.lock().get());
 
