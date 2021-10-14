@@ -29,6 +29,14 @@ E_STORAGE_STRUCT(Line,
     (EVec3, End)
 )
 
+E_STORAGE_STRUCT(Curve,
+    (float, Thickness, 5.0f),
+    (EVec3, Start, 200.0f, 200.0f, 0.0f),
+    (EVec3, End, 400.0f, 200.0f, 0.0f),
+    (EVec3, Controll1, 200.0f, 100.0f, 0.0f),
+    (EVec3, Controll2, 400.0f, 100.0f, 0.0f)
+)
+
 E_STORAGE_STRUCT(TechnicalMesh,
     (EVector<EVec3>, Positions)
 )
@@ -96,6 +104,27 @@ APP_ENTRY
         drawingViewport.lock()->GetScene().Add(newLine);
     }, drawingViewport.lock().get());
 
+
+    shared::Events().AddEntityChangeEventListener(Curve::_dsc.GetId(), [](ERegister::Entity entity, const EString& nameIdent){
+        Curve l = shared::GetValue<Curve>(entity);
+        RBezierCurve* entityLine = (RBezierCurve*) meshes[entity];
+        if (entityLine)
+        {
+            entityLine->SetStart(l.Start);
+            entityLine->SetEnd(l.End);
+            entityLine->SetThickness(l.Thickness);
+        }
+    }, drawingViewport.lock().get());
+
+    shared::Events().AddComponentCreateEventListener(Curve::_dsc, [drawingViewport](ERegister::Entity entity){
+        Curve line = shared::GetValue<Curve>(entity);
+        RLine* newLine = new RLine();
+        meshes[entity] = newLine;
+        newLine->SetStart(line.Start);
+        newLine->SetEnd(line.End);
+        drawingViewport.lock()->GetScene().Add(newLine);
+    }, drawingViewport.lock().get());
+
     
     shared::Events().AddEntityChangeEventListener("Plane.Position", [](ERegister::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity];
@@ -154,4 +183,5 @@ EXT_ENTRY
     info.GetComponentRegister().RegisterStruct<TechnicalMesh>(extensionName);
     info.GetComponentRegister().RegisterStruct<Plane>(extensionName);
     info.GetComponentRegister().RegisterStruct<Line>(extensionName);
+    info.GetComponentRegister().RegisterStruct<Curve>(extensionName);
 }
