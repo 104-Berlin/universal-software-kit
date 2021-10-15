@@ -365,6 +365,11 @@ namespace events {
          * To remove an imgui thing
          */
         bool fWasJustClosed;
+
+        /**
+         * Window flags
+         */
+        ImGuiWindowFlags fWindowFlags;
     public:
         EUIPanel(const EString& title);
 

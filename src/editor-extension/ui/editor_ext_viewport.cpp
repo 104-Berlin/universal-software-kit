@@ -282,6 +282,11 @@ EViewportTool* EUIViewport::AddTool(EViewportTool* newTool)
     return newTool;
 }
 
+EVector<EViewportTool*> EUIViewport::GetRegisteredTools()
+{
+    return fRegisteredTools;
+}
+
 bool EUIViewport::OnRender() 
 {
     ImVec2 contentRegion = ImGui::GetContentRegionAvail();
@@ -302,4 +307,33 @@ bool EUIViewport::OnRender()
     }
 
     return true;
+}
+
+
+EUIViewportToolbar::EUIViewportToolbar(EWeakRef<EUIViewport> viewport) 
+    : EUIField("Viewport " + viewport.lock()->GetLabel()), fViewport(viewport)
+{
+    SetDirty();
+    SetCustomUpdateFunction([this](){
+        Regenerate();
+    });
+}
+
+bool EUIViewportToolbar::OnRender() 
+{
+    return true;
+}
+
+void EUIViewportToolbar::Regenerate() 
+{
+    fChildren.clear();
+    if (fViewport.expired()) { return; }
+    EWeakRef<EUIField> grid = AddChild(EMakeRef<EUIGrid>());
+    
+    for (EViewportTool* tool : fViewport.lock()->GetRegisteredTools())
+    {
+        grid.lock()->AddChild(EMakeRef<EUIButton>(tool->GetToolName())).lock()->AddEventListener<events::EButtonEvent>([](events::EButtonEvent event){
+            // Activate tool
+        });
+    }
 }

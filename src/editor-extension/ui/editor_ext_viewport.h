@@ -108,6 +108,18 @@ namespace Engine {
         Renderer::RCamera& GetCamera();
 
         EViewportTool* AddTool(EViewportTool* newTool);
+        EVector<EViewportTool*> GetRegisteredTools();
+    };
+
+    class E_EDEXAPI EUIViewportToolbar : public EUIField
+    {
+        EWeakRef<EUIViewport> fViewport;
+    public:
+        EUIViewportToolbar(EWeakRef<EUIViewport> viewport);
+
+        virtual bool OnRender() override;
+    private:
+        void Regenerate();
     };
 
 

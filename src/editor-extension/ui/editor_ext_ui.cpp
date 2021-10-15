@@ -337,14 +337,15 @@ void EUIField::AcceptDrag(const EString& type)
 EUIPanel::EUIPanel(const EString& title) 
     : EUIField(title), fOpen(true)
 {
-    
+    fWindowFlags = ImGuiWindowFlags_None;
 }
 
 bool EUIPanel::OnRender() 
 {
     if (fOpen)
     {
-        ImGui::Begin(GetLabel().c_str(), &fOpen);
+
+        ImGui::Begin(GetLabel().c_str(), &fOpen, fWindowFlags);
         ImGui::GetCurrentWindow()->Viewport->Flags &= ~ImGuiViewportFlags_NoDecoration;
         if (!fOpen) 
         {

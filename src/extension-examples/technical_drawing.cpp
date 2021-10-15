@@ -208,8 +208,12 @@ APP_ENTRY
     }, drawingViewport.lock().get());
 
 
+    ERef<EUIPanel> toolPanel = EMakeRef<EUIPanel>("Toolbar");
+    
+    toolPanel->AddChild(EMakeRef<EUIViewportToolbar>(drawingViewport));
 
 
+    info.PanelRegister->RegisterItem(extensionName, toolPanel);
     info.PanelRegister->RegisterItem(extensionName, someDrawingPanel);
 }
 
