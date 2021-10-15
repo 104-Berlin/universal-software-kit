@@ -44,6 +44,13 @@ EApplication::EApplication()
         {
             panel->DisconnectAllEvents();
         }
+        EExtension* extension = shared::ExtensionManager().GetExtension(event.ExtensionName);
+        auto entry = (void(*)())extension->GetFunction("app_cleanup");
+        if (entry)
+        {
+            entry();
+        }
+
         fUIRegister.ClearRegisteredItems(event.ExtensionName);
     });
 

@@ -221,6 +221,7 @@ void EExtensionManager::UnloadExtension(EExtension* extension)
 
     fTypeRegister.ClearRegisteredItems(extensionName);
     fResourceRegister.ClearRegisteredItems(extensionName);
+    
     fEventDispatcher.Post<events::EExtensionUnloadEvent>({extensionName, extensionPath});
 
     fLoadedExtensions.erase(extensionName);

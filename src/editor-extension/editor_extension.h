@@ -23,7 +23,7 @@
                   EXTENSION_EXPORT_FUN void app_entry(const char* extensionName, Engine::EAppInit info)
 
 
-
+#define APP_CLEANUP EXTENSION_EXPORT_FUN void app_cleanup()
 
 
 #include "graphics_wrapper.h"

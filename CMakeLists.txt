@@ -16,6 +16,7 @@ option(BUILD_EXAMPLES "Build exmaples" TRUE)
 option(BUILD_TEST "Toggle the unittest" TRUE)
 option(BUILD_CLT "Toggle the Command-Line-Tool" TRUE)
 option(BUILD_TOOLS "Toogle the build of the tools" TRUE)
+option(BUILD_MIDI_TOOL "Toggle the midi extension" TRUE)
 
 # Editor only for windows and mac supported
 if (NOT WIN32 AND NOT APPLE)
@@ -55,6 +56,11 @@ if (${BUILD_TOOLS})
 add_subdirectory(src/tools)
 endif()
 
+#########################
+######### MIDI ##########
+if (${BUILD_MIDI_TOOL})
+add_subdirectory(deps/rtmidi)
+endif()
 
 #########################
 ##### COMMAND_LINE ######
