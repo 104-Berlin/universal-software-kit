@@ -16,6 +16,8 @@ EVector<u32> planeIndices = {
 };
 
 static EUnorderedMap<ERegister::Entity, EUnorderedMap<EValueDescription::t_ID, RMesh*>> meshes;
+static EWeakRef<EUIViewport> drawingViewport;
+static RBezierCurve* editCurve = nullptr;
 
 E_STORAGE_STRUCT(Plane,
     (EVec3, Position),
@@ -52,6 +54,18 @@ static ExtensionData data{};
 
 void ViewportMouseMove(events::EMouseMoveEvent e)
 {
+    if (drawingViewport.expired()) { return; }
+    CurveDelegate& del = drawingViewport.lock()->GetCurveEdit();
+    size_t pointCount = drawingViewport.lock()->GetCurveEdit().GetPointCount(0);
+
+    ImVec2* points = drawingViewport.lock()->GetCurveEdit().GetPoints(0);
+    if (editCurve && pointCount == 4)
+    {
+        editCurve->SetStartPos({points[0].x, points[0].y, 0.0f});
+        editCurve->SetEndPos({points[1].x, points[1].y, 0.0f});
+        editCurve->SetControll1({points[2].x, points[2].y, 0.0f});
+        editCurve->SetControll2({points[3].x, points[3].y, 0.0f});
+    }
 }
 
 void ViewportClicked(events::EMouseDownEvent e)
@@ -79,8 +93,9 @@ void ViewportDrag(events::EMouseDragEvent e)
 APP_ENTRY
 {
     ERef<EUIPanel> someDrawingPanel = EMakeRef<EUIPanel>("Drawing Canvas");
-    EWeakRef<EUIViewport> drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()).lock());
+    drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()).lock());
     
+    drawingViewport.lock()->AddChild(EMakeRef<EUIPointMove>());
     drawingViewport.lock()->AddEventListener<events::EMouseDownEvent>(&ViewportClicked);
     drawingViewport.lock()->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
     drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
@@ -96,7 +111,7 @@ APP_ENTRY
         }
     }, drawingViewport.lock().get());
 
-    shared::Events().AddComponentCreateEventListener(Line::_dsc, [drawingViewport](ERegister::Entity entity){
+    shared::Events().AddComponentCreateEventListener(Line::_dsc, [](ERegister::Entity entity){
         Line line = shared::GetValue<Line>(entity);
         RLine* newLine = new RLine();
         meshes[entity][Line::_dsc.GetId()] = newLine;
@@ -117,10 +132,20 @@ APP_ENTRY
             entityLine->SetControll1(l.Controll1);
             entityLine->SetControll2(l.Controll2);
             entityLine->SetSteps(l.Steps);
+
+            size_t pointCount = drawingViewport.lock()->GetCurveEdit().GetPointCount(0);
+            ImVec2* points = drawingViewport.lock()->GetCurveEdit().GetPoints(0);
+            if (pointCount == 4)
+            {
+                points[0] = {l.Start.x, l.Start.y};
+                points[1] = {l.End.x, l.End.y};
+                points[2] = {l.Controll1.x, l.Controll1.y};
+                points[3] = {l.Controll2.x, l.Controll2.y};
+            }   
         }
     }, drawingViewport.lock().get());
 
-    shared::Events().AddComponentCreateEventListener(Curve::_dsc, [drawingViewport](ERegister::Entity entity){
+    shared::Events().AddComponentCreateEventListener(Curve::_dsc, [](ERegister::Entity entity){
         Curve line = shared::GetValue<Curve>(entity);
         RBezierCurve* newLine = new RBezierCurve();
         meshes[entity][Curve::_dsc.GetId()] = newLine;
@@ -129,6 +154,16 @@ APP_ENTRY
         newLine->SetControll1(line.Controll1);
         newLine->SetControll2(line.Controll2);
         newLine->SetSteps(line.Steps);
+        size_t pointCount = drawingViewport.lock()->GetCurveEdit().GetPointCount(0);
+        ImVec2* points = drawingViewport.lock()->GetCurveEdit().GetPoints(0);
+        if (pointCount == 4)
+        {
+            points[0] = {line.Start.x, line.Start.y};
+            points[1] = {line.End.x, line.End.y};
+            points[2] = {line.Controll1.x, line.Controll1.y};
+            points[3] = {line.Controll2.x, line.Controll2.y};
+        }
+        editCurve = newLine;
         drawingViewport.lock()->GetScene().Add(newLine);
     }, drawingViewport.lock().get());
 
@@ -164,7 +199,7 @@ APP_ENTRY
         }
     }, drawingViewport.lock().get());
 
-    shared::Events().AddComponentCreateEventListener(Plane::_dsc, [drawingViewport](ERegister::Entity entity){
+    shared::Events().AddComponentCreateEventListener(Plane::_dsc, [](ERegister::Entity entity){
         // Create mesh in 3D Scene
         if (drawingViewport.expired()) { return; }
         Plane mesh = shared::GetValue<Plane>(entity);

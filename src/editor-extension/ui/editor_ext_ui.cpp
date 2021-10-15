@@ -427,16 +427,22 @@ bool EUISameLine::OnRender()
     return false;
 }
 
+
 bool EUIViewport::OnRender() 
 {
     ImVec2 contentRegion = ImGui::GetContentRegionAvail();
 
     fFrameBuffer->Resize(contentRegion.x, contentRegion.y, Graphics::GFrameBufferFormat::RGBA8);
     fRenderer.Render(&fScene, &fCamera);
-
     ImGui::Image((ImTextureID)(unsigned long long)(unsigned long)fFrameBuffer->GetColorAttachment(), contentRegion, {0, 1}, {1, 0});
 
+
     return true;
+}
+
+CurveDelegate& EUIViewport::GetCurveEdit()
+{
+    return delegate;
 }
 
 
@@ -907,4 +913,21 @@ void EUIGrid::OnBeforeChildRender()
 
 void EUIGrid::OnAfterChildRender()
 {
+}
+
+
+EUIPointMove::EUIPointMove()
+    : EUIField("PointMove"), fCenterPosition(100.0f, 100.0f)
+{
+    
+}
+
+bool EUIPointMove::OnRender() 
+{   
+    ImGuiContext* g = ImGui::GetCurrentContext();
+    ImRect itemRect = g->LastItemData.Rect;
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->AddCircleFilled({fCenterPosition.x + itemRect.Min.x, fCenterPosition.y + itemRect.Min.y}, 10.0f, 0xffffffff);
+    return false;
 }

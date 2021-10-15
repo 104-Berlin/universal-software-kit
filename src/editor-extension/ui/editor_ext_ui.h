@@ -385,6 +385,54 @@ namespace events {
         void Open();
     };
 
+
+class CurveDelegate : public ImCurveEdit::Delegate
+{
+private:
+    Renderer::RBezierCurve* fCurve;
+
+    ImVec2 fMin;
+    ImVec2 fMax;
+
+    EVector<ImVec2> fPoints;
+public:
+    CurveDelegate()
+    {
+        fMin = {0.0f, 0.0f};
+        fMax = {0.0f, 0.0f};
+        fPoints = {
+            {50.0f, 50.0f},
+            {150.0f, 150.0f},
+            {50.0f, 100.0f},
+            {100.0f, 50.0f},
+        };
+    }
+
+    bool focused = false;
+    virtual size_t GetCurveCount() { return 1; }
+    virtual bool IsVisible(size_t curveIndex) { return true; }
+    virtual ImCurveEdit::CurveType GetCurveType(size_t curveIndex) const { return ImCurveEdit::CurveType::CurveBezier; }
+    virtual ImVec2& GetMin() {return fMin;}
+    virtual ImVec2& GetMax() {return fMax;}
+    virtual size_t GetPointCount(size_t curveIndex) { return fPoints.size(); }
+    virtual uint32_t GetCurveColor(size_t curveIndex) { return 0xffffffff; }
+    virtual ImVec2* GetPoints(size_t curveIndex) { return fPoints.data();}
+    virtual int EditPoint(size_t curveIndex, int pointIndex, ImVec2 value) 
+    { 
+        if (pointIndex < fPoints.size()) 
+        {
+            E_INFO("Setting");
+            fPoints[pointIndex] = value;
+        } 
+        return pointIndex; 
+    }
+    virtual void AddPoint(size_t curveIndex, ImVec2 value) {fPoints.push_back(value);}
+    virtual unsigned int GetBackgroundColor() { return 0x20202020; }
+    // handle undo/redo thru this functions
+    virtual void BeginEdit(int /*index*/) {}
+    virtual void EndEdit() {}
+};
+
     class E_EDEXAPI EUIViewport : public EUIField
     {
     public:
@@ -392,7 +440,10 @@ namespace events {
         virtual ~EUIViewport();
 
         virtual bool OnRender() override;
+
+        CurveDelegate& GetCurveEdit();
     private:
+        CurveDelegate delegate;
         Graphics::GFrameBuffer* fFrameBuffer;
 
         Renderer::RRenderer3D fRenderer;
@@ -672,6 +723,17 @@ namespace events
         virtual bool OnRender() override;
         virtual void OnBeforeChildRender() override;
         virtual void OnAfterChildRender() override;
+    };
+
+
+    class E_EDEXAPI EUIPointMove : public EUIField
+    {
+    private:
+        EVec2 fCenterPosition;
+    public:
+        EUIPointMove();
+
+        virtual bool OnRender() override;
     };
 
 }
