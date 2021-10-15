@@ -50,6 +50,81 @@ bool EPointMoveTool::OnRender()
     return false;
 }
 
+ELineEditTool::ELineEditTool()
+    : EViewportTool("LINE_EDIT"), fLine(nullptr)
+{
+    SetVisible(false);
+}
+
+void ELineEditTool::SetLine(Renderer::RLine* line) 
+{
+    fLine = line;
+    SetVisible(fLine != nullptr);   
+}
+
+Renderer::RLine* ELineEditTool::GetLine() const
+{
+    return fLine;
+}
+
+bool ELineEditTool::OnRender() 
+{
+    if (!fLine) { return false; }
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiContext* g = ImGui::GetCurrentContext();
+
+    ImRect itemRect = g->LastItemData.Rect;
+
+    float halfSize = 4.0f;
+
+    EVec2 startPoint = EVec2(fLine->GetStart().x, fLine->GetStart().y) + ImConvert::ImToGlmVec2(itemRect.Min);
+    EVec2 endPoint = EVec2(fLine->GetEnd().x, fLine->GetEnd().y) + ImConvert::ImToGlmVec2(itemRect.Min);
+
+    const ImRect startAnchor(ImConvert::GlmToImVec2(startPoint - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(startPoint + EVec2(halfSize, halfSize)));
+    const ImRect endAnchor(ImConvert::GlmToImVec2(endPoint - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(endPoint + EVec2(halfSize, halfSize)));
+
+
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->AddRect(startAnchor.Min, startAnchor.Max, 0xffffffff);
+    draw_list->AddRect(endAnchor.Min, endAnchor.Max, 0xffffffff);
+
+    bool wasChanged = fCurrentSelection != Selection::NONE && !io.MouseDown[0];
+    Selection newSelection = io.MouseDown[0] ? fCurrentSelection : Selection::NONE; 
+
+
+    if (startAnchor.Contains(io.MousePos))
+    {
+        if (io.MouseDown[0])
+        {
+            newSelection = Selection::START;
+        }
+    }
+    if (endAnchor.Contains(io.MousePos))
+    {
+        if (io.MouseDown[0])
+        {
+            newSelection = Selection::END;
+        }
+    }
+
+    fCurrentSelection = newSelection;
+
+    switch (fCurrentSelection)
+    {
+    case Selection::START:
+        fLine->SetStart(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f));
+        break;
+    case Selection::END:
+        fLine->SetEnd(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f));
+        break;
+    case Selection::NONE:
+        break;
+    }
+
+    return wasChanged;
+}
+
 EBezierEditTool::EBezierEditTool() 
     : EViewportTool("BEZIER_EDIT"), fCurve(nullptr)
 {

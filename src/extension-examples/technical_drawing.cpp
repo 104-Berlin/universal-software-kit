@@ -20,7 +20,9 @@ EVector<u32> planeIndices = {
 static EUnorderedMap<ERegister::Entity, EUnorderedMap<EValueDescription::t_ID, RMesh*>> meshes;
 static EWeakRef<EUIViewport> drawingViewport;
 static EBezierEditTool* bezierEdit = nullptr;
+static ELineEditTool* lineEdit = nullptr;
 static ERegister::Entity currentEditCurveEntity = 0;
+static ERegister::Entity currentEditLineEntity = 0;
 
 E_STORAGE_STRUCT(Plane,
     (EVec3, Position),
@@ -97,6 +99,8 @@ APP_ENTRY
     ERef<EUIPanel> someDrawingPanel = EMakeRef<EUIPanel>("Drawing Canvas");
     drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()).lock());
     bezierEdit = static_cast<EBezierEditTool*>(drawingViewport.lock()->AddTool(new EBezierEditTool()));
+    lineEdit = static_cast<ELineEditTool*>(drawingViewport.lock()->AddTool(new ELineEditTool()));
+    
     drawingViewport.lock()->AddEventListener<events::EMouseDownEvent>(&ViewportClicked);
     drawingViewport.lock()->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
     drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
@@ -120,6 +124,9 @@ APP_ENTRY
         meshes[entity][Line::_dsc.GetId()] = newLine;
         newLine->SetStart(line.Start);
         newLine->SetEnd(line.End);
+
+        lineEdit->SetLine(newLine);
+        currentEditLineEntity = entity;
         drawingViewport.lock()->GetScene().Add(newLine);
     }, drawingViewport.lock().get());
 

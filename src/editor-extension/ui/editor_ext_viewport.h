@@ -34,6 +34,26 @@ namespace Engine {
         virtual bool OnRender() override;
     };
 
+    class E_EDEXAPI ELineEditTool : public EViewportTool
+    {
+        enum Selection
+        {
+            NONE,
+            START,
+            END
+        };
+    private:
+        Renderer::RLine* fLine;
+        Selection fCurrentSelection;
+    public:
+        ELineEditTool();
+
+        void SetLine(Renderer::RLine* line);
+        Renderer::RLine* GetLine() const;
+
+        virtual bool OnRender();
+    };
+
     class E_EDEXAPI EBezierEditTool : public EViewportTool
     {
         enum Selection
