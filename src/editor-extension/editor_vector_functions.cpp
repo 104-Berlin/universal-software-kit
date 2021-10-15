@@ -1,5 +1,29 @@
 #include "editor_extension.h"
 
+ImVec2 ImConvert::GlmToImVec2(const EVec2& vector)
+{
+	return {vector.x, vector.y};
+}
+
+ImVec4 ImConvert::GlmToImVec4(const EVec4& vector)
+{
+	return {vector.x, vector.y, vector.z, vector.w};
+}
+
+
+EVec2 ImConvert::ImToGlmVec2(const ImVec2& vector)
+{
+	return {vector.x, vector.y};
+}
+
+EVec4 ImConvert::ImToGlmVec4(const ImVec4& vector)
+{
+	return {vector.x, vector.y, vector.z, vector.w};
+}
+
+
+
+
 template <>
 bool convert::setter<EVec2>(Engine::EProperty* prop, const EVec2& vec)
 {

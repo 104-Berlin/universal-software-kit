@@ -42,4 +42,5 @@ typedef glm::mat4 EMat4;
 #include "editor_vector_dsc.h"
 
 #include "ui/editor_ext_ui.h"
+#include "ui/editor_ext_viewport.h"
 #include "ui/editor_ui_register.h"

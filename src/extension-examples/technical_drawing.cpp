@@ -4,6 +4,8 @@ using namespace Engine;
 using namespace Graphics;
 using namespace Renderer;
 
+
+
 EVector<RMesh::Vertex> planeVertices = {
     {{-50.0f,-50.0f, -1.0f}},
     {{ 50.0f,-50.0f, -1.0f}},
@@ -17,7 +19,8 @@ EVector<u32> planeIndices = {
 
 static EUnorderedMap<ERegister::Entity, EUnorderedMap<EValueDescription::t_ID, RMesh*>> meshes;
 static EWeakRef<EUIViewport> drawingViewport;
-static RBezierCurve* editCurve = nullptr;
+static EBezierEditTool* bezierEdit = nullptr;
+static ERegister::Entity currentEditCurveEntity = 0;
 
 E_STORAGE_STRUCT(Plane,
     (EVec3, Position),
@@ -54,18 +57,6 @@ static ExtensionData data{};
 
 void ViewportMouseMove(events::EMouseMoveEvent e)
 {
-    if (drawingViewport.expired()) { return; }
-    CurveDelegate& del = drawingViewport.lock()->GetCurveEdit();
-    size_t pointCount = drawingViewport.lock()->GetCurveEdit().GetPointCount(0);
-
-    ImVec2* points = drawingViewport.lock()->GetCurveEdit().GetPoints(0);
-    if (editCurve && pointCount == 4)
-    {
-        editCurve->SetStartPos({points[0].x, points[0].y, 0.0f});
-        editCurve->SetEndPos({points[1].x, points[1].y, 0.0f});
-        editCurve->SetControll1({points[2].x, points[2].y, 0.0f});
-        editCurve->SetControll2({points[3].x, points[3].y, 0.0f});
-    }
 }
 
 void ViewportClicked(events::EMouseDownEvent e)
@@ -89,16 +80,28 @@ void ViewportDrag(events::EMouseDragEvent e)
     }
 }
 
+void ViewportToolFinish(events::EViewportToolFinishEvent event)
+{
+    if (!currentEditCurveEntity) { return; }
+    Curve currentCurve = shared::GetValue<Curve>(currentEditCurveEntity);
+    currentCurve.Start = bezierEdit->GetCurve()->GetStartPos();
+    currentCurve.End = bezierEdit->GetCurve()->GetEndPos();
+    currentCurve.Controll1 = bezierEdit->GetCurve()->GetControll1();
+    currentCurve.Controll2 = bezierEdit->GetCurve()->GetControll2();
+    shared::SetValue<Curve>(currentEditCurveEntity, "Curve", currentCurve);
+}
+
 
 APP_ENTRY
 {
     ERef<EUIPanel> someDrawingPanel = EMakeRef<EUIPanel>("Drawing Canvas");
     drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()).lock());
-    
-    drawingViewport.lock()->AddChild(EMakeRef<EUIPointMove>());
+    bezierEdit = static_cast<EBezierEditTool*>(drawingViewport.lock()->AddTool(new EBezierEditTool()));
     drawingViewport.lock()->AddEventListener<events::EMouseDownEvent>(&ViewportClicked);
     drawingViewport.lock()->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
     drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
+
+    drawingViewport.lock()->AddEventListener<events::EViewportToolFinishEvent>(&ViewportToolFinish);
     
     shared::Events().AddEntityChangeEventListener(Line::_dsc.GetId(), [](ERegister::Entity entity, const EString& nameIdent){
         Line l = shared::GetValue<Line>(entity);
@@ -132,16 +135,6 @@ APP_ENTRY
             entityLine->SetControll1(l.Controll1);
             entityLine->SetControll2(l.Controll2);
             entityLine->SetSteps(l.Steps);
-
-            size_t pointCount = drawingViewport.lock()->GetCurveEdit().GetPointCount(0);
-            ImVec2* points = drawingViewport.lock()->GetCurveEdit().GetPoints(0);
-            if (pointCount == 4)
-            {
-                points[0] = {l.Start.x, l.Start.y};
-                points[1] = {l.End.x, l.End.y};
-                points[2] = {l.Controll1.x, l.Controll1.y};
-                points[3] = {l.Controll2.x, l.Controll2.y};
-            }   
         }
     }, drawingViewport.lock().get());
 
@@ -154,16 +147,9 @@ APP_ENTRY
         newLine->SetControll1(line.Controll1);
         newLine->SetControll2(line.Controll2);
         newLine->SetSteps(line.Steps);
-        size_t pointCount = drawingViewport.lock()->GetCurveEdit().GetPointCount(0);
-        ImVec2* points = drawingViewport.lock()->GetCurveEdit().GetPoints(0);
-        if (pointCount == 4)
-        {
-            points[0] = {line.Start.x, line.Start.y};
-            points[1] = {line.End.x, line.End.y};
-            points[2] = {line.Controll1.x, line.Controll1.y};
-            points[3] = {line.Controll2.x, line.Controll2.y};
-        }
-        editCurve = newLine;
+        
+        bezierEdit->SetBezierCurve(newLine);
+        currentEditCurveEntity = entity;
         drawingViewport.lock()->GetScene().Add(newLine);
     }, drawingViewport.lock().get());
 
