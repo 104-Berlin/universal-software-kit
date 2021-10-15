@@ -6,6 +6,16 @@
 #define EVec4_dsc Engine::EValueDescription::CreateStruct("EVec4", {{"X", DoubleDescription}, {"Y", DoubleDescription}, {"Z", DoubleDescription}, {"W", DoubleDescription}})
 
 
+namespace ImConvert
+{
+    E_EDEXAPI ImVec2 GlmToImVec2(const EVec2& vector);
+    E_EDEXAPI ImVec4 GlmToImVec4(const EVec4& vector);
+
+    E_EDEXAPI EVec2 ImToGlmVec2(const ImVec2& vector);
+    E_EDEXAPI EVec4 ImToGlmVec4(const ImVec4& vector);
+}
+
+
 #ifdef EWIN
 
 namespace convert

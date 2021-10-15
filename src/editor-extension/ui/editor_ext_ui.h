@@ -384,28 +384,7 @@ namespace events {
          */
         void Open();
     };
-
-    class E_EDEXAPI EUIViewport : public EUIField
-    {
-    public:
-        EUIViewport(const Renderer::RCamera& = Renderer::RCamera(Renderer::ECameraMode::ORTHOGRAPHIC));
-        virtual ~EUIViewport();
-
-        virtual bool OnRender() override;
-    private:
-        Graphics::GFrameBuffer* fFrameBuffer;
-
-        Renderer::RRenderer3D fRenderer;
-        Renderer::RCamera fCamera;
-        Renderer::RScene fScene;
-    public:
-        Renderer::RScene& GetScene();
-        const Renderer::RScene& GetScene() const;
-
-        const Renderer::RCamera& GetCamera() const;
-        Renderer::RCamera& GetCamera();
-    };
-
+    
     class E_EDEXAPI EUISameLine : public EUIField
     {
     public:
