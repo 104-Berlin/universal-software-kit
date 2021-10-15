@@ -71,6 +71,16 @@ if (${BUILD_TEST})
 endif()
 
 
+
+
+#########################
+######## EXAMPLES #######
+if (${BUILD_EXAMPLES})
+add_subdirectory(src/extension-examples)
+endif()
+
+
+
 #########################
 ####### EDITOR ##########
 if ((WIN32 OR APPLE) AND ${BUILD_EDITOR})
@@ -78,12 +88,13 @@ if ((WIN32 OR APPLE) AND ${BUILD_EDITOR})
   add_subdirectory(deps/usk-graphics)
 
   add_subdirectory(src/editor)
-endif()
 
+  install(TARGETS USKEditor Shared EEditorExtension EExtension GPlatformWrapper EScripting GRenderCommand EInterface
+          RUNTIME DESTINATION ./)
+if(WIN32)
+  install(FILES bin/Release/TECHDRAW.uex
+          DESTINATION plugins)
+endif(WIN32)
 
-
-#########################
-######## EXAMPLES #######
-if (${BUILD_EXAMPLES})
-add_subdirectory(src/extension-examples)
+  include(CPack)
 endif()
