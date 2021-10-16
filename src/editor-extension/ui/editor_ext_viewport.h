@@ -17,6 +17,8 @@ namespace Engine {
         void SetVisible(bool visible);
 
         const EString& GetToolName() const;
+
+        virtual EString GetIcon() const;
     protected:
         // Return true if edit was completed
         virtual bool OnRender() = 0;

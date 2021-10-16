@@ -90,7 +90,7 @@ void EUIField::Render()
     {
         for (ERef<EUIField> uiField : fChildren)
         {
-            OnBeforeChildRender();
+            OnBeforeChildRender(uiField);
             uiField->Render();
             OnAfterChildRender();
         }
@@ -337,14 +337,14 @@ void EUIField::AcceptDrag(const EString& type)
 EUIPanel::EUIPanel(const EString& title) 
     : EUIField(title), fOpen(true)
 {
-    fWindowFlags = ImGuiWindowFlags_None;
+    fWindowFlags = ImGuiWindowFlags_None | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize;
 }
 
 bool EUIPanel::OnRender() 
 {
     if (fOpen)
     {
-
+        //ImGui::SetNextWindowSize({fWidthOverride, fHeightOverride});
         ImGui::Begin(GetLabel().c_str(), &fOpen, fWindowFlags);
         ImGui::GetCurrentWindow()->Viewport->Flags &= ~ImGuiViewportFlags_NoDecoration;
         if (!fOpen) 
@@ -792,7 +792,7 @@ EUITableRow::EUITableRow()
     
 }
 
-void EUITableRow::OnBeforeChildRender() 
+void EUITableRow::OnBeforeChildRender(EWeakRef<EUIField> child) 
 {
     ImGui::TableSetColumnIndex(fCurrentTableIndex++);
 }
@@ -838,17 +838,22 @@ bool EUIGrid::OnRender()
     fCurrentChildCount = 0;
     
     fCurrentWidthAvail = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, {1.0f, 1.0f});
     return true;
 }
 
-void EUIGrid::OnBeforeChildRender()
+void EUIGrid::OnBeforeChildRender(EWeakRef<EUIField> child)
 {
+    if (!child.expired())
+    {
+        child.lock()->SetSize({fCellWidth, fCellHeight});
+    }
     ImGuiStyle& style = ImGui::GetStyle();
     if (fCurrentChildCount != 0)
     {
         float last_button_x2 = ImGui::GetItemRectMax().x;
         float next_button_x2 = last_button_x2 + style.ItemSpacing.x + fCellWidth; // Expected position if next button was on same line
-        if (fCurrentChildCount + 1 < fChildren.size() && next_button_x2 < fCurrentWidthAvail)
+        if (fCurrentChildCount < fChildren.size() && next_button_x2 < fCurrentWidthAvail)
         {
             ImGui::SameLine();
         }
@@ -859,4 +864,9 @@ void EUIGrid::OnBeforeChildRender()
 
 void EUIGrid::OnAfterChildRender()
 {
+}
+
+void EUIGrid::OnRenderEnd()
+{
+    ImGui::PopStyleVar();
 }

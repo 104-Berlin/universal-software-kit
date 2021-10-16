@@ -26,6 +26,7 @@
 
 
 
+#include "editor_icons_material_design.h"
 #include "graphics_wrapper.h"
 #include "graphics_renderer.h"
 

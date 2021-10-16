@@ -30,6 +30,11 @@ const EString& EViewportTool::GetToolName() const
     return fToolName;
 }
 
+EString EViewportTool::GetIcon() const
+{
+    return ICON_MD_PAN_TOOL;
+}
+
 EPointMoveTool::EPointMoveTool() 
     : EViewportTool("POINT_MOVE"), fCenterPosition(100.0f, 100.0f)
 {
@@ -332,7 +337,7 @@ void EUIViewportToolbar::Regenerate()
     
     for (EViewportTool* tool : fViewport.lock()->GetRegisteredTools())
     {
-        grid.lock()->AddChild(EMakeRef<EUIButton>(tool->GetToolName())).lock()->AddEventListener<events::EButtonEvent>([](events::EButtonEvent event){
+        grid.lock()->AddChild(EMakeRef<EUIButton>(tool->GetIcon())).lock()->AddEventListener<events::EButtonEvent>([](events::EButtonEvent event){
             // Activate tool
         });
     }

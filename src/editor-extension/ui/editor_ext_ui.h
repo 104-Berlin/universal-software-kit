@@ -225,8 +225,9 @@ namespace events {
 
         /**
          * @brief called before child is rendered
+         * @param child The child that will be rendered next
          */
-        virtual void OnBeforeChildRender() {}
+        virtual void OnBeforeChildRender(EWeakRef<EUIField> child) {}
 
 
         /**
@@ -633,7 +634,7 @@ namespace events
     public:
         EUITableRow();
 
-        virtual void OnBeforeChildRender() override;
+        virtual void OnBeforeChildRender(EWeakRef<EUIField> child) override;
         virtual bool OnRender() override;
     };
 
@@ -654,8 +655,9 @@ namespace events
         void SetCellHeight(float height);
 
         virtual bool OnRender() override;
-        virtual void OnBeforeChildRender() override;
+        virtual void OnBeforeChildRender(EWeakRef<EUIField> child) override;
         virtual void OnAfterChildRender() override;
+        virtual void OnRenderEnd() override;
     };
 
 }
