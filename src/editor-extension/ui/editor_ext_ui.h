@@ -322,6 +322,11 @@ namespace events {
          */
         void SetDirty();
 
+        /**
+         * @brief Set wether to render element or not
+         * @param visible
+         */
+        void SetVisible(bool visible);
         
         /**
          * @brief Sets the type of the drag source. Specify empty string to disable dragging
@@ -365,11 +370,17 @@ namespace events {
          * To remove an imgui thing
          */
         bool fWasJustClosed;
+
+        /**
+         * Menu Bar
+         */
+        ERef<EUIField> fMenuBar;
     public:
         EUIPanel(const EString& title);
 
         virtual bool OnRender() override;
         virtual void OnRenderEnd() override;
+        virtual void OnUpdateEventDispatcher() override;
 
         /**
          * @return Wether the Panel is open
@@ -605,6 +616,20 @@ namespace events
         void SetStretchToAllColumns(bool stretch);
         void SetSelected(bool selected);
         bool IsSelected() const;
+    };
+
+    class E_EDEXAPI EUISelectionList : public EUIField
+    {
+    private:
+        EVector<EString> fOptions;
+        EVector<const char*>   fCharOptions;
+        int              fSelectedOption;
+    public:
+        EUISelectionList(const EString& label = "SelectionList");
+
+        virtual bool OnRender() override;
+
+        void AddOption(const EString& option);
     };
 
     class E_EDEXAPI EUITable : public EUIField

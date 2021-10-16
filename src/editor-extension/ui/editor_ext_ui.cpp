@@ -319,6 +319,11 @@ void EUIField::SetDirty()
     fDirty = true;
 }
 
+void EUIField::SetVisible(bool visible) 
+{
+    fVisible = visible;
+}
+
 void EUIField::SetDragType(const EString& type)
 {
     fDragType = type;
@@ -337,7 +342,7 @@ void EUIField::AcceptDrag(const EString& type)
 EUIPanel::EUIPanel(const EString& title) 
     : EUIField(title), fOpen(true)
 {
-    
+    fMenuBar = nullptr;
 }
 
 bool EUIPanel::OnRender() 
@@ -350,6 +355,11 @@ bool EUIPanel::OnRender()
         {
             fWasJustClosed = true;
         }
+        if (fMenuBar && ImGui::BeginMenuBar())
+        {
+            fMenuBar->Render();
+            ImGui::EndMenuBar();
+        }
     }
     return fOpen;
 }
@@ -361,7 +371,16 @@ void EUIPanel::OnRenderEnd()
         fWasJustClosed = false;
         ImGui::End();
     }
+}        
+
+void EUIPanel::OnUpdateEventDispatcher()
+{
+    if (fMenuBar)
+    {
+        fMenuBar->UpdateEventDispatcher();
+    }
 }
+
 
 bool EUIPanel::IsOpen() const
 {
@@ -743,6 +762,25 @@ void EUISelectable::SetSelected(bool selected)
 bool EUISelectable::IsSelected() const
 {
     return fIsSelected;
+}
+
+EUISelectionList::EUISelectionList(const EString& label)
+    : EUIField(label), fSelectedOption(0)
+{
+
+}
+
+bool EUISelectionList::OnRender()
+{
+    ImGui::ListBox(GetLabel().c_str(), &fSelectedOption, fCharOptions.data(), fCharOptions.size());
+    delete[] options;
+    return true;
+}
+
+void EUISelectionList::AddOption(const EString& option)
+{
+    fOptions.push_back(option);
+    fCharOptions.push_back(fOptions.back().c_str());
 }
 
 EUITable::EUITable(const EString& name) 
