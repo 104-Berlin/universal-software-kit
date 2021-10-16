@@ -4,6 +4,8 @@ using namespace Engine;
 using namespace Graphics;
 using namespace Renderer;
 
+
+
 EVector<RMesh::Vertex> planeVertices = {
     {{-50.0f,-50.0f, -1.0f}},
     {{ 50.0f,-50.0f, -1.0f}},
@@ -16,6 +18,11 @@ EVector<u32> planeIndices = {
 };
 
 static EUnorderedMap<ERegister::Entity, EUnorderedMap<EValueDescription::t_ID, RMesh*>> meshes;
+static EWeakRef<EUIViewport> drawingViewport;
+static EBezierEditTool* bezierEdit = nullptr;
+static ELineEditTool* lineEdit = nullptr;
+static ERegister::Entity currentEditCurveEntity = 0;
+static ERegister::Entity currentEditLineEntity = 0;
 
 E_STORAGE_STRUCT(Plane,
     (EVec3, Position),
@@ -27,6 +34,15 @@ E_STORAGE_STRUCT(Line,
     (float, Thickness, 8.0f),
     (EVec3, Start),
     (EVec3, End)
+)
+
+E_STORAGE_STRUCT(Curve,
+    (float, Thickness, 5.0f),
+    (EVec3, Start, 200.0f, 200.0f, 0.0f),
+    (EVec3, End, 400.0f, 200.0f, 0.0f),
+    (EVec3, Controll1, 200.0f, 100.0f, 0.0f),
+    (EVec3, Controll2, 400.0f, 100.0f, 0.0f),
+    (int, Steps, 10)
 )
 
 E_STORAGE_STRUCT(TechnicalMesh,
@@ -66,15 +82,30 @@ void ViewportDrag(events::EMouseDragEvent e)
     }
 }
 
+void ViewportToolFinish(events::EViewportToolFinishEvent event)
+{
+    if (!currentEditCurveEntity) { return; }
+    Curve currentCurve = shared::GetValue<Curve>(currentEditCurveEntity);
+    currentCurve.Start = bezierEdit->GetCurve()->GetStartPos();
+    currentCurve.End = bezierEdit->GetCurve()->GetEndPos();
+    currentCurve.Controll1 = bezierEdit->GetCurve()->GetControll1();
+    currentCurve.Controll2 = bezierEdit->GetCurve()->GetControll2();
+    shared::SetValue<Curve>(currentEditCurveEntity, "Curve", currentCurve);
+}
+
 
 APP_ENTRY
 {
     ERef<EUIPanel> someDrawingPanel = EMakeRef<EUIPanel>("Drawing Canvas");
-    EWeakRef<EUIViewport> drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()).lock());
+    drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()).lock());
+    bezierEdit = static_cast<EBezierEditTool*>(drawingViewport.lock()->AddTool(new EBezierEditTool()));
+    lineEdit = static_cast<ELineEditTool*>(drawingViewport.lock()->AddTool(new ELineEditTool()));
     
     drawingViewport.lock()->AddEventListener<events::EMouseDownEvent>(&ViewportClicked);
     drawingViewport.lock()->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
     drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
+
+    drawingViewport.lock()->AddEventListener<events::EViewportToolFinishEvent>(&ViewportToolFinish);
     
     shared::Events().AddEntityChangeEventListener(Line::_dsc.GetId(), [](ERegister::Entity entity, const EString& nameIdent){
         Line l = shared::GetValue<Line>(entity);
@@ -87,12 +118,45 @@ APP_ENTRY
         }
     }, drawingViewport.lock().get());
 
-    shared::Events().AddComponentCreateEventListener(Line::_dsc, [drawingViewport](ERegister::Entity entity){
+    shared::Events().AddComponentCreateEventListener(Line::_dsc, [](ERegister::Entity entity){
         Line line = shared::GetValue<Line>(entity);
         RLine* newLine = new RLine();
         meshes[entity][Line::_dsc.GetId()] = newLine;
         newLine->SetStart(line.Start);
         newLine->SetEnd(line.End);
+
+        lineEdit->SetLine(newLine);
+        currentEditLineEntity = entity;
+        drawingViewport.lock()->GetScene().Add(newLine);
+    }, drawingViewport.lock().get());
+
+
+    shared::Events().AddEntityChangeEventListener(Curve::_dsc.GetId(), [](ERegister::Entity entity, const EString& nameIdent){
+        Curve l = shared::GetValue<Curve>(entity);
+        RBezierCurve* entityLine = (RBezierCurve*) meshes[entity][Curve::_dsc.GetId()];
+        if (entityLine)
+        {
+            entityLine->SetStartPos(l.Start);
+            entityLine->SetEndPos(l.End);
+            entityLine->SetThickness(l.Thickness);
+            entityLine->SetControll1(l.Controll1);
+            entityLine->SetControll2(l.Controll2);
+            entityLine->SetSteps(l.Steps);
+        }
+    }, drawingViewport.lock().get());
+
+    shared::Events().AddComponentCreateEventListener(Curve::_dsc, [](ERegister::Entity entity){
+        Curve line = shared::GetValue<Curve>(entity);
+        RBezierCurve* newLine = new RBezierCurve();
+        meshes[entity][Curve::_dsc.GetId()] = newLine;
+        newLine->SetStartPos(line.Start);
+        newLine->SetEndPos(line.End);
+        newLine->SetControll1(line.Controll1);
+        newLine->SetControll2(line.Controll2);
+        newLine->SetSteps(line.Steps);
+        
+        bezierEdit->SetBezierCurve(newLine);
+        currentEditCurveEntity = entity;
         drawingViewport.lock()->GetScene().Add(newLine);
     }, drawingViewport.lock().get());
 
@@ -128,7 +192,7 @@ APP_ENTRY
         }
     }, drawingViewport.lock().get());
 
-    shared::Events().AddComponentCreateEventListener(Plane::_dsc, [drawingViewport](ERegister::Entity entity){
+    shared::Events().AddComponentCreateEventListener(Plane::_dsc, [](ERegister::Entity entity){
         // Create mesh in 3D Scene
         if (drawingViewport.expired()) { return; }
         Plane mesh = shared::GetValue<Plane>(entity);
@@ -154,4 +218,5 @@ EXT_ENTRY
     info.GetComponentRegister().RegisterStruct<TechnicalMesh>(extensionName);
     info.GetComponentRegister().RegisterStruct<Plane>(extensionName);
     info.GetComponentRegister().RegisterStruct<Line>(extensionName);
+    info.GetComponentRegister().RegisterStruct<Curve>(extensionName);
 }
