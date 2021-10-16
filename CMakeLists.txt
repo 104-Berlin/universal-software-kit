@@ -10,6 +10,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
+set(CMAKE_MACOSX_RPATH 1)
+set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
+
+
 option(USE_COV "Use the covarage option when not using MSVC" FALSE)
 option(BUILD_EDITOR "Build the editor for mac or windows" TRUE)
 option(BUILD_EXAMPLES "Build exmaples" TRUE)
@@ -79,7 +83,7 @@ if (${BUILD_EXAMPLES})
 add_subdirectory(src/extension-examples)
 endif()
 
-
+set(INSTALL_NAME_DIR lib)
 
 #########################
 ####### EDITOR ##########
@@ -89,12 +93,20 @@ if ((WIN32 OR APPLE) AND ${BUILD_EDITOR})
 
   add_subdirectory(src/editor)
 
-  install(TARGETS USKEditor Shared EEditorExtension EExtension GPlatformWrapper EScripting GRenderCommand EInterface
-          RUNTIME DESTINATION ./)
+  install(TARGETS USKEditor Shared EEditorExtension EExtension GPlatformWrapper EScripting GRenderCommand EInterface ##Util GRenderer GOpenGL GGLFW GInterface ImGui
+          RUNTIME DESTINATION ./
+          LIBRARY DESTINATION lib)
 if(WIN32)
   install(FILES bin/Release/TECHDRAW.uex
           DESTINATION plugins)
+elseif(APPLE)
+  install(FILES bin/TECHDRAW.uex
+          DESTINATION plugins)
+
+set(CPACK_BUNDLE_NAME USKEditor)
+set(CPACK_BUNDLE_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist)
+set(CPACK_BUNDLE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/AppIcon.icns)
 endif(WIN32)
 
-  include(CPack)
+include(CPack)
 endif()
