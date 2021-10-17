@@ -466,7 +466,7 @@ namespace events
 
     E_STORAGE_STRUCT(ESelectChangeEvent,
         (EString, Option),
-        (int, Index)
+        (size_t, Index)
     )
 
 
