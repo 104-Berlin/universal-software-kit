@@ -973,6 +973,7 @@ EResourceSelect::EResourceSelect(const EString& resourceType)
     }
 
     EWeakRef<EUIDropdown> dropDown = std::static_pointer_cast<EUIDropdown>(AddChild(EMakeRef<EUIDropdown>()).lock());
+    dropDown.lock()->AcceptDrag("Resource" + resourceType);
     dropDown.lock()->SetOptions(stringOptions);
     dropDown.lock()->AddEventListener<events::ESelectChangeEvent>([this](events::ESelectChangeEvent event){
         fResourceLink.ResourceId = fOptions[event.Index].ResourceID;

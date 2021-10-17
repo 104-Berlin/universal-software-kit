@@ -15,6 +15,7 @@ E_STORAGE_STRUCT(MyType,
     (int, SomeInteger),
     (float, Other),
     (EString, SomeString),
+    (EResourceLink, ImageLink, "Image"),
     (EVector<MySubType>, Working)
 )
 
