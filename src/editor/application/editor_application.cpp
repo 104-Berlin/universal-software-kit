@@ -300,7 +300,7 @@ void EApplication::RegisterDefaultResources()
 void EApplication::RegisterDefaultComponentRender() 
 {
     fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, ERegister::Entity entity, const EString& nameIdent){
-        ERef<EResourceSelect> resourceSelect = EMakeRef<EResourceSelect>("Image");
+        ERef<EUIResourceSelect> resourceSelect = EMakeRef<EUIResourceSelect>("Image");
         resourceSelect->AddEventListener<events::EResourceSelectChangeEvent>([nameIdent, entity](events::EResourceSelectChangeEvent event){
             shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink("Image", event.ResourceID));
         });

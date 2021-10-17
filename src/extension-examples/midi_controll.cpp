@@ -12,6 +12,7 @@ static RtMidiIn* midi = nullptr;
 static std::condition_variable waitForInput;
 static u8 lastUsedInput = 0;
 static size_t selectedMidiInputIndex = 0;
+static EResourceData::t_ID currentResourceId;
 
 
 enum class MidiInputType : size_t
@@ -126,6 +127,7 @@ APP_CLEANUP
 EXT_ENTRY
 {
     EResourceDescription midiResource("MidiConfig", {"midicfg"});
+    midiResource.CanCreate = true;
     info.GetResourceRegister().RegisterItem(extensionName, midiResource);
 }
 
@@ -150,15 +152,26 @@ void CreateControllerEdit(ERef<EUIPanel> editPanel)
 
     editPanel->SetMenuBar(menuBar);
 
-    EWeakRef<EUIField> addModeButton = editPanel->AddChild(EMakeRef<EUIButton>("Add Mode"));
-    EWeakRef<EUIField> addInputButton = editPanel->AddChild(EMakeRef<EUIButton>("Add Input"));
-    EWeakRef<EUIField> buttonSelectContainer = editPanel->AddChild(EMakeRef<EUIContainer>());
-    editPanel->AddChild(EMakeRef<EUISameLine>());
-    EWeakRef<EUIField> buttonOptionContainer = editPanel->AddChild(EMakeRef<EUIContainer>());
+    EWeakRef<EUIField> resourceSelect = editPanel->AddChild(EMakeRef<EUIResourceSelect>("MidiConfig"));
+
+
+    EWeakRef<EUIField> editContainer = editPanel->AddChild(EMakeRef<EUIContainer>());
+    editContainer.lock()->SetVisible(false);
+
+    EWeakRef<EUIField> addModeButton = editContainer.lock()->AddChild(EMakeRef<EUIButton>("Add Mode"));
+    EWeakRef<EUIField> addInputButton = editContainer.lock()->AddChild(EMakeRef<EUIButton>("Add Input"));
+    EWeakRef<EUIField> buttonSelectContainer = editContainer.lock()->AddChild(EMakeRef<EUIContainer>());
+    editContainer.lock()->AddChild(EMakeRef<EUISameLine>());
+    EWeakRef<EUIField> buttonOptionContainer = editContainer.lock()->AddChild(EMakeRef<EUIContainer>());
     buttonOptionContainer.lock()->SetDirty();
     EWeakRef<EUISelectionList> selectionList = std::dynamic_pointer_cast<EUISelectionList>(buttonSelectContainer.lock()->AddChild(EMakeRef<EUISelectionList>()).lock());
     buttonSelectContainer.lock()->SetWidth(200.0f);
 
+
+    resourceSelect.lock()->AddEventListener<events::EResourceSelectChangeEvent>([editContainer](events::EResourceSelectChangeEvent event){
+        editContainer.lock()->SetVisible(event.ResourceID);
+        currentResourceId = event.ResourceID;
+    });
 
     addModeButton.lock()->AddEventListener<events::EButtonEvent>([addInputButton](){
         CurrentMidiController.Modes.push_back(MidiMode());

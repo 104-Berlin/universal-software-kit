@@ -25,10 +25,11 @@ namespace Engine {
         EVector<EString>    AcceptedFileEndings;
         ImpFunction         ImportFunction;
         ExpFunction         ExportFunction;
+        bool                CanCreate;
 
         EResourceDescription() = default;
         EResourceDescription(const EString& name, const EVector<EString>& acceptedFileEndings)
-            : ResourceName(name), AcceptedFileEndings(acceptedFileEndings)
+            : ResourceName(name), AcceptedFileEndings(acceptedFileEndings), CanCreate(false)
         {}
     };
 

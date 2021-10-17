@@ -957,7 +957,7 @@ void EUIGrid::OnAfterChildRender()
 {
 }
 
-EResourceSelect::EResourceSelect(const EString& resourceType)
+EUIResourceSelect::EUIResourceSelect(const EString& resourceType)
     : EUIField("ResourceSelect" + resourceType), fResourceLink(resourceType)
 {
     fOptions.push_back({0, "None"});

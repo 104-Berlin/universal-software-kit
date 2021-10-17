@@ -712,7 +712,7 @@ namespace events
         )
     }
 
-    class E_EDEXAPI EResourceSelect : public EUIField
+    class E_EDEXAPI EUIResourceSelect : public EUIField
     {
         struct ResourceOption
         {
@@ -723,7 +723,7 @@ namespace events
         EResourceLink fResourceLink;
         EVector<ResourceOption> fOptions;
     public:
-        EResourceSelect(const EString& resourceType);
+        EUIResourceSelect(const EString& resourceType);
     };
 
 }
