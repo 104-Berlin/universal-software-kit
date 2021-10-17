@@ -58,7 +58,7 @@ endif()
 
 #########################
 ######### MIDI ##########
-if (${BUILD_MIDI_TOOL})
+if (${BUILD_MIDI_TOOL} AND ${BUILD_EDITOR})
 add_subdirectory(deps/rtmidi)
 endif()
 
