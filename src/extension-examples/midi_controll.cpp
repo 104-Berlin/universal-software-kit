@@ -143,12 +143,12 @@ void CreateControllerEdit(ERef<EUIPanel> editPanel)
     CurrentMidiController.Modes.push_back(MidiMode());
 
     ERef<EUIField> menuBar = EMakeRef<EUIMenu>("File");
-    EWeakRef<EUIField> saveMenuItem = menuBar->AddChild(EMakeRef<EUIMenuItem>(menuBar));
+    EWeakRef<EUIField> saveMenuItem = menuBar->AddChild(EMakeRef<EUIMenuItem>("Save"));
     saveMenuItem.lock()->AddEventListener<events::EButtonEvent>([](){
 
     });
 
-    editPanel->SetContextMenu();
+    editPanel->SetMenuBar(menuBar);
 
     EWeakRef<EUIField> addModeButton = editPanel->AddChild(EMakeRef<EUIButton>("Add Mode"));
     EWeakRef<EUIField> addInputButton = editPanel->AddChild(EMakeRef<EUIButton>("Add Input"));

@@ -86,7 +86,7 @@ EResourceView::EResourceView()
             resourceField.lock()->SetHeight(fPreviewSize);
             resourceField.lock()->SetTooltip(EMakeRef<EUILabel>(std::to_string(res.ID)));
             resourceField.lock()->SetDragType("Resource" + fSelectedResourceType);
-            resourceField.lock()->SetDragData({res.ID});
+            resourceField.lock()->SetDragData({res.ID, res.Name});
         }
     });
 

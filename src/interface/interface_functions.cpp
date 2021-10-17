@@ -142,9 +142,9 @@ ERef<EResourceData> shared::GetResource(EResourceData::t_ID id)
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetResourceData(id);
 }
 
-EVector<ERef<EResourceData>> shared::GetLoadedResource() 
+EVector<ERef<EResourceData>> shared::GetLoadedResource(const EString& resourceType) 
 {
-    return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllResources();
+    return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllResources(resourceType);
 }
 
 ESharedBuffer shared::GetRegisterAsBuffer()

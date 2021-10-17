@@ -397,6 +397,11 @@ void EUIPanel::Open()
     fOpen = true;
 }
 
+void EUIPanel::SetMenuBar(ERef<EUIField> menuBar)
+{
+    fMenuBar = menuBar;
+}
+
 EUISameLine::EUISameLine() 
     : EUIField("OL")
 {
@@ -818,6 +823,17 @@ bool EUIDropdown::OnRender()
     return true;
 }
 
+void EUIDropdown::SetOptions(const EVector<EString>& options)
+{
+    fOptions = options;
+}
+
+void EUIDropdown::AddOption(const EString& option)
+{
+    fOptions.push_back(option);
+}
+
+
 void EUIDropdown::SetSelectedIndex(size_t index)
 {
     if (index < fOptions.size())
@@ -939,4 +955,47 @@ void EUIGrid::OnBeforeChildRender()
 
 void EUIGrid::OnAfterChildRender()
 {
+}
+
+EResourceSelect::EResourceSelect(const EString& resourceType)
+    : EUIField("ResourceSelect" + resourceType), fResourceLink(resourceType)
+{
+    fOptions.push_back({0, "None"});
+
+    for(auto& entry : shared::GetLoadedResource(resourceType))
+    {
+        fOptions.push_back({entry->ID, entry->Name});
+    }
+    EVector<EString> stringOptions;
+    for (const auto& opt : fOptions)
+    {
+        stringOptions.push_back(opt.Name);
+    }
+
+    EWeakRef<EUIDropdown> dropDown = std::static_pointer_cast<EUIDropdown>(AddChild(EMakeRef<EUIDropdown>()).lock());
+    dropDown.lock()->SetOptions(stringOptions);
+    dropDown.lock()->AddEventListener<events::ESelectChangeEvent>([this](events::ESelectChangeEvent event){
+        fResourceLink.ResourceId = fOptions[event.Index].ResourceID;
+        
+        fEventDispatcher.Enqueue<events::EResourceSelectChangeEvent>({fResourceLink.Type, fOptions[event.Index].Name, fOptions[event.Index].ResourceID});
+    });
+
+    dropDown.lock()->AddEventListener<events::EDropEvent>([this, dropDown](events::EDropEvent e){
+        EResourceData::t_ID resourceID = e.DragDataAsID;
+        EString resourceName = e.DragDataAsString;
+
+        // Find index for dropdown
+        EVector<ResourceOption>::iterator it = std::find_if(fOptions.begin(), fOptions.end(), [resourceID](ResourceOption option){return resourceID==option.ResourceID;});
+        if (it != fOptions.end())
+        {
+            size_t index = std::distance(fOptions.begin(), it);
+            dropDown.lock()->SetSelectedIndex(index);
+            fResourceLink.ResourceId = resourceID;
+            fEventDispatcher.Enqueue<events::EResourceSelectChangeEvent>({fResourceLink.Type, resourceName, resourceID});
+        }
+   });
+    shared::Events().Connect<events::EResourceAddedEvent>([this, dropDown](events::EResourceAddedEvent event){
+        fOptions.push_back({event.ResourceID, event.Name});
+        dropDown.lock()->AddOption(event.Name);
+    }, this);
 }

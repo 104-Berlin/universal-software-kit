@@ -299,17 +299,10 @@ void EApplication::RegisterDefaultResources()
 void EApplication::RegisterDefaultComponentRender() 
 {
     fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, ERegister::Entity entity, const EString& nameIdent){
-        ERef<EUIField> result = EMakeRef<EUIField>("ResourceLink");
-        EResourceLink resourceLink;
-        if (convert::getter(prop, &resourceLink))
-        {
-            EWeakRef<EUIField> resource = result->AddChild(EMakeRef<EUIButton>(resourceLink.Type));
-            resource.lock()->AcceptDrag("ResourceImage");
-            resource.lock()->AddEventListener<events::EDropEvent>([resource, entity, nameIdent](events::EDropEvent e){
-
-                shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink("Image", e.DragDataAsID));
-            });
-        }
-        return result;
+        ERef<EResourceSelect> resourceSelect = EMakeRef<EResourceSelect>("Image");
+        resourceSelect->AddEventListener<events::EResourceSelectChangeEvent>([nameIdent, entity](events::EResourceSelectChangeEvent event){
+            shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink("Image", event.ResourceID));
+        });
+        return resourceSelect;
     }});
 }

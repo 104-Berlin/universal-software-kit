@@ -394,6 +394,10 @@ namespace events {
          * Shows the panel
          */
         void Open();
+        /**
+         * @brief Set Menu Bar
+         */
+        void SetMenuBar(ERef<EUIField> menuBar);
     };
     
     class E_EDEXAPI EUISameLine : public EUIField
@@ -649,6 +653,8 @@ namespace events
 
         virtual bool OnRender() override;
 
+        void SetOptions(const EVector<EString>& options);
+        void AddOption(const EString& option);
         void SetSelectedIndex(size_t index);
     };
 
@@ -696,6 +702,28 @@ namespace events
         virtual bool OnRender() override;
         virtual void OnBeforeChildRender() override;
         virtual void OnAfterChildRender() override;
+    };
+
+    namespace events {
+        E_STORAGE_STRUCT(EResourceSelectChangeEvent,
+            (EString, ResourceType),
+            (EString, ResourceName),
+            (EResourceData::t_ID, ResourceID)
+        )
+    }
+
+    class E_EDEXAPI EResourceSelect : public EUIField
+    {
+        struct ResourceOption
+        {
+            EResourceData::t_ID ResourceID;
+            EString Name;
+        };
+    private:
+        EResourceLink fResourceLink;
+        EVector<ResourceOption> fOptions;
+    public:
+        EResourceSelect(const EString& resourceType);
     };
 
 }

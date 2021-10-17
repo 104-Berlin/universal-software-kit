@@ -141,7 +141,7 @@ namespace Engine {
 
        E_INTER_API EVector<ERef<EProperty>> GetAllComponents(ERegister::Entity entity);
        E_INTER_API ERef<EResourceData> GetResource(EResourceData::t_ID id);
-       E_INTER_API EVector<ERef<EResourceData>> GetLoadedResource(); // This wont return the data of the resource. Fetch them manuel
+       E_INTER_API EVector<ERef<EResourceData>> GetLoadedResource(const EString& resourceType = ""); // This wont return the data of the resource. Fetch them manuel
        E_INTER_API ESharedBuffer GetRegisterAsBuffer();
     }
 
