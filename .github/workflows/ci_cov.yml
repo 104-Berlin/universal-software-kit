@@ -28,7 +28,7 @@ jobs:
             cd bin
             cd Debug
             .\UnitTest.exe
-
+            
   CI-MACOS:
     runs-on: macos-latest
 
