@@ -459,9 +459,18 @@ EJson ERegisterSocket::Pk_HandleGetResource(const ERegisterPacket& packet)
 
 EJson ERegisterSocket::Pk_HandleGetLoadedResources(const ERegisterPacket& packet) 
 {
+    EString resourceString;
+    if (packet.Body["ResourceType"].is_string())
+    {
+        resourceString = packet.Body["ResourceType"].get<EString>();
+    }
     EJson result = EJson::array();
 
-    for (EResourceData* data : fLoadedRegister->GetResourceManager().GetAllResource())
+    EVector<EResourceData*> resources;
+    if (resourceString.empty()) { resources = fLoadedRegister->GetResourceManager().GetAllResource(); }
+    else { resources = fLoadedRegister->GetResourceManager().GetAllResource(resourceString); }
+
+    for (EResourceData* data : resources)
     {
         result.push_back(ESerializer::WriteResourceDataToJson(*data, false));
     }

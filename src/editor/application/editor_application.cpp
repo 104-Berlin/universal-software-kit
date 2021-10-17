@@ -15,6 +15,7 @@ E_STORAGE_STRUCT(MyType,
     (int, SomeInteger),
     (float, Other),
     (EString, SomeString),
+    (EResourceLink, ImageLink, "Image"),
     (EVector<MySubType>, Working)
 )
 
@@ -44,6 +45,13 @@ EApplication::EApplication()
         {
             panel->DisconnectAllEvents();
         }
+        EExtension* extension = shared::ExtensionManager().GetExtension(event.ExtensionName);
+        auto entry = (void(*)())extension->GetFunction("app_cleanup");
+        if (entry)
+        {
+            entry();
+        }
+
         fUIRegister.ClearRegisteredItems(event.ExtensionName);
     });
 
@@ -292,17 +300,10 @@ void EApplication::RegisterDefaultResources()
 void EApplication::RegisterDefaultComponentRender() 
 {
     fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, ERegister::Entity entity, const EString& nameIdent){
-        ERef<EUIField> result = EMakeRef<EUIField>("ResourceLink");
-        EResourceLink resourceLink;
-        if (convert::getter(prop, &resourceLink))
-        {
-            EWeakRef<EUIField> resource = result->AddChild(EMakeRef<EUIButton>(resourceLink.Type));
-            resource.lock()->AcceptDrag("ResourceImage");
-            resource.lock()->AddEventListener<events::EDropEvent>([resource, entity, nameIdent](events::EDropEvent e){
-
-                shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink("Image", e.DragDataAsID));
-            });
-        }
-        return result;
+        ERef<EUIResourceSelect> resourceSelect = EMakeRef<EUIResourceSelect>("Image");
+        resourceSelect->AddEventListener<events::EResourceSelectChangeEvent>([nameIdent, entity](events::EResourceSelectChangeEvent event){
+            shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink("Image", event.ResourceID));
+        });
+        return resourceSelect;
     }});
 }

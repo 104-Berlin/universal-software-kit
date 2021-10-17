@@ -25,7 +25,7 @@ EResourceView::EResourceView()
         for (auto res : allResources)
         {
             EWeakRef<EUIField> selectField = resourceTypeContainer.lock()->AddChild(EMakeRef<EUISelectable>(res.ResourceName));
-            selectField.lock()->AddEventListener<events::ESelectionChangeEvent>([this, res, selectField, resourceList](events::ESelectionChangeEvent event){
+            selectField.lock()->AddEventListener<events::ESelectableChangeEvent>([this, res, selectField, resourceList](events::ESelectableChangeEvent event){
                 if (event.Selected)
                 {
                     if (fLastSelected)
@@ -33,12 +33,12 @@ EResourceView::EResourceView()
                         static_cast<EUISelectable*>(fLastSelected)->SetSelected(false);
                     }
                     fLastSelected = selectField.lock().get();
-                    fSelectedResourceType = res.ResourceName;
+                    fSelectedResourceType = {res.ResourceName, res.CanCreate};
                 }
                 else
                 {
                     fLastSelected = nullptr;
-                    fSelectedResourceType = "";
+                    fSelectedResourceType = {"", false};
                 }
                 if (!resourceList.expired())
                 {
@@ -64,9 +64,19 @@ EResourceView::EResourceView()
         if (resourceList.expired()) { return; }
         resourceList.lock()->Clear();
         EWeakRef<EUIField> changeSize = resourceList.lock()->AddChild(EMakeRef<EUIFloatEdit>("Size"));
+        resourceList.lock()->AddChild(EMakeRef<EUISameLine>());
+        EWeakRef<EUIField> createButton = resourceList.lock()->AddChild(EMakeRef<EUIButton>("Create"));
+        createButton.lock()->SetVisible(fSelectedResourceType.CanCreate);
+
         static_cast<EUIFloatEdit*>(changeSize.lock().get())->SetValue(fPreviewSize);
         EWeakRef<EUIField> resourceGrid = resourceList.lock()->AddChild(EMakeRef<EUIGrid>(fPreviewSize));
 
+        createButton.lock()->AddEventListener<events::EButtonEvent>([this](){
+            EResourceData resourceData(0, fSelectedResourceType.TypeName, "New " + fSelectedResourceType.TypeName, nullptr, 0);
+            resourceData.Name = "New " + fSelectedResourceType.TypeName;
+            resourceData.Type = fSelectedResourceType.TypeName;
+            shared::CreateResource(&resourceData);
+        });
 
         changeSize.lock()->AddEventListener<events::EFloatChangeEvent>([this, resourceGrid](events::EFloatChangeEvent event){
             if (resourceGrid.expired()) { return; }
@@ -78,22 +88,22 @@ EResourceView::EResourceView()
             }
         });
 
-        if (fSelectedResourceType.empty()) { return; }
-        for (const Resource& res : fResources[fSelectedResourceType])
+        if (fSelectedResourceType.TypeName.empty()) { return; }
+        for (const Resource& res : fResources[fSelectedResourceType.TypeName])
         {
             EWeakRef<EUIField> resourceField = resourceGrid.lock()->AddChild(EMakeRef<EUIButton>(res.Name));
             resourceField.lock()->SetWidth(fPreviewSize);
             resourceField.lock()->SetHeight(fPreviewSize);
             resourceField.lock()->SetTooltip(EMakeRef<EUILabel>(std::to_string(res.ID)));
-            resourceField.lock()->SetDragType("Resource" + fSelectedResourceType);
-            resourceField.lock()->SetDragData({res.ID});
+            resourceField.lock()->SetDragType("Resource" + fSelectedResourceType.TypeName);
+            resourceField.lock()->SetDragData({res.ID, res.Name});
         }
     });
 
 
     shared::Events().Connect<events::EResourceAddedEvent>([this, resourceList](events::EResourceAddedEvent event){
         fResources[event.ResourceType].push_back({event.ResourceID, event.Name, event.PathToFile});
-        if (event.ResourceType == fSelectedResourceType && !resourceList.expired()) 
+        if (event.ResourceType == fSelectedResourceType.TypeName && !resourceList.expired()) 
         { 
             resourceList.lock()->SetDirty();
         }

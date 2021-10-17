@@ -7,3 +7,6 @@
 [submodule "deps/chai"]
 	path = deps/chai
 	url = https://github.com/ChaiScript/ChaiScript.git
+[submodule "deps/rtmidi"]
+	path = deps/rtmidi
+	url = https://github.com/thestk/rtmidi.git

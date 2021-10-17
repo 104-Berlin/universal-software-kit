@@ -175,13 +175,20 @@ ERef<EResourceData> ERegisterConnection::Send_GetResourceData(EResourceData::t_I
     return resourceData;
 }
 
-EVector<ERef<EResourceData>> ERegisterConnection::Send_GetAllResources() 
+EVector<ERef<EResourceData>> ERegisterConnection::Send_GetAllResources(const EString& resourceType) 
 {
     EVector<ERef<EResourceData>> result;
 
     ERegisterPacket packet;
     packet.PacketType = EPacketType::GET_LOADED_RESOURCES;
     packet.ID = GetNewPacketID();
+
+    EJson body = EJson::object();
+    if (!resourceType.empty())
+    {
+        body["ResourceType"] = resourceType;
+    }
+    packet.Body = body;
 
     SendToServer(packet);
 

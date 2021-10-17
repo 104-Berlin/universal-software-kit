@@ -322,6 +322,11 @@ namespace events {
          */
         void SetDirty();
 
+        /**
+         * @brief Set wether to render element or not
+         * @param visible
+         */
+        void SetVisible(bool visible);
         
         /**
          * @brief Sets the type of the drag source. Specify empty string to disable dragging
@@ -365,11 +370,17 @@ namespace events {
          * To remove an imgui thing
          */
         bool fWasJustClosed;
+
+        /**
+         * Menu Bar
+         */
+        ERef<EUIField> fMenuBar;
     public:
         EUIPanel(const EString& title);
 
         virtual bool OnRender() override;
         virtual void OnRenderEnd() override;
+        virtual void OnUpdateEventDispatcher() override;
 
         /**
          * @return Wether the Panel is open
@@ -383,6 +394,10 @@ namespace events {
          * Shows the panel
          */
         void Open();
+        /**
+         * @brief Set Menu Bar
+         */
+        void SetMenuBar(ERef<EUIField> menuBar);
     };
     
     class E_EDEXAPI EUISameLine : public EUIField
@@ -445,9 +460,16 @@ namespace events
         (bool, Checked)
     )
 
-    E_STORAGE_STRUCT(ESelectionChangeEvent,
+    E_STORAGE_STRUCT(ESelectableChangeEvent,
         (bool, Selected)
     )
+
+    E_STORAGE_STRUCT(ESelectChangeEvent,
+        (EString, Option),
+        (u32, Index)
+    )
+
+
 
 }
 
@@ -607,6 +629,35 @@ namespace events
         bool IsSelected() const;
     };
 
+    class E_EDEXAPI EUISelectionList : public EUIField
+    {
+    private:
+        EVector<EString> fOptions;
+        EVector<const char*>   fCharOptions;
+        int              fSelectedOption;
+    public:
+        EUISelectionList(const EString& label = "SelectionList");
+
+        virtual bool OnRender() override;
+
+        void AddOption(const EString& option);
+    };
+
+    class E_EDEXAPI EUIDropdown : public EUIField
+    {
+    private:
+        EVector<EString> fOptions;
+        size_t           fSelected;
+    public:
+        EUIDropdown(const EString& label = "", const EVector<EString>& options = {}, size_t selected = 0);
+
+        virtual bool OnRender() override;
+
+        void SetOptions(const EVector<EString>& options);
+        void AddOption(const EString& option);
+        void SetSelectedIndex(size_t index);
+    };
+
     class E_EDEXAPI EUITable : public EUIField
     {
     private:
@@ -651,6 +702,28 @@ namespace events
         virtual bool OnRender() override;
         virtual void OnBeforeChildRender() override;
         virtual void OnAfterChildRender() override;
+    };
+
+    namespace events {
+        E_STORAGE_STRUCT(EResourceSelectChangeEvent,
+            (EString, ResourceType),
+            (EString, ResourceName),
+            (EResourceData::t_ID, ResourceID)
+        )
+    }
+
+    class E_EDEXAPI EUIResourceSelect : public EUIField
+    {
+        struct ResourceOption
+        {
+            EResourceData::t_ID ResourceID;
+            EString Name;
+        };
+    private:
+        EResourceLink fResourceLink;
+        EVector<ResourceOption> fOptions;
+    public:
+        EUIResourceSelect(const EString& resourceType);
     };
 
 }
