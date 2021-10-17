@@ -456,9 +456,16 @@ namespace events
         (bool, Checked)
     )
 
-    E_STORAGE_STRUCT(ESelectionChangeEvent,
+    E_STORAGE_STRUCT(ESelectableChangeEvent,
         (bool, Selected)
     )
+
+    E_STORAGE_STRUCT(ESelectChangeEvent,
+        (EString, Option),
+        (int, Index)
+    )
+
+
 
 }
 
@@ -630,6 +637,19 @@ namespace events
         virtual bool OnRender() override;
 
         void AddOption(const EString& option);
+    };
+
+    class E_EDEXAPI EUIDropdown : public EUIField
+    {
+    private:
+        EVector<EString> fOptions;
+        size_t           fSelected;
+    public:
+        EUIDropdown(const EString& label = "", const EVector<EString>& options = {}, size_t selected = 0);
+
+        virtual bool OnRender() override;
+
+        void SetSelectedIndex(size_t index);
     };
 
     class E_EDEXAPI EUITable : public EUIField

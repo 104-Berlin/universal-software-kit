@@ -744,7 +744,7 @@ bool EUISelectable::OnRender()
 
     if (ImGui::Selectable(GetLabel().c_str(), &fIsSelected, flags))
     {
-        fEventDispatcher.Enqueue<events::ESelectionChangeEvent>({fIsSelected});
+        fEventDispatcher.Enqueue<events::ESelectableChangeEvent>({fIsSelected});
     }
     return true;
 }
@@ -772,15 +772,58 @@ EUISelectionList::EUISelectionList(const EString& label)
 
 bool EUISelectionList::OnRender()
 {
-    ImGui::ListBox(GetLabel().c_str(), &fSelectedOption, fCharOptions.data(), fCharOptions.size());
-    delete[] options;
+    EVector<const char*> options;
+    for (const EString& opt : fOptions)
+    {
+        options.push_back(opt.c_str());
+    }
+    if (ImGui::ListBox("", &fSelectedOption, options.data(), options.size()))
+    {
+        fEventDispatcher.Enqueue<events::ESelectChangeEvent>({fOptions[fSelectedOption], fSelectedOption});
+    }
     return true;
 }
 
 void EUISelectionList::AddOption(const EString& option)
 {
     fOptions.push_back(option);
-    fCharOptions.push_back(fOptions.back().c_str());
+}
+
+EUIDropdown::EUIDropdown(const EString& label, const EVector<EString>& options, size_t selected)
+    : EUIField(label), fOptions(options), fSelected(selected)
+{
+
+}
+
+bool EUIDropdown::OnRender()
+{
+    if (fOptions.size() == 0) { return false; }
+    if (ImGui::BeginCombo(GetLabel().c_str(), fOptions[fSelected].c_str()))
+    {
+        for (size_t i = 0; i < fOptions.size(); i++)
+        {
+            const EString& opt = fOptions[i];
+            bool selected = i == fSelected;
+            if (ImGui::Selectable(opt.c_str(), &selected))
+            {
+                if (fSelected != i)
+                {
+                    fEventDispatcher.Enqueue<events::ESelectChangeEvent>({opt, i});
+                }
+                fSelected = i;
+            }
+        }
+        ImGui::EndCombo();
+    }
+    return true;
+}
+
+void EUIDropdown::SetSelectedIndex(size_t index)
+{
+    if (index < fOptions.size())
+    {
+        fSelected = index;
+    }
 }
 
 EUITable::EUITable(const EString& name) 

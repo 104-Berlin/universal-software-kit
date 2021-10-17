@@ -25,7 +25,7 @@ EResourceView::EResourceView()
         for (auto res : allResources)
         {
             EWeakRef<EUIField> selectField = resourceTypeContainer.lock()->AddChild(EMakeRef<EUISelectable>(res.ResourceName));
-            selectField.lock()->AddEventListener<events::ESelectionChangeEvent>([this, res, selectField, resourceList](events::ESelectionChangeEvent event){
+            selectField.lock()->AddEventListener<events::ESelectableChangeEvent>([this, res, selectField, resourceList](events::ESelectableChangeEvent event){
                 if (event.Selected)
                 {
                     if (fLastSelected)

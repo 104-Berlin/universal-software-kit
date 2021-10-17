@@ -17,7 +17,7 @@ EObjectView::EObjectView(Engine::EUIValueRegister* valueFieldRegister)
         EWeakRef<EUISelectable> selectabe = std::dynamic_pointer_cast<EUISelectable>(newRow->AddChild(EMakeRef<EUISelectable>(std::to_string(event.Handle))).lock());
         selectabe.lock()->SetStretchToAllColumns(true);
 
-        selectabe.lock()->AddEventListener<events::ESelectionChangeEvent>([this, event](events::ESelectionChangeEvent se){
+        selectabe.lock()->AddEventListener<events::ESelectableChangeEvent>([this, event](events::ESelectableChangeEvent se){
             if (se.Selected)
             {
                 if (fSelectedEntity)
