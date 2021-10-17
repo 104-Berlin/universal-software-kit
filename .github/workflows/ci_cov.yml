@@ -44,7 +44,7 @@ jobs:
     - name: build
       run: |
             cd build
-            cmake make -j
+            make -j
     - name: Test
       run: |
             cd bin
