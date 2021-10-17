@@ -784,7 +784,7 @@ bool EUISelectionList::OnRender()
     }
     if (ImGui::ListBox("", &fSelectedOption, options.data(), options.size()))
     {
-        fEventDispatcher.Enqueue<events::ESelectChangeEvent>({fOptions[fSelectedOption], fSelectedOption});
+        fEventDispatcher.Enqueue<events::ESelectChangeEvent>({fOptions[fSelectedOption], (u32)fSelectedOption});
     }
     return true;
 }
@@ -813,7 +813,7 @@ bool EUIDropdown::OnRender()
             {
                 if (fSelected != i)
                 {
-                    fEventDispatcher.Enqueue<events::ESelectChangeEvent>({opt, i});
+                    fEventDispatcher.Enqueue<events::ESelectChangeEvent>({opt, (u32)i});
                 }
                 fSelected = i;
             }
