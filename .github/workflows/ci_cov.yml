@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build-test:
+  CI-Windows:
     runs-on: windows-latest
 
     steps:
@@ -29,12 +29,38 @@ jobs:
             cd Debug
             .\UnitTest.exe
 
-  cover:
-    runs-on: ${{ matrix.os }}
-    
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest]
+  CI-MACOS:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@master
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
+    - name: configure
+      run: |
+            mkdir build
+            cd build
+            cmake ..
+    - name: build
+      run: |
+            cd build
+            cmake make -j
+    - name: Test
+      run: |
+            cd bin
+            ./UnitTest
+            - uses: romeovs/lcov-reporter-action@v0.2.16
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+        fail_ci_if_error: false
+        verbose: false # optional (default = false)
+
+  CI-Ubuntu:
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@master
@@ -61,4 +87,4 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
         fail_ci_if_error: false
-        verbose: true # optional (default = false)
+        verbose: false # optional (default = false)
