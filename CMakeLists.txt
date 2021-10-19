@@ -73,7 +73,11 @@ endif()
 #########################
 ###### TESTING ##########
 if (${BUILD_TEST})
-  add_subdirectory(deps/googletets)
+  add_library(gtest STATIC  ${CMAKE_CURRENT_SOURCE_DIR}/deps/googletets/googletest/src/gtest-all.cc
+                            ${CMAKE_CURRENT_SOURCE_DIR}/deps/googletets/googletest/src/gtest_main.cc)
+  target_include_directories(gtest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/googletets/googletest/include)
+  target_include_directories(gtest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/googletets/googletest)
+
   add_subdirectory(src/tests)
 endif()
 
