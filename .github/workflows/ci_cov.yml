@@ -25,10 +25,8 @@ jobs:
             cmake --build .
     - name: Test
       run: |
-            cd bin
-            cd Debug
-            .\UnitTest.exe
-
+            .\RunWinTest.bat
+            
   CI-MACOS:
     runs-on: macos-latest
 
@@ -44,6 +42,7 @@ jobs:
     - name: build
       run: |
             cd build
+            make install -j
             make -j
     - name: Test
       run: |

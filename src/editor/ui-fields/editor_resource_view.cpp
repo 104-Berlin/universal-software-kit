@@ -64,9 +64,9 @@ EResourceView::EResourceView()
         if (resourceList.expired()) { return; }
         resourceList.lock()->Clear();
         EWeakRef<EUIField> changeSize = resourceList.lock()->AddChild(EMakeRef<EUIFloatEdit>("Size"));
-        resourceList.lock()->AddChild(EMakeRef<EUISameLine>());
-        EWeakRef<EUIField> createButton = resourceList.lock()->AddChild(EMakeRef<EUIButton>("Create"));
-        createButton.lock()->SetVisible(fSelectedResourceType.CanCreate);
+        EWeakRef<EUIField> sameline = resourceList.lock()->AddChild(EMakeRef<EUISameLine>());
+        EWeakRef<EUIField> createButton = sameline.lock()->AddChild(EMakeRef<EUIButton>("Create"));
+        sameline.lock()->SetVisible(fSelectedResourceType.CanCreate);
 
         static_cast<EUIFloatEdit*>(changeSize.lock().get())->SetValue(fPreviewSize);
         EWeakRef<EUIField> resourceGrid = resourceList.lock()->AddChild(EMakeRef<EUIGrid>(fPreviewSize));

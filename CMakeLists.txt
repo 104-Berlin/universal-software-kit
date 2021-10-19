@@ -7,9 +7,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-set(MACOSX_RPATH ON)
+set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+
 
 option(USE_COV "Use the covarage option when not using MSVC" FALSE)
 option(BUILD_EDITOR "Build the editor for mac or windows" TRUE)
@@ -91,17 +94,9 @@ endif()
 #########################
 ####### EDITOR ##########
 if ((WIN32 OR APPLE) AND ${BUILD_EDITOR})
+set(BUILD_SHARED_LIBS FALSE)
   add_subdirectory(src/editor-extension)
   add_subdirectory(deps/usk-graphics)
 
   add_subdirectory(src/editor)
-
-  install(TARGETS USKEditor Shared EEditorExtension EExtension GPlatformWrapper EScripting GRenderCommand EInterface
-          RUNTIME DESTINATION ./)
-if(WIN32)
-  install(FILES bin/Release/TECHDRAW.uex
-          DESTINATION plugins)
-endif(WIN32)
-
-  include(CPack)
 endif()
