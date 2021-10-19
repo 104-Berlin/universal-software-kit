@@ -97,8 +97,6 @@ void ERegisterSocket::Init()
 
 void ERegisterSocket::CleanUp() 
 {
-    
-
     fIsRunning = false;
 
     if (fSocketId > -1)

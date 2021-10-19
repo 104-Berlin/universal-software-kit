@@ -46,7 +46,7 @@ int main(int argc, char** argv)
                 if (args.size() == 3)
                 {
                     ERegister::Entity entity = std::stoi(args[1]);
-                    ERef<EProperty> component = shared::GetValue(entity, args[2]);
+                    ERef<EProperty> component = shared::GetValueFromIdent(entity, args[2]);
                     if (component)
                     {
                         inter::PrintProperty(component.get());

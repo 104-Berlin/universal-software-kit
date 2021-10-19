@@ -115,7 +115,7 @@ shared::ESharedError  shared::SetValue(ERegister::Entity entity, const EString& 
 }
 
 
-ERef<EProperty> shared::GetValue(ERegister::Entity entity, const EString& valueIdent) 
+ERef<EProperty> shared::GetValueFromIdent(ERegister::Entity entity, const EString& valueIdent) 
 {
     ERef<EProperty> result = StaticSharedContext::instance().GetRegisterConnection().Send_GetValue(entity, valueIdent);
     if (!result)

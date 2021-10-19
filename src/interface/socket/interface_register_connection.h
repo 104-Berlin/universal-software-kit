@@ -6,7 +6,8 @@ namespace Engine {
     {
     private:   
         ERegisterPacket::PackId fLastPacketId;
-        int                 fSocketId;
+        int                     fSocketId;
+        bool                    fIsConnected;
 
         std::condition_variable fConnected;
 
@@ -48,6 +49,8 @@ namespace Engine {
         ESharedBuffer Send_GetRegisterBuffer();
 
         void Connect(const EString& connectTo, int connectToPort);
+
+        bool IsConnected() const;
 
         void Init();
         void CleanUp();
