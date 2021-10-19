@@ -7,8 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 
 option(USE_COV "Use the covarage option when not using MSVC" FALSE)
@@ -73,14 +76,7 @@ endif()
 #########################
 ###### TESTING ##########
 if (${BUILD_TEST})
-  add_library(gtest STATIC  ${CMAKE_CURRENT_SOURCE_DIR}/deps/googletets/googletest/src/gtest-all.cc
-                            ${CMAKE_CURRENT_SOURCE_DIR}/deps/googletets/googletest/src/gtest_main.cc)
-  target_include_directories(gtest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/googletets/googletest/include)
-  target_include_directories(gtest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/googletets/googletest)
-  target_link_libraries(gtest ${CMAKE_USE_PTHREADS_INIT})
-  target_link_libraries(gtest ${CMAKE_THREAD_LIBS_INIT})
-
-
+  add_subdirectory(deps/googletets)
   add_subdirectory(src/tests)
 endif()
 
@@ -98,6 +94,7 @@ endif()
 #########################
 ####### EDITOR ##########
 if ((WIN32 OR APPLE) AND ${BUILD_EDITOR})
+set(BUILD_SHARED_LIBS FALSE)
   add_subdirectory(src/editor-extension)
   add_subdirectory(deps/usk-graphics)
 
