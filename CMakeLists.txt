@@ -77,6 +77,8 @@ if (${BUILD_TEST})
                             ${CMAKE_CURRENT_SOURCE_DIR}/deps/googletets/googletest/src/gtest_main.cc)
   target_include_directories(gtest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/googletets/googletest/include)
   target_include_directories(gtest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/googletets/googletest)
+  target_link_libraries(gtest ${CMAKE_THREAD_LIBS_INIT})
+
 
   add_subdirectory(src/tests)
 endif()
