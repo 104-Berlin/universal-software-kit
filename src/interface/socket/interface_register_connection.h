@@ -42,6 +42,7 @@ namespace Engine {
         void Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
         void Send_AddArrayEntry(ERegister::Entity entity, const EString& valueIdent);
 
+        EVector<ERegister::Entity> Send_GetAllEntites();
         ERef<EProperty> Send_GetValue(ERegister::Entity entity, const EString& valueIdent);
         EVector<ERef<EProperty>> Send_GetAllValues(ERegister::Entity entity);
         ERef<EResourceData> Send_GetResourceData(EResourceData::t_ID resourceId);

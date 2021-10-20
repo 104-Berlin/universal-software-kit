@@ -128,6 +128,7 @@ namespace Engine {
 
 
         // Getter
+        E_INTER_API EVector<ERegister::Entity> GetAllEntites();
         
         E_INTER_API ERef<EProperty> GetValueFromIdent(ERegister::Entity entity, const EString& vlaueIdent);
 

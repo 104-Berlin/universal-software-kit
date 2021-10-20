@@ -92,6 +92,30 @@ void ERegisterConnection::Send_AddArrayEntry(ERegister::Entity entity, const ESt
     SendToServer(packet);
 }
 
+EVector<ERegister::Entity> ERegisterConnection::Send_GetAllEntites() 
+{
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::GET_ALL_ENTITES;
+    packet.ID = GetNewPacketID();
+    packet.Body = EJson::object();
+
+    SendToServer(packet);
+
+    EJson response = WaitForRequest(packet.ID);
+
+    EVector<ERegister::Entity> result;
+
+    if (response.is_array())
+    {
+        for (const EJson& entityJson : response)
+        {
+            result.push_back(entityJson.get<ERegister::Entity>());
+        }
+    }
+
+    return result;
+}
+
 ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, const EString& valueIdent) 
 {
     EJson request = EJson::object();

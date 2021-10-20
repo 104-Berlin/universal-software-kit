@@ -272,6 +272,11 @@ void ERegisterSocket::ConnectionGotPacket(Connection* connection, const ERegiste
         responseJson = Pk_HandleGetRegisterBuffer(packet);
         break;
     }
+    case EPacketType::GET_ALL_ENTITES:
+    {
+        responseJson = Pk_HandleGetAllEntites(packet);
+        break;
+    }
     case EPacketType::REGISTER_EVENT: break;
     }
 
@@ -485,6 +490,18 @@ EJson ERegisterSocket::Pk_HandleGetRegisterBuffer(const ERegisterPacket& packet)
     if (!buffer.IsNull())
     {
         result["Data"] = Base64::Encode(buffer.Data<u8>(), buffer.GetSizeInByte());
+    }
+
+    return result;
+}
+
+EJson ERegisterSocket::Pk_HandleGetAllEntites(const ERegisterPacket& packet)
+{
+    EJson result = EJson::array();
+
+    for (ERegister::Entity entity : fLoadedRegister->GetAllEntities())
+    {
+        result.push_back(entity);
     }
 
     return result;
