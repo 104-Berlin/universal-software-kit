@@ -18,6 +18,7 @@ namespace Engine {
         GET_RESOURCE = 22,
         GET_LOADED_RESOURCES = 23, // This does not return the data
         GET_REGISTER_BUFFER = 24, // loads the complete buffer of the register with resources
+        GET_ALL_ENTITES = 25,
         
 
         REGISTER_EVENT = 101,
@@ -37,6 +38,7 @@ namespace Engine {
             case EPacketType::GET_ALL_VALUES: return "GET_ALL_VALUES";
             case EPacketType::GET_RESOURCE: return "GET_RESOURCE";
             case EPacketType::GET_LOADED_RESOURCES: return "GET_LOADED_RESOURCES";
+            case EPacketType::GET_ALL_ENTITES: return "GET_ALL_ENTITES";
             case EPacketType::REGISTER_EVENT: return "REGISTER_EVENT";
             case EPacketType::GET_REGISTER_BUFFER: return "GET_REGISTER_BUFFER";
         }

@@ -4,7 +4,7 @@ using namespace Engine;
 
 
 ERegisterConnection::ERegisterConnection() 
-    : fSocketId(-1), fLastPacketId(0)
+    : fSocketId(-1), fLastPacketId(0), fIsConnected(false)
 {
     fListening = false;
 }
@@ -90,6 +90,30 @@ void ERegisterConnection::Send_AddArrayEntry(ERegister::Entity entity, const ESt
     packet.Body = requestJson;
 
     SendToServer(packet);
+}
+
+EVector<ERegister::Entity> ERegisterConnection::Send_GetAllEntites() 
+{
+    ERegisterPacket packet;
+    packet.PacketType = EPacketType::GET_ALL_ENTITES;
+    packet.ID = GetNewPacketID();
+    packet.Body = EJson::object();
+
+    SendToServer(packet);
+
+    EJson response = WaitForRequest(packet.ID);
+
+    EVector<ERegister::Entity> result;
+
+    if (response.is_array())
+    {
+        for (const EJson& entityJson : response)
+        {
+            result.push_back(entityJson.get<ERegister::Entity>());
+        }
+    }
+
+    return result;
 }
 
 ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, const EString& valueIdent) 
@@ -307,6 +331,7 @@ void ERegisterConnection::Run_ListenLoop()
             if (n == 0)
             {
                 E_WARN("Connection to Server lost!");
+                fIsConnected = false;
                 break;
             }
             _sock::print_last_socket_error();
@@ -368,11 +393,14 @@ ERegisterPacket::PackId ERegisterConnection::GetNewPacketID()
 
 void ERegisterConnection::Connect(const EString& connectTo, int connectToPort) 
 {
+    fIsConnected = false;
+    
     E_INFO("Conecting to server " + connectTo);
     hostent* connect_to_server = gethostbyname(connectTo.c_str());
     if (connect_to_server == NULL)
     {
         E_ERROR("Could not find Server " + connectTo);
+        fIsConnected = false;
         return;
     }
 
@@ -384,9 +412,16 @@ void ERegisterConnection::Connect(const EString& connectTo, int connectToPort)
     if (connect(fSocketId, (sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
     {
         E_ERROR("Could not connect to server!");
+        fIsConnected = false;
         _sock::print_last_socket_error();
         return;
     }
     fConnected.notify_all();
+    fIsConnected = true;
     E_INFO("Connected");
+}
+
+bool ERegisterConnection::IsConnected() const
+{
+    return fIsConnected;
 }

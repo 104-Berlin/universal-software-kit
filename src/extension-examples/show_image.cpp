@@ -25,12 +25,14 @@ public:
         : EUIField("ImageView")
     {
         shared::Events().AddComponentCreateEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
-            ImageLayer imageLayer = shared::GetValue<ImageLayer>(handle);
-
-            ERef<EUIImageView> newImageView = EMakeRef<EUIImageView>();
-            newImageView->SetSize(250, 250);
-            fImageViews[handle] = newImageView;
-            AddChild(newImageView);
+            ImageLayer imageLayer;
+            if (shared::GetValue<ImageLayer>(handle, &imageLayer))
+            {
+                ERef<EUIImageView> newImageView = EMakeRef<EUIImageView>();
+                newImageView->SetSize(250, 250);
+                fImageViews[handle] = newImageView;
+                AddChild(newImageView);
+            }
         }, this);
 
         shared::Events().AddComponentDeleteEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
@@ -43,15 +45,18 @@ public:
         }, this);
 
         shared::Events().AddEntityChangeEventListener("ImageLayer.resourceLink", [this](ERegister::Entity handle, const EString&){
-            ImageLayer imageLayer = shared::GetValue<ImageLayer>(handle);
-            ERef<EResourceData> data = shared::GetResource(imageLayer.resourceLink.ResourceId);
-            
-            if (data && fImageViews.find(handle) != fImageViews.end())
+            ImageLayer imageLayer;
+            if (shared::GetValue<ImageLayer>(handle, &imageLayer))
             {
-                Editor::EImageUserData* userData = (Editor::EImageUserData*)data->UserData;
-                if (userData)
+                ERef<EResourceData> data = shared::GetResource(imageLayer.resourceLink.ResourceId);
+                
+                if (data && fImageViews.find(handle) != fImageViews.end())
                 {
-                    fImageViews[handle].lock()->SetTextureData(data->Data, userData->width, userData->height);
+                    Editor::EImageUserData* userData = (Editor::EImageUserData*)data->UserData;
+                    if (userData)
+                    {
+                        fImageViews[handle].lock()->SetTextureData(data->Data, userData->width, userData->height);
+                    }
                 }
             }
         }, this);

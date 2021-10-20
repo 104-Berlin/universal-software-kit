@@ -114,8 +114,13 @@ shared::ESharedError  shared::SetValue(ERegister::Entity entity, const EString& 
     return false;
 }
 
+EVector<ERegister::Entity> shared::GetAllEntites()
+{
+    return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllEntites();
+}
 
-ERef<EProperty> shared::GetValue(ERegister::Entity entity, const EString& valueIdent) 
+
+ERef<EProperty> shared::GetValueFromIdent(ERegister::Entity entity, const EString& valueIdent) 
 {
     ERef<EProperty> result = StaticSharedContext::instance().GetRegisterConnection().Send_GetValue(entity, valueIdent);
     if (!result)

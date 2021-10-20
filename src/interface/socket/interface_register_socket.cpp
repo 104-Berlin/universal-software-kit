@@ -50,7 +50,9 @@ void ERegisterSocket::Init()
     fLoadedRegister->CatchAllEvents([this](EStructProperty* data){
         HandleRegisterEvent(data);
     });
-    fLoadedRegister->GetResourceManager();
+    fLoadedRegister->GetResourceManager().GetEventDispatcher().ConnectAll([this](EStructProperty* data){
+        HandleRegisterEvent(data);
+    });
  
 
     // TODO: For single machine interface use AF_LOCAL
@@ -64,6 +66,10 @@ void ERegisterSocket::Init()
     {
         E_ERROR("Could not create socket!");
         return;
+    }
+    else
+    {
+        E_INFO("Server socket succesfully started!");
     }
 
     fAddressInfo = new sockaddr_in();
@@ -97,8 +103,6 @@ void ERegisterSocket::Init()
 
 void ERegisterSocket::CleanUp() 
 {
-    
-
     fIsRunning = false;
 
     if (fSocketId > -1)
@@ -272,6 +276,11 @@ void ERegisterSocket::ConnectionGotPacket(Connection* connection, const ERegiste
     case EPacketType::GET_REGISTER_BUFFER:
     {
         responseJson = Pk_HandleGetRegisterBuffer(packet);
+        break;
+    }
+    case EPacketType::GET_ALL_ENTITES:
+    {
+        responseJson = Pk_HandleGetAllEntites(packet);
         break;
     }
     case EPacketType::REGISTER_EVENT: break;
@@ -487,6 +496,18 @@ EJson ERegisterSocket::Pk_HandleGetRegisterBuffer(const ERegisterPacket& packet)
     if (!buffer.IsNull())
     {
         result["Data"] = Base64::Encode(buffer.Data<u8>(), buffer.GetSizeInByte());
+    }
+
+    return result;
+}
+
+EJson ERegisterSocket::Pk_HandleGetAllEntites(const ERegisterPacket& packet)
+{
+    EJson result = EJson::array();
+
+    for (ERegister::Entity entity : fLoadedRegister->GetAllEntities())
+    {
+        result.push_back(entity);
     }
 
     return result;
