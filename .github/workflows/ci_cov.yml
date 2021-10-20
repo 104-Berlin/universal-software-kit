@@ -74,16 +74,3 @@ jobs:
       run: |
             cd build
             make -j
-    - name: Test
-      run: |
-            cd bin
-            sudo ./UnitTest
-    - uses: romeovs/lcov-reporter-action@v0.2.16
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-        fail_ci_if_error: false
-        verbose: false # optional (default = false)
