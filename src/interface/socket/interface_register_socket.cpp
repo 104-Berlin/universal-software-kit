@@ -50,7 +50,9 @@ void ERegisterSocket::Init()
     fLoadedRegister->CatchAllEvents([this](EStructProperty* data){
         HandleRegisterEvent(data);
     });
-    fLoadedRegister->GetResourceManager();
+    fLoadedRegister->GetResourceManager().GetEventDispatcher().ConnectAll([this](EStructProperty* data){
+        HandleRegisterEvent(data);
+    });
  
 
     // TODO: For single machine interface use AF_LOCAL
@@ -64,6 +66,10 @@ void ERegisterSocket::Init()
     {
         E_ERROR("Could not create socket!");
         return;
+    }
+    else
+    {
+        E_INFO("Server socket succesfully started!");
     }
 
     fAddressInfo = new sockaddr_in();
