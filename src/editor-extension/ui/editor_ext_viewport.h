@@ -1,12 +1,15 @@
 #pragma once
 
 namespace Engine {
+
+    class EUIViewport;
     
     class E_EDEXAPI EViewportTool 
     {
     private:
         bool fVisible;
         EString fToolName;
+        EUIViewport* fViewport;
     public:
         EViewportTool(const EString& toolName);
         virtual ~EViewportTool() = default;
@@ -17,6 +20,10 @@ namespace Engine {
         void SetVisible(bool visible);
 
         const EString& GetToolName() const;
+
+
+        void SetViewport(EUIViewport* viewport);
+        EUIViewport* GetViewport() const;
     protected:
         // Return true if edit was completed
         virtual bool OnRender() = 0;
@@ -108,6 +115,9 @@ namespace Engine {
         Renderer::RCamera& GetCamera();
 
         EViewportTool* AddTool(EViewportTool* newTool);
+
+        EVec2 Project(const EVec3& point) const;
+        EVec3 Unproject(const EVec3& point) const;
     };
 
 
