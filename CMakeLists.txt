@@ -7,8 +7,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+
 
 option(USE_COV "Use the covarage option when not using MSVC" FALSE)
 option(BUILD_EDITOR "Build the editor for mac or windows" TRUE)
@@ -16,6 +20,7 @@ option(BUILD_EXAMPLES "Build exmaples" TRUE)
 option(BUILD_TEST "Toggle the unittest" TRUE)
 option(BUILD_CLT "Toggle the Command-Line-Tool" TRUE)
 option(BUILD_TOOLS "Toogle the build of the tools" TRUE)
+option(BUILD_MIDI_TOOL "Toggle the midi extension" TRUE)
 
 # Editor only for windows and mac supported
 if (NOT WIN32 AND NOT APPLE)
@@ -55,6 +60,11 @@ if (${BUILD_TOOLS})
 add_subdirectory(src/tools)
 endif()
 
+#########################
+######### MIDI ##########
+if (${BUILD_MIDI_TOOL} AND ${BUILD_EDITOR})
+add_subdirectory(deps/rtmidi)
+endif()
 
 #########################
 ##### COMMAND_LINE ######
@@ -84,17 +94,9 @@ endif()
 #########################
 ####### EDITOR ##########
 if ((WIN32 OR APPLE) AND ${BUILD_EDITOR})
+set(BUILD_SHARED_LIBS FALSE)
   add_subdirectory(src/editor-extension)
   add_subdirectory(deps/usk-graphics)
 
   add_subdirectory(src/editor)
-
-  install(TARGETS USKEditor Shared EEditorExtension EExtension GPlatformWrapper EScripting GRenderCommand EInterface
-          RUNTIME DESTINATION ./)
-if(WIN32)
-  install(FILES bin/Release/TECHDRAW.uex
-          DESTINATION plugins)
-endif(WIN32)
-
-  include(CPack)
 endif()

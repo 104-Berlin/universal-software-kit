@@ -6,7 +6,8 @@ namespace Engine {
     {
     private:   
         ERegisterPacket::PackId fLastPacketId;
-        int                 fSocketId;
+        int                     fSocketId;
+        bool                    fIsConnected;
 
         std::condition_variable fConnected;
 
@@ -41,13 +42,16 @@ namespace Engine {
         void Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
         void Send_AddArrayEntry(ERegister::Entity entity, const EString& valueIdent);
 
+        EVector<ERegister::Entity> Send_GetAllEntites();
         ERef<EProperty> Send_GetValue(ERegister::Entity entity, const EString& valueIdent);
         EVector<ERef<EProperty>> Send_GetAllValues(ERegister::Entity entity);
         ERef<EResourceData> Send_GetResourceData(EResourceData::t_ID resourceId);
-        EVector<ERef<EResourceData>> Send_GetAllResources();
+        EVector<ERef<EResourceData>> Send_GetAllResources(const EString& resourceType = "");
         ESharedBuffer Send_GetRegisterBuffer();
 
         void Connect(const EString& connectTo, int connectToPort);
+
+        bool IsConnected() const;
 
         void Init();
         void CleanUp();

@@ -73,6 +73,7 @@ namespace Engine {
         EJson Pk_HandleGetResource(const ERegisterPacket& packet);
         EJson Pk_HandleGetLoadedResources(const ERegisterPacket& packet); // This just returns the descriptions of the resources. Not the actual data
         EJson Pk_HandleGetRegisterBuffer(const ERegisterPacket& packet);
+        EJson Pk_HandleGetAllEntites(const ERegisterPacket& packet);
     };
 
 }

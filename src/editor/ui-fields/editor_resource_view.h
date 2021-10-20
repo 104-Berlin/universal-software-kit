@@ -3,6 +3,11 @@
 namespace Editor {
     class EResourceView : public Engine::EUIField
     {
+        struct ResourceType
+        {
+            EString TypeName;
+            bool    CanCreate;
+        };
         struct Resource
         {
             Engine::EResourceData::t_ID ID;
@@ -11,10 +16,10 @@ namespace Editor {
         };
     private:
         EUnorderedMap<EString, EVector<Resource>>    fResources;
-        EUIField*                  fLastSelected;
+        EUIField*                                         fLastSelected;
 
-        float fPreviewSize;
-        EString                             fSelectedResourceType;
+        float                                             fPreviewSize;
+        ResourceType                                      fSelectedResourceType;
     public:
         EResourceView();
     };

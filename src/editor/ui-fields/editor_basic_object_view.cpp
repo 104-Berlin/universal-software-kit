@@ -17,7 +17,7 @@ EObjectView::EObjectView(Engine::EUIValueRegister* valueFieldRegister)
         EWeakRef<EUISelectable> selectabe = std::dynamic_pointer_cast<EUISelectable>(newRow->AddChild(EMakeRef<EUISelectable>(std::to_string(event.Handle))).lock());
         selectabe.lock()->SetStretchToAllColumns(true);
 
-        selectabe.lock()->AddEventListener<events::ESelectionChangeEvent>([this, event](events::ESelectionChangeEvent se){
+        selectabe.lock()->AddEventListener<events::ESelectableChangeEvent>([this, event](events::ESelectableChangeEvent se){
             if (se.Selected)
             {
                 if (fSelectedEntity)
@@ -161,7 +161,7 @@ ERef<EUIField> EObjectView::RenderArray(Engine::EArrayProperty* storage, EString
 
     field->SetDirty();
     field->SetCustomUpdateFunction([this, weakRef, nameIdent](){
-        ERef<EProperty> foundProp = shared::GetValue(fSelectedEntity, nameIdent);
+        ERef<EProperty> foundProp = shared::GetValueFromIdent(fSelectedEntity, nameIdent);
         if (foundProp->GetDescription().GetType() != EValueType::ARRAY) { return; }
         weakRef.lock()->Clear();
 
@@ -203,7 +203,7 @@ ERef<EUIField> EObjectView::RenderBool(Engine::EValueProperty<bool>* storage, ES
     shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (entity != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
+        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
         weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<bool>>(prop)->GetValue());
     }, result.get());
     return result;
@@ -223,7 +223,7 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage, 
     shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (entity != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
+        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
         weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<i32>>(prop)->GetValue());
     }, result.get());
     return result;
@@ -243,7 +243,7 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u32>* storage, 
     shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (entity != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
+        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
         weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<u32>>(prop)->GetValue());
     }, result.get());
     return result;
@@ -263,7 +263,7 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u64>* storage, 
     shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (entity != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
+        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
         weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<u64>>(prop)->GetValue());
     }, result.get());
     return result;
@@ -284,7 +284,7 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<double>* storage
     shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (entity != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
+        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
         weakResult.lock()->SetValue((float)std::static_pointer_cast<EValueProperty<double>>(prop)->GetValue());
     }, result.get());
     return result;
@@ -305,7 +305,7 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<float>* storage,
     shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (entity != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
+        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
         weakResult.lock()->SetValue((float)std::static_pointer_cast<EValueProperty<float>>(prop)->GetValue());
     }, result.get());
     return result;
@@ -323,7 +323,7 @@ ERef<EUIField> EObjectView::RenderString(Engine::EValueProperty<EString>* storag
 
     shared::Events().AddEntityChangeEventListener(nameIdent, [weakResult](ERegister::Entity entity, const EString& valueIdent){
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValue(entity, valueIdent);
+        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
         weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<EString>>(prop)->GetValue());
     }, result.get());
     return result;

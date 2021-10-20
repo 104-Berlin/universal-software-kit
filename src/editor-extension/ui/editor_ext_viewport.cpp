@@ -35,6 +35,16 @@ EString EViewportTool::GetIcon() const
     return ICON_MD_PAN_TOOL;
 }
 
+void EViewportTool::SetViewport(EUIViewport* viewport) 
+{
+    fViewport = viewport;
+}
+
+EUIViewport* EViewportTool::GetViewport() const
+{
+    return fViewport;
+}
+
 EPointMoveTool::EPointMoveTool() 
     : EViewportTool("POINT_MOVE"), fCenterPosition(100.0f, 100.0f)
 {
@@ -82,8 +92,10 @@ bool ELineEditTool::OnRender()
 
     float halfSize = 4.0f;
 
-    EVec2 startPoint = EVec2(fLine->GetStart().x, fLine->GetStart().y) + ImConvert::ImToGlmVec2(itemRect.Min);
-    EVec2 endPoint = EVec2(fLine->GetEnd().x, fLine->GetEnd().y) + ImConvert::ImToGlmVec2(itemRect.Min);
+    E_INFO("PROJECT: (" + std::to_string(GetViewport()->Project(fLine->GetStart()).x) + ", " + std::to_string(GetViewport()->Project(fLine->GetStart()).y) + ")");
+
+    EVec2 startPoint = GetViewport()->Project(fLine->GetStart()) + ImConvert::ImToGlmVec2(itemRect.Min);
+    EVec2 endPoint = GetViewport()->Project(fLine->GetEnd()) + ImConvert::ImToGlmVec2(itemRect.Min);
 
     const ImRect startAnchor(ImConvert::GlmToImVec2(startPoint - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(startPoint + EVec2(halfSize, halfSize)));
     const ImRect endAnchor(ImConvert::GlmToImVec2(endPoint - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(endPoint + EVec2(halfSize, halfSize)));
@@ -118,10 +130,10 @@ bool ELineEditTool::OnRender()
     switch (fCurrentSelection)
     {
     case Selection::START:
-        fLine->SetStart(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f));
+        fLine->SetStart(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
         break;
     case Selection::END:
-        fLine->SetEnd(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f));
+        fLine->SetEnd(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
         break;
     case Selection::NONE:
         break;
@@ -244,7 +256,14 @@ EUIViewport::EUIViewport(const Renderer::RCamera& camera)
         fRenderer(Graphics::Wrapper::GetMainContext(), fFrameBuffer),
         fCamera(camera)
 {
-    
+    AddEventListener<events::EMouseDragEvent>([this](events::EMouseDragEvent event){
+        if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Space)))
+        {
+            E_INFO("Moving camera");
+            fCamera.MoveRight(event.MouseDelta.x);
+            fCamera.MoveUp(-event.MouseDelta.y);
+        }
+    });
 }
 
 EUIViewport::~EUIViewport() 
@@ -284,6 +303,7 @@ Renderer::RCamera& EUIViewport::GetCamera()
 EViewportTool* EUIViewport::AddTool(EViewportTool* newTool) 
 {
     fRegisteredTools.push_back(newTool);
+    newTool->SetViewport(this);
     return newTool;
 }
 
@@ -314,6 +334,17 @@ bool EUIViewport::OnRender()
     return true;
 }
 
+EVec2 EUIViewport::Project(const EVec3& point) const
+{
+    EVec4 result = fCamera.GetProjectionMatrix(fFrameBuffer->GetWidth(), fFrameBuffer->GetHeight()) * fCamera.GetViewMatrix() * EVec4(point.x, point.y, point.z, 1.0f);
+    return {((result.x + 1.0f) / 2.0f) * fFrameBuffer->GetWidth(), ((-result.y + 1.0f) / 2.0f) * fFrameBuffer->GetHeight()};
+}
+
+EVec3 EUIViewport::Unproject(const EVec3& point) const
+{
+    EVec4 result = glm::inverse(fCamera.GetProjectionMatrix(fFrameBuffer->GetWidth(), fFrameBuffer->GetHeight()) * fCamera.GetViewMatrix()) * EVec4(point.x / fFrameBuffer->GetWidth() * 2.0f - 1.0f, -(point.y / fFrameBuffer->GetHeight() * 2.0f - 1.0f), point.z, 1.0f);
+    return {result.x, result.y, result.z};
+}
 
 EUIViewportToolbar::EUIViewportToolbar(EWeakRef<EUIViewport> viewport) 
     : EUIField("Viewport " + viewport.lock()->GetLabel()), fViewport(viewport)

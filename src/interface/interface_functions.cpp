@@ -114,8 +114,13 @@ shared::ESharedError  shared::SetValue(ERegister::Entity entity, const EString& 
     return false;
 }
 
+EVector<ERegister::Entity> shared::GetAllEntites()
+{
+    return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllEntites();
+}
 
-ERef<EProperty> shared::GetValue(ERegister::Entity entity, const EString& valueIdent) 
+
+ERef<EProperty> shared::GetValueFromIdent(ERegister::Entity entity, const EString& valueIdent) 
 {
     ERef<EProperty> result = StaticSharedContext::instance().GetRegisterConnection().Send_GetValue(entity, valueIdent);
     if (!result)
@@ -142,9 +147,9 @@ ERef<EResourceData> shared::GetResource(EResourceData::t_ID id)
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetResourceData(id);
 }
 
-EVector<ERef<EResourceData>> shared::GetLoadedResource() 
+EVector<ERef<EResourceData>> shared::GetLoadedResource(const EString& resourceType) 
 {
-    return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllResources();
+    return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllResources(resourceType);
 }
 
 ESharedBuffer shared::GetRegisterAsBuffer()

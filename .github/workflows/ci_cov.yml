@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build-test:
+  CI-Windows:
     runs-on: windows-latest
 
     steps:
@@ -25,16 +25,10 @@ jobs:
             cmake --build .
     - name: Test
       run: |
-            cd bin
-            cd Debug
-            .\UnitTest.exe
-
-  cover:
-    runs-on: ${{ matrix.os }}
-    
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest]
+            .\RunWinTest.bat
+            
+  CI-MACOS:
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@master
@@ -48,6 +42,7 @@ jobs:
     - name: build
       run: |
             cd build
+            make install -j
             make -j
     - name: Test
       run: |
@@ -62,3 +57,20 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
         fail_ci_if_error: false
         verbose: true # optional (default = false)
+
+  CI-Ubuntu:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
+    - name: configure
+      run: |
+            mkdir build
+            cd build
+            cmake -DUSE_COV=TRUE ..
+    - name: build
+      run: |
+            cd build
+            make -j

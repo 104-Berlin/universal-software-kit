@@ -98,6 +98,14 @@ namespace Engine {
         ESharedError E_INTER_API CreateComponent(const EString& componentId, ERegister::Entity entity);
         ESharedError E_INTER_API CreateComponent(const EValueDescription& componentId, ERegister::Entity entity);
         ESharedError E_INTER_API CreateComponent(EStructProperty* componentValue, ERegister::Entity entity);
+
+        template <typename T>
+        ESharedError CreateComponent(ERegister::Entity entity)
+        {
+            return CreateComponent(getdsc::GetDescription<T>(), entity);
+        }
+
+
         ESharedError E_INTER_API CreateResource(EResourceData* data);
 
         ESharedError E_INTER_API SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
@@ -120,28 +128,31 @@ namespace Engine {
 
 
         // Getter
+        E_INTER_API EVector<ERegister::Entity> GetAllEntites();
         
-       E_INTER_API ERef<EProperty> GetValue(ERegister::Entity entity, const EString& vlaueIdent);
+        E_INTER_API ERef<EProperty> GetValueFromIdent(ERegister::Entity entity, const EString& vlaueIdent);
 
         template <typename T>
-        T GetValue(ERegister::Entity entity)
+        bool GetValue(ERegister::Entity entity, T* value)
         {
-            T result;
             EValueDescription dsc = getdsc::GetDescription<T>();
             if (dsc.Valid())
             {
-                ERef<EProperty> foundProp = GetValue(entity, dsc.GetId());
+                ERef<EProperty> foundProp = GetValueFromIdent(entity, dsc.GetId());
                 if (foundProp)
                 {
-                    convert::getter(foundProp.get(), &result);
+                    if (convert::getter(foundProp.get(), value))
+                    {
+                        return true;
+                    }
                 }
             }
-            return result;
+            return false;
         }
 
        E_INTER_API EVector<ERef<EProperty>> GetAllComponents(ERegister::Entity entity);
        E_INTER_API ERef<EResourceData> GetResource(EResourceData::t_ID id);
-       E_INTER_API EVector<ERef<EResourceData>> GetLoadedResource(); // This wont return the data of the resource. Fetch them manuel
+       E_INTER_API EVector<ERef<EResourceData>> GetLoadedResource(const EString& resourceType = ""); // This wont return the data of the resource. Fetch them manuel
        E_INTER_API ESharedBuffer GetRegisterAsBuffer();
     }
 
