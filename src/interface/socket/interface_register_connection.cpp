@@ -376,6 +376,7 @@ void ERegisterConnection::Connect(const EString& connectTo, int connectToPort)
     if (connect_to_server == NULL)
     {
         E_ERROR("Could not find Server " + connectTo);
+        fIsConnected = false;
         return;
     }
 
@@ -387,6 +388,7 @@ void ERegisterConnection::Connect(const EString& connectTo, int connectToPort)
     if (connect(fSocketId, (sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
     {
         E_ERROR("Could not connect to server!");
+        fIsConnected = false;
         _sock::print_last_socket_error();
         return;
     }

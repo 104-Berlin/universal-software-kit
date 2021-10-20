@@ -14,12 +14,17 @@ TEST(Interface, CheckStartup)
 
     EXPECT_TRUE(shared::StaticSharedContext::instance().GetRegisterConnection().IsConnected());
 
+    if (!shared::StaticSharedContext::instance().GetRegisterConnection().IsConnected())
+    {
+        shared::StaticSharedContext::Stop();
+        return;
+    }
     // Create component
     shared::CreateEntity();
-    shared::CreateComponent(SomeTestType::_dsc, 1);
+    shared::CreateComponent(SomeTestType::_dsc, 2);
 
     SomeTestType foundValue;
-    bool foundSomeType = shared::GetValue<SomeTestType>(1, &foundValue);
+    bool foundSomeType = shared::GetValue<SomeTestType>(2, &foundValue);
     EXPECT_TRUE(foundSomeType);
 
     
