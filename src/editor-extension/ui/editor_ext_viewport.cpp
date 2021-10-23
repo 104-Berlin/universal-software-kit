@@ -6,6 +6,7 @@ using namespace Engine;
 
 EUIViewport::EUIViewport(const Renderer::RCamera& camera) 
     :   EUIField("VIEWPORT"), 
+        fActiveTool(nullptr),
         fFrameBuffer(Graphics::Wrapper::CreateFrameBuffer(100, 100)), 
         fRenderer(Graphics::Wrapper::GetMainContext(), fFrameBuffer),
         fCamera(camera)
@@ -66,6 +67,10 @@ Renderer::RCamera& EUIViewport::GetCamera()
 
 EViewportTool* EUIViewport::AddTool(EViewportTool* newTool) 
 {
+    if (fActiveTool == nullptr)
+    {
+        fActiveTool = newTool;
+    }
     fRegisteredTools.push_back(newTool);
     newTool->SetViewport(this);
     return newTool;
@@ -75,6 +80,25 @@ EVector<EViewportTool*> EUIViewport::GetRegisteredTools()
 {
     return fRegisteredTools;
 }
+
+EViewportTool* EUIViewport::GetActiveTool()
+{
+    return fActiveTool;
+}
+
+void EUIViewport::SetActiveTool(const EString& toolName)
+{
+    for (EViewportTool* tool : fRegisteredTools)
+    {
+        if (tool->GetToolName() == toolName)
+        {
+            fActiveTool = tool;
+            return;
+        }
+    }
+    E_WARN("Could not find tool " + toolName);
+}
+
 
 bool EUIViewport::OnRender() 
 {
@@ -132,8 +156,16 @@ void EUIViewportToolbar::Regenerate()
     
     for (EViewportTool* tool : fViewport.lock()->GetRegisteredTools())
     {
-        grid.lock()->AddChild(EMakeRef<EUIButton>(tool->GetIcon())).lock()->AddEventListener<events::EButtonEvent>([](events::EButtonEvent event){
+        EString toolName = tool->GetToolName();
+        EWeakRef<EUISelectable> tool_Selectable = std::dynamic_pointer_cast<EUISelectable>(grid.lock()->AddChild(EMakeRef<EUISelectable>(tool->GetIcon())).lock());
+        tool_Selectable.lock()->SetStateControllFunction([this, toolName]()->bool{
+            EViewportTool* activeTool = this->fViewport.lock()->GetActiveTool();
+            if (!activeTool) { return false; }
+            return activeTool->GetToolName() == toolName;
+        });
+        tool_Selectable.lock()->AddEventListener<events::ESelectableChangeEvent>([this, toolName](events::ESelectableChangeEvent event){
             // Activate tool
+            fViewport.lock()->SetActiveTool(toolName);
         });
     }
 }

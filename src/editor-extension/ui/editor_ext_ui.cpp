@@ -768,7 +768,7 @@ void EUIContainer::OnRenderEnd()
 }
 
 EUISelectable::EUISelectable(const EString& label) 
-    : EUIField(label), fStretchToAllColumns(false), fIsSelected(false)
+    : EUIField(label), fStretchToAllColumns(false), fIsSelected(false), fStateControll()
 {
     
 }
@@ -776,8 +776,12 @@ EUISelectable::EUISelectable(const EString& label)
 bool EUISelectable::OnRender() 
 {
     ImGuiSelectableFlags flags = fStretchToAllColumns ? ImGuiSelectableFlags_SpanAllColumns : 0;
+    if (fStateControll)
+    {
+        fIsSelected = fStateControll();
+    }
 
-    if (ImGui::Selectable(GetLabel().c_str(), &fIsSelected, flags))
+    if (ImGui::Selectable(GetLabel().c_str(), &fIsSelected, flags, {fWidthOverride, fHeightOverride}))
     {
         fEventDispatcher.Enqueue<events::ESelectableChangeEvent>({fIsSelected});
     }
@@ -797,6 +801,11 @@ void EUISelectable::SetSelected(bool selected)
 bool EUISelectable::IsSelected() const
 {
     return fIsSelected;
+}
+
+void EUISelectable::SetStateControllFunction(StateControllFn function)
+{
+    fStateControll = function;
 }
 
 EUISelectionList::EUISelectionList(const EString& label)

@@ -632,9 +632,12 @@ namespace events
 
     class E_EDEXAPI EUISelectable : public EUIField
     {
+    public:
+        using StateControllFn = std::function<bool()>;
     private:
         bool fStretchToAllColumns;
         bool fIsSelected;
+        StateControllFn fStateControll;
     public:
         EUISelectable(const EString& label);
 
@@ -643,6 +646,8 @@ namespace events
         void SetStretchToAllColumns(bool stretch);
         void SetSelected(bool selected);
         bool IsSelected() const;
+
+        void SetStateControllFunction(StateControllFn fn);
     };
 
     class E_EDEXAPI EUISelectionList : public EUIField

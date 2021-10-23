@@ -7,6 +7,7 @@ namespace Engine {
     {
     private:
         EVector<EViewportTool*> fRegisteredTools;
+        EViewportTool*          fActiveTool;
     public:
         EUIViewport(const Renderer::RCamera& = Renderer::RCamera(Renderer::ECameraMode::ORTHOGRAPHIC));
         virtual ~EUIViewport();
@@ -32,6 +33,8 @@ namespace Engine {
         EVec3 Unproject(const EVec3& point) const;
 
         EVector<EViewportTool*> GetRegisteredTools();
+        EViewportTool* GetActiveTool();
+        void SetActiveTool(const EString& toolName);
     };
 
     class E_EDEXAPI EUIViewportToolbar : public EUIField
