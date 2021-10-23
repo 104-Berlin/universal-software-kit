@@ -108,14 +108,11 @@ bool EUIViewport::OnRender()
     fRenderer.Render(&fScene, &fCamera);
     ImGui::Image((ImTextureID)(unsigned long long)(unsigned long)fFrameBuffer->GetColorAttachment(), contentRegion, {0, 1}, {1, 0});
 
-    for (EViewportTool* tool : fRegisteredTools)
+    if (fActiveTool && fActiveTool->IsVisible())
     {
-        if (tool->IsVisible())
+        if (fActiveTool->Render())
         {
-            if (tool->Render())
-            {
-                fEventDispatcher.Enqueue<events::EViewportToolFinishEvent>({tool->GetToolName()});
-            }
+            fEventDispatcher.Enqueue<events::EViewportToolFinishEvent>({fActiveTool->GetToolName()});
         }
     }
 

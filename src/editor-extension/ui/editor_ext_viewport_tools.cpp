@@ -71,7 +71,7 @@ bool EPointMoveTool::OnRender()
 }
 
 ELineEditTool::ELineEditTool()
-    : EViewportTool("LINE_EDIT"), fLine(nullptr), fEditState(EditState::CREATING)
+    : EViewportTool(sGetName()), fLine(nullptr), fEditState(EditState::CREATING)
 {
     SetVisible(false);
 }
@@ -96,8 +96,6 @@ bool ELineEditTool::OnRender()
     ImRect itemRect = g->LastItemData.Rect;
 
     float halfSize = 4.0f;
-
-    E_INFO("PROJECT: (" + std::to_string(GetViewport()->Project(fLine->GetStart()).x) + ", " + std::to_string(GetViewport()->Project(fLine->GetStart()).y) + ")");
 
     EVec2 startPoint = GetViewport()->Project(fLine->GetStart()) + ImConvert::ImToGlmVec2(itemRect.Min);
     EVec2 endPoint = GetViewport()->Project(fLine->GetEnd()) + ImConvert::ImToGlmVec2(itemRect.Min);
@@ -157,9 +155,14 @@ void ELineEditTool::OnActivateTool()
     fEditState = EditState::CREATING;
 }
 
+EString ELineEditTool::sGetName()
+{
+    return "LINE_EDIT";
+}
+
 
 EBezierEditTool::EBezierEditTool() 
-    : EViewportTool("BEZIER_EDIT"), fCurve(nullptr)
+    : EViewportTool(sGetName()), fCurve(nullptr)
 {
     fCurrentSelection = Selection::NONE;
     SetVisible(false);
@@ -263,4 +266,9 @@ void EBezierEditTool::SetBezierCurve(Renderer::RBezierCurve* curve)
 Renderer::RBezierCurve* EBezierEditTool::GetCurve() const
 {
     return fCurve;
+}
+
+EString EBezierEditTool::sGetName()
+{
+    return "BEZIER_EDIT";
 }

@@ -76,6 +76,8 @@ namespace Engine {
         virtual bool OnRender();
         virtual void OnViewportClicked(const EVec2& screenPos, const EVec3& worldPos);
         virtual void OnActivateTool();
+        
+        static EString sGetName();
     };
 
     class E_EDEXAPI EBezierEditTool : public EViewportTool
@@ -99,6 +101,8 @@ namespace Engine {
 
         void SetBezierCurve(Renderer::RBezierCurve* curve);
         Renderer::RBezierCurve* GetCurve() const;
+
+        static EString sGetName();
     };
 
 
