@@ -101,6 +101,7 @@ APP_ENTRY
 {
     ERef<EUIPanel> someDrawingPanel = EMakeRef<EUIPanel>("Drawing Canvas");
     drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()).lock());
+    someDrawingPanel->SetMenuBar(EMakeRef<EUIViewportToolbar>(drawingViewport));
     bezierEdit = static_cast<EBezierEditTool*>(drawingViewport.lock()->AddTool(new EBezierEditTool()));
     lineEdit = static_cast<ELineEditTool*>(drawingViewport.lock()->AddTool(new ELineEditTool()));
     
@@ -224,13 +225,6 @@ APP_ENTRY
         }
     }, drawingViewport.lock().get());
 
-
-    ERef<EUIPanel> toolPanel = EMakeRef<EUIPanel>("Toolbar");
-    
-    toolPanel->AddChild(EMakeRef<EUIViewportToolbar>(drawingViewport));
-
-
-    info.PanelRegister->RegisterItem(extensionName, toolPanel);
     info.PanelRegister->RegisterItem(extensionName, someDrawingPanel);
 }
 

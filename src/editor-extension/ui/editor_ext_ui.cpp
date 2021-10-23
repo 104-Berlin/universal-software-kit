@@ -367,6 +367,14 @@ bool EUIPanel::OnRender()
 {
     if (fOpen)
     {
+        if (fMenuBar)
+        {
+            fWindowFlags |= ImGuiWindowFlags_MenuBar;
+        }
+        else
+        {
+            fWindowFlags &= ~ImGuiWindowFlags_MenuBar;
+        }
         //ImGui::SetNextWindowSize({fWidthOverride, fHeightOverride});
         ImGui::Begin(GetLabel().c_str(), &fOpen, fWindowFlags);
         ImGui::GetCurrentWindow()->Viewport->Flags &= ~ImGuiViewportFlags_NoDecoration;
@@ -374,10 +382,13 @@ bool EUIPanel::OnRender()
         {
             fWasJustClosed = true;
         }
-        if (fMenuBar && ImGui::BeginMenuBar())
+        if (fMenuBar)
         {
-            fMenuBar->Render();
-            ImGui::EndMenuBar();
+            if (ImGui::BeginMenuBar())
+            {
+                fMenuBar->Render();
+                ImGui::EndMenuBar();
+            }
         }
     }
     return fOpen;
