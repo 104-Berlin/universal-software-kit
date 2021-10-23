@@ -17,6 +17,17 @@ EUIViewport::EUIViewport(const Renderer::RCamera& camera)
             fCamera.MoveUp(-event.MouseDelta.y);
         }
     });
+    AddEventListener<events::EMouseScrollEvent>([this](events::EMouseScrollEvent event){
+        E_INFO("Mouse scroll " + std::to_string(event.ScrollX) + "; " + std::to_string(event.ScrollY));
+        if (fCamera.GetMode() == Renderer::ECameraMode::ORTHOGRAPHIC)
+        {
+            fCamera.SetZoom(fCamera.GetZoom() + (event.ScrollX / 10.0f));
+        }
+        else
+        {
+            fCamera.MoveForward(-event.ScrollX);
+        }
+    });
 }
 
 EUIViewport::~EUIViewport() 

@@ -42,6 +42,10 @@ namespace events {
         (EString, DragDataAsString)
     )
 
+    E_STORAGE_STRUCT(EMouseScrollEvent,
+        (float, ScrollX),
+        (float, ScrollY)
+    )
 }
 
     struct EUIDragData
@@ -299,6 +303,12 @@ namespace events {
          * @param menu The Context menu. Any Content
          */
         void SetContextMenu(const ERef<EUIField>& menu);
+
+        /**
+         * @brief Get current context menu
+         * @return Current conetxt menu
+         */
+        EWeakRef<EUIField> GetContextMenu() const;
 
         /**
          * @brief Set the tooltip. Use nullptr for no tooltip on this field

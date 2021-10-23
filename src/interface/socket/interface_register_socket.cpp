@@ -50,9 +50,6 @@ void ERegisterSocket::Init()
     fLoadedRegister->CatchAllEvents([this](EStructProperty* data){
         HandleRegisterEvent(data);
     });
-    fLoadedRegister->GetResourceManager().GetEventDispatcher().ConnectAll([this](EStructProperty* data){
-        HandleRegisterEvent(data);
-    });
  
 
     // TODO: For single machine interface use AF_LOCAL

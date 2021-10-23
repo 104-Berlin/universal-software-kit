@@ -183,6 +183,14 @@ void EUIField::HandleRenderEnd()
         EVec2 mouseDrag2(md2.x, md2.y);
         ImGui::ResetMouseDragDelta(2);
 
+        float scrollX = ImGui::GetIO().MouseWheel;
+        float scrollY = ImGui::GetIO().MouseWheelH;
+
+        if (scrollX != 0.0f || scrollY != 0.0f)
+        {
+            fEventDispatcher.Enqueue<events::EMouseScrollEvent>({scrollX, scrollY});
+        }
+
 
         EVec2 mouseDelta = mousePos - fLastMousePos;
         fLastMousePos = mousePos;
@@ -299,6 +307,11 @@ void EUIField::SetContextMenu(const ERef<EUIField>& menu)
     fContextMenu = menu;   
 }
 
+EWeakRef<EUIField> EUIField::GetContextMenu() const
+{
+    return fContextMenu;
+}
+
 void EUIField::SetTooltip(const ERef<EUIField>& tooltip)
 {
     fToolTip = tooltip;
@@ -317,6 +330,10 @@ bool EUIField::IsTooltipOpen() const
 void EUIField::SetDirty() 
 {
     fDirty = true;
+    for (ERef<EUIField> child : fChildren)
+    {
+        child->SetDirty();
+    }
 }
 
 void EUIField::SetVisible(bool visible) 

@@ -43,7 +43,7 @@ EObjectView::EObjectView(Engine::EUIValueRegister* valueFieldRegister)
         }
     }, this);
     shared::Events().Connect<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent e){
-        RegenAddComponentMenu();
+        fComponentsView.lock()->GetContextMenu().lock()->SetDirty();
     }, this);
 
     ERef<EUIContainer> entitiesList = EMakeRef<EUIContainer>("Entities");
@@ -346,24 +346,29 @@ void EObjectView::RegenComponentsView()
 void EObjectView::RegenAddComponentMenu() 
 {
     ERef<EUIField> componentContextMenu = EMakeRef<EUIField>("Context Menu");
-    ERef<EUIMenu> addMenu = EMakeRef<EUIMenu>("Add Component");
+    EWeakRef<EUIField> componentWeakRefMenu = componentContextMenu;
+    componentContextMenu->SetCustomUpdateFunction([this, componentWeakRefMenu](){
+        if (componentWeakRefMenu.expired()) { return; }
+        componentWeakRefMenu.lock()->Clear();
+        ERef<EUIMenu> addMenu = EMakeRef<EUIMenu>("Add Component");
 
-    EVector<EComponentRegisterEntry> allComponents = shared::ExtensionManager().GetComponentRegister().GetAllItems();
-    for (const EComponentRegisterEntry& dsc : allComponents)
-    {
-        EWeakRef<EUIField> item = addMenu->AddChild(EMakeRef<EUIMenuItem>(dsc.Description.GetId()));
-        item.lock()->AddEventListener<events::EButtonEvent>([this, dsc](){
-            if (dsc.DefaultValue)
-            {
-                shared::CreateComponent(dsc.DefaultValue.get(), fSelectedEntity);
-            }
-            else
-            {
-                shared::CreateComponent(dsc.Description, fSelectedEntity);
-            }
-        });
-    }
+        EVector<EComponentRegisterEntry> allComponents = shared::ExtensionManager().GetComponentRegister().GetAllItems();
+        for (const EComponentRegisterEntry& dsc : allComponents)
+        {
+            EWeakRef<EUIField> item = addMenu->AddChild(EMakeRef<EUIMenuItem>(dsc.Description.GetId()));
+            item.lock()->AddEventListener<events::EButtonEvent>([this, dsc](){
+                if (dsc.DefaultValue)
+                {
+                    shared::CreateComponent(dsc.DefaultValue.get(), fSelectedEntity);
+                }
+                else
+                {
+                    shared::CreateComponent(dsc.Description, fSelectedEntity);
+                }
+            });
+        }
 
-    componentContextMenu->AddChild(addMenu);
+        componentWeakRefMenu.lock()->AddChild(addMenu);
+    });
     fComponentsView.lock()->SetContextMenu(componentContextMenu);
 }
