@@ -32,7 +32,7 @@ const EString& EViewportTool::GetToolName() const
 
 EString EViewportTool::GetIcon() const
 {
-    return ICON_MD_PAN_TOOL;
+    return ICON_MD_CALL_MADE;
 }
 
 void EViewportTool::SetViewport(EUIViewport* viewport) 
@@ -160,6 +160,12 @@ EString ELineEditTool::sGetName()
     return "LINE_EDIT";
 }
 
+EString ELineEditTool::GetIcon() const
+{
+    return ICON_MD_CALL_MADE;
+}
+
+
 
 EBezierEditTool::EBezierEditTool() 
     : EViewportTool(sGetName()), fCurve(nullptr)
@@ -271,4 +277,9 @@ Renderer::RBezierCurve* EBezierEditTool::GetCurve() const
 EString EBezierEditTool::sGetName()
 {
     return "BEZIER_EDIT";
+}
+
+EString EBezierEditTool::GetIcon() const
+{
+    return ICON_MD_ROUNDED_CORNER;
 }

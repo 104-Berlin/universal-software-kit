@@ -78,6 +78,8 @@ namespace Engine {
         virtual void OnActivateTool();
         
         static EString sGetName();
+
+        virtual EString GetIcon() const;
     };
 
     class E_EDEXAPI EBezierEditTool : public EViewportTool
@@ -103,6 +105,8 @@ namespace Engine {
         Renderer::RBezierCurve* GetCurve() const;
 
         static EString sGetName();
+
+        virtual EString GetIcon() const;
     };
 
 
