@@ -339,7 +339,8 @@ void EObjectView::RegenComponentsView()
     EVector<ERef<EProperty>> allComponents = shared::GetAllComponents(fSelectedEntity);
     for (auto component : allComponents)
     {
-        fComponentsView.lock()->AddChild(RenderProperty(component.get(), component->GetPropertyName()));
+        EWeakRef<EUIField> collapsable = fComponentsView.lock()->AddChild(EMakeRef<EUICollapsable>(component->GetPropertyName()));
+        collapsable.lock()->AddChild(RenderProperty(component.get(), component->GetPropertyName()));
     }
 }
 
@@ -347,6 +348,7 @@ void EObjectView::RegenAddComponentMenu()
 {
     ERef<EUIField> componentContextMenu = EMakeRef<EUIField>("Context Menu");
     EWeakRef<EUIField> componentWeakRefMenu = componentContextMenu;
+    componentContextMenu->SetDirty();
     componentContextMenu->SetCustomUpdateFunction([this, componentWeakRefMenu](){
         if (componentWeakRefMenu.expired()) { return; }
         componentWeakRefMenu.lock()->Clear();

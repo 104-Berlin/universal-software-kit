@@ -748,4 +748,14 @@ namespace events
         EUIResourceSelect(const EString& resourceType);
     };
 
+    class E_EDEXAPI EUICollapsable : public EUIField
+    {
+    private:
+        bool fOpen;
+    public:
+        EUICollapsable(const EString& label);
+
+        virtual bool OnRender() override;
+    };
+
 }

@@ -1049,3 +1049,16 @@ EUIResourceSelect::EUIResourceSelect(const EString& resourceType)
         dropDown.lock()->AddOption(event.Name);
     }, this);
 }
+
+EUICollapsable::EUICollapsable(const EString& label)
+    : EUIField(label)
+{
+    
+}
+
+bool EUICollapsable::OnRender()
+{
+    fOpen = ImGui::CollapsingHeader(GetLabel().c_str());
+
+    return fOpen;
+}
