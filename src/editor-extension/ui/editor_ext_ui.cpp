@@ -359,7 +359,7 @@ void EUIField::AcceptDrag(const EString& type)
 EUIPanel::EUIPanel(const EString& title) 
     : EUIField(title), fOpen(true)
 {
-    fWindowFlags = ImGuiWindowFlags_None | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize;
+    fWindowFlags = ImGuiWindowFlags_None ;
     fMenuBar = nullptr;
 }
 
