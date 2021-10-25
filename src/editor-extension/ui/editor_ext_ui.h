@@ -758,4 +758,21 @@ namespace events
         virtual bool OnRender() override;
     };
 
+    class E_EDEXAPI EUIDivider : public EUIField
+    {
+    public:
+        EUIDivider();
+
+        virtual bool OnRender() override;
+    };
+
+    class E_EDEXAPI EUIGroupPanel : public EUIField
+    {
+    public:
+        EUIGroupPanel(const EString& label);
+
+        virtual bool OnRender() override;
+        virtual void OnRenderEnd() override;
+    };
+
 }
