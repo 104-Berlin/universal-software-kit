@@ -42,6 +42,10 @@ namespace events {
         (EString, DragDataAsString)
     )
 
+    E_STORAGE_STRUCT(EMouseScrollEvent,
+        (float, ScrollX),
+        (float, ScrollY)
+    )
 }
 
     struct EUIDragData
@@ -225,8 +229,9 @@ namespace events {
 
         /**
          * @brief called before child is rendered
+         * @param child The child that will be rendered next
          */
-        virtual void OnBeforeChildRender() {}
+        virtual void OnBeforeChildRender(EWeakRef<EUIField> child) {}
 
 
         /**
@@ -300,6 +305,12 @@ namespace events {
         void SetContextMenu(const ERef<EUIField>& menu);
 
         /**
+         * @brief Get current context menu
+         * @return Current conetxt menu
+         */
+        EWeakRef<EUIField> GetContextMenu() const;
+
+        /**
          * @brief Set the tooltip. Use nullptr for no tooltip on this field
          * @param menu The tooltip. Can be any content
          */
@@ -370,6 +381,11 @@ namespace events {
          * To remove an imgui thing
          */
         bool fWasJustClosed;
+
+        /**
+         * Window flags
+         */
+        ImGuiWindowFlags fWindowFlags;
 
         /**
          * Menu Bar
@@ -616,9 +632,12 @@ namespace events
 
     class E_EDEXAPI EUISelectable : public EUIField
     {
+    public:
+        using StateControllFn = std::function<bool()>;
     private:
         bool fStretchToAllColumns;
         bool fIsSelected;
+        StateControllFn fStateControll;
     public:
         EUISelectable(const EString& label);
 
@@ -627,6 +646,8 @@ namespace events
         void SetStretchToAllColumns(bool stretch);
         void SetSelected(bool selected);
         bool IsSelected() const;
+
+        void SetStateControllFunction(StateControllFn fn);
     };
 
     class E_EDEXAPI EUISelectionList : public EUIField
@@ -679,7 +700,7 @@ namespace events
     public:
         EUITableRow();
 
-        virtual void OnBeforeChildRender() override;
+        virtual void OnBeforeChildRender(EWeakRef<EUIField> child) override;
         virtual bool OnRender() override;
     };
 
@@ -700,8 +721,9 @@ namespace events
         void SetCellHeight(float height);
 
         virtual bool OnRender() override;
-        virtual void OnBeforeChildRender() override;
+        virtual void OnBeforeChildRender(EWeakRef<EUIField> child) override;
         virtual void OnAfterChildRender() override;
+        virtual void OnRenderEnd() override;
     };
 
     namespace events {

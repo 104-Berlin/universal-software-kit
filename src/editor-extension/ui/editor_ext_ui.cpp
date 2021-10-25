@@ -90,7 +90,7 @@ void EUIField::Render()
     {
         for (ERef<EUIField> uiField : fChildren)
         {
-            OnBeforeChildRender();
+            OnBeforeChildRender(uiField);
             uiField->Render();
             OnAfterChildRender();
         }
@@ -182,6 +182,14 @@ void EUIField::HandleRenderEnd()
         ImVec2 md2 = ImGui::GetMouseDragDelta(2, 0.0f);
         EVec2 mouseDrag2(md2.x, md2.y);
         ImGui::ResetMouseDragDelta(2);
+
+        float scrollX = ImGui::GetIO().MouseWheel;
+        float scrollY = ImGui::GetIO().MouseWheelH;
+
+        if (scrollX != 0.0f || scrollY != 0.0f)
+        {
+            fEventDispatcher.Enqueue<events::EMouseScrollEvent>({scrollX, scrollY});
+        }
 
 
         EVec2 mouseDelta = mousePos - fLastMousePos;
@@ -299,6 +307,11 @@ void EUIField::SetContextMenu(const ERef<EUIField>& menu)
     fContextMenu = menu;   
 }
 
+EWeakRef<EUIField> EUIField::GetContextMenu() const
+{
+    return fContextMenu;
+}
+
 void EUIField::SetTooltip(const ERef<EUIField>& tooltip)
 {
     fToolTip = tooltip;
@@ -317,6 +330,10 @@ bool EUIField::IsTooltipOpen() const
 void EUIField::SetDirty() 
 {
     fDirty = true;
+    for (ERef<EUIField> child : fChildren)
+    {
+        child->SetDirty();
+    }
 }
 
 void EUIField::SetVisible(bool visible) 
@@ -342,6 +359,7 @@ void EUIField::AcceptDrag(const EString& type)
 EUIPanel::EUIPanel(const EString& title) 
     : EUIField(title), fOpen(true)
 {
+    fWindowFlags = ImGuiWindowFlags_None ;
     fMenuBar = nullptr;
 }
 
@@ -349,16 +367,28 @@ bool EUIPanel::OnRender()
 {
     if (fOpen)
     {
-        ImGui::Begin(GetLabel().c_str(), &fOpen);
+        if (fMenuBar)
+        {
+            fWindowFlags |= ImGuiWindowFlags_MenuBar;
+        }
+        else
+        {
+            fWindowFlags &= ~ImGuiWindowFlags_MenuBar;
+        }
+        //ImGui::SetNextWindowSize({fWidthOverride, fHeightOverride});
+        ImGui::Begin(GetLabel().c_str(), &fOpen, fWindowFlags);
         ImGui::GetCurrentWindow()->Viewport->Flags &= ~ImGuiViewportFlags_NoDecoration;
         if (!fOpen) 
         {
             fWasJustClosed = true;
         }
-        if (fMenuBar && ImGui::BeginMenuBar())
+        if (fMenuBar)
         {
-            fMenuBar->Render();
-            ImGui::EndMenuBar();
+            if (ImGui::BeginMenuBar())
+            {
+                fMenuBar->Render();
+                ImGui::EndMenuBar();
+            }
         }
     }
     return fOpen;
@@ -738,7 +768,7 @@ void EUIContainer::OnRenderEnd()
 }
 
 EUISelectable::EUISelectable(const EString& label) 
-    : EUIField(label), fStretchToAllColumns(false), fIsSelected(false)
+    : EUIField(label), fStretchToAllColumns(false), fIsSelected(false), fStateControll()
 {
     
 }
@@ -746,8 +776,12 @@ EUISelectable::EUISelectable(const EString& label)
 bool EUISelectable::OnRender() 
 {
     ImGuiSelectableFlags flags = fStretchToAllColumns ? ImGuiSelectableFlags_SpanAllColumns : 0;
+    if (fStateControll)
+    {
+        fIsSelected = fStateControll();
+    }
 
-    if (ImGui::Selectable(GetLabel().c_str(), &fIsSelected, flags))
+    if (ImGui::Selectable(GetLabel().c_str(), &fIsSelected, flags, {fWidthOverride, fHeightOverride}))
     {
         fEventDispatcher.Enqueue<events::ESelectableChangeEvent>({fIsSelected});
     }
@@ -767,6 +801,11 @@ void EUISelectable::SetSelected(bool selected)
 bool EUISelectable::IsSelected() const
 {
     return fIsSelected;
+}
+
+void EUISelectable::SetStateControllFunction(StateControllFn function)
+{
+    fStateControll = function;
 }
 
 EUISelectionList::EUISelectionList(const EString& label)
@@ -888,7 +927,7 @@ EUITableRow::EUITableRow()
     
 }
 
-void EUITableRow::OnBeforeChildRender() 
+void EUITableRow::OnBeforeChildRender(EWeakRef<EUIField> child) 
 {
     ImGui::TableSetColumnIndex(fCurrentTableIndex++);
 }
@@ -934,17 +973,22 @@ bool EUIGrid::OnRender()
     fCurrentChildCount = 0;
     
     fCurrentWidthAvail = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, {1.0f, 1.0f});
     return true;
 }
 
-void EUIGrid::OnBeforeChildRender()
+void EUIGrid::OnBeforeChildRender(EWeakRef<EUIField> child)
 {
+    if (!child.expired())
+    {
+        child.lock()->SetSize({fCellWidth, fCellHeight});
+    }
     ImGuiStyle& style = ImGui::GetStyle();
     if (fCurrentChildCount != 0)
     {
         float last_button_x2 = ImGui::GetItemRectMax().x;
         float next_button_x2 = last_button_x2 + style.ItemSpacing.x + fCellWidth; // Expected position if next button was on same line
-        if (fCurrentChildCount + 1 < fChildren.size() && next_button_x2 < fCurrentWidthAvail)
+        if (fCurrentChildCount < fChildren.size() && next_button_x2 < fCurrentWidthAvail)
         {
             ImGui::SameLine();
         }
@@ -955,6 +999,11 @@ void EUIGrid::OnBeforeChildRender()
 
 void EUIGrid::OnAfterChildRender()
 {
+}
+
+void EUIGrid::OnRenderEnd()
+{
+    ImGui::PopStyleVar();
 }
 
 EUIResourceSelect::EUIResourceSelect(const EString& resourceType)

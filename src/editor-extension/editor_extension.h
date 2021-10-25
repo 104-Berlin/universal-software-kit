@@ -26,6 +26,7 @@
 #define APP_CLEANUP EXTENSION_EXPORT_FUN void app_cleanup()
 
 
+#include "editor_icons_material_design.h"
 #include "graphics_wrapper.h"
 #include "graphics_renderer.h"
 
@@ -42,5 +43,6 @@ typedef glm::mat4 EMat4;
 #include "editor_vector_dsc.h"
 
 #include "ui/editor_ext_ui.h"
+#include "ui/editor_ext_viewport_tools.h"
 #include "ui/editor_ext_viewport.h"
 #include "ui/editor_ui_register.h"

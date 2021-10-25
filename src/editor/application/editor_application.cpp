@@ -1,6 +1,5 @@
 #include "editor.h"
 
-#include "editor_icons_material_design.h"
 
 using namespace Editor;
 using namespace Graphics;

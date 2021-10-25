@@ -30,18 +30,26 @@ E_STORAGE_STRUCT(Plane,
     (EVec3, Scale)
 )
 
+E_STORAGE_STRUCT(LinePositions,
+    (EVec3, Start, 200.0f, 200.0f, 0.0f),
+    (EVec3, End, 200.0f, 500.0f, 0.0f)
+)
+
 E_STORAGE_STRUCT(Line, 
     (float, Thickness, 8.0f),
-    (EVec3, Start),
-    (EVec3, End)
+    (LinePositions, Positions)
+)
+
+E_STORAGE_STRUCT(CurvePositions,
+    (EVec3, Start, 200.0f, 200.0f, 0.0f),
+    (EVec3, End, 400.0f, 200.0f, 0.0f),
+    (EVec3, Controll1, 200.0f, 100.0f, 0.0f),
+    (EVec3, Controll2, 400.0f, 100.0f, 0.0f)
 )
 
 E_STORAGE_STRUCT(Curve,
     (float, Thickness, 5.0f),
-    (EVec3, Start, 200.0f, 200.0f, 0.0f),
-    (EVec3, End, 400.0f, 200.0f, 0.0f),
-    (EVec3, Controll1, 200.0f, 100.0f, 0.0f),
-    (EVec3, Controll2, 400.0f, 100.0f, 0.0f),
+    (CurvePositions, Positions),
     (int, Steps, 10)
 )
 
@@ -84,15 +92,29 @@ void ViewportDrag(events::EMouseDragEvent e)
 
 void ViewportToolFinish(events::EViewportToolFinishEvent event)
 {
-    if (!currentEditCurveEntity) { return; }
-    Curve currentCurve;
-    if (shared::GetValue<Curve>(currentEditCurveEntity, &currentCurve))
-    {
-        currentCurve.Start = bezierEdit->GetCurve()->GetStartPos();
-        currentCurve.End = bezierEdit->GetCurve()->GetEndPos();
-        currentCurve.Controll1 = bezierEdit->GetCurve()->GetControll1();
-        currentCurve.Controll2 = bezierEdit->GetCurve()->GetControll2();
-        shared::SetValue<Curve>(currentEditCurveEntity, "Curve", currentCurve);
+    if (event.ToolName == EBezierEditTool::sGetName()) 
+    { 
+        EBezierEditTool* editTool = static_cast<EBezierEditTool*>(drawingViewport.lock()->GetActiveTool());
+        if (editTool)
+        {
+            CurvePositions newPositions;
+            newPositions.Start = editTool->GetCurve()->GetStartPos();
+            newPositions.End = editTool->GetCurve()->GetEndPos();
+            newPositions.Controll1 = editTool->GetCurve()->GetControll1();
+            newPositions.Controll2 = editTool->GetCurve()->GetControll2();
+            shared::SetValue<CurvePositions>(currentEditCurveEntity, "Curve.Positions", newPositions);
+        }
+    }
+    else if (event.ToolName == ELineEditTool::sGetName()) 
+    { 
+        ELineEditTool* editTool = static_cast<ELineEditTool*>(drawingViewport.lock()->GetActiveTool());
+        if (editTool)
+        {
+            LinePositions newPosition;
+            newPosition.Start = editTool->GetLine()->GetStart();
+            newPosition.End = editTool->GetLine()->GetEnd();
+            shared::SetValue<LinePositions>(currentEditLineEntity, "Line.Positions", newPosition);
+        }
     }
 }
 
@@ -101,6 +123,7 @@ APP_ENTRY
 {
     ERef<EUIPanel> someDrawingPanel = EMakeRef<EUIPanel>("Drawing Canvas");
     drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()).lock());
+    someDrawingPanel->SetMenuBar(EMakeRef<EUIViewportToolbar>(drawingViewport));
     bezierEdit = static_cast<EBezierEditTool*>(drawingViewport.lock()->AddTool(new EBezierEditTool()));
     lineEdit = static_cast<ELineEditTool*>(drawingViewport.lock()->AddTool(new ELineEditTool()));
     
@@ -117,8 +140,8 @@ APP_ENTRY
             RLine* entityLine = (RLine*) meshes[entity][Line::_dsc.GetId()];
             if (entityLine)
             {
-                entityLine->SetStart(l.Start);
-                entityLine->SetEnd(l.End);
+                entityLine->SetStart(l.Positions.Start);
+                entityLine->SetEnd(l.Positions.End);
                 entityLine->SetThickness(l.Thickness);
             }
         }
@@ -130,8 +153,8 @@ APP_ENTRY
         {
             RLine* newLine = new RLine();
             meshes[entity][Line::_dsc.GetId()] = newLine;
-            newLine->SetStart(line.Start);
-            newLine->SetEnd(line.End);
+            newLine->SetStart(line.Positions.Start);
+            newLine->SetEnd(line.Positions.End);
 
             lineEdit->SetLine(newLine);
             currentEditLineEntity = entity;
@@ -147,11 +170,11 @@ APP_ENTRY
             RBezierCurve* entityLine = (RBezierCurve*) meshes[entity][Curve::_dsc.GetId()];
             if (entityLine)
             {
-                entityLine->SetStartPos(l.Start);
-                entityLine->SetEndPos(l.End);
+                entityLine->SetStartPos(l.Positions.Start);
+                entityLine->SetEndPos(l.Positions.End);
                 entityLine->SetThickness(l.Thickness);
-                entityLine->SetControll1(l.Controll1);
-                entityLine->SetControll2(l.Controll2);
+                entityLine->SetControll1(l.Positions.Controll1);
+                entityLine->SetControll2(l.Positions.Controll2);
                 entityLine->SetSteps(l.Steps);
             }
         }
@@ -163,10 +186,10 @@ APP_ENTRY
         {
             RBezierCurve* newLine = new RBezierCurve();
             meshes[entity][Curve::_dsc.GetId()] = newLine;
-            newLine->SetStartPos(line.Start);
-            newLine->SetEndPos(line.End);
-            newLine->SetControll1(line.Controll1);
-            newLine->SetControll2(line.Controll2);
+            newLine->SetStartPos(line.Positions.Start);
+            newLine->SetEndPos(line.Positions.End);
+            newLine->SetControll1(line.Positions.Controll1);
+            newLine->SetControll2(line.Positions.Controll2);
             newLine->SetSteps(line.Steps);
             
             bezierEdit->SetBezierCurve(newLine);
@@ -223,9 +246,6 @@ APP_ENTRY
             }
         }
     }, drawingViewport.lock().get());
-
-
-
 
     info.PanelRegister->RegisterItem(extensionName, someDrawingPanel);
 }
