@@ -101,10 +101,16 @@ ERef<EUIField> EObjectView::RenderStruct(EStructProperty* storage, EString nameI
 {
     ERef<EUIField> result = EMakeRef<EUIField>("STRUCT");
     EValueDescription description = storage->GetDescription();
-    for (auto& entry : description.GetStructFields())
+    EVector<Engine::EValueDescription::StructField> structFields = description.GetStructFields();
+    for (size_t i = 0; i < structFields.size(); i++)
     {
+        auto& entry = structFields[i];
         const EString& propertyName = entry.first;
         result->AddChild(RenderProperty(storage->GetProperty(propertyName), nameIdent + "." + propertyName));
+        if (i < structFields.size() - 1)
+        {
+            result->AddChild(EMakeRef<EUIDivider>());
+        }
     }
     return result;
 }
@@ -172,7 +178,9 @@ ERef<EUIField> EObjectView::RenderArray(Engine::EArrayProperty* storage, EString
         for (size_t i = 0; i < elements.size(); i++)
         {
             EProperty* element = elements[i];
-            weakRef.lock()->AddChild(RenderProperty(element, nameIdent + "." + std::to_string(i)));
+
+            EWeakRef<EUIField> groupPanel = weakRef.lock()->AddChild(EMakeRef<EUIGroupPanel>(element->GetPropertyName()));
+            groupPanel.lock()->AddChild(RenderProperty(element, nameIdent + "." + std::to_string(i)));
         }
 
         EWeakRef<EUIField> addElemButton = weakRef.lock()->AddChild(EMakeRef<EUIButton>("Add Element"));
@@ -339,7 +347,8 @@ void EObjectView::RegenComponentsView()
     EVector<ERef<EProperty>> allComponents = shared::GetAllComponents(fSelectedEntity);
     for (auto component : allComponents)
     {
-        fComponentsView.lock()->AddChild(RenderProperty(component.get(), component->GetPropertyName()));
+        EWeakRef<EUIField> collapsable = fComponentsView.lock()->AddChild(EMakeRef<EUICollapsable>(component->GetPropertyName()));
+        collapsable.lock()->AddChild(RenderProperty(component.get(), component->GetPropertyName()));
     }
 }
 
@@ -347,6 +356,7 @@ void EObjectView::RegenAddComponentMenu()
 {
     ERef<EUIField> componentContextMenu = EMakeRef<EUIField>("Context Menu");
     EWeakRef<EUIField> componentWeakRefMenu = componentContextMenu;
+    componentContextMenu->SetDirty();
     componentContextMenu->SetCustomUpdateFunction([this, componentWeakRefMenu](){
         if (componentWeakRefMenu.expired()) { return; }
         componentWeakRefMenu.lock()->Clear();
