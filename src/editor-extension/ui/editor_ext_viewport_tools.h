@@ -73,13 +73,13 @@ namespace Engine {
         void SetLine(Renderer::RLine* line);
         Renderer::RLine* GetLine() const;
 
-        virtual bool OnRender();
-        virtual void OnViewportClicked(const EVec2& screenPos, const EVec3& worldPos);
-        virtual void OnActivateTool();
+        virtual bool OnRender() override;
+        virtual void OnViewportClicked(const EVec2& screenPos, const EVec3& worldPos) override;
+        virtual void OnActivateTool() override;
         
         static EString sGetName();
 
-        virtual EString GetIcon() const;
+        virtual EString GetIcon() const override;
     };
 
     class E_EDEXAPI EBezierEditTool : public EViewportTool
@@ -106,7 +106,7 @@ namespace Engine {
 
         static EString sGetName();
 
-        virtual EString GetIcon() const;
+        virtual EString GetIcon() const override;
     };
 
 
