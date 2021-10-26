@@ -152,10 +152,11 @@ bool EServerStatusUI::OnRender()
         ImGui::PushStyleColor(ImGuiCol_Text, 0xff00fe21);
         ImGui::Text("Connected to %s", shared::StaticSharedContext::instance().GetRegisterConnection().GetConnectedToAddress().c_str());
         ImGui::PopStyleColor();
-        /* code */
         break;
     case ERegisterConnection::Status::Connecting:
-        Spinner("", 10.0f, 4.0f, 0xffffffff);
+        ImGui::Text("Connecting");
+        ImGui::SameLine();
+        Spinner("Connecting", ImGui::GetTextLineHeight() / 2.0f, 4.0f, 0xffffffff);
         break;
     case ERegisterConnection::Status::Disconnected:
         ImGui::PushStyleColor(ImGuiCol_Text, 0xff0021fe);
