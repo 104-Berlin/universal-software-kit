@@ -22,4 +22,15 @@ namespace Editor {
         virtual bool OnRender() override;
     };
 
+
+    class EServerStatusUI : public Engine::EUIField
+    {
+    private:
+        int fCurrentPort;
+    public:
+        EServerStatusUI();
+
+        virtual bool OnRender() override;
+    };  
+
 }

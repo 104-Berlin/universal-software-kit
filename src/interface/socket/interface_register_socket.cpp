@@ -39,8 +39,15 @@ ERegisterSocket::~ERegisterSocket()
     CleanUp();
 }
 
+bool ERegisterSocket::IsRunning() const
+{
+    return fIsRunning;
+}
+
+
 void ERegisterSocket::Init() 
 {
+    fIsRunning = false;
     if (fLoadedRegister)
     {
         delete fLoadedRegister;

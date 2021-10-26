@@ -187,9 +187,9 @@ namespace Engine {
 
 
             // For now we create local socket
-            fRegisterSocket = new ERegisterSocket(420);
+            fRegisterSocket = new ERegisterSocket(1420);
             fRegisterConnection.Init();
-            fRegisterConnection.Connect("localhost", 420);
+            fRegisterConnection.Connect("localhost", 1420);
         }
 
         StaticSharedContext::~StaticSharedContext() 
@@ -217,19 +217,52 @@ namespace Engine {
             return fRegisterEventDispatcher;
         }
         
+        bool StaticSharedContext::IsLocaleServerRunning() const
+        {
+            return fRegisterSocket != nullptr && fRegisterSocket->IsRunning();
+        }
+
+        void StaticSharedContext::RestartLocaleServer(int port)
+        {
+            if (fRegisterSocket)
+            {
+                delete fRegisterSocket;
+                fRegisterSocket = nullptr;
+            }
+
+            fRegisterSocket = new ERegisterSocket(port);
+        }
+
+
+
         void StaticSharedContext::ConnectTo(const EString& address) 
         {
             // Restart the connection
             fRegisterConnection.CleanUp();
-            if (fRegisterSocket)
+
+            EVector<EString> addressStrings = EStringUtil::SplitString(address, ":");
+            EString connectToAddress = addressStrings[0];
+            int port = 1420;
+            if (addressStrings.size() > 1)
+            {
+                EString portString = addressStrings[1];
+                char* p;
+                long newPort = strtol(portString.c_str(), &p, 10);
+                if (p)
+                {
+                    port = (int) newPort;
+                }
+            }
+
+            if (fRegisterSocket && connectToAddress != "localhost" && connectToAddress != "127.0.0.1")
             {
                 delete fRegisterSocket;
                 fRegisterSocket = nullptr;
             }
             fRegisterConnection.Init();
             
-            E_INFO("Connecting to " + address);
-            fRegisterConnection.Connect(address, 420);
+            E_INFO("Connecting to " + connectToAddress + ":" + std::to_string(port));
+            fRegisterConnection.Connect(connectToAddress, port);
         }
 
 

@@ -11,10 +11,11 @@ E_STORAGE_STRUCT(SomeTestType,
 TEST(Interface, CheckStartup)
 {
     shared::StaticSharedContext::Start();
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-    EXPECT_TRUE(shared::StaticSharedContext::instance().GetRegisterConnection().IsConnected());
+    EXPECT_TRUE(shared::StaticSharedContext::instance().GetRegisterConnection().GetConnectionStatus() == ERegisterConnection::Status::Connected);
 
-    if (!shared::StaticSharedContext::instance().GetRegisterConnection().IsConnected())
+    if (shared::StaticSharedContext::instance().GetRegisterConnection().GetConnectionStatus() != ERegisterConnection::Status::Connected)
     {
         shared::StaticSharedContext::Stop();
         return;

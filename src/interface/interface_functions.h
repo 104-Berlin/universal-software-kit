@@ -59,6 +59,9 @@ namespace Engine {
 
             ERegisterEventDispatcher& Events();
 
+            bool IsLocaleServerRunning() const;
+            void RestartLocaleServer(int port = 1420);
+
             void ConnectTo(const EString& address);
 
             static void Start();

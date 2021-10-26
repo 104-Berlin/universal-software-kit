@@ -47,6 +47,8 @@ namespace Engine {
     public:
         ERegisterSocket(int port);
         ~ERegisterSocket();
+
+        bool IsRunning() const;
     private:
         void Init();
         void CleanUp();

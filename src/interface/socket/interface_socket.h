@@ -2,7 +2,6 @@
 
 namespace Engine {
 
-
     enum class EPacketType : u32
     {
         CREATE_ENTITY = 0,
