@@ -4,7 +4,7 @@ using namespace Engine;
 
 
 ERegisterConnection::ERegisterConnection() 
-    : fSocketId(-1), fLastPacketId(0), fIsConnected(false)
+    : fSocketId(-1), fLastPacketId(0), fConnectionStatus(Status::Disconnected)
 {
     fListening = false;
 }
@@ -292,11 +292,17 @@ void ERegisterConnection::CleanUp()
         entry.second.GotResult.notify_all();
     }
 
+    if (fConnectingThread.joinable())
+    {
+        fConnectingThread.join();
+    }
+
     if (fListenThread.joinable())
     {
         fListenThread.join();
     }
 }
+
 
 EEventDispatcher& ERegisterConnection::GetEventDispatcher() 
 {
@@ -331,7 +337,7 @@ void ERegisterConnection::Run_ListenLoop()
             if (n == 0)
             {
                 E_WARN("Connection to Server lost!");
-                fIsConnected = false;
+                fConnectionStatus = Status::Disconnected;
                 break;
             }
             _sock::print_last_socket_error();
@@ -393,35 +399,47 @@ ERegisterPacket::PackId ERegisterConnection::GetNewPacketID()
 
 void ERegisterConnection::Connect(const EString& connectTo, int connectToPort) 
 {
-    fIsConnected = false;
-    
-    E_INFO("Conecting to server " + connectTo);
-    hostent* connect_to_server = gethostbyname(connectTo.c_str());
-    if (connect_to_server == NULL)
+    fConnectionStatus = Status::Connecting;
+    fConnectToAddress = "";
+    if (fConnectingThread.joinable())
     {
-        E_ERROR("Could not find Server " + connectTo);
-        fIsConnected = false;
-        return;
+        fConnectingThread.join();
     }
+    fConnectingThread = std::thread([this, connectTo, connectToPort](){
+        E_INFO("Conecting to server " + connectTo);
+        hostent* connect_to_server = gethostbyname(connectTo.c_str());
+        if (connect_to_server == NULL)
+        {
+            E_ERROR("Could not find Server " + connectTo);
+            fConnectionStatus = Status::Disconnected;
+            return;
+        }
 
-    sockaddr_in serverAddr;
-    serverAddr.sin_family = AF_INET;
-    bcopy((char*)connect_to_server->h_addr_list[0], (char*)&serverAddr.sin_addr, connect_to_server->h_length);
-    serverAddr.sin_port = htons(connectToPort);
+        sockaddr_in serverAddr;
+        serverAddr.sin_family = AF_INET;
+        bcopy((char*)connect_to_server->h_addr_list[0], (char*)&serverAddr.sin_addr, connect_to_server->h_length);
+        serverAddr.sin_port = htons(connectToPort);
 
-    if (connect(fSocketId, (sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
-    {
-        E_ERROR("Could not connect to server!");
-        fIsConnected = false;
-        _sock::print_last_socket_error();
-        return;
-    }
-    fConnected.notify_all();
-    fIsConnected = true;
-    E_INFO("Connected");
+        if (connect(fSocketId, (sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
+        {
+            E_ERROR("Could not connect to server!");
+            fConnectionStatus = Status::Disconnected;
+            _sock::print_last_socket_error();
+            return;
+        }
+        fConnectToAddress = connectTo;
+        fConnected.notify_all();
+        fConnectionStatus = Status::Connected;
+        E_INFO("Connected");
+    });
 }
 
-bool ERegisterConnection::IsConnected() const
+ERegisterConnection::Status ERegisterConnection::GetConnectionStatus() const
 {
-    return fIsConnected;
+    return fConnectionStatus;
+}
+
+const EString& ERegisterConnection::GetConnectedToAddress() const
+{
+    return fConnectToAddress;
 }

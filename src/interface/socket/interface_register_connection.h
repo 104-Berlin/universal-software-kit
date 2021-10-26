@@ -4,15 +4,24 @@ namespace Engine {
     
     class E_INTER_API ERegisterConnection
     {
+    public:
+        enum class Status 
+        {
+            Disconnected,
+            Connecting,
+            Connected
+        };
     private:   
         ERegisterPacket::PackId fLastPacketId;
         int                     fSocketId;
-        bool                    fIsConnected;
+        Status                  fConnectionStatus;
+        EString                 fConnectToAddress;
 
         std::condition_variable fConnected;
 
         std::atomic<bool>   fListening;
         std::thread         fListenThread;
+        std::thread         fConnectingThread;
         std::mutex          fNewIdMutex;
         std::mutex          fSendMutex;
 
@@ -51,7 +60,8 @@ namespace Engine {
 
         void Connect(const EString& connectTo, int connectToPort);
 
-        bool IsConnected() const;
+        Status GetConnectionStatus() const;
+        const EString& GetConnectedToAddress() const;
 
         void Init();
         void CleanUp();

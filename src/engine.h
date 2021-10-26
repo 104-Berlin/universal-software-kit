@@ -20,6 +20,7 @@
 #include <type_traits>
 #include <regex>
 #include <atomic>
+#include <future>
 
 #ifdef M_PI
 #undef M_PI
