@@ -13,6 +13,10 @@ set(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
+# use, i.e. don't skip the full RPATH for the build tree
+set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
+set(CMAKE_MACOSX_RPATH ../lib/)
+
 
 option(USE_COV "Use the covarage option when not using MSVC" FALSE)
 option(BUILD_EDITOR "Build the editor for mac or windows" TRUE)

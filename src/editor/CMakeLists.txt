@@ -10,3 +10,18 @@ add_executable(USKEditor    editor_entry.cpp
 target_include_directories(USKEditor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(USKEditor EEditorExtension)
+install(TARGETS USKEditor)
+
+
+
+
+set(CPACK_PACKAGE_FILE_NAME Editor)
+set(CPACK_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/AppIcon.icns)
+set(DYLD_LIBRARY_PATH lib)
+
+set(CPACK_BUNDLE_NAME USKEditor)
+set(CPACK_BUNDLE_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist)
+set(CPACK_BUNDLE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/AppIcon.icns)
+
+
+include(CPack)
