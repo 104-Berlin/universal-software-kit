@@ -23,6 +23,10 @@ if (${BUILD_MIDI_TOOL})
 add_library(MIDI_CONTROLL MODULE midi_controll.cpp)
 set_target_properties(MIDI_CONTROLL PROPERTIES SUFFIX ".uex")
 set_target_properties(MIDI_CONTROLL PROPERTIES PREFIX "")
+
+
+target_link_libraries(MIDI_CONTROLL EEditorExtension)
+target_link_libraries(MIDI_CONTROLL rtmidi)
 endif(${BUILD_MIDI_TOOL})
 
 target_link_libraries(Example1 EEditorExtension)
@@ -31,8 +35,6 @@ target_link_libraries(UISHOW EEditorExtension)
 target_link_libraries(SHOW_IMAGE EEditorExtension)
 
 
-target_link_libraries(MIDI_CONTROLL EEditorExtension)
-target_link_libraries(MIDI_CONTROLL rtmidi)
 
 endif()
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(USKEditor)
 
-add_executable(USKEditor    editor_entry.cpp
+add_executable(USKEditor MACOSX_BUNDLE    editor_entry.cpp
                             ui-fields/editor_ui_fields.cpp
                             ui-fields/editor_basic_object_view.cpp
                             ui-fields/editor_resource_view.cpp
@@ -10,8 +10,12 @@ add_executable(USKEditor    editor_entry.cpp
 target_include_directories(USKEditor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(USKEditor EEditorExtension)
-install(TARGETS USKEditor)
 
+set(APPS ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/USKEditor.app)
+set(DIRS ${CMAKE_BINARY_DIR})
+
+install(CODE "include(BundleUtilities)
+            fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")")
 
 
 
