@@ -2,6 +2,14 @@
 
 namespace Engine {
 
+    namespace events {
+
+        E_STORAGE_STRUCT(EEntityChangeEvent,
+            ()        
+        )
+
+    }
+
     namespace shared {
 
         class E_INTER_API ERegisterEventDispatcher : public EEventDispatcher

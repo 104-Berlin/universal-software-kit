@@ -282,6 +282,29 @@ void EApplication::RegisterDefaultPanels()
     fUIRegister.RegisterItem("Core", resourcePanel);
     fUIRegister.RegisterItem("Core", extensionPanel);
     fUIRegister.RegisterItem("Core", connectionStatePanel);
+
+
+
+    ERef<EUIPanel> basicViewport = EMakeRef<EUIPanel>("Basic Viewport");
+    basicViewport->AddChild(EMakeRef<EUIViewport>());
+    shared::Events().AddEntityChangeEventListener([basicViewport](const shared::EntityChangeEvent& event){
+        if (event.GetType() == shared::EntityChangeEvent::Type::kEntityAdded)
+        {
+            basicViewport->AddChild(EMakeRef<EObjectView>(&fUIValueRegister));
+        }
+        else if (event.GetType() == shared::EntityChangeEvent::Type::kEntityRemoved)
+        {
+            for (ERef<EUIPanel> panel : basicViewport->GetChildren())
+            {
+                if (panel->GetName() == event.GetEntityName())
+                {
+                    basicViewport->RemoveChild(panel);
+                    break;
+                }
+            }
+        }
+    });
+    fUIRegister.RegisterItem("Core", basicViewport);
 }
 
 void EApplication::RegisterDefaultResources() 
@@ -290,6 +313,9 @@ void EApplication::RegisterDefaultResources()
     imageDsc.ImportFunction = &ResImage::ImportImage;
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", imageDsc);
 
+    EResourceDescription svgDsc("SVG",{"svg"});
+    svgDsc.ImportFunction = &ResSvg::ImportSvg;
+    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", svgDsc);
 
     // FOR TESTING PURPOSES
     EResourceDescription pdfDescription("PDF", {"pdf"});

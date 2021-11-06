@@ -4,6 +4,7 @@ project(USKEditorExtension)
 
 add_library(EEditorExtension SHARED editor_vector_functions.cpp        
                                     default-types/editor_def_res_image.cpp
+                                    default-types/editor_def_res_svg.cpp
                                     ui/editor_ext_viewport.cpp
                                     ui/editor_ext_viewport_tools.cpp
                                     ui/editor_ext_ui.cpp)
