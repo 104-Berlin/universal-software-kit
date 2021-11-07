@@ -244,11 +244,17 @@ bool EDeserializer::ReadResourceFromJson(const EJson& json, EResourceData* resDa
         {
             u8* data;
             size_t dataLen;
-            u8* userData;
-            size_t userDataLen;
-            if (Base64::Decode(json["Data"].get<EString>(), &data, &dataLen) &&
-                Base64::Decode(json["UserData"].get<EString>(), &userData, &userDataLen))
+            u8* userData = nullptr;
+            size_t userDataLen = 0;
+            if (Base64::Decode(json["Data"].get<EString>(), &data, &dataLen))
             {
+                EString userDataString = json["UserData"].get<EString>();
+
+                if (userDataString.length() > 0)
+                {
+                    Base64::Decode(userDataString, &userData, &userDataLen);
+                }
+
                 if (resData->Data)
                 {
                     delete resData->Data;

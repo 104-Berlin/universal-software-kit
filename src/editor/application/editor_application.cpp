@@ -1,5 +1,8 @@
 #include "editor.h"
 
+#define NANOSVG_IMPLEMENTATION	// Expands implementation
+#include "../../deps/usk-graphics/deps/nanosvg/src/nanosvg.h"
+
 
 using namespace Editor;
 using namespace Graphics;
@@ -16,6 +19,10 @@ E_STORAGE_STRUCT(MyType,
     (EString, SomeString),
     (EResourceLink, ImageLink, "Image"),
     (EVector<MySubType>, Working)
+)
+
+E_STORAGE_STRUCT(BasicSvg,
+    (EResourceLink, SvgLink, "SVG")
 )
 
 EApplication::EApplication() 
@@ -58,6 +65,7 @@ EApplication::EApplication()
         this->RegenerateMainMenuBar();
     });
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<MyType>("Core");
+    shared::ExtensionManager().GetComponentRegister().RegisterStruct<BasicSvg>("Core");
 }
 
 void EApplication::Start(const EString& defaultRegisterPath) 
@@ -286,22 +294,54 @@ void EApplication::RegisterDefaultPanels()
 
 
     ERef<EUIPanel> basicViewport = EMakeRef<EUIPanel>("Basic Viewport");
-    basicViewport->AddChild(EMakeRef<EUIViewport>());
-    shared::Events().AddEntityChangeEventListener([basicViewport](const shared::EntityChangeEvent& event){
-        if (event.GetType() == shared::EntityChangeEvent::Type::kEntityAdded)
+    EWeakRef<EUIViewport> weakViewport = std::dynamic_pointer_cast<EUIViewport>(basicViewport->AddChild(EMakeRef<EUIViewport>()).lock());
+    
+
+    shared::Events().AddEntityChangeEventListener("BasicSvg.SvgLink", [this, weakViewport](ERegister::Entity entity, const EString& nameIdent){
+        EResourceLink value;
+        if (shared::GetValue<EResourceLink>(nameIdent, entity, &value))
         {
-            basicViewport->AddChild(EMakeRef<EObjectView>(&fUIValueRegister));
-        }
-        else if (event.GetType() == shared::EntityChangeEvent::Type::kEntityRemoved)
-        {
-            for (ERef<EUIPanel> panel : basicViewport->GetChildren())
+            // Get Resource data
+            ERef<Engine::EResourceData> resourceData = shared::GetResource(value.ResourceId);
+            // If fEntityObjectMap does not contain entity insert new Renderer::RObject into the map
+            Renderer::RObject* svgObject = nullptr;
+            if (fEntityObjectMap.find(entity) == fEntityObjectMap.end())
             {
-                if (panel->GetName() == event.GetEntityName())
-                {
-                    basicViewport->RemoveChild(panel);
-                    break;
+                svgObject = new Renderer::RObject();
+                fEntityObjectMap[entity] = svgObject;
+                weakViewport.lock()->GetScene().Add(svgObject);
+            }
+            else
+            {
+                // If fEntityObjectMap contains entity update Renderer::RObject
+                svgObject = fEntityObjectMap[entity];
+            }
+            svgObject->Clear();
+            if (!resourceData || !resourceData->Data)
+            {
+                return;
+            }
+            char* buffer = new char[resourceData->DataSize + 1];
+            strcpy(buffer, (const char*) resourceData->Data);
+            NSVGimage* image;
+            image = nsvgParse(buffer, "px", 96.0f);
+            if (image)
+            {
+                for (auto shape = image->shapes; shape != NULL; shape = shape->next) {
+                    for (auto path = shape->paths; path != NULL; path = path->next) {
+                        for (int i = 0; i < path->npts-1; i += 3) {
+                            float* p = &path->pts[i*2];
+                            Renderer::RBezierCurve* curve = new Renderer::RBezierCurve();
+                            curve->SetStartPos({ p[0], p[1], 0.0f });
+                            curve->SetControll1({ p[2], p[3], 0.0f });
+                            curve->SetControll2({ p[4], p[5], 0.0f });
+                            curve->SetEndPos({ p[6], p[7], 0.0f });
+                            svgObject->Add(curve);
+                        }
+                    }
                 }
             }
+            nsvgDelete(image);
         }
     });
     fUIRegister.RegisterItem("Core", basicViewport);
@@ -328,11 +368,16 @@ void EApplication::RegisterDefaultResources()
 
 void EApplication::RegisterDefaultComponentRender() 
 {
-    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, ERegister::Entity entity, const EString& nameIdent){
-        ERef<EUIResourceSelect> resourceSelect = EMakeRef<EUIResourceSelect>("Image");
-        resourceSelect->AddEventListener<events::EResourceSelectChangeEvent>([nameIdent, entity](events::EResourceSelectChangeEvent event){
-            shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink("Image", event.ResourceID));
-        });
-        return resourceSelect;
+    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, ERegister::Entity entity, const EString& nameIdent)->ERef<EUIField>{
+        EResourceLink link;
+        if (convert::getter(prop, &link))
+        {
+            ERef<EUIResourceSelect> resourceSelect = EMakeRef<EUIResourceSelect>(link.Type);
+            resourceSelect->AddEventListener<events::EResourceSelectChangeEvent>([nameIdent, entity, link](events::EResourceSelectChangeEvent event){
+                shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink(link.Type, event.ResourceID));
+            });
+            return resourceSelect;
+        }
+        return EMakeRef<EUIField>("ResourceLink");
     }});
 }

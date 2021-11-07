@@ -366,7 +366,6 @@ bool ERegisterConnection::IsWaitingForRequest(ERegisterPacket::PackId id)
 
 void ERegisterConnection::GotPacket(const ERegisterPacket& packet) 
 {
-    _sock::print_packet("CONNECTION", packet);
     if (IsWaitingForRequest(packet.ID))
     {
         fRequests[packet.ID].Json = packet.Body;
@@ -388,6 +387,8 @@ void ERegisterConnection::GotPacket(const ERegisterPacket& packet)
             }
         }
     }
+    
+    _sock::print_packet("CONNECTION", packet);
 }
 
 ERegisterPacket::PackId ERegisterConnection::GetNewPacketID()

@@ -85,7 +85,6 @@ namespace Engine {
 
         void SetUserData(u8* data, size_t data_size)
         {
-            E_ASSERT(data);
             if (UserData)
             {
                 delete[] UserData;

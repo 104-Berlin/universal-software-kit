@@ -2,13 +2,6 @@
 
 namespace Engine {
 
-    namespace events {
-
-        E_STORAGE_STRUCT(EEntityChangeEvent,
-            ()        
-        )
-
-    }
 
     namespace shared {
 
@@ -144,12 +137,12 @@ namespace Engine {
         E_INTER_API ERef<EProperty> GetValueFromIdent(ERegister::Entity entity, const EString& vlaueIdent);
 
         template <typename T>
-        bool GetValue(ERegister::Entity entity, T* value)
+        bool GetValue(const EString& nameIdent, ERegister::Entity entity, T* value)
         {
             EValueDescription dsc = getdsc::GetDescription<T>();
             if (dsc.Valid())
             {
-                ERef<EProperty> foundProp = GetValueFromIdent(entity, dsc.GetId());
+                ERef<EProperty> foundProp = GetValueFromIdent(entity, nameIdent);
                 if (foundProp)
                 {
                     if (convert::getter(foundProp.get(), value))
@@ -159,6 +152,12 @@ namespace Engine {
                 }
             }
             return false;
+        }
+
+        template <typename T>
+        bool GetValue(ERegister::Entity entity, T* value)
+        {
+            return GetValue(getdsc::GetDescription<T>().GetId(), entity, value);
         }
 
        E_INTER_API EVector<ERef<EProperty>> GetAllComponents(ERegister::Entity entity);
