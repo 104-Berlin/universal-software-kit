@@ -25,6 +25,16 @@ E_STORAGE_STRUCT(BasicSvg,
     (EResourceLink, SvgLink, "SVG")
 )
 
+E_STORAGE_ENUM(MyEnum,
+    One,
+    Two,
+    Three
+)
+
+E_STORAGE_STRUCT(EnumTest,
+    (MyEnum, SomeEnum)
+)
+
 EApplication::EApplication() 
     : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
 {
@@ -66,6 +76,7 @@ EApplication::EApplication()
     });
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<MyType>("Core");
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<BasicSvg>("Core");
+    shared::ExtensionManager().GetComponentRegister().RegisterStruct<EnumTest>("Core");
 }
 
 void EApplication::Start(const EString& defaultRegisterPath) 

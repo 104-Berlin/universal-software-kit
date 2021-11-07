@@ -171,6 +171,11 @@ bool ReadEnumFromJson(const EJson& json, EEnumProperty* property)
         property->SetCurrentValue(json["CurrentValue"].get<EString>());
         return true;
     }
+    else if (json["CurrentValue"].is_number_integer())
+    {
+        property->SetCurrentValue(json["CurrentValue"].get<u32>());
+        return true;
+    }
     return false;
 }
 

@@ -140,7 +140,7 @@ TEST(RegisterTest, Basics)
 			stringValue->SetValue("Hello World");
 			vectorProperty->SetValue<Vector>(newVecValue);
 			boolValue->SetValue(true);
-			enumProperty->SetCurrentValue("Second");
+			enumProperty->SetCurrentValue("Two");
 
 			arrayProperty->AddElement();
 			arrayProperty->AddElement();
@@ -185,7 +185,7 @@ TEST(RegisterTest, Basics)
 			EXPECT_STREQ(stringValue->GetValue().c_str(), "Hello World");
 			EXPECT_TRUE(boolValue->GetValue());
 
-			EXPECT_STREQ(enumProperty->GetCurrentValue().c_str(), "Second");
+			EXPECT_EQ(enumProperty->GetCurrentValue(), 1);
 
 			EXPECT_EQ(arrayProperty->GetElements().size(), 2);
 			EXPECT_NE(arrayProperty->GetElement(0), nullptr);
