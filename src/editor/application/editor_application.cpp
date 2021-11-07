@@ -18,6 +18,16 @@ E_STORAGE_STRUCT(MyType,
     (EVector<MySubType>, Working)
 )
 
+E_STORAGE_ENUM(MyEnum,
+    One,
+    Two,
+    Three
+)
+
+E_STORAGE_STRUCT(EnumTest,
+    (MyEnum, SomeEnum)
+)
+
 EApplication::EApplication() 
     : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
 {
@@ -58,6 +68,7 @@ EApplication::EApplication()
         this->RegenerateMainMenuBar();
     });
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<MyType>("Core");
+    shared::ExtensionManager().GetComponentRegister().RegisterStruct<EnumTest>("Core");
 }
 
 void EApplication::Start(const EString& defaultRegisterPath) 

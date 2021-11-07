@@ -174,14 +174,16 @@ namespace Engine {
     class E_API EEnumProperty : public EProperty
     {
     private:
-        EString fValue;
+        u32 fValue;
     public:
         EEnumProperty(const EString& name, EValueDescription description, const EString& initValue = "");
         EEnumProperty(EEnumProperty&) = default;
         ~EEnumProperty();
 
         void SetCurrentValue(const EString& value);
-        const EString& GetCurrentValue() const;
+        void SetCurrentValue(u32 value);
+        u32 GetCurrentValue() const;
+        
 
     protected:
         virtual EProperty* OnClone() override;

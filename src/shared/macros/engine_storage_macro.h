@@ -137,3 +137,49 @@
                                     };
 
 
+
+
+/**
+ * #####################################################################################################################
+ * #####################################################################################################################
+ * #####################################################################################################################
+ * ####################################################### ENUM MACROS #################################################
+ * #####################################################################################################################
+ * #####################################################################################################################
+ * #####################################################################################################################
+ */
+
+#define E_CREATE_ENUM_PROP(s_name) s_name,
+
+#define E_CREATE_ENUM_DSC(s_name) EXPAND(E_STRINGIFY(s_name)),
+
+
+
+#define E_STORAGE_ENUM(name, ...) struct name {\
+                                    typedef enum \
+                                        {\
+                                        EXPAND (E_LOOP_ARGS(E_CREATE_ENUM_PROP, __VA_ARGS__) )\
+                                        } opts;\
+                                    opts Value;\
+                                    static inline ::Engine::EValueDescription _dsc = ::Engine::EValueDescription::CreateEnum(EXPAND(E_STRINGIFY(name)), {\
+                                            EXPAND (E_LOOP_ARGS(E_CREATE_ENUM_DSC, __VA_ARGS__))\
+                                    });\
+                                    static bool ToProperty(const name & value, ::Engine::EStructProperty* property)\
+                                    {\
+                                        EProperty* prop = property;\
+                                        EEnumProperty* enumProp = static_cast<EEnumProperty*>(prop);\
+                                        enumProp->SetCurrentValue(static_cast<u32>(value.Value));\
+                                        return true;\
+                                    }\
+                                    static bool FromProperty(name & value, const ::Engine::EStructProperty* property)\
+                                    {\
+                                        const EProperty* prop = property;\
+                                        const EEnumProperty* enumProp = static_cast<const EEnumProperty*>(prop);\
+                                        value.Value = static_cast<opts>(enumProp->GetCurrentValue());\
+                                        return true;\
+                                    }\
+                                    bool operator==(const name& other) const {\
+                                        return Value == other.Value; \
+                                    }\
+                                    bool operator!=(const name& other) const { return !((*this) == other);}\
+                                };

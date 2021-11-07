@@ -58,6 +58,7 @@ namespace Engine {
 
 
         static EValueDescription CreateStruct(const t_ID& id, EVector<StructField> childs);
+        static EValueDescription CreateEnum(const t_ID& id, EVector<EString> options);
 
         bool operator==(const EValueDescription& other);
         bool operator!=(const EValueDescription& other);
