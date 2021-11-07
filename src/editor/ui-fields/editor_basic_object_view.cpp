@@ -138,26 +138,26 @@ char* convert_str_to_chr(const std::string & s)
 
 ERef<EUIField> EObjectView::RenderEnum(Engine::EEnumProperty* storage, EString nameIdent) 
 {
-    /*EValueDescription description = storage->GetDescription();
-    int currentItem = -1;
-    for (EString option : description.GetEnumOptions())
-    {
-        currentItem++;
-        if (option == storage->GetCurrentValue())
+    EValueDescription description = storage->GetDescription();
+    EVector<EString> enumValues = description.GetEnumOptions();
+
+    ERef<EUIDropdown> result = EMakeRef<EUIDropdown>(storage->GetPropertyName());
+    EWeakRef<EUIDropdown> weakResult = result;
+    result->SetOptions(enumValues);
+    result->SetSelectedIndex(storage->GetCurrentValue());
+    result->AddEventListener<events::ESelectChangeEvent>([this, nameIdent](events::ESelectChangeEvent event){
+        shared::SetEnumValue(fSelectedEntity, nameIdent, event.Index);
+    });
+    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](ERegister::Entity entity, const EString& valueIdent){
+        if (weakResult.expired()) { return; }
+        if (entity == fSelectedEntity)
         {
-            break;
+            ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
+            weakResult.lock()->SetSelectedIndex(std::static_pointer_cast<EEnumProperty>(prop)->GetCurrentValue());
         }
-    }
-    std::vector<char*> opt;
-    std::transform(description.GetEnumOptions().begin(), description.GetEnumOptions().end(), std::back_inserter(opt), convert_str_to_chr);
+    }, this);
 
-    ImGui::Combo(storage->GetPropertyName().c_str(), &currentItem, opt.data(), description.GetEnumOptions().size());
-
-    for ( size_t i = 0 ; i < opt.size() ; i++ )
-            delete [] opt[i];
-
-    storage->SetCurrentValue(description.GetEnumOptions()[currentItem]);*/
-    return nullptr;
+    return result;
 }
 
 ERef<EUIField> EObjectView::RenderArray(Engine::EArrayProperty* storage, EString nameIdent) 

@@ -127,6 +127,7 @@ namespace Engine {
             return false;
         }
 
+        ESharedError E_INTER_API SetEnumValue(ERegister::Entity entity, const EString& valueIdent, u32 value);
         ESharedError E_INTER_API AddArrayEntry(ERegister::Entity entity, const EString& ident);
 
 

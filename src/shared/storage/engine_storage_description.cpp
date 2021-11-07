@@ -98,6 +98,20 @@ EValueDescription EValueDescription::CreateStruct(const t_ID& id,  EVector<Struc
     return result;
 }
 
+EValueDescription EValueDescription::CreateEnum(const t_ID& id, EVector<EString> options)
+{
+    EValueDescription result(EValueType::ENUM, id);
+    for (const EString& entry : options)
+    {
+        if (!entry.empty())
+        {
+            result.AddEnumOption(entry);
+        }
+    }
+    return result;
+}
+
+
 bool EValueDescription::operator==(const EValueDescription& other) 
 {
     return fID == other.fID && fType == other.fType && (fType != EValueType::ARRAY || *fArrayType == *other.fArrayType);

@@ -254,28 +254,9 @@ void EStructProperty::OnCopy(const EProperty* from)
 }
 
 EEnumProperty::EEnumProperty(const EString& name, EValueDescription description, const EString& initValue)
-    : EProperty(name, description), fValue(initValue)
+    : EProperty(name, description), fValue(0)
 {
-    const EVector<EString>& options = description.GetEnumOptions();
-    if (options.size() > 0)
-    {
-        if (fValue.empty())
-        {
-            fValue = options[0];
-        }
-        else
-        {
-            EVector<EString>::const_iterator foundOption = std::find(options.begin(), options.end(), fValue);
-            if (foundOption == options.end())
-            {
-                fValue = options[0];
-            }
-        }
-    }
-    else
-    {
-        fValue = "";
-    }
+    SetCurrentValue(initValue);
 }
 
 EEnumProperty::~EEnumProperty() 
@@ -285,11 +266,46 @@ EEnumProperty::~EEnumProperty()
 
 void EEnumProperty::SetCurrentValue(const EString& value) 
 {
-    fValue = value;
+    if (value.empty())
+    {
+        fValue = 0;
+        return;
+    }
+    EValueDescription dsc = GetDescription();
+    E_ASSERT(dsc.GetType() == EValueType::ENUM);
+    const EVector<EString>& options = dsc.GetEnumOptions();
+    EVector<EString>::const_iterator foundOption = std::find(options.begin(), options.end(), value);
+    if (foundOption == options.end())
+    {
+        fValue = 0;
+    }
+    else
+    {
+        fValue = std::distance(options.begin(), foundOption);
+    }
+
     if (fChangeFunc) { fChangeFunc(GetPropertyName()); }
 }
 
-const EString& EEnumProperty::GetCurrentValue() const
+
+void EEnumProperty::SetCurrentValue(u32 value)
+{
+    EValueDescription dsc = GetDescription();
+    E_ASSERT(dsc.GetType() == EValueType::ENUM);
+    const EVector<EString>& options = dsc.GetEnumOptions();
+    if (value >= options.size())
+    {
+        fValue = 0;
+    }
+    else
+    {
+        fValue = value;
+    }
+
+    if (fChangeFunc) { fChangeFunc(GetPropertyName()); }
+}
+
+u32 EEnumProperty::GetCurrentValue() const
 {
     return fValue;
 }

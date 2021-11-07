@@ -131,6 +131,17 @@ ERef<EProperty> shared::GetValueFromIdent(ERegister::Entity entity, const EStrin
     return result;
 }
 
+shared::ESharedError shared::SetEnumValue(ERegister::Entity entity, const EString& valueIdent, u32 value)
+{
+    EJson valueJson = EJson::object();
+    valueJson["CurrentValue"] = value;
+
+    StaticSharedContext::instance().GetRegisterConnection().Send_SetValue(entity, valueIdent, valueJson.dump());
+
+    return false;
+}
+
+
 shared::ESharedError shared::AddArrayEntry(ERegister::Entity entity, const EString& ident) 
 {
     StaticSharedContext::instance().GetRegisterConnection().Send_AddArrayEntry(entity, ident);
