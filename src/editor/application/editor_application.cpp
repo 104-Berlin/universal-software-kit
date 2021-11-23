@@ -313,11 +313,16 @@ void EApplication::RegisterDefaultResources()
 
 void EApplication::RegisterDefaultComponentRender() 
 {
-    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, ERegister::Entity entity, const EString& nameIdent){
-        ERef<EUIResourceSelect> resourceSelect = EMakeRef<EUIResourceSelect>("Image");
-        resourceSelect->AddEventListener<events::EResourceSelectChangeEvent>([nameIdent, entity](events::EResourceSelectChangeEvent event){
-            shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink("Image", event.ResourceID));
-        });
-        return resourceSelect;
+    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, ERegister::Entity entity, const EString& nameIdent)->ERef<EUIField>{
+        EResourceLink link;
+        if (convert::getter(prop, &link))
+        {
+            ERef<EUIResourceSelect> resourceSelect = EMakeRef<EUIResourceSelect>(link.Type);
+            resourceSelect->AddEventListener<events::EResourceSelectChangeEvent>([nameIdent, entity, link](events::EResourceSelectChangeEvent event){
+                shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink(link.Type, event.ResourceID));
+            });
+            return resourceSelect;
+        }
+        return EMakeRef<EUIField>("ResourceLink");
     }});
 }
