@@ -16,6 +16,14 @@
 #include "prefix_shared.h"
 #include "prefix_interface.h"
 
+#include "bx/bounds.h"
+#include "bx/pixelformat.h"
+#include "bx/string.h"
+#include "bgfx/bgfx.h"
+#include "bimg/bimg.h"
+#include "dear-imgui/imgui.h"
+#include "dear-imgui/imgui_internal.h"
+
 
 #define INIT_IMGUI_FUNC EXTENSION_EXPORT_FUN void InitImGui() { ImGui::SetCurrentContext(Graphics::Wrapper::GetCurrentImGuiContext()); }
 
@@ -25,17 +33,6 @@
 
 #define APP_CLEANUP EXTENSION_EXPORT_FUN void app_cleanup()
 
-
-#include "editor_icons_material_design.h"
-#include "graphics_wrapper.h"
-#include "graphics_renderer.h"
-
-
-typedef glm::vec2 EVec2;
-typedef glm::vec3 EVec3;
-typedef glm::vec4 EVec4;
-
-typedef glm::mat4 EMat4;
 
 #include "default-types/editor_def_res_image.h"
 

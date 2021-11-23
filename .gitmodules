@@ -10,3 +10,6 @@
 [submodule "deps/rtmidi"]
 	path = deps/rtmidi
 	url = https://github.com/thestk/rtmidi.git
+[submodule "deps/bgfx"]
+	path = deps/bgfx
+	url = https://github.com/104-Berlin/bfgx_usk_build.git

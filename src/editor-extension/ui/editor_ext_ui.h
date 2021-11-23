@@ -21,18 +21,18 @@ namespace Engine {
 namespace events {
 
     E_STORAGE_STRUCT(EMouseMoveEvent,
-        (EVec2, Position),
-        (EVec2, MouseDelta)
+        (EVec3, Position),
+        (EVec3, MouseDelta)
     )
 
     E_STORAGE_STRUCT(EMouseDownEvent,
-        (EVec2,   Position),
+        (EVec3,   Position),
         (u32,     MouseButton)
     )
 
     E_STORAGE_STRUCT(EMouseDragEvent,
-        (EVec2,   Position),
-        (EVec2,   MouseDelta),
+        (EVec3,   Position),
+        (EVec3,   MouseDelta),
         (u32,     MouseButton)
     )
 

@@ -170,17 +170,17 @@ void EUIField::HandleRenderEnd()
     fIsTooltipOpen = false;
     if (ImGui::IsItemHovered())
     {
-        EVec2 mousePos(ImGui::GetMousePos().x, ImGui::GetMousePos().y);
-        mousePos -= EVec2(itemRect.Min.x, itemRect.Min.y);
+        EVec3 mousePos(ImGui::GetMousePos().x, ImGui::GetMousePos().y);
+        mousePos -= EVec3(itemRect.Min.x, itemRect.Min.y);
 
         ImVec2 md0 = ImGui::GetMouseDragDelta(0, 0.0f);
-        EVec2 mouseDrag0(md0.x, md0.y);
+        EVec3 mouseDrag0(md0.x, md0.y);
         ImGui::ResetMouseDragDelta(0);
         ImVec2 md1 = ImGui::GetMouseDragDelta(1, 0.0f);
-        EVec2 mouseDrag1(md1.x, md1.y);
+        EVec3 mouseDrag1(md1.x, md1.y);
         ImGui::ResetMouseDragDelta(1);
         ImVec2 md2 = ImGui::GetMouseDragDelta(2, 0.0f);
-        EVec2 mouseDrag2(md2.x, md2.y);
+        EVec3 mouseDrag2(md2.x, md2.y);
         ImGui::ResetMouseDragDelta(2);
 
         float scrollX = ImGui::GetIO().MouseWheel;
@@ -192,7 +192,7 @@ void EUIField::HandleRenderEnd()
         }
 
 
-        EVec2 mouseDelta = mousePos - fLastMousePos;
+        EVec3 mouseDelta = mousePos - fLastMousePos;
         fLastMousePos = mousePos;
         if (glm::length(mouseDelta) > 0.0f)
         {
