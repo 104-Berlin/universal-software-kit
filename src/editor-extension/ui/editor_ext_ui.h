@@ -752,8 +752,9 @@ namespace events
     {
     private:
         bool fOpen;
+        ImGuiTreeNodeFlags fFlags;
     public:
-        EUICollapsable(const EString& label);
+        EUICollapsable(const EString& label, bool defaultOpen = true);
 
         virtual bool OnRender() override;
     };

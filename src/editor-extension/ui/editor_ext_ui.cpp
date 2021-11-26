@@ -1050,17 +1050,16 @@ EUIResourceSelect::EUIResourceSelect(const EString& resourceType)
     }, this);
 }
 
-EUICollapsable::EUICollapsable(const EString& label)
+EUICollapsable::EUICollapsable(const EString& label, bool defaultOpen)
     : EUIField(label)
 {
-    
+    fFlags = ImGuiTreeNodeFlags_None;
+    if (defaultOpen) { fFlags |= ImGuiTreeNodeFlags_DefaultOpen; }
 }
 
 bool EUICollapsable::OnRender()
 {
-    fOpen = ImGui::CollapsingHeader(GetLabel().c_str());
-
-    return fOpen;
+    return fOpen = ImGui::CollapsingHeader(GetLabel().c_str(), fFlags);
 }
 
 EUIDivider::EUIDivider()
