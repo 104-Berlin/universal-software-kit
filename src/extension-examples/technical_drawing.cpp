@@ -17,12 +17,12 @@ EVector<u32> planeIndices = {
     0, 1, 2, 2, 3, 0
 };
 
-static EUnorderedMap<ERegister::Entity, EUnorderedMap<EValueDescription::t_ID, RMesh*>> meshes;
+static EUnorderedMap<EDataBase::Entity, EUnorderedMap<EValueDescription::t_ID, RMesh*>> meshes;
 static EWeakRef<EUIViewport> drawingViewport;
 static EBezierEditTool* bezierEdit = nullptr;
 static ELineEditTool* lineEdit = nullptr;
-static ERegister::Entity currentEditCurveEntity = 0;
-static ERegister::Entity currentEditLineEntity = 0;
+static EDataBase::Entity currentEditCurveEntity = 0;
+static EDataBase::Entity currentEditLineEntity = 0;
 
 E_STORAGE_STRUCT(Plane,
     (EVec3, Position),
@@ -133,7 +133,7 @@ APP_ENTRY
 
     drawingViewport.lock()->AddEventListener<events::EViewportToolFinishEvent>(&ViewportToolFinish);
     
-    shared::Events().AddEntityChangeEventListener(Line::_dsc.GetId(), [](ERegister::Entity entity, const EString& nameIdent){
+    shared::Events().AddEntityChangeEventListener(Line::_dsc.GetId(), [](EDataBase::Entity entity, const EString& nameIdent){
         Line l;
         if (shared::GetValue<Line>(entity, &l))
         {
@@ -147,7 +147,7 @@ APP_ENTRY
         }
     }, drawingViewport.lock().get());
 
-    shared::Events().AddComponentCreateEventListener(Line::_dsc, [](ERegister::Entity entity){
+    shared::Events().AddComponentCreateEventListener(Line::_dsc, [](EDataBase::Entity entity){
         Line line;
         if (shared::GetValue<Line>(entity, &line))
         {
@@ -163,7 +163,7 @@ APP_ENTRY
     }, drawingViewport.lock().get());
 
 
-    shared::Events().AddEntityChangeEventListener(Curve::_dsc.GetId(), [](ERegister::Entity entity, const EString& nameIdent){
+    shared::Events().AddEntityChangeEventListener(Curve::_dsc.GetId(), [](EDataBase::Entity entity, const EString& nameIdent){
         Curve l;
         if (shared::GetValue<Curve>(entity, &l))
         {
@@ -180,7 +180,7 @@ APP_ENTRY
         }
     }, drawingViewport.lock().get());
 
-    shared::Events().AddComponentCreateEventListener(Curve::_dsc, [](ERegister::Entity entity){
+    shared::Events().AddComponentCreateEventListener(Curve::_dsc, [](EDataBase::Entity entity){
         Curve line;
         if (shared::GetValue<Curve>(entity, &line))
         {
@@ -199,7 +199,7 @@ APP_ENTRY
     }, drawingViewport.lock().get());
 
     
-    shared::Events().AddEntityChangeEventListener("Plane.Position", [](ERegister::Entity entity, const EString& ident){
+    shared::Events().AddEntityChangeEventListener("Plane.Position", [](EDataBase::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity][Plane::_dsc.GetId()];
         if (!graphicsMesh) { return; }
         ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValueFromIdent(entity, "Plane.Position"));
@@ -209,7 +209,7 @@ APP_ENTRY
             graphicsMesh->SetPosition(posVector);
         }
     }, drawingViewport.lock().get());
-    shared::Events().AddEntityChangeEventListener("Plane.Rotation", [](ERegister::Entity entity, const EString& ident){
+    shared::Events().AddEntityChangeEventListener("Plane.Rotation", [](EDataBase::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity][Plane::_dsc.GetId()];
         if (!graphicsMesh) { return; }
         ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValueFromIdent(entity, "Plane.Rotation"));
@@ -219,7 +219,7 @@ APP_ENTRY
             graphicsMesh->SetRotation(glm::vec3{glm::radians(posVector.x), glm::radians(posVector.y), glm::radians(posVector.z)});
         }
     }, drawingViewport.lock().get());
-    shared::Events().AddEntityChangeEventListener("Plane.Scale", [](ERegister::Entity entity, const EString& ident){
+    shared::Events().AddEntityChangeEventListener("Plane.Scale", [](EDataBase::Entity entity, const EString& ident){
         RMesh* graphicsMesh = meshes[entity][Plane::_dsc.GetId()];
         if (!graphicsMesh) { return; }
         ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValueFromIdent(entity, "Plane.Scale"));
@@ -230,7 +230,7 @@ APP_ENTRY
         }
     }, drawingViewport.lock().get());
 
-    shared::Events().AddComponentCreateEventListener(Plane::_dsc, [](ERegister::Entity entity){
+    shared::Events().AddComponentCreateEventListener(Plane::_dsc, [](EDataBase::Entity entity){
         // Create mesh in 3D Scene
         if (drawingViewport.expired()) { return; }
         Plane mesh;

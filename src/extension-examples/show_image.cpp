@@ -19,12 +19,12 @@ E_STORAGE_STRUCT(ImageLayer,
 class ImageLayerView : public EUIField
 {
 private:
-    EUnorderedMap<ERegister::Entity, EWeakRef<EUIImageView>> fImageViews;
+    EUnorderedMap<EDataBase::Entity, EWeakRef<EUIImageView>> fImageViews;
 public:
     ImageLayerView()
         : EUIField("ImageView")
     {
-        shared::Events().AddComponentCreateEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
+        shared::Events().AddComponentCreateEventListener(ImageLayer::_dsc, [this](EDataBase::Entity handle){
             ImageLayer imageLayer;
             if (shared::GetValue<ImageLayer>(handle, &imageLayer))
             {
@@ -35,8 +35,8 @@ public:
             }
         }, this);
 
-        shared::Events().AddComponentDeleteEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
-            EUnorderedMap<ERegister::Entity, EWeakRef<EUIImageView>>::iterator it = fImageViews.find(handle);
+        shared::Events().AddComponentDeleteEventListener(ImageLayer::_dsc, [this](EDataBase::Entity handle){
+            EUnorderedMap<EDataBase::Entity, EWeakRef<EUIImageView>>::iterator it = fImageViews.find(handle);
             if (it != fImageViews.end())
             {
                 RemoveChild(it->second);
@@ -44,7 +44,7 @@ public:
             }
         }, this);
 
-        shared::Events().AddEntityChangeEventListener("ImageLayer.resourceLink", [this](ERegister::Entity handle, const EString&){
+        shared::Events().AddEntityChangeEventListener("ImageLayer.resourceLink", [this](EDataBase::Entity handle, const EString&){
             ImageLayer imageLayer;
             if (shared::GetValue<ImageLayer>(handle, &imageLayer))
             {

@@ -44,7 +44,7 @@ namespace Engine {
 
     class E_API EProperty
     {
-        friend class ERegister;
+        friend class EDataBase;
         // Function when value changes
         // Contains string to the current property identifier
         using ChangeFunc = std::function<void(EString)>;

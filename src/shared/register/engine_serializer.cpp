@@ -49,13 +49,13 @@ EJson ESerializer::WriteStorageDescriptionToJson(const EValueDescription& descri
 EJson WriteStructToJs(EStructProperty* property);
 
 
-EJson ESerializer::WriteSceneToJson(ERegister* scene) 
+EJson ESerializer::WriteSceneToJson(EDataBase* scene) 
 {
     EUnorderedMap<EValueDescription::t_ID, EValueDescription> valueTypes;
     EJson result = EJson::object();
 
     EJson entityArray = EJson::array();
-    for (ERegister::Entity entity : scene->GetAllEntities())
+    for (EDataBase::Entity entity : scene->GetAllEntities())
     {
         EJson entityObject = EJson::object();
         for (EStructProperty* component : scene->GetAllComponents(entity))
@@ -178,7 +178,7 @@ EJson ESerializer::WritePropertyToJs(EProperty* property, bool writeDescription)
     return 0;
 }
 
-ESharedBuffer ESerializer::WriteFullSceneBuffer(ERegister* reg) 
+ESharedBuffer ESerializer::WriteFullSceneBuffer(EDataBase* reg) 
 {
     EFileCollection fileCollection;
 

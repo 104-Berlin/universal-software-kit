@@ -8,7 +8,7 @@
 namespace Engine {
 
 
-    class E_API ERegister
+    class E_API EDataBase
     {
     public:
         using Entity = u64;
@@ -22,8 +22,8 @@ namespace Engine {
         EVector<Entity>     fAliveEntites;
         EVector<Entity>     fDeadEntites;
     public:
-        ERegister(const EString& name = "Unknown");
-        ~ERegister();
+        EDataBase(const EString& name = "Unknown");
+        ~EDataBase();
         
         EResourceManager& GetResourceManager();
 
@@ -86,22 +86,22 @@ namespace Engine {
 
     
     E_STORAGE_STRUCT(EntityCreateEvent,
-        (ERegister::Entity, Handle)
+        (EDataBase::Entity, Handle)
     )
 
     E_STORAGE_STRUCT(ComponentCreateEvent, 
         (EValueDescription::t_ID, ValueId),
-        (ERegister::Entity, Handle)
+        (EDataBase::Entity, Handle)
     )
 
     E_STORAGE_STRUCT(ComponentDeleteEvent,
         (EValueDescription::t_ID, ValueId),
-        (ERegister::Entity, Handle)
+        (EDataBase::Entity, Handle)
     )
 
     E_STORAGE_STRUCT(ValueChangeEvent,
         (EString, Identifier),
-        (ERegister::Entity, Handle)
+        (EDataBase::Entity, Handle)
     )
 
 
@@ -111,12 +111,12 @@ namespace Engine {
         
 
         struct EComponentChangeEvent {
-            ERegister::Entity Entity;
+            EDataBase::Entity Entity;
             EStructProperty* Property;
         };
 
         struct EComponentDeleteEvent {
-            ERegister::Entity Entity;
+            EDataBase::Entity Entity;
         };
 
     }

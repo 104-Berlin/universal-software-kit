@@ -12,7 +12,7 @@ TEST(ExtensionTest, Basics)
 
 TEST(ExtensionTest, LoadExtension)
 {
-    ERegister* activeScene = new ERegister();
+    EDataBase* activeScene = new EDataBase();
 
     EExtensionManager extensionManager;
     extensionManager.LoadExtension("Example2.uex");
@@ -23,7 +23,7 @@ TEST(ExtensionTest, LoadExtension)
 
     if (electricalDsc.Valid())
     {
-        ERegister::Entity entity = activeScene->CreateEntity();
+        EDataBase::Entity entity = activeScene->CreateEntity();
         activeScene->AddComponent(entity, electricalDsc);
 
         EXPECT_TRUE(activeScene->HasComponent(entity, electricalDsc));

@@ -58,7 +58,7 @@ shared::ESharedError shared::LoadRegisterFromBuffer(ESharedBuffer buffer)
 }
 
 
-shared::ESharedError shared::CreateComponent(const EString& componentId, ERegister::Entity entity) 
+shared::ESharedError shared::CreateComponent(const EString& componentId, EDataBase::Entity entity) 
 {
     EComponentRegisterEntry desc;
     if (!EXTENSION_MANAGER.GetComponentRegister().FindItem(EFindTypeDescByName(componentId), &desc))
@@ -78,7 +78,7 @@ shared::ESharedError shared::CreateComponent(const EString& componentId, ERegist
     return false;
 }
 
-shared::ESharedError shared::CreateComponent(const EValueDescription& componentId, ERegister::Entity entity) 
+shared::ESharedError shared::CreateComponent(const EValueDescription& componentId, EDataBase::Entity entity) 
 {
     if (componentId.GetType() != EValueType::STRUCT)
     {
@@ -89,7 +89,7 @@ shared::ESharedError shared::CreateComponent(const EValueDescription& componentI
     return false;
 }
 
-shared::ESharedError shared::CreateComponent(EStructProperty* componentValue, ERegister::Entity entity)
+shared::ESharedError shared::CreateComponent(EStructProperty* componentValue, EDataBase::Entity entity)
 {
     if (!componentValue)
     {
@@ -107,20 +107,20 @@ shared::ESharedError shared::CreateResource(EResourceData* data)
     return false;
 }
 
-shared::ESharedError  shared::SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString)
+shared::ESharedError  shared::SetValue(EDataBase::Entity entity, const EString& valueIdent, const EString& valueString)
 {
     StaticSharedContext::instance().GetRegisterConnection().Send_SetValue(entity, valueIdent, valueString);
 
     return false;
 }
 
-EVector<ERegister::Entity> shared::GetAllEntites()
+EVector<EDataBase::Entity> shared::GetAllEntites()
 {
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllEntites();
 }
 
 
-ERef<EProperty> shared::GetValueFromIdent(ERegister::Entity entity, const EString& valueIdent) 
+ERef<EProperty> shared::GetValueFromIdent(EDataBase::Entity entity, const EString& valueIdent) 
 {
     ERef<EProperty> result = StaticSharedContext::instance().GetRegisterConnection().Send_GetValue(entity, valueIdent);
     if (!result)
@@ -131,7 +131,7 @@ ERef<EProperty> shared::GetValueFromIdent(ERegister::Entity entity, const EStrin
     return result;
 }
 
-shared::ESharedError shared::SetEnumValue(ERegister::Entity entity, const EString& valueIdent, u32 value)
+shared::ESharedError shared::SetEnumValue(EDataBase::Entity entity, const EString& valueIdent, u32 value)
 {
     EJson valueJson = EJson::object();
     valueJson["CurrentValue"] = value;
@@ -142,13 +142,13 @@ shared::ESharedError shared::SetEnumValue(ERegister::Entity entity, const EStrin
 }
 
 
-shared::ESharedError shared::AddArrayEntry(ERegister::Entity entity, const EString& ident) 
+shared::ESharedError shared::AddArrayEntry(EDataBase::Entity entity, const EString& ident) 
 {
     StaticSharedContext::instance().GetRegisterConnection().Send_AddArrayEntry(entity, ident);
     return false;
 }
 
-EVector<ERef<EProperty>> shared::GetAllComponents(ERegister::Entity entity) 
+EVector<ERef<EProperty>> shared::GetAllComponents(EDataBase::Entity entity) 
 {
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllValues(entity);
 }

@@ -8,11 +8,11 @@ static EValueDescription dsc = EValueDescription::CreateStruct("SomeStruct", {{"
 
 TEST(SceneDelete, DeletingAScene)
 {
-    ERegister* scene = new ERegister();
-    //scene->AddComponentCreateEventListener(dsc, [](ERegister::Entity entity){});
+    EDataBase* scene = new EDataBase();
+    //scene->AddComponentCreateEventListener(dsc, [](EDataBase::Entity entity){});
 
     delete scene;
-    scene = new ERegister();
+    scene = new EDataBase();
 
     delete scene;
 }

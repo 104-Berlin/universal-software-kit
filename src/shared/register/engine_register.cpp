@@ -7,7 +7,7 @@ using namespace Engine;
 
 
 
-ERegister::ERegister(const EString& name) 
+EDataBase::EDataBase(const EString& name) 
     : fName(name)
 {
     fResourceManager.GetEventDispatcher().ConnectAll([this](EProperty* prop){
@@ -15,7 +15,7 @@ ERegister::ERegister(const EString& name)
     });
 }
 
-Engine::ERegister::~ERegister() 
+Engine::EDataBase::~EDataBase() 
 {
     for (auto& entry : fComponentStorage)
     {
@@ -28,12 +28,12 @@ Engine::ERegister::~ERegister()
 }
 
 
-EResourceManager& ERegister::GetResourceManager() 
+EResourceManager& EDataBase::GetResourceManager() 
 {
     return fResourceManager;
 }
 
-ERegister::Entity ERegister::CreateEntity() 
+EDataBase::Entity EDataBase::CreateEntity() 
 {
     static Entity currentEntity = 1;
     
@@ -53,7 +53,7 @@ ERegister::Entity ERegister::CreateEntity()
     return newEntity;
 }
 
-void ERegister::DestroyEntity(Entity entity) 
+void EDataBase::DestroyEntity(Entity entity) 
 {
     EVector<Entity>::iterator it = std::find(fAliveEntites.begin(), fAliveEntites.end(), entity);
     if (it == fAliveEntites.end())
@@ -70,12 +70,12 @@ void ERegister::DestroyEntity(Entity entity)
     fDeadEntites.push_back(entity);
 }
 
-EVector<ERegister::Entity> ERegister::GetAllEntities() const
+EVector<EDataBase::Entity> EDataBase::GetAllEntities() const
 {
     return fAliveEntites;
 }
 
-void ERegister::Clear() 
+void EDataBase::Clear() 
 {
     for (auto& entry : fComponentStorage)
     {
@@ -90,12 +90,12 @@ void ERegister::Clear()
     fDeadEntites.clear();
 }
 
-bool ERegister::IsAlive(Entity entity) 
+bool EDataBase::IsAlive(Entity entity) 
 {
     return std::find(fAliveEntites.begin(), fAliveEntites.end(), entity) != fAliveEntites.end();
 }
 
-EStructProperty* ERegister::AddComponent(Entity entity, const EValueDescription& description) 
+EStructProperty* EDataBase::AddComponent(Entity entity, const EValueDescription& description) 
 {
     E_ASSERT_M(description.Valid(), "ERROR: Invalid value descrition!");
     E_ASSERT_M(description.GetType() == EValueType::STRUCT, "Component can only be inserted as struct");
@@ -116,7 +116,7 @@ EStructProperty* ERegister::AddComponent(Entity entity, const EValueDescription&
     return nullptr;
 }
 
-void ERegister::RemoveComponent(Entity entity, const EValueDescription& componentId)
+void EDataBase::RemoveComponent(Entity entity, const EValueDescription& componentId)
 {
     E_ASSERT_M(componentId.Valid(), "ERROR: Invalid value descrition!");
     if (!IsAlive(entity)) { return; }
@@ -128,24 +128,24 @@ void ERegister::RemoveComponent(Entity entity, const EValueDescription& componen
     fEventDispatcher.Enqueue<ComponentDeleteEvent>({componentId.GetId(), entity});
 }
 
-bool ERegister::HasComponent(Entity entity, const EValueDescription& componentId) 
+bool EDataBase::HasComponent(Entity entity, const EValueDescription& componentId) 
 {
     E_ASSERT_M(componentId.Valid(), "ERROR: Invalid value descrition!");
     return HasComponent(entity, componentId.GetId());
 }
 
-bool Engine::ERegister::HasComponent(Entity entity, const EValueDescription::t_ID& componentId) 
+bool Engine::EDataBase::HasComponent(Entity entity, const EValueDescription::t_ID& componentId) 
 {
     return fComponentStorage[componentId].find(entity) != fComponentStorage[componentId].end();
 }
 
-EStructProperty* ERegister::GetComponent(Entity entity, const EValueDescription& componentId) 
+EStructProperty* EDataBase::GetComponent(Entity entity, const EValueDescription& componentId) 
 {
     E_ASSERT_M(componentId.Valid(), "ERROR: Invalid value descrition!");
     return GetComponent(entity, componentId.GetId());
 }
 
-EStructProperty* ERegister::GetComponent(Entity entity, const EValueDescription::t_ID& componentId) 
+EStructProperty* EDataBase::GetComponent(Entity entity, const EValueDescription::t_ID& componentId) 
 {
     if (!IsAlive(entity)) { return nullptr; }
     if (!HasComponent(entity, componentId)) { return nullptr; }
@@ -153,27 +153,27 @@ EStructProperty* ERegister::GetComponent(Entity entity, const EValueDescription:
     return fComponentStorage[componentId][entity];
 }
 
-void Engine::ERegister::DisconnectEvents() 
+void Engine::EDataBase::DisconnectEvents() 
 {
     fEventDispatcher.DisconnectEvents();
 }
 
-void Engine::ERegister::WaitForEvent() 
+void Engine::EDataBase::WaitForEvent() 
 {
     fEventDispatcher.WaitForEvent();
 }
 
-EEventDispatcher& Engine::ERegister::GetEventDispatcher()
+EEventDispatcher& Engine::EDataBase::GetEventDispatcher()
 {
     return fEventDispatcher;
 }
 
-void Engine::ERegister::UpdateEvents() 
+void Engine::EDataBase::UpdateEvents() 
 {
     fEventDispatcher.Update();
 }
 
-EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identifier) 
+EProperty* EDataBase::GetValueByIdentifier(Entity entity, const EString& identifier) 
 {
     EVector<EString> identList;
     size_t start = 0;
@@ -194,7 +194,7 @@ EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identif
     return currentProp->GetPropertyByIdentifier(identifier.substr(identList[0].length() + 1));
 }
 
-EVector<EStructProperty*> ERegister::GetAllComponents(Entity entity) 
+EVector<EStructProperty*> EDataBase::GetAllComponents(Entity entity) 
 {
     EVector<EStructProperty*> result;
     for (auto& entry : fComponentStorage)
@@ -207,7 +207,7 @@ EVector<EStructProperty*> ERegister::GetAllComponents(Entity entity)
     return result;
 }
 
-EUnorderedMap<ERegister::Entity, EStructProperty*>& ERegister::View(const EValueDescription& description) 
+EUnorderedMap<EDataBase::Entity, EStructProperty*>& EDataBase::View(const EValueDescription& description) 
 {
     return fComponentStorage[description.GetId()];
 }

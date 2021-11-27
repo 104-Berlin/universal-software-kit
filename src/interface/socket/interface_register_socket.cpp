@@ -29,7 +29,7 @@ void ERegisterSocket::Connection::SendPacket(const ERegisterPacket& packet)
 
 
 ERegisterSocket::ERegisterSocket(int port) 
-    : fPort(port), fSocketId(-1), fAddressInfo(nullptr), fLoadedRegister(new ERegister())
+    : fPort(port), fSocketId(-1), fAddressInfo(nullptr), fLoadedRegister(new EDataBase())
 {
     Init();
 }
@@ -52,7 +52,7 @@ void ERegisterSocket::Init()
     {
         delete fLoadedRegister;
     }
-    fLoadedRegister = new ERegister();
+    fLoadedRegister = new EDataBase();
 
     fLoadedRegister->CatchAllEvents([this](EStructProperty* data){
         HandleRegisterEvent(data);
@@ -315,7 +315,7 @@ void ERegisterSocket::HandleRegisterEvent(EStructProperty* data)
 
 EJson ERegisterSocket::Pk_HandleCreateEntity(const ERegisterPacket& packet) 
 {
-    ERegister::Entity entity = fLoadedRegister->CreateEntity();
+    EDataBase::Entity entity = fLoadedRegister->CreateEntity();
     E_ERROR("CREATE ENTITY " + std::to_string(entity));
     return EJson::object();
 }
@@ -327,7 +327,7 @@ EJson ERegisterSocket::Pk_HandleCreateComponent(const ERegisterPacket& packet)
     {
         if (packet.Body["Entity"].is_number_integer())
         {
-            ERegister::Entity entity = (ERegister::Entity) packet.Body["Entity"].get<int>();
+            EDataBase::Entity entity = (EDataBase::Entity) packet.Body["Entity"].get<int>();
             EStructProperty* property = fLoadedRegister->AddComponent(entity, initValue->GetDescription());
             if (property)
             {
@@ -363,7 +363,7 @@ EJson ERegisterSocket::Pk_HandleSetValue(const ERegisterPacket& packet)
 {
     if (packet.Body["Entity"].is_number_integer() && packet.Body["ValueIdent"].is_string() && packet.Body["Value"].is_string())
     {
-        ERegister::Entity entity = packet.Body["Entity"].get<int>();
+        EDataBase::Entity entity = packet.Body["Entity"].get<int>();
         EString valueIdent = packet.Body["ValueIdent"].get<EString>();
         EString value = packet.Body["Value"].get<EString>();
 
@@ -385,7 +385,7 @@ EJson ERegisterSocket::Pk_HandleAddArrayEntry(const ERegisterPacket& packet)
 {
     if (packet.Body["Entity"].is_number_integer() && packet.Body["ValueIdent"].is_string())
     {
-        ERegister::Entity entity = packet.Body["Entity"].get<int>();
+        EDataBase::Entity entity = packet.Body["Entity"].get<int>();
         EString valueIdent = packet.Body["ValueIdent"].get<EString>();
         EProperty* foundProperty = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
         if (!foundProperty || foundProperty->GetDescription().GetType() != EValueType::ARRAY)
@@ -404,7 +404,7 @@ EJson ERegisterSocket::Pk_HandleGetValue(const ERegisterPacket& packet)
     EJson result = EJson::object();
     if (packet.Body["Entity"].is_number_integer() && packet.Body["ValueIdent"].is_string())
     {
-        ERegister::Entity entity = packet.Body["Entity"].get<int>();
+        EDataBase::Entity entity = packet.Body["Entity"].get<int>();
         EString valueIdent = packet.Body["ValueIdent"].get<EString>();
         EProperty* foundValue = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
 
@@ -441,7 +441,7 @@ EJson ERegisterSocket::Pk_HandleGetAllValues(const ERegisterPacket& packet)
     EJson result = EJson::object();
     if (packet.Body["Entity"].is_number_integer())
     {
-        ERegister::Entity entity = packet.Body["Entity"].get<int>();
+        EDataBase::Entity entity = packet.Body["Entity"].get<int>();
         EJson propertyArrayJson = EJson::array();
         EVector<EStructProperty*> properties = fLoadedRegister->GetAllComponents(entity);
         for (EStructProperty* property : properties)
@@ -509,7 +509,7 @@ EJson ERegisterSocket::Pk_HandleGetAllEntites(const ERegisterPacket& packet)
 {
     EJson result = EJson::array();
 
-    for (ERegister::Entity entity : fLoadedRegister->GetAllEntities())
+    for (EDataBase::Entity entity : fLoadedRegister->GetAllEntities())
     {
         result.push_back(entity);
     }

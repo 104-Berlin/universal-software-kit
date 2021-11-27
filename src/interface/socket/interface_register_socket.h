@@ -27,7 +27,7 @@ namespace Engine {
             std::mutex      SendMutex;
         };
     private:
-        ERegister*          fLoadedRegister; // The register to get and set data
+        EDataBase*          fLoadedRegister; // The register to get and set data
 
 
         int                 fSocketId; // The running socket

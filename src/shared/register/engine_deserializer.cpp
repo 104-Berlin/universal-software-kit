@@ -61,7 +61,7 @@ bool EDeserializer::ReadStorageDescriptionFromJson(const EJson& json, EValueDesc
     return true;
 }
 
-bool EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene) 
+bool EDeserializer::ReadSceneFromJson(const EJson& json, EDataBase* saveToScene) 
 {
     saveToScene->Clear();
     if (!json["ValueTypes"].is_array()) { E_ERROR("Reading Register from json. No found storage types!"); return false; }
@@ -83,7 +83,7 @@ bool EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene)
     {
         for (const EJson& entityObject : json["Objects"])
         {
-            ERegister::Entity entity = saveToScene->CreateEntity();
+            EDataBase::Entity entity = saveToScene->CreateEntity();
             for (const auto& it : entityObject.items())
             {
                 EString id = it.key();
@@ -276,7 +276,7 @@ bool EDeserializer::ReadResourceFromJson(const EJson& json, EResourceData* resDa
     return false;
 }
 
-bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene) 
+bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, EDataBase* saveToScene) 
 {
     EFileCollection fileCollection;
     fileCollection.SetFromCompleteBuffer(buffer);

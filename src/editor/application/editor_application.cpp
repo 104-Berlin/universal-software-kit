@@ -313,7 +313,7 @@ void EApplication::RegisterDefaultResources()
 
 void EApplication::RegisterDefaultComponentRender() 
 {
-    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, ERegister::Entity entity, const EString& nameIdent)->ERef<EUIField>{
+    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, EDataBase::Entity entity, const EString& nameIdent)->ERef<EUIField>{
         EResourceLink link;
         if (convert::getter(prop, &link))
         {

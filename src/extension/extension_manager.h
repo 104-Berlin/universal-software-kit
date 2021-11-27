@@ -41,7 +41,7 @@ namespace events {
     {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
-        EComponentRegister                       fTypeRegister;
+        EComponentRegister                  fTypeRegister;
         EResourceRegister                   fResourceRegister;
         EEventDispatcher                    fEventDispatcher;
     public:

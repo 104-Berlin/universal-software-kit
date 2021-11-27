@@ -46,10 +46,10 @@ namespace Engine {
         class E_INTER_API StaticSharedContext
         {
         private:
-            EExtensionManager               fExtensionManager;
-            ERegisterConnection             fRegisterConnection;
-            ERegisterSocket*                fRegisterSocket;
-            ERegisterEventDispatcher        fRegisterEventDispatcher;
+            EExtensionManager               fExtensionManager;   // Loaded extensions, e.G. Components, ResourceTypes, etc.
+            ERegisterConnection             fRegisterConnection; // Client communication with Register
+            ERegisterSocket*                fRegisterSocket;     // Register Provider / Server (Entities and Data)
+            ERegisterEventDispatcher        fRegisterEventDispatcher; // Event Dispatcher for Register. All events the register provides are dispatched here.
         public:
             StaticSharedContext();
             ~StaticSharedContext();
@@ -98,12 +98,12 @@ namespace Engine {
 
         ESharedError E_INTER_API LoadRegisterFromBuffer(ESharedBuffer buffer);
         
-        ESharedError E_INTER_API CreateComponent(const EString& componentId, ERegister::Entity entity);
-        ESharedError E_INTER_API CreateComponent(const EValueDescription& componentId, ERegister::Entity entity);
-        ESharedError E_INTER_API CreateComponent(EStructProperty* componentValue, ERegister::Entity entity);
+        ESharedError E_INTER_API CreateComponent(const EString& componentId, EDataBase::Entity entity);
+        ESharedError E_INTER_API CreateComponent(const EValueDescription& componentId, EDataBase::Entity entity);
+        ESharedError E_INTER_API CreateComponent(EStructProperty* componentValue, EDataBase::Entity entity);
 
         template <typename T>
-        ESharedError CreateComponent(ERegister::Entity entity)
+        ESharedError CreateComponent(EDataBase::Entity entity)
         {
             return CreateComponent(getdsc::GetDescription<T>(), entity);
         }
@@ -111,10 +111,10 @@ namespace Engine {
 
         ESharedError E_INTER_API CreateResource(EResourceData* data);
 
-        ESharedError E_INTER_API SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString);
+        ESharedError E_INTER_API SetValue(EDataBase::Entity entity, const EString& valueIdent, const EString& valueString);
 
         template <typename T>
-        ESharedError SetValue(ERegister::Entity entity, const EString& valueIdent, const T& value)
+        ESharedError SetValue(EDataBase::Entity entity, const EString& valueIdent, const T& value)
         {
             EValueDescription dsc = getdsc::GetDescription<T>();
             if (dsc.Valid())
@@ -127,17 +127,17 @@ namespace Engine {
             return false;
         }
 
-        ESharedError E_INTER_API SetEnumValue(ERegister::Entity entity, const EString& valueIdent, u32 value);
-        ESharedError E_INTER_API AddArrayEntry(ERegister::Entity entity, const EString& ident);
+        ESharedError E_INTER_API SetEnumValue(EDataBase::Entity entity, const EString& valueIdent, u32 value);
+        ESharedError E_INTER_API AddArrayEntry(EDataBase::Entity entity, const EString& ident);
 
 
         // Getter
-        E_INTER_API EVector<ERegister::Entity> GetAllEntites();
+        E_INTER_API EVector<EDataBase::Entity> GetAllEntites();
         
-        E_INTER_API ERef<EProperty> GetValueFromIdent(ERegister::Entity entity, const EString& vlaueIdent);
+        E_INTER_API ERef<EProperty> GetValueFromIdent(EDataBase::Entity entity, const EString& vlaueIdent);
 
         template <typename T>
-        bool GetValue(ERegister::Entity entity, T* value)
+        bool GetValue(EDataBase::Entity entity, T* value)
         {
             EValueDescription dsc = getdsc::GetDescription<T>();
             if (dsc.Valid())
@@ -154,7 +154,7 @@ namespace Engine {
             return false;
         }
 
-       E_INTER_API EVector<ERef<EProperty>> GetAllComponents(ERegister::Entity entity);
+       E_INTER_API EVector<ERef<EProperty>> GetAllComponents(EDataBase::Entity entity);
        E_INTER_API ERef<EResourceData> GetResource(EResourceData::t_ID id);
        E_INTER_API EVector<ERef<EResourceData>> GetLoadedResource(const EString& resourceType = ""); // This wont return the data of the resource. Fetch them manuel
        E_INTER_API ESharedBuffer GetRegisterAsBuffer();

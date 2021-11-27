@@ -5,10 +5,10 @@ namespace Editor {
     class EObjectView : public Engine::EUIField
     {
     private:
-        Engine::ERegister::Entity           fSelectedEntity;
+        Engine::EDataBase::Entity           fSelectedEntity;
         EWeakRef<Engine::EUITable>          fEntitiesTable;
         EWeakRef<Engine::EUIContainer>      fComponentsView;
-        EUnorderedMap<Engine::ERegister::Entity, EWeakRef<Engine::EUITableRow>> fEntityRows;
+        EUnorderedMap<Engine::EDataBase::Entity, EWeakRef<Engine::EUITableRow>> fEntityRows;
 
         Engine::EUIValueRegister* fUIValueRegister;
     public:

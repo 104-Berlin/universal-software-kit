@@ -77,7 +77,7 @@ TEST(RegisterTest, Basics)
 		.AddStructField("Enum", someEnum)
 		.AddStructField("VectorArray", vectorList);
 	
-	ERegister scene;
+	EDataBase scene;
 
 	bool componentCreated = false;
 	scene.GetEventDispatcher().Connect<ComponentCreateEvent>([&componentCreated, myTestComponent](ComponentCreateEvent event){
@@ -87,7 +87,7 @@ TEST(RegisterTest, Basics)
 		}
 	});
 
-	ERegister::Entity entity = scene.CreateEntity();
+	EDataBase::Entity entity = scene.CreateEntity();
 	EXPECT_FALSE(componentCreated);
 	scene.AddComponent(entity, myTestComponent);
 	scene.UpdateEvents();

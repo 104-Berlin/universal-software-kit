@@ -23,7 +23,7 @@ TEST(Interface, CheckStartup)
     // Create component
     shared::CreateEntity();
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    EVector<ERegister::Entity> entites = shared::GetAllEntites();
+    EVector<EDataBase::Entity> entites = shared::GetAllEntites();
     EXPECT_EQ(entites.size(), 1);
     shared::CreateComponent(SomeTestType::_dsc, entites[0]);
 
