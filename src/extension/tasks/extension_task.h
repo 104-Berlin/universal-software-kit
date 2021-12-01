@@ -22,7 +22,7 @@ namespace Engine {
         EValueDescription fOutputDescription;
     public:
         EBaseTask(const EString& name, u16 type, bool hasInput = false, bool hasOutput = false);
-        ~EBaseTask();
+        virtual ~EBaseTask();
 
         EStructProperty* Execute(EStructProperty* inValue);
         virtual EStructProperty* OnExecute(EStructProperty* inValue) = 0;
