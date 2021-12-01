@@ -86,18 +86,23 @@ void EUIField::Render()
     }
     ImGui::PushID(fID);
 
-    if (OnRender())
+    bool renderResult = true;
+
+    if (renderResult = OnRender())
     {
         for (ERef<EUIField> uiField : fChildren)
         {
-            OnBeforeChildRender(uiField);
-            uiField->Render();
-            OnAfterChildRender();
+            bool beforeChildResult = OnBeforeChildRender(uiField);
+            if (beforeChildResult)
+            {
+                uiField->Render();
+            }
+            OnAfterChildRender(beforeChildResult);
         }
     }
     
     HandleRenderEndBefore();
-    OnRenderEnd();
+    OnRenderEnd(renderResult);
     HandleRenderEnd();
     ImGui::PopID();
 }
@@ -226,7 +231,7 @@ void EUIField::HandleRenderEnd()
     }    
 }
 
-void EUIField::OnRenderEnd() 
+void EUIField::OnRenderEnd(bool renderResult) 
 {
     
 }
@@ -394,7 +399,7 @@ bool EUIPanel::OnRender()
     return fOpen;
 }
 
-void EUIPanel::OnRenderEnd() 
+void EUIPanel::OnRenderEnd(bool renderResult) 
 {
     if (fOpen || fWasJustClosed)
     {
@@ -602,12 +607,12 @@ EUIMainMenuBar::EUIMainMenuBar()
 
 bool EUIMainMenuBar::OnRender() 
 {
-    return fOpen = ImGui::BeginMainMenuBar();
+    return ImGui::BeginMainMenuBar();
 }
 
-void EUIMainMenuBar::OnRenderEnd() 
+void EUIMainMenuBar::OnRenderEnd(bool renderResult) 
 {
-    if (fOpen)
+    if (renderResult)
     {
         ImGui::EndMainMenuBar();
     }
@@ -617,19 +622,19 @@ void EUIMainMenuBar::OnRenderEnd()
 // ----------------------------------------
 // Menu
 EUIMenu::EUIMenu(const EString& displayName) 
-    : EUIField(displayName), fOpen(false)
+    : EUIField(displayName)
 {
     
 }
 
 bool EUIMenu::OnRender() 
 {
-    return fOpen = ImGui::BeginMenu(GetLabel().c_str());
+    return ImGui::BeginMenu(GetLabel().c_str());
 }
 
-void EUIMenu::OnRenderEnd() 
+void EUIMenu::OnRenderEnd(bool renderResult) 
 {
-    if (fOpen)
+    if (renderResult)
     {
         ImGui::EndMenu();
     }
@@ -640,19 +645,19 @@ void EUIMenu::OnRenderEnd()
 // ----------------------------------------
 // Context Menu
 EUIContextMenu::EUIContextMenu(const EString& displayName) 
-    : EUIField(displayName), fOpen(false)
+    : EUIField(displayName)
 {
     
 }
 
 bool EUIContextMenu::OnRender() 
 {
-    return fOpen = ImGui::BeginPopupContextWindow();
+    return ImGui::BeginPopupContextWindow();
 }
 
-void EUIContextMenu::OnRenderEnd() 
+void EUIContextMenu::OnRenderEnd(bool renderResult) 
 {
-    if (fOpen)
+    if (renderResult)
     {
         ImGui::EndPopup();
     }
@@ -712,7 +717,6 @@ EUIModal::EUIModal(const EString& title)
     : EUIField(title)
 {
     fOpen = false;
-    fEndPopup = false;
     fPopupShouldOpen = false;
     SetWidth(300);
 }
@@ -727,13 +731,12 @@ bool EUIModal::OnRender()
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
-    fEndPopup = ImGui::BeginPopupModal(GetLabel().c_str(), &fOpen, ImGuiWindowFlags_AlwaysAutoResize);
-    return fEndPopup;
+    return ImGui::BeginPopupModal(GetLabel().c_str(), &fOpen, ImGuiWindowFlags_AlwaysAutoResize);
 }
 
-void EUIModal::OnRenderEnd() 
+void EUIModal::OnRenderEnd(bool renderResult) 
 {
-    if (fEndPopup)
+    if (renderResult)
     {
         ImGui::EndPopup();
     }
@@ -762,7 +765,7 @@ bool EUIContainer::OnRender()
     return true;
 }
 
-void EUIContainer::OnRenderEnd() 
+void EUIContainer::OnRenderEnd(bool renderResult) 
 {
     ImGui::EndChild();
 }
@@ -889,15 +892,15 @@ EUITable::EUITable(const EString& name)
 
 bool EUITable::OnRender() 
 {
-    if (fHeaderCells.size() == 0) { return fEndTable = false; }
+    if (fHeaderCells.size() == 0) { return false; }
     static ImGuiTableFlags flags = ImGuiTableFlags_Resizable;
     //ImGui::CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
     //ImGui::CheckboxFlags("ImGuiTableFlags_Reorderable", &flags, ImGuiTableFlags_Reorderable);
     //ImGui::CheckboxFlags("ImGuiTableFlags_Hideable", &flags, ImGuiTableFlags_Hideable);
     //ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &flags, ImGuiTableFlags_NoBordersInBody);
     //ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBodyUntilResize", &flags, ImGuiTableFlags_NoBordersInBodyUntilResize);
-
-    if ((fEndTable = ImGui::BeginTable(GetLabel().c_str(), fHeaderCells.size(), flags)))
+    bool endTable = ImGui::BeginTable(GetLabel().c_str(), fHeaderCells.size(), flags);
+    if (endTable)
     {
         for (const EString& header : fHeaderCells)
         {
@@ -905,12 +908,12 @@ bool EUITable::OnRender()
         }
         ImGui::TableHeadersRow();
     }
-    return fEndTable;
+    return endTable;
 }
 
-void EUITable::OnRenderEnd() 
+void EUITable::OnRenderEnd(bool renderResult) 
 {
-    if (fEndTable)
+    if (renderResult)
     {
         ImGui::EndTable();
     }
@@ -927,9 +930,10 @@ EUITableRow::EUITableRow()
     
 }
 
-void EUITableRow::OnBeforeChildRender(EWeakRef<EUIField> child) 
+bool EUITableRow::OnBeforeChildRender(EWeakRef<EUIField> child) 
 {
     ImGui::TableSetColumnIndex(fCurrentTableIndex++);
+    return true;
 }
 
 bool EUITableRow::OnRender() 
@@ -977,7 +981,7 @@ bool EUIGrid::OnRender()
     return true;
 }
 
-void EUIGrid::OnBeforeChildRender(EWeakRef<EUIField> child)
+bool EUIGrid::OnBeforeChildRender(EWeakRef<EUIField> child)
 {
     if (!child.expired())
     {
@@ -995,13 +999,10 @@ void EUIGrid::OnBeforeChildRender(EWeakRef<EUIField> child)
     }
     fCurrentChildCount++;
     ImGui::SetNextItemWidth(fCellWidth);
+    return true;
 }
 
-void EUIGrid::OnAfterChildRender()
-{
-}
-
-void EUIGrid::OnRenderEnd()
+void EUIGrid::OnRenderEnd(bool renderResult)
 {
     ImGui::PopStyleVar();
 }
@@ -1118,7 +1119,7 @@ bool EUIGroupPanel::OnRender()
     return true;
 }
 
-void EUIGroupPanel::OnRenderEnd()
+void EUIGroupPanel::OnRenderEnd(bool renderResult)
 {
 
     auto itemSpacing = ImGui::GetStyle().ItemSpacing;
@@ -1194,4 +1195,72 @@ void EUIGroupPanel::OnRenderEnd()
     ImGui::Dummy(ImVec2(0.0f, 0.0f));
 
     ImGui::EndGroup();
+}
+
+
+EUITabView::EUITabView(const EString& label)
+    : EUIField(label)
+{
+    fCurrentTab = 0;
+    fCurrentRenderedTab = 0;
+}
+
+void EUITabView::AddTab(const EString& label, const ERef<EUIField>& tab)
+{
+    fTabs.push_back(label);
+    AddChild(tab);
+}
+
+void EUITabView::SetCurrentTab(size_t index)
+{
+    if (index < fTabs.size())
+    {
+        fCurrentTab = index;
+    }
+    else
+    {
+        fCurrentTab = 0;
+    }
+}
+
+void EUITabView::SetCurrentTab(const EString& tabLabel)
+{
+    for (size_t i = 0; i < fTabs.size(); i++)
+    {
+        if (fTabs[i] == tabLabel)
+        {
+            fCurrentTab = i;
+            return;
+        }
+    }
+
+    fCurrentTab = 0;
+}
+
+bool EUITabView::OnRender()
+{
+    fCurrentRenderedTab = 0;
+    return fEndTabView = ImGui::BeginTabBar(GetLabel().c_str(), ImGuiTabBarFlags_None);
+}
+
+void EUITabView::OnRenderEnd(bool renderResult)
+{
+    if (fEndTabView)
+    {
+        ImGui::EndTabBar();
+    }
+}
+
+bool EUITabView::OnBeforeChildRender(EWeakRef<EUIField> child)
+{
+    const EString& tabLabel = fTabs[fCurrentRenderedTab++];
+    return ImGui::BeginTabItem(tabLabel.c_str());
+}
+
+void EUITabView::OnAfterChildRender(bool beforeResult)
+{
+    if (beforeResult)
+    {
+        ImGui::EndTabItem();
+    }
 }

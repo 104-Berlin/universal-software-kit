@@ -196,6 +196,9 @@ namespace Engine {
                 fRegisterEventDispatcher.Post_P(property->GetDescription(), property);
             });
 
+            fExtensionManager.GetTaskRegister().RegisterItem("Core", new ECFuncTask("CreateObject", [](){
+                CreateEntity();
+            }));
 
             // For now we create local socket
             fRegisterSocket = new ERegisterSocket(1420);
@@ -250,6 +253,18 @@ namespace Engine {
         {
             // Restart the connection
             fRegisterConnection.CleanUp();
+
+            if (address.length() == 0)
+            {
+                E_ERROR("No address to connect to!");
+                if (fRegisterSocket)
+                {
+                    delete fRegisterSocket;
+                    fRegisterSocket = nullptr;
+                }
+                fRegisterConnection.Init();
+                return;
+            }
 
             EVector<EString> addressStrings = EStringUtil::SplitString(address, ":");
             EString connectToAddress = addressStrings[0];

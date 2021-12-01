@@ -147,6 +147,8 @@ namespace Engine {
         }
     };
 
+    typedef EExtensionRegister<EBaseTask*> ETaskRegister;
+
 
     struct EComponentRegisterEntry
     {

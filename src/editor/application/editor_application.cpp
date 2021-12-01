@@ -286,6 +286,10 @@ void EApplication::RegisterDefaultPanels()
     ERef<EUIPanel> universalSceneView4 = EMakeRef<EUIPanel>("Basic Scene View 4");
     universalSceneView4->AddChild(EMakeRef<EObjectView>(&fUIValueRegister));
 
+
+    ERef<EUIPanel> registerPanel = EMakeRef<EUIPanel>("Register Panel");
+    registerPanel->AddChild(EMakeRef<EBasicRegisterView>());
+
     fUIRegister.RegisterItem("Core", universalSceneView1);
     fUIRegister.RegisterItem("Core", universalSceneView2);
     fUIRegister.RegisterItem("Core", universalSceneView3);
@@ -293,6 +297,7 @@ void EApplication::RegisterDefaultPanels()
     fUIRegister.RegisterItem("Core", resourcePanel);
     fUIRegister.RegisterItem("Core", extensionPanel);
     fUIRegister.RegisterItem("Core", connectionStatePanel);
+    fUIRegister.RegisterItem("Core", registerPanel);
 }
 
 void EApplication::RegisterDefaultResources() 

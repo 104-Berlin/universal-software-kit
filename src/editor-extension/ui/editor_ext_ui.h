@@ -224,20 +224,23 @@ namespace events {
         /**
          * Virtual function to end the rendering
          * This can be usefull in some cases
+         * @param renderResult the result of the OnRender call of this item
          */
-        virtual void OnRenderEnd();
+        virtual void OnRenderEnd(bool renderResult);
 
         /**
          * @brief called before child is rendered
          * @param child The child that will be rendered next
+         * @return Wether the child should be rendered or not
          */
-        virtual void OnBeforeChildRender(EWeakRef<EUIField> child) {}
+        virtual bool OnBeforeChildRender(EWeakRef<EUIField> child) { return true; }
 
 
         /**
          * @brief called after child is rendered
+         * @param beforeChildResult The result of the OnBeforeChildRender call
          */
-        virtual void OnAfterChildRender() {}
+        virtual void OnAfterChildRender(bool beforeChildResult) {}
 
         /**
          * This calls all registered event listener and clear the event loop
@@ -395,7 +398,7 @@ namespace events {
         EUIPanel(const EString& title);
 
         virtual bool OnRender() override;
-        virtual void OnRenderEnd() override;
+        virtual void OnRenderEnd(bool renderResult) override;
         virtual void OnUpdateEventDispatcher() override;
 
         /**
@@ -549,36 +552,30 @@ namespace events
 
     class E_EDEXAPI EUIMainMenuBar : public EUIField
     {
-    private:
-        bool fOpen;
     public:
         EUIMainMenuBar();
 
         virtual bool OnRender() override;
-        virtual void OnRenderEnd() override;
+        virtual void OnRenderEnd(bool renderResult) override;
         
     };
 
     class E_EDEXAPI EUIMenu : public EUIField
     {
-    private:
-        bool    fOpen;
     public:
         EUIMenu(const EString& displayName = "MenuBar");
 
         virtual bool OnRender() override;
-        virtual void OnRenderEnd() override;
+        virtual void OnRenderEnd(bool renderResult) override;
     };
 
     class E_EDEXAPI EUIContextMenu : public EUIField
     {
-    private:
-        bool        fOpen;
     public:
         EUIContextMenu(const EString& displayName = "ContextMenu");
 
         virtual bool OnRender() override;
-        virtual void OnRenderEnd() override;
+        virtual void OnRenderEnd(bool renerResult) override;
     };
 
     class E_EDEXAPI EUIMenuItem : public EUIField
@@ -608,13 +605,12 @@ namespace events
     {
     private:
         bool fOpen;
-        bool fEndPopup;
         bool fPopupShouldOpen;
     public:
         EUIModal(const EString& title);
 
         virtual bool OnRender() override;
-        virtual void OnRenderEnd() override;
+        virtual void OnRenderEnd(bool renderResult) override;
 
         void Open();
         void Close();
@@ -626,7 +622,7 @@ namespace events
         EUIContainer(const EString& name = "CONTAINER");
 
         virtual bool OnRender() override;
-        virtual void OnRenderEnd() override;
+        virtual void OnRenderEnd(bool renderResult) override;
     };
 
 
@@ -682,13 +678,12 @@ namespace events
     class E_EDEXAPI EUITable : public EUIField
     {
     private:
-        bool fEndTable; // For ImGui
         EVector<EString> fHeaderCells;
     public:
         EUITable(const EString& name = "Table");
 
         virtual bool OnRender() override;
-        virtual void OnRenderEnd() override;
+        virtual void OnRenderEnd(bool renderResult) override;
 
         void SetHeaderCells(const EVector<EString>& headerCells);
     };
@@ -700,7 +695,7 @@ namespace events
     public:
         EUITableRow();
 
-        virtual void OnBeforeChildRender(EWeakRef<EUIField> child) override;
+        virtual bool OnBeforeChildRender(EWeakRef<EUIField> child) override;
         virtual bool OnRender() override;
     };
 
@@ -721,9 +716,8 @@ namespace events
         void SetCellHeight(float height);
 
         virtual bool OnRender() override;
-        virtual void OnBeforeChildRender(EWeakRef<EUIField> child) override;
-        virtual void OnAfterChildRender() override;
-        virtual void OnRenderEnd() override;
+        virtual bool OnBeforeChildRender(EWeakRef<EUIField> child) override;
+        virtual void OnRenderEnd(bool renderResult) override;
     };
 
     namespace events {
@@ -773,7 +767,29 @@ namespace events
         EUIGroupPanel(const EString& label);
 
         virtual bool OnRender() override;
-        virtual void OnRenderEnd() override;
+        virtual void OnRenderEnd(bool renderResult) override;
+    };
+
+    class E_EDEXAPI EUITabView : public EUIField
+    {
+    private:
+        bool fEndTabView;
+        size_t fCurrentRenderedTab;
+        size_t fCurrentTab;
+        EVector<EString> fTabs;
+    public:
+        EUITabView(const EString& label = "TabView");
+
+        void AddTab(const EString& label, const ERef<EUIField>& tab);
+        void SetCurrentTab(size_t index);
+        void SetCurrentTab(const EString& tabLabel);
+
+
+        virtual bool OnRender() override;
+        virtual void OnRenderEnd(bool renderResult) override;
+
+        virtual bool OnBeforeChildRender(EWeakRef<EUIField> child) override;
+        virtual void OnAfterChildRender(bool beforeResult) override;
     };
 
 }

@@ -8,21 +8,35 @@ namespace Engine {
     static constexpr u16 ETaskType_EVENT_DRIVEN = BIT(3);
 
 
-    class EBaseTask
+    class E_EXTAPI EBaseTask
     {
     private:
         EString fName;
 
         u16 fType;
+    protected:
+        bool fHasInput;
+        bool fHasOutput;
+
+        EValueDescription fInputDescription;
+        EValueDescription fOutputDescription;
     public:
-        EBaseTask(const EString& name, u16 type);
+        EBaseTask(const EString& name, u16 type, bool hasInput = false, bool hasOutput = false);
         ~EBaseTask();
 
         EStructProperty* Execute(EStructProperty* inValue);
         virtual EStructProperty* OnExecute(EStructProperty* inValue) = 0;
+
+        const EString& GetName() const;
+
+        bool HasInput() const;
+        bool HasOutput() const;
+
+        const EValueDescription& GetInputDescription() const;
+        const EValueDescription& GetOutputDescription() const;
     };
 
-    class ECFuncTask : public EBaseTask
+    class E_EXTAPI ECFuncTask : public EBaseTask
     {
     private:
         using CFunc_NoParam_NoReturn = std::function<void()>;

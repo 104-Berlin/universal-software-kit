@@ -259,6 +259,8 @@ ESharedBuffer ERegisterConnection::Send_GetRegisterBuffer()
 
 void ERegisterConnection::Init() 
 {
+    fConnectionStatus = Status::Disconnected;
+    
     int socketDomain = AF_INET;
     fSocketId = socket(socketDomain, SOCK_STREAM, 0);
     if (fSocketId == -1)

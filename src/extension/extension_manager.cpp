@@ -164,6 +164,16 @@ const EResourceRegister& EExtensionManager::GetResourceRegister() const
     return fResourceRegister;
 }
 
+ETaskRegister& EExtensionManager::GetTaskRegister()
+{
+    return fTaskRegister;
+}
+
+const ETaskRegister& EExtensionManager::GetTaskRegister() const
+{
+    return fTaskRegister;
+}
+
 EEventDispatcher& EExtensionManager::GetEventDispatcher()
 {
     return fEventDispatcher;
