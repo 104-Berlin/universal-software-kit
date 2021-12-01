@@ -14,6 +14,7 @@ EBaseTask::~EBaseTask()
 }
 
 EStructProperty* EBaseTask::Execute(EStructProperty* inValue) 
+
 {
     return OnExecute(inValue);
 }

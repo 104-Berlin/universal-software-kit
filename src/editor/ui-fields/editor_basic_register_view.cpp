@@ -29,7 +29,8 @@ ERef<EUIField> EBasicRegisterView::CreateTaskView()
             taskField->AddChild(EMakeRef<EUILabel>(task->GetName()));
             taskField->AddChild(EMakeRef<EUISameLine>());
             ERef<EUIButton> runButton = EMakeRef<EUIButton>("Run");
-            runButton->AddEventListener<events::EButtonEvent>([task](){
+            EWeakRef<EUIButton> weakRunButton = runButton;
+            runButton->AddEventListener<events::EButtonEvent>([task, weakRunButton](){
                 const EValueDescription& intputDescription = task->GetInputDescription();
                 EStructProperty* input = nullptr;
                 if (task->HasInput() && intputDescription.Valid())
@@ -42,8 +43,12 @@ ERef<EUIField> EBasicRegisterView::CreateTaskView()
                     {
                         input = (EStructProperty*) EProperty::CreateFromDescription("IN", intputDescription);
                     }
+                    weakRunButton.lock()->OpenPopup(EMakeRef<EComponentEdit>());
                 }
-                task->Execute(input);
+                else
+                {
+                    task->Execute(input);
+                }
             });
             taskField->AddChild(runButton);
             weakTaskView.lock()->AddChild(taskField);

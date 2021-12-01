@@ -409,3 +409,4 @@ void EArrayProperty::OnCopy(const EProperty* from)
         }
     }
 }
+

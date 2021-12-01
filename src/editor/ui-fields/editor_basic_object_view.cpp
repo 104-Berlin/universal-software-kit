@@ -382,3 +382,148 @@ void EObjectView::RegenAddComponentMenu()
     });
     fComponentsView.lock()->SetContextMenu(componentContextMenu);
 }
+
+
+/***
+ * 
+ * COMPONENT EDIT
+ * 
+ ****/
+
+EComponentEdit::EComponentEdit()
+    : EUIField("Component Edit")
+{
+    
+}
+
+ERef<EUIField> EComponentEdit::RenderProperty(Engine::EProperty* storage, EString nameIdent) 
+{
+    return nullptr;
+}
+
+ERef<EUIField> EComponentEdit::RenderStruct(Engine::EStructProperty* storage, EString nameIdent) 
+{
+    return nullptr;
+}
+
+ERef<EUIField> EComponentEdit::RenderPrimitive(Engine::EProperty* storage, EString nameIdent) 
+{
+    return nullptr;
+}
+
+ERef<EUIField> EComponentEdit::RenderEnum(Engine::EEnumProperty* storage, EString nameIdent) 
+{
+    return nullptr;
+}
+
+ERef<EUIField> EComponentEdit::RenderArray(Engine::EArrayProperty* storage, EString nameIdent) 
+{
+    ERef<EUIField> field = EMakeRef<EUIField>("Some Label");
+    EWeakRef<EUIField> weakRef = field;
+
+    field->SetDirty();
+    field->SetCustomUpdateFunction([this, weakRef, storage, nameIdent](){
+        EVector<EProperty*> elements = storage->GetElements();
+
+        for (size_t i = 0; i < elements.size(); i++)
+        {
+            EProperty* element = elements[i];
+
+            EWeakRef<EUIField> groupPanel = weakRef.lock()->AddChild(EMakeRef<EUIGroupPanel>(element->GetPropertyName()));
+            groupPanel.lock()->AddChild(RenderProperty(element, nameIdent + "." + std::to_string(i)));
+        }
+
+        EWeakRef<EUIField> addElemButton = weakRef.lock()->AddChild(EMakeRef<EUIButton>("Add Element"));
+        addElemButton.lock()->AddEventListener<events::EButtonEvent>([this, storage](){
+            storage->AddElement();
+        });
+    });
+    return field;
+
+}
+
+ERef<EUIField> EComponentEdit::RenderBool(Engine::EValueProperty<bool>* storage, EString nameIdent) 
+{
+    ERef<EUICheckbox> result = EMakeRef<EUICheckbox>(storage->GetPropertyName().c_str());
+
+    result->SetValue(storage->GetValue());
+
+    result->AddEventListener<events::ECheckboxEvent>([this, nameIdent](events::ECheckboxEvent event){
+        fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
+    });
+    return result;
+}
+
+ERef<EUIField> EComponentEdit::RenderInteger(Engine::EValueProperty<i32>* storage, EString nameIdent) 
+{
+    ERef<EUIIntegerEdit> result = EMakeRef<EUIIntegerEdit>(storage->GetPropertyName().c_str());
+
+    result->SetValue(storage->GetValue());
+
+    result->AddEventListener<events::EIntegerCompleteEvent>([this, nameIdent](events::EIntegerCompleteEvent event){
+        fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
+    });
+
+    return result;
+}
+
+ERef<EUIField> EComponentEdit::RenderInteger(Engine::EValueProperty<u32>* storage, EString nameIdent) 
+{
+    ERef<EUIIntegerEdit> result = EMakeRef<EUIIntegerEdit>(storage->GetPropertyName().c_str());
+
+    result->SetValue(storage->GetValue());
+
+    result->AddEventListener<events::EIntegerCompleteEvent>([this, nameIdent](events::EIntegerCompleteEvent event){
+        fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
+    });
+
+    return result;
+}
+
+ERef<EUIField> EComponentEdit::RenderInteger(Engine::EValueProperty<u64>* storage, EString nameIdent) 
+{
+    ERef<EUIIntegerEdit> result = EMakeRef<EUIIntegerEdit>(storage->GetPropertyName().c_str());
+    result->SetValue(storage->GetValue());
+
+    result->AddEventListener<events::EIntegerCompleteEvent>([this, nameIdent](events::EIntegerCompleteEvent event){
+        fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
+    });
+    return result;
+}
+
+ERef<EUIField> EComponentEdit::RenderDouble(Engine::EValueProperty<double>* storage, EString nameIdent) 
+{
+    ERef<EUIFloatEdit> result = EMakeRef<EUIFloatEdit>(storage->GetPropertyName().c_str());
+
+    result->SetValue(storage->GetValue());
+
+    result->AddEventListener<events::EFloatCompleteEvent>([this, nameIdent](events::EFloatCompleteEvent event){
+        fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
+    });
+
+    return result;
+}
+
+ERef<EUIField> EComponentEdit::RenderDouble(Engine::EValueProperty<float>* storage, EString nameIdent) 
+{
+    ERef<EUIFloatEdit> result = EMakeRef<EUIFloatEdit>(storage->GetPropertyName().c_str());
+
+    result->SetValue(storage->GetValue());
+
+    result->AddEventListener<events::EFloatCompleteEvent>([this, nameIdent](events::EFloatCompleteEvent event){
+        this->fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
+    });
+    return result;
+}
+
+ERef<EUIField> EComponentEdit::RenderString(Engine::EValueProperty<EString>* storage, EString nameIdent) 
+{
+    ERef<EUITextField> result = EMakeRef<EUITextField>(storage->GetPropertyName().c_str());
+    EWeakRef<EUITextField> weakResult = result;
+    result->SetValue(storage->GetValue());
+
+    result->AddEventListener<events::ETextCompleteEvent>([this, nameIdent](events::ETextCompleteEvent event){
+        this->fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
+    });
+    return result;
+}

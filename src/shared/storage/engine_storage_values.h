@@ -45,6 +45,7 @@ namespace Engine {
     class E_API EProperty
     {
         friend class EDataBase;
+        friend class EAny;
         // Function when value changes
         // Contains string to the current property identifier
         using ChangeFunc = std::function<void(EString)>;
@@ -215,7 +216,7 @@ namespace Engine {
                 {
                     outVector.push_back(value);
                     return true;
-                }                        
+                }                  
                 E_ERROR("Getting array property as vector has some type conflicts!");
                 E_ERROR("Trying to get array of " + fDescription.GetId() + " as Vector<" + typeid(T).name() + ">");
 
@@ -330,6 +331,56 @@ namespace Engine {
     protected:
         virtual EProperty* OnClone() override;
         virtual void OnCopy(const EProperty* from) override;
+    };
+
+
+    // The any type. Can be used as basic example for own types
+
+    class E_API EAny
+    {
+    private:
+        ERef<EProperty> fProperty;
+    public:
+        EAny() = default;
+        EAny(const EAny& other) = default;
+        ~EAny() = default;
+
+        EAny& operator=(const EAny& other) = default;
+
+        bool operator==(const EAny& other) const
+        {
+            if (!fProperty || !other.fProperty) { return fProperty == other.fProperty; }
+            return fProperty->GetDescription() == other.fProperty->GetDescription();
+        }
+
+        bool operator!=(const EAny& other) const
+        {
+            return !(*this == other);
+        }
+
+        bool ToProperty(const EAny& value, ::Engine::EProperty* property)
+        {
+            if (property->GetDescription().GetType() == value.fProperty->GetDescription().GetType())
+            {
+                property->Copy(value.fProperty.get());
+                return true;
+            }
+            return false;
+        }
+
+        bool FromProperty(EAny& value, const ::Engine::EProperty* property) const
+        {
+            EValueDescription dsc = property->GetDescription();
+            if (!dsc.Valid())
+            {
+                return false;
+            }
+            value.fProperty = ERef<EProperty>(EProperty::CreateFromDescription(dsc.GetId(), dsc));
+            value.fProperty->Copy(property);
+            return true;
+        }
+
+        
     };
 
 }

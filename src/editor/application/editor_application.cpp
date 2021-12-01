@@ -49,6 +49,7 @@ EApplication::EApplication()
         }
     });
 
+
     shared::ExtensionManager().AddEventListener<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
         for (ERef<EUIPanel> panel : fUIRegister.GetItems(event.ExtensionName))
         {

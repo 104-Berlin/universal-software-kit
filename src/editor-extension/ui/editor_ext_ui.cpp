@@ -154,6 +154,24 @@ void EUIField::HandleRenderEndBefore()
 void EUIField::HandleRenderEnd()
 {
     ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
+    EString popupName = GetLabel() + "_Popup";
+
+    if (fPopupOpen)
+    {
+        ImGui::OpenPopup(popupName.c_str());
+        fPopupOpen = false;
+    }
+
+    if (fCurrentPopup)
+    {
+        if (ImGui::BeginPopup(popupName.c_str()))
+        {
+            fCurrentPopup->Render();
+            ImGui::EndPopup();
+        }
+
+    }
+
 
     fIsContextMenuOpen = false;
     if (fContextMenu)
@@ -253,6 +271,10 @@ void EUIField::UpdateEventDispatcher()
     if (fIsTooltipOpen)
     {
         fToolTip->UpdateEventDispatcher();
+    }
+    if (fCurrentPopup)
+    {
+        fCurrentPopup->UpdateEventDispatcher();
     }
 }
 
@@ -360,6 +382,21 @@ void EUIField::AcceptDrag(const EString& type)
 {
     fAcceptDragType = type;
 }
+
+void EUIField::OpenPopup(const ERef<EUIField>& popup)
+{
+    fCurrentPopup = popup;
+    fPopupOpen = true;
+}
+
+void EUIField::ClosePopup()
+{
+    fPopupOpen = false;
+    fCurrentPopup = nullptr;
+}
+
+
+
 
 EUIPanel::EUIPanel(const EString& title) 
     : EUIField(title), fOpen(true)

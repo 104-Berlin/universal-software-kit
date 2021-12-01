@@ -141,6 +141,16 @@ namespace events {
         ERef<EUIField> fToolTip;
 
         /**
+         * @brief Popup. Will be temporary storaged and gets released when the popup is closed
+         */
+        ERef<EUIField> fCurrentPopup;
+
+        /**
+         * @brief Wether the popup should be closed
+         */
+        bool fPopupOpen;
+
+        /**
          * The drag type of the field.
          * If set to empty string no drag function is applied
          * If set to some string you can drag the field. Use SetDragData() to specify specific data
@@ -359,6 +369,18 @@ namespace events {
          * @param type Thte type of the DragSource. Setted by SetDragType() from anouther UIField
          */
         void AcceptDrag(const EString& type);
+
+        /**
+         * @brief opens the popup
+         * 
+         * @param popup The Popup to open
+         */
+        void OpenPopup(const ERef<EUIField>& popup);
+
+        /**
+         * @brief Closes the popup
+         */
+        void ClosePopup();
 
         /**
          * Adds a listener to specified EventType

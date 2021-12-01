@@ -170,7 +170,10 @@ ESharedBuffer shared::GetRegisterAsBuffer()
 
 
 namespace Engine {
-    
+    E_STORAGE_STRUCT(CreateComponentInput,
+        (EAny, Value),
+        (EDataBase::Entity, Entity)
+    )
     namespace shared {
 
         StaticSharedContext::StaticSharedContext() 
@@ -199,6 +202,13 @@ namespace Engine {
             fExtensionManager.GetTaskRegister().RegisterItem("Core", new ECFuncTask("CreateObject", [](){
                 CreateEntity();
             }));
+
+            
+
+            ECFuncTask* createNewComponentTask = new ECFuncTask("CreateComponent", [this](){
+                CreateComponent(EString(), EDataBase::Entity());
+            });
+            fExtensionManager.GetTaskRegister().RegisterItem("Core", createNewComponentTask);
 
             // For now we create local socket
             fRegisterSocket = new ERegisterSocket(1420);
