@@ -65,6 +65,15 @@ void inter::PrintProperty(EProperty* prop)
     case EValueType::PRIMITIVE: PrintProperty_Prim(prop); break;
     case EValueType::ARRAY: PrintProperty_Array(static_cast<EArrayProperty*>(prop)); break;
     case EValueType::STRUCT: PrintProperty_Struct(static_cast<EStructProperty*>(prop)); break;
+    case EValueType::ANY:
+    {
+        EAny value;
+        if (static_cast<EStructProperty*>(prop)->GetValue(value))
+        {
+            PrintProperty(value.GetProperty());
+        }
+        break;
+    }
     case EValueType::ENUM: break;
     case EValueType::UNKNOWN: break;
     }

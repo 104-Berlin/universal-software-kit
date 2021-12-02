@@ -92,6 +92,15 @@ ERef<EUIField> EObjectView::RenderProperty(Engine::EProperty* storage, EString n
     case EValueType::ARRAY: return RenderArray(static_cast<EArrayProperty*>(storage), nameIdent); break;
     case EValueType::PRIMITIVE: return RenderPrimitive(storage, nameIdent); break;
     case EValueType::ENUM: return RenderEnum(static_cast<EEnumProperty*>(storage), nameIdent); break;
+    case EValueType::ANY:
+    {
+        EAny value;
+        if (static_cast<EStructProperty*>(storage)->GetValue(value))
+        {
+            return RenderProperty(value.Value(), nameIdent);
+        }
+        break;
+    }
     case EValueType::UNKNOWN: break;
     }
     return nullptr;

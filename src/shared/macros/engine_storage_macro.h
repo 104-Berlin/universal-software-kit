@@ -51,6 +51,7 @@
                                     {\
                                         switch (valDsc.GetType())\
                                         {\
+                                        case ::Engine::EValueType::ANY:\
                                         case ::Engine::EValueType::STRUCT: static_cast<::Engine::EStructProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetValue<type>(value. s_name ); break;\
                                         case ::Engine::EValueType::PRIMITIVE: static_cast<::Engine::EValueProperty<type>*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetValue(value. s_name ); break;\
                                         case ::Engine::EValueType::ENUM: break;/*TODO*/\
@@ -79,6 +80,7 @@
                                     {\
                                         switch (valDsc.GetType())\
                                         {\
+                                        case ::Engine::EValueType::ANY:\
                                         case ::Engine::EValueType::STRUCT: static_cast<const ::Engine::EStructProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetValue<type>(value. s_name ); break;\
                                         case ::Engine::EValueType::PRIMITIVE: value. s_name = static_cast<const ::Engine::EValueProperty<type>*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetValue(); break;\
                                         case ::Engine::EValueType::ENUM: break;/*TODO*/\

@@ -380,7 +380,10 @@ namespace Engine {
             return true;
         }
 
-        
+        EProperty* Value() const
+        {
+            return fProperty.get();
+        }
     };
 
 }

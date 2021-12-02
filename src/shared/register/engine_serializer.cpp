@@ -11,6 +11,7 @@ EJson ESerializer::WriteStorageDescriptionToJson(const EValueDescription& descri
     result["ID"] = description.GetId();
     switch (description.GetType())
     {
+        case EValueType::ANY:
         case EValueType::PRIMITIVE:
         case EValueType::UNKNOWN: break;
         case EValueType::ARRAY:
