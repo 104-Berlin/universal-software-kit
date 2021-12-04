@@ -159,6 +159,7 @@ EJson ESerializer::WritePropertyToJs(EProperty* property, bool writeDescription)
     {
     case EValueType::PRIMITIVE: valueJson = WritePrimitiveToJs(property); break;
     case EValueType::ARRAY: valueJson = WriteArrayToJs(static_cast<EArrayProperty*>(property)); break;
+    case EValueType::ANY:
     case EValueType::STRUCT: valueJson = WriteStructToJs(static_cast<EStructProperty*>(property)); break;
     case EValueType::ENUM: valueJson = WriteEnumToJs(static_cast<EEnumProperty*>(property)); break;
     case EValueType::UNKNOWN: return 0;

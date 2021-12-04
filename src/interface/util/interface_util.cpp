@@ -70,7 +70,7 @@ void inter::PrintProperty(EProperty* prop)
         EAny value;
         if (static_cast<EStructProperty*>(prop)->GetValue(value))
         {
-            PrintProperty(value.GetProperty());
+            PrintProperty(value.Value());
         }
         break;
     }

@@ -3,6 +3,7 @@
 
 using namespace Engine;
 
+const EValueDescription EAny::_dsc = EValueDescription(EValueType::ANY/*In case of own struct use EValueType::STRUCT*/, "Any");
 
 
 EProperty::EProperty(const EString& name, EValueDescription description) 
@@ -73,6 +74,7 @@ EProperty* EProperty::CreateFromDescription(const EString& name, EValueDescripti
     case EValueType::ARRAY: return CreatePropertyArray(name, description);
     case EValueType::STRUCT: return CreatePropertyStruct(name, description);
     case EValueType::ENUM: return CreatePropertyEnum(name, description);
+    case EValueType::ANY: return new EStructProperty(name, description);
     case EValueType::UNKNOWN: return nullptr;
     }
     return nullptr;
@@ -223,6 +225,7 @@ EProperty* EStructProperty::GetPropertyByIdentifier(const EString& ident) const
             currentProp = structProp->GetProperty(currentIdent);
             break;
         }
+        case EValueType::ANY:
         case EValueType::ENUM:
         {
             break;

@@ -227,6 +227,7 @@ namespace Engine {
             {
                 switch (fDescription.GetType())
                 {
+                    case EValueType::ANY:
                     case EValueType::STRUCT: 
                     {
                         if (!insert_element(static_cast<EStructProperty*>(prop)))
@@ -260,6 +261,7 @@ namespace Engine {
                     case EValueType::UNKNOWN: return false;
                 }
             }
+            return true;
         }
 
         template <typename T>
@@ -290,6 +292,7 @@ namespace Engine {
                     static_cast<EValueProperty<typename T::value_type>*>(newEntry)->SetValue(entry);
                     break;
                 }
+                case EValueType::ANY:
                 case EValueType::STRUCT:
                 {
                     if (!static_cast<EStructProperty*>(newEntry)->SetValue<typename T::value_type>(entry))
@@ -358,7 +361,7 @@ namespace Engine {
             return !(*this == other);
         }
 
-        bool ToProperty(const EAny& value, ::Engine::EProperty* property)
+        static bool ToProperty(const EAny& value, ::Engine::EProperty* property)
         {
             if (property->GetDescription().GetType() == value.fProperty->GetDescription().GetType())
             {
@@ -368,7 +371,7 @@ namespace Engine {
             return false;
         }
 
-        bool FromProperty(EAny& value, const ::Engine::EProperty* property) const
+        static bool FromProperty(EAny& value, const ::Engine::EProperty* property)
         {
             EValueDescription dsc = property->GetDescription();
             if (!dsc.Valid())
@@ -384,6 +387,9 @@ namespace Engine {
         {
             return fProperty.get();
         }
+
+    public:
+        static const EValueDescription _dsc;
     };
 
 }

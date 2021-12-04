@@ -88,7 +88,7 @@ void EUIField::Render()
 
     bool renderResult = true;
 
-    if (renderResult = OnRender())
+    if ((renderResult = OnRender()))
     {
         for (ERef<EUIField> uiField : fChildren)
         {
