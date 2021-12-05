@@ -114,6 +114,18 @@ shared::ESharedError  shared::SetValue(EDataBase::Entity entity, const EString& 
     return false;
 }
 
+shared::ESharedError shared::SetValue(EDataBase::Entity entity, const EString& valueIdent, EProperty* value)
+{
+    if (!value)
+    {
+        E_ERROR("Invalid value to set!");
+        return true;
+    }
+    EString propertyValue = ESerializer::WritePropertyToJs(value).dump();
+    StaticSharedContext::instance().GetRegisterConnection().Send_SetValue(entity, valueIdent, propertyValue);
+    return false;
+}
+
 EVector<EDataBase::Entity> shared::GetAllEntites()
 {
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllEntites();
@@ -205,9 +217,26 @@ namespace Engine {
 
             
 
-            ECFuncTask* createNewComponentTask = new ECFuncTask("CreateComponent", [this](){
-                CreateComponent(EString(), EDataBase::Entity());
+            ECFuncTask* createNewComponentTask = new ECFuncTask("CreateComponent", [this](EStructProperty* property){
+                CreateComponentInput input;
+                if (!property->GetValue(input.Value))
+                {
+                    E_ERROR("Could not get value from property when creating component!");
+                    return;
+                }
+                if (!input.Value.Value())
+                {
+                    E_ERROR("No init value for creating component!");
+                    return;
+                }
+                if (input.Value.Value()->GetDescription().GetType() != EValueType::STRUCT)
+                {
+                    E_ERROR("You have to add struct as component");
+                    return;
+                }
+                shared::CreateComponent((EStructProperty*) input.Value.Value(), input.Entity);
             });
+            createNewComponentTask->SetInputDescription(CreateComponentInput::_dsc);
             fExtensionManager.GetTaskRegister().RegisterItem("Core", createNewComponentTask);
 
             // For now we create local socket

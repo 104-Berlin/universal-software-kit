@@ -46,8 +46,9 @@ namespace Editor {
     
     class EComponentEdit : public Engine::EUIField
     {
+        ERef<Engine::EProperty> fEditedProperty;
     public:
-        EComponentEdit();
+        EComponentEdit(const ERef<Engine::EProperty>& property);
     private:
         ERef<EUIField> RenderProperty(Engine::EProperty* storage, EString nameIdent);
 

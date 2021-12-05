@@ -42,8 +42,8 @@ ERef<EUIField> EBasicRegisterView::CreateTaskView()
                     else
                     {
                         input = (EStructProperty*) EProperty::CreateFromDescription("IN", intputDescription);
+                        weakRunButton.lock()->OpenPopup(EMakeRef<EComponentEdit>(ERef<EProperty>(input)));
                     }
-                    weakRunButton.lock()->OpenPopup(EMakeRef<EComponentEdit>());
                 }
                 else
                 {

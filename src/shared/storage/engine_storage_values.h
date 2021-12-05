@@ -344,7 +344,7 @@ namespace Engine {
     private:
         ERef<EProperty> fProperty;
     public:
-        EAny() = default;
+        EAny() : fProperty(nullptr) {}
         EAny(const EAny& other) = default;
         ~EAny() = default;
 

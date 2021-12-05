@@ -112,6 +112,7 @@ namespace Engine {
         ESharedError E_INTER_API CreateResource(EResourceData* data);
 
         ESharedError E_INTER_API SetValue(EDataBase::Entity entity, const EString& valueIdent, const EString& valueString);
+        ESharedError E_INTER_API SetValue(EDataBase::Entity entity, const EString& valueIdent, EProperty* value);
 
         template <typename T>
         ESharedError SetValue(EDataBase::Entity entity, const EString& valueIdent, const T& value)

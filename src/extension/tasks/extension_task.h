@@ -32,7 +32,9 @@ namespace Engine {
         bool HasInput() const;
         bool HasOutput() const;
 
+        void SetInputDescription(const EValueDescription& description);
         const EValueDescription& GetInputDescription() const;
+        void SetOutputDescription(const EValueDescription& description);
         const EValueDescription& GetOutputDescription() const;
     };
 

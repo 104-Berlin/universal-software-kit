@@ -28,6 +28,8 @@ E_STORAGE_STRUCT(EnumTest,
     (MyEnum, SomeEnum)
 )
 
+static EApplication* runningInstance = nullptr;
+
 EApplication::EApplication() 
     : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
 {
@@ -72,8 +74,19 @@ EApplication::EApplication()
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<EnumTest>("Core");
 }
 
+EApplication::~EApplication() 
+{
+    runningInstance = nullptr;
+}
+
 void EApplication::Start(const EString& defaultRegisterPath) 
 {
+    if (runningInstance)
+    {
+        E_ERROR("Application already started");
+        return;
+    }
+    runningInstance = this;
     fLoadOnStartRegister = defaultRegisterPath;
     Wrapper::RunApplicationLoop(std::bind(&EApplication::Init, this, std::placeholders::_1), std::bind(&EApplication::Render, this), std::bind(&EApplication::RenderImGui, this), std::bind(&EApplication::CleanUp, this), &Wrapper::SetImGuiContext);
 }
@@ -319,16 +332,31 @@ void EApplication::RegisterDefaultResources()
 
 void EApplication::RegisterDefaultComponentRender() 
 {
-    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, EDataBase::Entity entity, const EString& nameIdent)->ERef<EUIField>{
+    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, const EString& nameIdent, std::function<void(EProperty*)> callbackFn)->ERef<EUIField>{
         EResourceLink link;
         if (convert::getter(prop, &link))
         {
             ERef<EUIResourceSelect> resourceSelect = EMakeRef<EUIResourceSelect>(link.Type);
-            resourceSelect->AddEventListener<events::EResourceSelectChangeEvent>([nameIdent, entity, link](events::EResourceSelectChangeEvent event){
-                shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink(link.Type, event.ResourceID));
+            resourceSelect->AddEventListener<events::EResourceSelectChangeEvent>([nameIdent, callbackFn, link](events::EResourceSelectChangeEvent event){
+                EResourceLink newLink;
+                newLink.Type = event.ResourceType;
+                newLink.ResourceId = event.ResourceID;
+
+                EStructProperty* structProp = static_cast<EStructProperty*>(EProperty::CreateFromDescription(EResourceLink::_dsc.GetId(), EResourceLink::_dsc));
+                if (convert::setter(structProp, newLink))
+                {
+                    callbackFn(structProp);
+                }
+                delete structProp;
             });
             return resourceSelect;
         }
         return EMakeRef<EUIField>("ResourceLink");
     }});
+}
+
+EApplication* EApplication::gApp() 
+{
+    E_ASSERT_M(runningInstance != nullptr, "Application not initialized");
+    return runningInstance;
 }

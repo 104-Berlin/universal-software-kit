@@ -4,7 +4,7 @@ namespace Engine {
 
     using EUIRegister = EExtensionRegister<ERef<EUIPanel>>;
 
-    using EUIValueRegisterEntry = EPair<EValueDescription::t_ID, std::function<ERef<EUIField>(EProperty*, EDataBase::Entity, const EString&)>>;
+    using EUIValueRegisterEntry = EPair<EValueDescription::t_ID, std::function<ERef<EUIField>(EProperty*, const EString&, std::function<void(EProperty*)>)>>;
     using EUIValueRegister = EExtensionRegister<EUIValueRegisterEntry>;
 
     class EFindValueFieldByType

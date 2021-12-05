@@ -14,8 +14,15 @@ EBaseTask::~EBaseTask()
 }
 
 EStructProperty* EBaseTask::Execute(EStructProperty* inValue) 
-
 {
+    if (fHasInput)
+    {
+        if (inValue == nullptr)
+        {
+            E_ERROR("EBaseTask::Execute: input value is null");
+            return nullptr;
+        }
+    }
     return OnExecute(inValue);
 }
 
@@ -34,9 +41,19 @@ bool EBaseTask::HasOutput() const
     return fHasOutput;
 }
 
+void EBaseTask::SetInputDescription(const EValueDescription& description) 
+{
+    fInputDescription = description;
+}
+
 const EValueDescription& EBaseTask::GetInputDescription() const
 {
     return fInputDescription;
+}
+
+void EBaseTask::SetOutputDescription(const EValueDescription& description) 
+{
+    fOutputDescription = description;
 }
 
 const EValueDescription& EBaseTask::GetOutputDescription() const

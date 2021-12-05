@@ -83,7 +83,9 @@ ERef<EUIField> EObjectView::RenderProperty(Engine::EProperty* storage, EString n
     EUIValueRegisterEntry valueRender;
     if (fUIValueRegister && fUIValueRegister->FindItem(EFindValueFieldByType(propertyDsc.GetId()), &valueRender))
     {
-        return valueRender.second(storage, fSelectedEntity, nameIdent);
+        return valueRender.second(storage, nameIdent, [this, nameIdent](EProperty* property){
+            shared::SetValue(fSelectedEntity, nameIdent, property);
+        });
     }
 
     switch (type)
@@ -399,30 +401,95 @@ void EObjectView::RegenAddComponentMenu()
  * 
  ****/
 
-EComponentEdit::EComponentEdit()
-    : EUIField("Component Edit")
+EComponentEdit::EComponentEdit(const ERef<EProperty>& property)
+    : EUIField("Component Edit"), fEditedProperty(property)
 {
-    
+    AddChild(RenderProperty(fEditedProperty.get(), fEditedProperty->GetPropertyName()));
 }
 
 ERef<EUIField> EComponentEdit::RenderProperty(Engine::EProperty* storage, EString nameIdent) 
 {
+    EValueDescription propertyDsc = storage->GetDescription();
+    EValueType type = propertyDsc.GetType();
+
+    EUIValueRegisterEntry valueRender;
+    if (EApplication::gApp()->GetUIValueRegister().FindItem(EFindValueFieldByType(propertyDsc.GetId()), &valueRender))
+    {
+        return valueRender.second(storage, nameIdent, [this, nameIdent](Engine::EProperty* storage){
+            // We use post because this is called in event loop
+            fEventDispatcher.Post<events::ComponentEditChangeEvent>({nameIdent});
+        });
+    }
+
+    switch (type)
+    {
+    case EValueType::STRUCT: return RenderStruct(static_cast<EStructProperty*>(storage), nameIdent); break;
+    case EValueType::ARRAY: return RenderArray(static_cast<EArrayProperty*>(storage), nameIdent); break;
+    case EValueType::PRIMITIVE: return RenderPrimitive(storage, nameIdent); break;
+    case EValueType::ENUM: return RenderEnum(static_cast<EEnumProperty*>(storage), nameIdent); break;
+    case EValueType::ANY:
+    {
+        EAny value;
+        if (static_cast<EStructProperty*>(storage)->GetValue(value))
+        {
+            if (value.Value())
+            {
+                
+            }
+        }
+        break;
+    }
+    case EValueType::UNKNOWN: break;
+    }
     return nullptr;
 }
 
 ERef<EUIField> EComponentEdit::RenderStruct(Engine::EStructProperty* storage, EString nameIdent) 
 {
-    return nullptr;
+    ERef<EUIField> result = EMakeRef<EUIField>("STRUCT");
+    EValueDescription description = storage->GetDescription();
+    EVector<Engine::EValueDescription::StructField> structFields = description.GetStructFields();
+    for (size_t i = 0; i < structFields.size(); i++)
+    {
+        auto& entry = structFields[i];
+        const EString& propertyName = entry.first;
+        result->AddChild(RenderProperty(storage->GetProperty(propertyName), nameIdent + "." + propertyName));
+        if (i < structFields.size() - 1)
+        {
+            result->AddChild(EMakeRef<EUIDivider>());
+        }
+    }
+    return result;
 }
 
 ERef<EUIField> EComponentEdit::RenderPrimitive(Engine::EProperty* storage, EString nameIdent) 
 {
+    EValueDescription description = storage->GetDescription();
+    const EString& primitiveId = description.GetId();
+    if (primitiveId == E_TYPEID_STRING) {return  RenderString(static_cast<EValueProperty<EString>*>(storage), nameIdent); } 
+    else if (primitiveId == E_TYPEID_INTEGER) { return RenderInteger(static_cast<EValueProperty<i32>*>(storage), nameIdent); }
+    else if (primitiveId == E_TYPEID_UNSIGNED_INTEGER) { return RenderInteger(static_cast<EValueProperty<u32>*>(storage), nameIdent); }
+    else if (primitiveId == E_TYPEID_UNSIGNED_BIG_INTEGER) { return RenderInteger(static_cast<EValueProperty<u64>*>(storage), nameIdent); }
+    else if (primitiveId == E_TYPEID_DOUBLE) { return RenderDouble(static_cast<EValueProperty<double>*>(storage), nameIdent); }
+    else if (primitiveId == E_TYPEID_FLOAT) { return RenderDouble(static_cast<EValueProperty<float>*>(storage), nameIdent); }
+    else if (primitiveId == E_TYPEID_BOOL) { return RenderBool(static_cast<EValueProperty<bool>*>(storage), nameIdent); }
     return nullptr;
 }
 
 ERef<EUIField> EComponentEdit::RenderEnum(Engine::EEnumProperty* storage, EString nameIdent) 
 {
-    return nullptr;
+    EValueDescription description = storage->GetDescription();
+    EVector<EString> enumValues = description.GetEnumOptions();
+
+    ERef<EUIDropdown> result = EMakeRef<EUIDropdown>(storage->GetPropertyName());
+    EWeakRef<EUIDropdown> weakResult = result;
+    result->SetOptions(enumValues);
+    result->SetSelectedIndex(storage->GetCurrentValue());
+    result->AddEventListener<events::ESelectChangeEvent>([this, nameIdent](events::ESelectChangeEvent event){
+        fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
+    });
+
+    return result;
 }
 
 ERef<EUIField> EComponentEdit::RenderArray(Engine::EArrayProperty* storage, EString nameIdent) 
