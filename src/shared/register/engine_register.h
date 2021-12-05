@@ -52,7 +52,7 @@ namespace Engine {
             T result;
             if (inserted)
             {
-                convert::getter<T>(inserted, result);
+                convert::getter<T>(inserted, &result);
             }
             return result;
         }

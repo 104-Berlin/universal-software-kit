@@ -211,3 +211,62 @@ TEST(RegisterTest, Basics)
 	scene.Clear();
 	EXPECT_EQ(scene.GetAllEntities().size(), 0);
 }
+
+/**
+ * Modern Register Components with C Represenation
+ */
+
+E_STORAGE_STRUCT(Vec,
+		(double, X),
+		(double, Y),
+		(double, Z)
+	);
+
+	E_STORAGE_ENUM(MyEnum,
+		ONE, TOW
+	);
+
+	E_STORAGE_STRUCT(MyTestComponent,
+		(EString, MyString),
+		(double, MyDouble),
+		(bool, MyBool),
+		(Vec, Vector),
+		(MyEnum, Enum),
+		(EAny, MyAny),
+		(EVector<Vec>, VectorArray)
+	);
+
+TEST(EDataBase, RegisterComponentWithCRepresenation)
+{
+	MyTestComponent myTestComponent;
+
+	EDataBase dataBase;
+	EDataBase::Entity entity1 = dataBase.CreateEntity();
+	dataBase.AddComponent<MyTestComponent>(entity1);
+	EStructProperty* storage = dataBase.GetComponent(entity1, MyTestComponent::_dsc);
+	storage->SetValue<MyTestComponent>(myTestComponent);
+
+	ERef<EStructProperty> someAnyValue = ERef<EStructProperty>(static_cast<EStructProperty*>(EProperty::CreateFromDescription(Vec::_dsc.GetId(), Vec::_dsc)));
+	someAnyValue->SetValue<Vec>(Vec{1, 2, 3});
+
+
+	if (storage->GetValue<MyTestComponent>(myTestComponent))
+	{
+		myTestComponent.MyAny.SetValue(someAnyValue);
+		myTestComponent.MyDouble = 10.4;
+		myTestComponent.MyString = "Hello World";
+
+		storage->SetValue<MyTestComponent>(myTestComponent);
+	}
+
+	MyTestComponent myTestComponent2;
+	if (storage->GetValue<MyTestComponent>(myTestComponent2))
+	{
+		EXPECT_EQ(myTestComponent2.MyDouble, 10.4);
+		EXPECT_STREQ(myTestComponent2.MyString.c_str(), "Hello World");
+	}
+
+	
+
+	
+}

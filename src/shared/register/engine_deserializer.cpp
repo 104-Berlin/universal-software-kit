@@ -211,7 +211,7 @@ bool EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
 
     switch (currentType)
     {
-    case EValueType::ANY:
+    case EValueType::ANY: 
     case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json, property); break;
     case EValueType::ARRAY: ReadArrayFromJson(json, static_cast<EArrayProperty*>(property)); break;
     case EValueType::STRUCT: ReadStructFromJson(json, static_cast<EStructProperty*>(property)); break;

@@ -147,11 +147,7 @@ Engine::EStructProperty::EStructProperty(const EStructProperty& other)
 
 EStructProperty::~EStructProperty() 
 {
-    for (EProperty* property : fProperties)
-    {
-        delete property;
-    }
-    fProperties.clear();
+    ResetFields();
 }
 
 
@@ -254,6 +250,15 @@ void EStructProperty::OnCopy(const EProperty* from)
             prop->Copy(copyFromField);
         }
     }
+}
+
+void EStructProperty::ResetFields()
+{
+    for (EProperty* property : fProperties)
+    {
+        delete property;
+    }
+    fProperties.clear();
 }
 
 EEnumProperty::EEnumProperty(const EString& name, EValueDescription description, const EString& initValue)

@@ -182,10 +182,7 @@ ESharedBuffer shared::GetRegisterAsBuffer()
 
 
 namespace Engine {
-    E_STORAGE_STRUCT(CreateComponentInput,
-        (EAny, Value),
-        (EDataBase::Entity, Entity)
-    )
+    
     namespace shared {
 
         StaticSharedContext::StaticSharedContext() 
@@ -219,7 +216,7 @@ namespace Engine {
 
             ECFuncTask* createNewComponentTask = new ECFuncTask("CreateComponent", [this](EStructProperty* property){
                 CreateComponentInput input;
-                if (!property->GetValue(input.Value))
+                if (!property->GetValue(input))
                 {
                     E_ERROR("Could not get value from property when creating component!");
                     return;
@@ -231,10 +228,12 @@ namespace Engine {
                 }
                 if (input.Value.Value()->GetDescription().GetType() != EValueType::STRUCT)
                 {
-                    E_ERROR("You have to add struct as component");
+                    E_ERROR("Init value for creating component has to be struct!");
                     return;
                 }
-                shared::CreateComponent((EStructProperty*) input.Value.Value(), input.Entity);
+                EStructProperty* structProp = static_cast<EStructProperty*>(input.Value.Value());
+
+                shared::CreateComponent(structProp, input.Entity);
             });
             createNewComponentTask->SetInputDescription(CreateComponentInput::_dsc);
             fExtensionManager.GetTaskRegister().RegisterItem("Core", createNewComponentTask);

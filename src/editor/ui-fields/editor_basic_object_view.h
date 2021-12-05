@@ -30,6 +30,7 @@ namespace Editor {
         ERef<EUIField> RenderPrimitive(Engine::EProperty* storage, EString nameIdent);
         ERef<EUIField> RenderEnum(Engine::EEnumProperty* storage, EString nameIdent);
         ERef<EUIField> RenderArray(Engine::EArrayProperty* storage, EString nameIdent);
+        ERef<EUIField> RenderAny(Engine::EStructProperty* storage, EString nameIdent);
 
         ERef<EUIField> RenderBool(Engine::EValueProperty<bool>* storage, EString nameIdent);
         ERef<EUIField> RenderInteger(Engine::EValueProperty<i32>* storage, EString nameIdent);
@@ -56,6 +57,7 @@ namespace Editor {
         ERef<EUIField> RenderPrimitive(Engine::EProperty* storage, EString nameIdent);
         ERef<EUIField> RenderEnum(Engine::EEnumProperty* storage, EString nameIdent);
         ERef<EUIField> RenderArray(Engine::EArrayProperty* storage, EString nameIdent);
+        ERef<EUIField> RenderAny(Engine::EStructProperty* storage, EString nameIdent);
 
         ERef<EUIField> RenderBool(Engine::EValueProperty<bool>* storage, EString nameIdent);
         ERef<EUIField> RenderInteger(Engine::EValueProperty<i32>* storage, EString nameIdent);

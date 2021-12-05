@@ -1,7 +1,10 @@
 #pragma once
 
 namespace Engine {
-
+    E_STORAGE_STRUCT(CreateComponentInput,
+            (EAny, Value),
+            (EDataBase::Entity, Entity)
+        )
     namespace shared {
 
         class E_INTER_API ERegisterEventDispatcher : public EEventDispatcher

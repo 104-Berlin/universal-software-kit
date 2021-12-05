@@ -99,7 +99,7 @@ ERef<EUIField> EObjectView::RenderProperty(Engine::EProperty* storage, EString n
         EAny value;
         if (static_cast<EStructProperty*>(storage)->GetValue(value))
         {
-            return RenderProperty(value.Value(), nameIdent);
+            //return RenderProperty(value.Value(), nameIdent);
         }
         break;
     }
@@ -423,22 +423,11 @@ ERef<EUIField> EComponentEdit::RenderProperty(Engine::EProperty* storage, EStrin
 
     switch (type)
     {
-    case EValueType::STRUCT: return RenderStruct(static_cast<EStructProperty*>(storage), nameIdent); break;
-    case EValueType::ARRAY: return RenderArray(static_cast<EArrayProperty*>(storage), nameIdent); break;
-    case EValueType::PRIMITIVE: return RenderPrimitive(storage, nameIdent); break;
-    case EValueType::ENUM: return RenderEnum(static_cast<EEnumProperty*>(storage), nameIdent); break;
-    case EValueType::ANY:
-    {
-        EAny value;
-        if (static_cast<EStructProperty*>(storage)->GetValue(value))
-        {
-            if (value.Value())
-            {
-                
-            }
-        }
-        break;
-    }
+    case EValueType::STRUCT: return RenderStruct(static_cast<EStructProperty*>(storage), nameIdent);
+    case EValueType::ARRAY: return RenderArray(static_cast<EArrayProperty*>(storage), nameIdent); 
+    case EValueType::PRIMITIVE: return RenderPrimitive(storage, nameIdent);
+    case EValueType::ENUM: return RenderEnum(static_cast<EEnumProperty*>(storage), nameIdent); 
+    case EValueType::ANY: return RenderAny(static_cast<EStructProperty*>(storage), nameIdent); 
     case EValueType::UNKNOWN: break;
     }
     return nullptr;
@@ -485,7 +474,8 @@ ERef<EUIField> EComponentEdit::RenderEnum(Engine::EEnumProperty* storage, EStrin
     EWeakRef<EUIDropdown> weakResult = result;
     result->SetOptions(enumValues);
     result->SetSelectedIndex(storage->GetCurrentValue());
-    result->AddEventListener<events::ESelectChangeEvent>([this, nameIdent](events::ESelectChangeEvent event){
+    result->AddEventListener<events::ESelectChangeEvent>([this, nameIdent, storage](events::ESelectChangeEvent event){
+        storage->SetCurrentValue(event.Index);
         fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
     });
 
@@ -499,6 +489,7 @@ ERef<EUIField> EComponentEdit::RenderArray(Engine::EArrayProperty* storage, EStr
 
     field->SetDirty();
     field->SetCustomUpdateFunction([this, weakRef, storage, nameIdent](){
+        weakRef.lock()->Clear();
         EVector<EProperty*> elements = storage->GetElements();
 
         for (size_t i = 0; i < elements.size(); i++)
@@ -510,12 +501,68 @@ ERef<EUIField> EComponentEdit::RenderArray(Engine::EArrayProperty* storage, EStr
         }
 
         EWeakRef<EUIField> addElemButton = weakRef.lock()->AddChild(EMakeRef<EUIButton>("Add Element"));
-        addElemButton.lock()->AddEventListener<events::EButtonEvent>([this, storage](){
+        addElemButton.lock()->AddEventListener<events::EButtonEvent>([this, storage, weakRef](){
             storage->AddElement();
+            weakRef.lock()->SetDirty();
         });
     });
     return field;
+}
 
+ERef<EUIField> EComponentEdit::RenderAny(Engine::EStructProperty* storage, EString nameIdent) 
+{
+    ERef<EUIField> result = EMakeRef<EUIField>("ANY");
+    ERef<EUIDropdown> dropDown = EMakeRef<EUIDropdown>("Type");
+    ERef<EUIGroupPanel> groupPanel = EMakeRef<EUIGroupPanel>("Value");
+    EWeakRef<EUIGroupPanel> weakGroupPanel = groupPanel;
+
+    
+    result->AddChild(dropDown);
+    result->AddChild(groupPanel);
+
+    // Set up dropdown
+    dropDown->AddOption("None");
+    for (auto& entry : shared::ExtensionManager().GetComponentRegister().GetAllItems())
+    {
+        dropDown->AddOption(entry.Description.GetId());
+    }
+    
+
+
+    dropDown->AddEventListener<events::ESelectChangeEvent>([storage, weakGroupPanel](events::ESelectChangeEvent e){
+        EAny newValue;
+        if (e.Index != 0)
+        {
+            EComponentRegisterEntry newValueDsc;
+            if (shared::ExtensionManager().GetComponentRegister().FindItem(EFindTypeDescByName(e.Option), &newValueDsc))
+            {
+                ERef<EProperty> newValueProp = ERef<EProperty>(EProperty::CreateFromDescription("value", newValueDsc.Description));
+                newValueProp->Copy(newValueDsc.DefaultValue.get());
+                newValue.SetValue(newValueProp);
+            }
+        }
+        storage->SetValue<EAny>(newValue);
+        if (!weakGroupPanel.expired())
+        {
+            weakGroupPanel.lock()->SetDirty();
+        }
+    });
+
+    // Set up value display
+    groupPanel->SetCustomUpdateFunction([this, weakGroupPanel, storage, nameIdent](){
+        if (weakGroupPanel.expired()) { return; }
+
+        weakGroupPanel.lock()->Clear();
+        
+        EStructProperty* structProp = static_cast<EStructProperty*>(storage);
+        EProperty* valueProp = structProp->GetProperty("value");
+        if (valueProp)
+        {
+            ERef<EUIField> propertyField = this->RenderProperty(valueProp, nameIdent + ".value");
+            weakGroupPanel.lock()->AddChild(propertyField);
+        }
+    });
+    return result;
 }
 
 ERef<EUIField> EComponentEdit::RenderBool(Engine::EValueProperty<bool>* storage, EString nameIdent) 
@@ -524,7 +571,8 @@ ERef<EUIField> EComponentEdit::RenderBool(Engine::EValueProperty<bool>* storage,
 
     result->SetValue(storage->GetValue());
 
-    result->AddEventListener<events::ECheckboxEvent>([this, nameIdent](events::ECheckboxEvent event){
+    result->AddEventListener<events::ECheckboxEvent>([this, nameIdent, storage](events::ECheckboxEvent event){
+        storage->SetValue(event.Checked);
         fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
     });
     return result;
@@ -536,7 +584,8 @@ ERef<EUIField> EComponentEdit::RenderInteger(Engine::EValueProperty<i32>* storag
 
     result->SetValue(storage->GetValue());
 
-    result->AddEventListener<events::EIntegerCompleteEvent>([this, nameIdent](events::EIntegerCompleteEvent event){
+    result->AddEventListener<events::EIntegerCompleteEvent>([this, nameIdent, storage](events::EIntegerCompleteEvent event){
+        storage->SetValue(event.Value);
         fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
     });
 
@@ -549,7 +598,8 @@ ERef<EUIField> EComponentEdit::RenderInteger(Engine::EValueProperty<u32>* storag
 
     result->SetValue(storage->GetValue());
 
-    result->AddEventListener<events::EIntegerCompleteEvent>([this, nameIdent](events::EIntegerCompleteEvent event){
+    result->AddEventListener<events::EIntegerCompleteEvent>([this, nameIdent, storage](events::EIntegerCompleteEvent event){
+        storage->SetValue(event.Value);
         fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
     });
 
@@ -561,7 +611,8 @@ ERef<EUIField> EComponentEdit::RenderInteger(Engine::EValueProperty<u64>* storag
     ERef<EUIIntegerEdit> result = EMakeRef<EUIIntegerEdit>(storage->GetPropertyName().c_str());
     result->SetValue(storage->GetValue());
 
-    result->AddEventListener<events::EIntegerCompleteEvent>([this, nameIdent](events::EIntegerCompleteEvent event){
+    result->AddEventListener<events::EIntegerCompleteEvent>([this, nameIdent, storage](events::EIntegerCompleteEvent event){
+        storage->SetValue(event.Value);
         fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
     });
     return result;
@@ -573,7 +624,8 @@ ERef<EUIField> EComponentEdit::RenderDouble(Engine::EValueProperty<double>* stor
 
     result->SetValue(storage->GetValue());
 
-    result->AddEventListener<events::EFloatCompleteEvent>([this, nameIdent](events::EFloatCompleteEvent event){
+    result->AddEventListener<events::EFloatCompleteEvent>([this, nameIdent, storage](events::EFloatCompleteEvent event){
+        storage->SetValue(event.Value);
         fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
     });
 
@@ -586,7 +638,8 @@ ERef<EUIField> EComponentEdit::RenderDouble(Engine::EValueProperty<float>* stora
 
     result->SetValue(storage->GetValue());
 
-    result->AddEventListener<events::EFloatCompleteEvent>([this, nameIdent](events::EFloatCompleteEvent event){
+    result->AddEventListener<events::EFloatCompleteEvent>([this, nameIdent, storage](events::EFloatCompleteEvent event){
+        storage->SetValue(event.Value);
         this->fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
     });
     return result;
@@ -598,7 +651,8 @@ ERef<EUIField> EComponentEdit::RenderString(Engine::EValueProperty<EString>* sto
     EWeakRef<EUITextField> weakResult = result;
     result->SetValue(storage->GetValue());
 
-    result->AddEventListener<events::ETextCompleteEvent>([this, nameIdent](events::ETextCompleteEvent event){
+    result->AddEventListener<events::ETextCompleteEvent>([this, nameIdent, storage](events::ETextCompleteEvent event){
+        storage->SetValue(event.Value);
         this->fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
     });
     return result;

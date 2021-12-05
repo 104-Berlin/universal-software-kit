@@ -127,6 +127,7 @@ namespace Engine {
 
     class E_API EStructProperty : public EProperty
     {
+        friend class EAny;
     private:
         EVector<EProperty*> fProperties;
     public:
@@ -164,6 +165,11 @@ namespace Engine {
         const EProperty* GetProperty(const EString& propertyName) const;
 
         EProperty* GetPropertyByIdentifier(const EString& ident) const;
+    private:
+        /**
+         * @brief Clears the fields and deletes them
+         */
+        void ResetFields();
     protected:
         virtual EProperty* OnClone() override;
         virtual void OnCopy(const EProperty* from) override;
@@ -363,24 +369,43 @@ namespace Engine {
 
         static bool ToProperty(const EAny& value, ::Engine::EProperty* property)
         {
-            if (property->GetDescription().GetType() == value.fProperty->GetDescription().GetType())
+            E_ASSERT_M(property->GetDescription().GetType() == EValueType::ANY, "Trying to set a value to a property that is not of type ANY!");
+            if (property->GetDescription().GetType() != EValueType::ANY) { return false; }
+            ::Engine::EStructProperty* structProperty = static_cast<::Engine::EStructProperty*>(property);
+            structProperty->ResetFields();
+
+            if (value.fProperty)
             {
-                property->Copy(value.fProperty.get());
-                return true;
+                EProperty* newValueProperty = EProperty::CreateFromDescription("value", value.fProperty->GetDescription());
+                newValueProperty->Copy(value.fProperty.get());
+                structProperty->fProperties.push_back(newValueProperty);
             }
-            return false;
+            return true;
         }
 
         static bool FromProperty(EAny& value, const ::Engine::EProperty* property)
         {
             EValueDescription dsc = property->GetDescription();
-            if (!dsc.Valid())
+            if (dsc.GetType() != EValueType::ANY) { return false; }
+            const ::Engine::EStructProperty* structProperty = static_cast<const ::Engine::EStructProperty*>(property);
+            
+            const EProperty* valueProperty = structProperty->GetProperty("value");
+
+            if (valueProperty)
             {
-                return false;
+                value.fProperty = ERef<EProperty>(EProperty::CreateFromDescription("value", valueProperty->GetDescription()));
+                value.fProperty->Copy(valueProperty);
             }
-            value.fProperty = ERef<EProperty>(EProperty::CreateFromDescription(dsc.GetId(), dsc));
-            value.fProperty->Copy(property);
+            else
+            {
+                value.fProperty = nullptr;
+            }
             return true;
+        }
+
+        void SetValue(const ERef<EProperty>& property)
+        {
+            fProperty = property;
         }
 
         EProperty* Value() const
