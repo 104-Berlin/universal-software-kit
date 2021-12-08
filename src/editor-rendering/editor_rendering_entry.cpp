@@ -5,22 +5,22 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-/*#include "Common/interface/RefCntAutoPtr.hpp"
+#include "Common/interface/RefCntAutoPtr.hpp"
 
 #include "Graphics/GraphicsEngineOpenGL/interface/EngineFactoryOpenGL.h"
 #include "Graphics/GraphicsEngine/interface/RenderDevice.h"
 #include "Graphics/GraphicsEngine/interface/DeviceContext.h"
-#include "Graphics/GraphicsEngine/interface/SwapChain.h"*/
+#include "Graphics/GraphicsEngine/interface/SwapChain.h"
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
-/*using namespace Diligent;
+using namespace Diligent;
 
 RefCntAutoPtr<IRenderDevice>  pDevice;
 RefCntAutoPtr<IDeviceContext> pImmediateContext;
-RefCntAutoPtr<ISwapChain>     pSwapChain;*/
+RefCntAutoPtr<ISwapChain>     pSwapChain;
 
 void editor_rendering::RunApplicationLoop(std::function<void()> initFunction, std::function<void()> RenderImGui, std::function<void()> CleanUp, void(*SetImGuiContext)(ImGuiContext*))
 {
@@ -40,7 +40,7 @@ void editor_rendering::RunApplicationLoop(std::function<void()> initFunction, st
     GLFWwindow* wnd = glfwCreateWindow(1270, 720, "Test Diligent", NULL, NULL);
     if (!wnd) { std::cout << "Could not init wind" << std::endl; return; }
     glfwSetWindowSizeLimits(wnd, 320, 240, GLFW_DONT_CARE, GLFW_DONT_CARE);
-/*
+
 #ifdef EWIN
     Win32NativeWindow Window{glfwGetWin32Window(wnd)};
     auto GetEngineFactoryOpenGL = LoadGraphicsEngineOpenGL();
@@ -110,6 +110,6 @@ void editor_rendering::RunApplicationLoop(std::function<void()> initFunction, st
 
     glfwDestroyWindow(wnd);
     glfwTerminate();
-*/
+
     return;
 }

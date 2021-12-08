@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 project(USKEditorRendering)
 
 set(USK_IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../deps/imgui)
+set(USK_DILIGENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../deps/diligent-core)
 
 add_library(USKImgui STATIC ${USK_IMGUI_DIR}/imgui.cpp 
                             ${USK_IMGUI_DIR}/imgui_draw.cpp 
@@ -12,8 +13,20 @@ add_library(USKImgui STATIC ${USK_IMGUI_DIR}/imgui.cpp
                             ${USK_IMGUI_DIR}/backends/imgui_impl_opengl3.cpp)
 
 target_link_libraries(USKImgui glfw)
-target_include_directories(USKImgui PUBLIC ${USK_IMGUI_DIR})
+target_include_directories(USKImgui PUBLIC  ${USK_IMGUI_DIR}
+                                            ${USK_DILIGENT_DIR}
+                                            ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(USKEditorRendering STATIC editor_rendering_entry.cpp)
 
-target_link_libraries(USKEditorRendering USKImgui)
+target_link_libraries(USKEditorRendering    Diligent-Common
+                                            Diligent-GraphicsTools
+                                            Diligent-GraphicsEngineOpenGL-shared
+                                            USKImgui)
+
+target_compile_definitions(USKEditorRendering PRIVATE ENGINE_DLL=1)
+
+
+if(WIN32)
+copy_required_dlls(USKEditorRendering)
+endif()

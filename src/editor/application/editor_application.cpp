@@ -74,7 +74,7 @@ EApplication::EApplication()
 void EApplication::Start(const EString& defaultRegisterPath) 
 {
     fLoadOnStartRegister = defaultRegisterPath;
-    
+    editor_rendering::RunApplicationLoop([](){}, [](){}, [](){}, NULL);
 }
 
 void EApplication::RegenerateMainMenuBar() 

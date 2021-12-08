@@ -30,6 +30,8 @@
 #include "graphics_wrapper.h"
 #include "graphics_renderer.h"
 
+#include "editor_rendering.h"
+
 
 typedef glm::vec2 EVec2;
 typedef glm::vec3 EVec3;
