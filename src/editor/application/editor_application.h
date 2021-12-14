@@ -2,6 +2,9 @@
 
 namespace Editor {
 
+    
+    static void SetImGuiContext(ImGuiContext* context);
+
     class EApplication
     {
     private:
@@ -20,7 +23,7 @@ namespace Editor {
         void Start(const EString& defaultRegisterPath = "");
         void RegenerateMainMenuBar();
     private:
-        void Init(Graphics::GContext* context);
+        void Init();
         void CleanUp();
         void Render();
         void RenderImGui();

@@ -14,15 +14,23 @@ add_library(USKImgui STATIC ${USK_IMGUI_DIR}/imgui.cpp
 
 target_link_libraries(USKImgui glfw)
 target_include_directories(USKImgui PUBLIC  ${USK_IMGUI_DIR}
-                                            ${USK_DILIGENT_DIR}
                                             ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(USKEditorRendering STATIC editor_rendering_entry.cpp)
+add_library(USKEditorRendering SHARED   editor_rendering_entry.cpp
+                                        ${USK_IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+                                        ${USK_IMGUI_DIR}/backends/imgui_impl_opengl3.cpp)
+
+target_compile_definitions(USKEditorRendering PRIVATE EXPORT_EDITOR_RENDERING)
+
 
 target_link_libraries(USKEditorRendering    Diligent-Common
                                             Diligent-GraphicsTools
                                             Diligent-GraphicsEngineOpenGL-shared
-                                            USKImgui)
+                                            glfw
+                                            ImGui)
+
+target_include_directories(USKEditorRendering PUBLIC ${USK_DILIGENT_DIR}
+                                                     ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_compile_definitions(USKEditorRendering PRIVATE ENGINE_DLL=1)
 

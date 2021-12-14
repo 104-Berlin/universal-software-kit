@@ -17,7 +17,7 @@
 #include "prefix_interface.h"
 
 
-#define INIT_IMGUI_FUNC EXTENSION_EXPORT_FUN void InitImGui() { ImGui::SetCurrentContext(Graphics::Wrapper::GetCurrentImGuiContext()); }
+#define INIT_IMGUI_FUNC EXTENSION_EXPORT_FUN void InitImGui() { ImGui::SetCurrentContext(editor_rendering::GetCurrentImGuiContext()); }
 
 #define APP_ENTRY INIT_IMGUI_FUNC\
                   EXTENSION_EXPORT_FUN void app_entry(const char* extensionName, Engine::EAppInit info)

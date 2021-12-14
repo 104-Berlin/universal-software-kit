@@ -5,6 +5,12 @@ using namespace Editor;
 using namespace Graphics;
 using namespace Engine;
 
+static void Editor::SetImGuiContext(ImGuiContext* context)
+{
+    ImGui::SetCurrentContext(context);
+}
+
+
 E_STORAGE_STRUCT(MySubType, 
     (double, SomeDouble),
     (int, SomeMoreInt)
@@ -74,7 +80,7 @@ EApplication::EApplication()
 void EApplication::Start(const EString& defaultRegisterPath) 
 {
     fLoadOnStartRegister = defaultRegisterPath;
-    editor_rendering::RunApplicationLoop([](){}, [](){}, [](){}, NULL);
+    editor_rendering::RunApplicationLoop(std::bind(&EApplication::Init, this), std::bind(&EApplication::RenderImGui, this), std::bind(&EApplication::CleanUp, this), &SetImGuiContext);
 }
 
 void EApplication::RegenerateMainMenuBar() 
@@ -186,9 +192,9 @@ void EApplication::RegenerateMainMenuBar()
     fMainMenu->AddChild(modal);
 }
 
-void EApplication::Init(Graphics::GContext* context) 
+void EApplication::Init() 
 {
-    fGraphicsContext = context;
+    //fGraphicsContext = context;
     fMainMenu = EMakeRef<EUIMainMenuBar>();
     RegisterDefaultPanels();
     RegisterDefaultResources();
@@ -200,6 +206,9 @@ void EApplication::Init(Graphics::GContext* context)
 
     // For ImGui dll linkage
     Engine::intern::InitUI();
+
+    ImGuiContext* context = ImGui::GetCurrentContext();
+
 
 
     ImGuiIO& io = ImGui::GetIO();

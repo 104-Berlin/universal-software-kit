@@ -1,18 +1,10 @@
 #include "editor_rendering.h"
 
 #include <iostream>
-#define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-#include "Common/interface/RefCntAutoPtr.hpp"
 
-#include "Graphics/GraphicsEngineOpenGL/interface/EngineFactoryOpenGL.h"
-#include "Graphics/GraphicsEngine/interface/RenderDevice.h"
-#include "Graphics/GraphicsEngine/interface/DeviceContext.h"
-#include "Graphics/GraphicsEngine/interface/SwapChain.h"
-
-#include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
@@ -21,6 +13,13 @@ using namespace Diligent;
 RefCntAutoPtr<IRenderDevice>  pDevice;
 RefCntAutoPtr<IDeviceContext> pImmediateContext;
 RefCntAutoPtr<ISwapChain>     pSwapChain;
+
+static ImGuiContext* imguiContext = nullptr;
+
+ImGuiContext* editor_rendering::GetCurrentImGuiContext()
+{
+    return imguiContext;
+}
 
 void editor_rendering::RunApplicationLoop(std::function<void()> initFunction, std::function<void()> RenderImGui, std::function<void()> CleanUp, void(*SetImGuiContext)(ImGuiContext*))
 {
@@ -61,9 +60,14 @@ void editor_rendering::RunApplicationLoop(std::function<void()> initFunction, st
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    imguiContext = ImGui::GetCurrentContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigWindowsMoveFromTitleBarOnly = true;
+
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -73,7 +77,14 @@ void editor_rendering::RunApplicationLoop(std::function<void()> initFunction, st
     ImGui_ImplGlfw_InitForOpenGL(wnd, true);
     ImGui_ImplOpenGL3_Init();
 
-
+    if (SetImGuiContext)
+    {
+        SetImGuiContext(imguiContext);
+    }
+    if (initFunction)
+    {
+        initFunction();
+    }
 
 
     bool running = true;
@@ -87,17 +98,58 @@ void editor_rendering::RunApplicationLoop(std::function<void()> initFunction, st
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
+
+
         ImGui::NewFrame();
 
-        ImGui::Begin("Test");
-        ImGui::Text("Hello, world!");
+        static bool p_open;
+
+        static bool opt_fullscreen_persistant = true;
+        static ImGuiDockNodeFlags opt_flags = ImGuiDockNodeFlags_None;
+        bool opt_fullscreen = opt_fullscreen_persistant;
+
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar;
+        if (opt_fullscreen)
+        {
+            ImGuiViewport* viewport = ImGui::GetMainViewport();
+            ImGui::SetNextWindowPos(viewport->Pos);
+            ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, viewport->Size.y - 32));
+            ImGui::SetNextWindowViewport(viewport->ID);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+            window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+        }
+
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::Begin("DockSpace Demo", &p_open, window_flags);
+        ImGui::PopStyleVar();
+
+
+        if (opt_fullscreen)
+            ImGui::PopStyleVar(2);
+
+        // Dockspace		         
+        ImGuiIO& io = ImGui::GetIO();		        
+        if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+        {		
+            ImGuiID dockspace_id = ImGui::GetID("MyDockspace");		
+            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), opt_flags);		
+        }
+        
+        if (RenderImGui)
+        {
+            RenderImGui();
+        }
+
         ImGui::End();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         pImmediateContext->Flush();
-        pSwapChain->Present();
+        //pSwapChain->Present();
 
         glfwSwapBuffers(wnd);
         glfwPollEvents();
@@ -107,6 +159,11 @@ void editor_rendering::RunApplicationLoop(std::function<void()> initFunction, st
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+
+    if (CleanUp)
+    {
+        CleanUp();
+    }
 
     glfwDestroyWindow(wnd);
     glfwTerminate();

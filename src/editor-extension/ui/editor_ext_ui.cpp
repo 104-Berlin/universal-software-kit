@@ -6,8 +6,8 @@ using namespace Engine;
 
 void intern::InitUI()
 {
-    Graphics::Wrapper::SetImGuiContext(Graphics::Wrapper::GetCurrentImGuiContext());
-    ImGui::SetCurrentContext(Graphics::Wrapper::GetCurrentImGuiContext());
+    editor_rendering::SetImGuiContext(editor_rendering::GetCurrentImGuiContext());
+    ImGui::SetCurrentContext(editor_rendering::GetCurrentImGuiContext());
 }
 
 EUIField::EUIField(const EString& label) 
@@ -148,7 +148,7 @@ void EUIField::HandleRenderEndBefore()
 
 void EUIField::HandleRenderEnd()
 {
-    ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
+    ImGuiContext& g = *editor_rendering::GetCurrentImGuiContext();
 
     fIsContextMenuOpen = false;
     if (fContextMenu)
