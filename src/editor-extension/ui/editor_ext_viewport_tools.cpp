@@ -65,7 +65,7 @@ bool EPointMoveTool::OnRender()
     float halfSize = 4.0f;
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    draw_list->AddRect({currentCenter.x - halfSize, currentCenter.y - halfSize}, {currentCenter.x + halfSize, currentCenter.y + halfSize}, 0xffffffff);
+    draw_list->AddRect({(float)currentCenter.x - halfSize, (float)currentCenter.y - halfSize}, {(float)currentCenter.x + halfSize, (float) currentCenter.y + halfSize}, 0xffffffff);
     //draw_list->AddCircleFilled({fCenterPosition.x + itemRect.Min.x, fCenterPosition.y + itemRect.Min.y}, 10.0f, 0xffffffff);
     return false;
 }
@@ -97,8 +97,8 @@ bool ELineEditTool::OnRender()
 
     float halfSize = 4.0f;
 
-    EVec2 startPoint = GetViewport()->Project(fLine->GetStart()) + ImConvert::ImToGlmVec2(itemRect.Min);
-    EVec2 endPoint = GetViewport()->Project(fLine->GetEnd()) + ImConvert::ImToGlmVec2(itemRect.Min);
+    EVec2 startPoint;// = GetViewport()->Project(fLine->GetStart()) + ImConvert::ImToGlmVec2(itemRect.Min);
+    EVec2 endPoint;// = GetViewport()->Project(fLine->GetEnd()) + ImConvert::ImToGlmVec2(itemRect.Min);
 
     const ImRect startAnchor(ImConvert::GlmToImVec2(startPoint - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(startPoint + EVec2(halfSize, halfSize)));
     const ImRect endAnchor(ImConvert::GlmToImVec2(endPoint - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(endPoint + EVec2(halfSize, halfSize)));
@@ -133,10 +133,10 @@ bool ELineEditTool::OnRender()
     switch (fCurrentSelection)
     {
     case Selection::START:
-        fLine->SetStart(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
+        //fLine->SetStart(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
         break;
     case Selection::END:
-        fLine->SetEnd(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
+        //fLine->SetEnd(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
         break;
     case Selection::NONE:
         break;
@@ -184,10 +184,10 @@ bool EBezierEditTool::OnRender()
 
     float halfSize = 4.0f;
 
-    EVec2 startPoint = GetViewport()->Project(fCurve->GetStartPos()) + ImConvert::ImToGlmVec2(itemRect.Min);
-    EVec2 endPoint = GetViewport()->Project(fCurve->GetEndPos()) + ImConvert::ImToGlmVec2(itemRect.Min);
-    EVec2 controllPoint1 = GetViewport()->Project(fCurve->GetControll1()) + ImConvert::ImToGlmVec2(itemRect.Min);
-    EVec2 controllPoint2 = GetViewport()->Project(fCurve->GetControll2()) + ImConvert::ImToGlmVec2(itemRect.Min);
+    EVec2 startPoint;// = GetViewport()->Project(fCurve->GetStartPos()) + ImConvert::ImToGlmVec2(itemRect.Min);
+    EVec2 endPoint;// = GetViewport()->Project(fCurve->GetEndPos()) + ImConvert::ImToGlmVec2(itemRect.Min);
+    EVec2 controllPoint1;// = GetViewport()->Project(fCurve->GetControll1()) + ImConvert::ImToGlmVec2(itemRect.Min);
+    EVec2 controllPoint2;// = GetViewport()->Project(fCurve->GetControll2()) + ImConvert::ImToGlmVec2(itemRect.Min);
 
     const ImRect startAnchor(ImConvert::GlmToImVec2(startPoint - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(startPoint + EVec2(halfSize, halfSize)));
     const ImRect endAnchor(ImConvert::GlmToImVec2(endPoint - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(endPoint + EVec2(halfSize, halfSize)));
@@ -241,16 +241,16 @@ bool EBezierEditTool::OnRender()
     switch (fCurrentSelection)
     {
     case Selection::START:
-        fCurve->SetStartPos(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
+        //fCurve->SetStartPos(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
         break;
     case Selection::END:
-        fCurve->SetEndPos(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
+        //fCurve->SetEndPos(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
         break;
     case Selection::CTRL1:
-        fCurve->SetControll1(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
+        //fCurve->SetControll1(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
         break;
     case Selection::CTRL2:
-        fCurve->SetControll2(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
+        //fCurve->SetControll2(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
         break;
     case Selection::NONE:
         break;

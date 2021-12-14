@@ -33,11 +33,11 @@
 #include "editor_rendering.h"
 
 
-typedef glm::vec2 EVec2;
-typedef glm::vec3 EVec3;
-typedef glm::vec4 EVec4;
+typedef Diligent::Vector2<double> EVec2;
+typedef Diligent::Vector3<double> EVec3;
+typedef Diligent::Vector4<double> EVec4;
 
-typedef glm::mat4 EMat4;
+typedef Diligent::Matrix4x4<double> EMat4;
 
 #include "default-types/editor_def_res_image.h"
 

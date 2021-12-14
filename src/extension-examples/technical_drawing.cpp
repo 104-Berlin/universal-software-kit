@@ -98,10 +98,10 @@ void ViewportToolFinish(events::EViewportToolFinishEvent event)
         if (editTool)
         {
             CurvePositions newPositions;
-            newPositions.Start = editTool->GetCurve()->GetStartPos();
-            newPositions.End = editTool->GetCurve()->GetEndPos();
-            newPositions.Controll1 = editTool->GetCurve()->GetControll1();
-            newPositions.Controll2 = editTool->GetCurve()->GetControll2();
+            //newPositions.Start = editTool->GetCurve()->GetStartPos();
+            //newPositions.End = editTool->GetCurve()->GetEndPos();
+            //newPositions.Controll1 = editTool->GetCurve()->GetControll1();
+            //newPositions.Controll2 = editTool->GetCurve()->GetControll2();
             shared::SetValue<CurvePositions>(currentEditCurveEntity, "Curve.Positions", newPositions);
         }
     }
@@ -111,8 +111,8 @@ void ViewportToolFinish(events::EViewportToolFinishEvent event)
         if (editTool)
         {
             LinePositions newPosition;
-            newPosition.Start = editTool->GetLine()->GetStart();
-            newPosition.End = editTool->GetLine()->GetEnd();
+            //newPosition.Start = editTool->GetLine()->GetStart();
+            //newPosition.End = editTool->GetLine()->GetEnd();
             shared::SetValue<LinePositions>(currentEditLineEntity, "Line.Positions", newPosition);
         }
     }
@@ -140,8 +140,8 @@ APP_ENTRY
             RLine* entityLine = (RLine*) meshes[entity][Line::_dsc.GetId()];
             if (entityLine)
             {
-                entityLine->SetStart(l.Positions.Start);
-                entityLine->SetEnd(l.Positions.End);
+                //entityLine->SetStart(l.Positions.Start);
+                //entityLine->SetEnd(l.Positions.End);
                 entityLine->SetThickness(l.Thickness);
             }
         }
@@ -153,8 +153,8 @@ APP_ENTRY
         {
             RLine* newLine = new RLine();
             meshes[entity][Line::_dsc.GetId()] = newLine;
-            newLine->SetStart(line.Positions.Start);
-            newLine->SetEnd(line.Positions.End);
+            //newLine->SetStart(line.Positions.Start);
+            //newLine->SetEnd(line.Positions.End);
 
             lineEdit->SetLine(newLine);
             currentEditLineEntity = entity;
@@ -170,11 +170,11 @@ APP_ENTRY
             RBezierCurve* entityLine = (RBezierCurve*) meshes[entity][Curve::_dsc.GetId()];
             if (entityLine)
             {
-                entityLine->SetStartPos(l.Positions.Start);
-                entityLine->SetEndPos(l.Positions.End);
-                entityLine->SetThickness(l.Thickness);
-                entityLine->SetControll1(l.Positions.Controll1);
-                entityLine->SetControll2(l.Positions.Controll2);
+                //entityLine->SetStartPos(l.Positions.Start);
+                //entityLine->SetEndPos(l.Positions.End);
+                //entityLine->SetThickness(l.Thickness);
+                //entityLine->SetControll1(l.Positions.Controll1);
+                //entityLine->SetControll2(l.Positions.Controll2);
                 entityLine->SetSteps(l.Steps);
             }
         }
@@ -186,10 +186,10 @@ APP_ENTRY
         {
             RBezierCurve* newLine = new RBezierCurve();
             meshes[entity][Curve::_dsc.GetId()] = newLine;
-            newLine->SetStartPos(line.Positions.Start);
-            newLine->SetEndPos(line.Positions.End);
-            newLine->SetControll1(line.Positions.Controll1);
-            newLine->SetControll2(line.Positions.Controll2);
+            //newLine->SetStartPos(line.Positions.Start);
+            //newLine->SetEndPos(line.Positions.End);
+            //newLine->SetControll1(line.Positions.Controll1);
+            //newLine->SetControll2(line.Positions.Controll2);
             newLine->SetSteps(line.Steps);
             
             bezierEdit->SetBezierCurve(newLine);
@@ -206,7 +206,7 @@ APP_ENTRY
         EVec3 posVector;
         if (pos->GetValue<EVec3>(posVector))
         {
-            graphicsMesh->SetPosition(posVector);
+            //graphicsMesh->SetPosition(posVector);
         }
     }, drawingViewport.lock().get());
     shared::Events().AddEntityChangeEventListener("Plane.Rotation", [](ERegister::Entity entity, const EString& ident){
@@ -216,7 +216,7 @@ APP_ENTRY
         EVec3 posVector;
         if (pos->GetValue<EVec3>(posVector))
         {
-            graphicsMesh->SetRotation(glm::vec3{glm::radians(posVector.x), glm::radians(posVector.y), glm::radians(posVector.z)});
+            //graphicsMesh->SetRotation(glm::vec3{glm::radians(posVector.x), glm::radians(posVector.y), glm::radians(posVector.z)});
         }
     }, drawingViewport.lock().get());
     shared::Events().AddEntityChangeEventListener("Plane.Scale", [](ERegister::Entity entity, const EString& ident){
@@ -226,7 +226,7 @@ APP_ENTRY
         EVec3 posVector;
         if (pos->GetValue<EVec3>(posVector))
         {
-            graphicsMesh->SetScale(posVector);
+            //graphicsMesh->SetScale(posVector);
         }
     }, drawingViewport.lock().get());
 
@@ -240,7 +240,7 @@ APP_ENTRY
             gMesh->SetData(planeVertices, planeIndices);
             drawingViewport.lock()->GetScene().Add(gMesh);
 
-            if (mesh.Scale.length() == 0)
+            if (Diligent::length(mesh.Scale) == 0)
             {
                 shared::SetValue<EVec3>(entity, "Plane.Scale", {1.0f, 1.0f, 1.0f});
             }

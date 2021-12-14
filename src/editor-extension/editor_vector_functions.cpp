@@ -2,12 +2,12 @@
 
 ImVec2 ImConvert::GlmToImVec2(const EVec2& vector)
 {
-	return {vector.x, vector.y};
+	return {(float)vector.x, (float)vector.y};
 }
 
 ImVec4 ImConvert::GlmToImVec4(const EVec4& vector)
 {
-	return {vector.x, vector.y, vector.z, vector.w};
+	return {(float)vector.x, (float)vector.y, (float)vector.z, (float)vector.w};
 }
 
 

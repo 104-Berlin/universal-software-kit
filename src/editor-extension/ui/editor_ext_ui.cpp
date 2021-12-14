@@ -194,7 +194,8 @@ void EUIField::HandleRenderEnd()
 
         EVec2 mouseDelta = mousePos - fLastMousePos;
         fLastMousePos = mousePos;
-        if (glm::length(mouseDelta) > 0.0f)
+
+        if (Diligent::length(mouseDelta) > 0.0f)
         {
             fEventDispatcher.Enqueue<events::EMouseMoveEvent>({mousePos, mouseDelta});
         }
@@ -211,15 +212,15 @@ void EUIField::HandleRenderEnd()
         {
             fEventDispatcher.Enqueue<events::EMouseDownEvent>(events::EMouseDownEvent{mousePos, 2});
         }
-        if (glm::length(mouseDrag0) > 0.0f)
+        if (Diligent::length(mouseDrag0) > 0.0f)
         {
             fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag0, 0});
         }
-        if (glm::length(mouseDrag1) > 0.0f)
+        if (Diligent::length(mouseDrag1) > 0.0f)
         {
             fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag1, 1});
         }
-        if (glm::length(mouseDrag2) > 0.0f)
+        if (Diligent::length(mouseDrag2) > 0.0f)
         {
             fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag2, 2});
         }
@@ -981,7 +982,7 @@ void EUIGrid::OnBeforeChildRender(EWeakRef<EUIField> child)
 {
     if (!child.expired())
     {
-        child.lock()->SetSize({fCellWidth, fCellHeight});
+        child.lock()->SetSize(EVec2(fCellWidth, fCellHeight));
     }
     ImGuiStyle& style = ImGui::GetStyle();
     if (fCurrentChildCount != 0)
