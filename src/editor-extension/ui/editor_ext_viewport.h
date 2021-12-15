@@ -14,6 +14,8 @@ namespace Engine {
 
         virtual bool OnRender() override;
     private:
+        Diligent::RefCntAutoPtr<Diligent::ITextureView> fRenderTarget;
+
         Graphics::GFrameBuffer* fFrameBuffer;
 
         Renderer::RRenderer3D fRenderer;
