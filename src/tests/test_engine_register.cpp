@@ -80,8 +80,8 @@ TEST(RegisterTest, Basics)
 	EDataBase scene;
 
 	bool componentCreated = false;
-	scene.GetEventDispatcher().Connect<ComponentCreateEvent>([&componentCreated, myTestComponent](ComponentCreateEvent event){
-		if (event.ValueId == myTestComponent.GetId())
+	scene.GetEventDispatcher().Connect<EntityChangeEvent>([&componentCreated, myTestComponent](EntityChangeEvent event){
+		if (event.Type.Value == EntityChangeType::COMPONENT_ADDED)
 		{
 			componentCreated = true;
 		}

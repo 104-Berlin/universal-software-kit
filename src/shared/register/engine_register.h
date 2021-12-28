@@ -84,41 +84,27 @@ namespace Engine {
         void UpdateEvents();
     };
 
-    
-    E_STORAGE_STRUCT(EntityCreateEvent,
+    E_STORAGE_STRUCT(EntityHandle,
         (EDataBase::Entity, Handle)
     )
 
-    E_STORAGE_STRUCT(ComponentCreateEvent, 
-        (EValueDescription::t_ID, ValueId),
-        (EDataBase::Entity, Handle)
-    )
-
-    E_STORAGE_STRUCT(ComponentDeleteEvent,
-        (EValueDescription::t_ID, ValueId),
-        (EDataBase::Entity, Handle)
-    )
-
-    E_STORAGE_STRUCT(ValueChangeEvent,
+    E_STORAGE_STRUCT(ComponentChangeData,
         (EString, Identifier),
-        (EDataBase::Entity, Handle)
+        (EAny, NewValue)
     )
 
+    E_STORAGE_ENUM(EntityChangeType,
+        ENTITY_CREATED,
+        ENTITY_DESTROYED,
+        COMPONENT_ADDED,
+        COMPONENT_REMOVED,
+        COMPONENT_CHANGED
+    )
 
-
-    namespace events {
-
-        
-
-        struct EComponentChangeEvent {
-            EDataBase::Entity Entity;
-            EStructProperty* Property;
-        };
-
-        struct EComponentDeleteEvent {
-            EDataBase::Entity Entity;
-        };
-
-    }
+    E_STORAGE_STRUCT(EntityChangeEvent,
+        (EntityChangeType, Type),
+        (EntityHandle, Entity),
+        (EAny, Data)
+    )
 
 }

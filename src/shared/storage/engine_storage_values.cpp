@@ -3,7 +3,6 @@
 
 using namespace Engine;
 
-const EValueDescription EAny::_dsc = EValueDescription(EValueType::ANY/*In case of own struct use EValueType::STRUCT*/, "Any");
 
 
 EProperty::EProperty(const EString& name, EValueDescription description) 

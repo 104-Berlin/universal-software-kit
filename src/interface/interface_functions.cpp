@@ -9,7 +9,7 @@ using namespace Engine;
 shared::StaticSharedContext* shared::StaticSharedContext::fInstance = nullptr;
 
 
-shared::ERegisterEventDispatcher& shared::Events()
+EEventDispatcher& shared::Events()
 {
     return shared::StaticSharedContext::instance().Events();
 }
@@ -264,7 +264,7 @@ namespace Engine {
             return fRegisterConnection;
         }
         
-        ERegisterEventDispatcher& StaticSharedContext::Events() 
+        EEventDispatcher& StaticSharedContext::Events() 
         {
             return fRegisterEventDispatcher;
         }

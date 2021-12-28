@@ -176,6 +176,8 @@ namespace Engine {
     };
 
     
+    // Enum property member
+    HAS_MEMBER(Value)
 
 
     class E_API EEnumProperty : public EProperty
@@ -191,6 +193,32 @@ namespace Engine {
         void SetCurrentValue(u32 value);
         u32 GetCurrentValue() const;
         
+        /**
+         * @brief This is used for the STORAGE Macro to work
+         * 
+         * @tparam T - The type of the enum. Created with E_STORAGE_ENUM (...) see engine_storage_macro.h
+         */
+        template <typename T>
+        bool GetCurrentValue(T& outValue) const
+        {
+            if constexpr (has_member_Value <T>::value)
+            {
+                outValue.Value = (typename T::opts)fValue;
+                return true;
+            }
+            return false;
+        }
+
+        template <typename T>
+        bool SetCurrentValue(const T& Value)
+        {
+            if constexpr (has_member_Value <T>::value)
+            {
+                SetCurrentValue(static_cast<u32>(Value.Value));
+                return true;
+            }
+            return false;
+        }
 
     protected:
         virtual EProperty* OnClone() override;
@@ -414,7 +442,7 @@ namespace Engine {
         }
 
     public:
-        static const EValueDescription _dsc;
+        static inline EValueDescription _dsc = EValueDescription(EValueType::ANY/*In case of own struct use EValueType::STRUCT*/, "Any");
     };
 
 }

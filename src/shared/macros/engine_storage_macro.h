@@ -54,7 +54,7 @@
                                         case ::Engine::EValueType::ANY:\
                                         case ::Engine::EValueType::STRUCT: static_cast<::Engine::EStructProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetValue<type>(value. s_name ); break;\
                                         case ::Engine::EValueType::PRIMITIVE: static_cast<::Engine::EValueProperty<type>*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetValue(value. s_name ); break;\
-                                        case ::Engine::EValueType::ENUM: break;/*TODO*/\
+                                        case ::Engine::EValueType::ENUM: static_cast<::Engine::EEnumProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetCurrentValue<type>(value. s_name ); break;/*TODO*/\
                                         case ::Engine::EValueType::ARRAY:\
                                         case ::Engine::EValueType::UNKNOWN: break;\
                                         }\
@@ -62,6 +62,8 @@
                                     }
 #define E_SET_PROPERTY(typename) EXPAND ( E_SET_PROPERTY2 typename )
 
+
+#define E_ENUM_VALUE(s_name) EXPAND ( E_CONCATENATE ( EXPAND ( E_CONCATENATE ( EXPAND ( E_CONCATENATE ( EXPAND ( E_CONCATENATE(value, .) ), s_name ) ), . ) ), Value ) )
 
 #define E_SET_SELF2(type, s_name, ...) {::Engine::EValueDescription valDsc = ::Engine::getdsc::GetDescription<type>();\
                                     if constexpr (is_vector<type>::value)\
@@ -83,7 +85,7 @@
                                         case ::Engine::EValueType::ANY:\
                                         case ::Engine::EValueType::STRUCT: static_cast<const ::Engine::EStructProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetValue<type>(value. s_name ); break;\
                                         case ::Engine::EValueType::PRIMITIVE: value. s_name = static_cast<const ::Engine::EValueProperty<type>*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetValue(); break;\
-                                        case ::Engine::EValueType::ENUM: break;/*TODO*/\
+                                        case ::Engine::EValueType::ENUM: static_cast<const ::Engine::EEnumProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetCurrentValue<type>(value. s_name); break;/*TODO*/\
                                         case ::Engine::EValueType::ARRAY:\
                                         case ::Engine::EValueType::UNKNOWN: break;\
                                         }\
@@ -166,6 +168,9 @@
                                     static inline ::Engine::EValueDescription _dsc = ::Engine::EValueDescription::CreateEnum(EXPAND(E_STRINGIFY(name)), {\
                                             EXPAND (E_LOOP_ARGS(E_CREATE_ENUM_DSC, __VA_ARGS__))\
                                     });\
+                                    name () = default;\
+                                    name (opts value) : Value(value) {}\
+                                    name (u32 value) : Value(static_cast<opts>(value)) {}\
                                     static bool ToProperty(const name & value, ::Engine::EStructProperty* property)\
                                     {\
                                         EProperty* prop = property;\

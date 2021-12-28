@@ -305,9 +305,9 @@ void EApplication::RegisterDefaultPanels()
     registerPanel->AddChild(EMakeRef<EBasicRegisterView>());
 
     fUIRegister.RegisterItem("Core", universalSceneView1);
-    fUIRegister.RegisterItem("Core", universalSceneView2);
-    fUIRegister.RegisterItem("Core", universalSceneView3);
-    fUIRegister.RegisterItem("Core", universalSceneView4);
+    //fUIRegister.RegisterItem("Core", universalSceneView2);
+    //fUIRegister.RegisterItem("Core", universalSceneView3);
+    //fUIRegister.RegisterItem("Core", universalSceneView4);
     fUIRegister.RegisterItem("Core", resourcePanel);
     fUIRegister.RegisterItem("Core", extensionPanel);
     fUIRegister.RegisterItem("Core", connectionStatePanel);

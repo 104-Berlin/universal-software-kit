@@ -7,44 +7,7 @@ namespace Engine {
         )
     namespace shared {
 
-        class E_INTER_API ERegisterEventDispatcher : public EEventDispatcher
-        {
-        public:
-            template <typename Callback>
-            void AddComponentCreateEventListener(const EValueDescription& description, Callback cb, void* key = 0)
-            {
-                Connect<ComponentCreateEvent>([cb, description](ComponentCreateEvent event){
-                    if (event.ValueId == description.GetId())
-                    {
-                        std::invoke(cb, event.Handle);
-                    }
-                }, key);
-            }
-
-            template <typename Callback>
-            void AddComponentDeleteEventListener(const EValueDescription& description, Callback cb, void* key = 0)
-            {
-                Connect<ComponentDeleteEvent>([cb, description](ComponentDeleteEvent event){
-                    if (description.GetId() == event.ValueId)
-                    {
-                        std::invoke(cb, event.Handle);
-                    }
-                }, key);
-            }
-
-            template <typename Callback>
-            void AddEntityChangeEventListener(const EString& valueIdent, Callback cb, void* key = 0)
-            {
-                Connect<ValueChangeEvent>([cb, valueIdent](ValueChangeEvent event){
-                    if (event.Identifier.length() < valueIdent.length()) {return;}
-                    if (valueIdent == event.Identifier.substr(0, valueIdent.length()))
-                    {
-                        std::invoke(cb, event.Handle, valueIdent);
-                    }
-                }, key);
-            }
-        };
-
+        
 
         class E_INTER_API StaticSharedContext
         {
@@ -52,7 +15,7 @@ namespace Engine {
             EExtensionManager               fExtensionManager;   // Loaded extensions, e.G. Components, ResourceTypes, etc.
             ERegisterConnection             fRegisterConnection; // Client communication with Register
             ERegisterSocket*                fRegisterSocket;     // Register Provider / Server (Entities and Data)
-            ERegisterEventDispatcher        fRegisterEventDispatcher; // Event Dispatcher for Register. All events the register provides are dispatched here.
+            EEventDispatcher                fRegisterEventDispatcher; // Event Dispatcher for Register. All events the register provides are dispatched here.
         public:
             StaticSharedContext();
             ~StaticSharedContext();
@@ -60,7 +23,7 @@ namespace Engine {
             EExtensionManager&  GetExtensionManager();
             ERegisterConnection&  GetRegisterConnection();
 
-            ERegisterEventDispatcher& Events();
+            EEventDispatcher& Events();
 
             bool IsLocaleServerRunning() const;
             void RestartLocaleServer(int port = 1420);
@@ -85,7 +48,7 @@ namespace Engine {
             }
         };
 
-        E_INTER_API ERegisterEventDispatcher& Events();
+        E_INTER_API EEventDispatcher& Events();
         E_INTER_API EExtensionManager& ExtensionManager();
 
         

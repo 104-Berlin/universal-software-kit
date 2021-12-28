@@ -131,6 +131,16 @@ EJson WriteStructToJs(EStructProperty* property)
     return result;
 }
 
+EJson WriteAnyToJs(EStructProperty* property)
+{
+    EProperty* value = property->GetProperty("value");
+    if (!value)
+    {
+        return EJson();
+    }
+    return ESerializer::WritePropertyToJs(value, true);
+}
+
 EJson WriteEnumToJs(EEnumProperty* property)
 {
     EJson result = EJson::object();
@@ -159,7 +169,7 @@ EJson ESerializer::WritePropertyToJs(EProperty* property, bool writeDescription)
     {
     case EValueType::PRIMITIVE: valueJson = WritePrimitiveToJs(property); break;
     case EValueType::ARRAY: valueJson = WriteArrayToJs(static_cast<EArrayProperty*>(property)); break;
-    case EValueType::ANY:
+    case EValueType::ANY: valueJson = WriteAnyToJs(static_cast<EStructProperty*>(property)); break;
     case EValueType::STRUCT: valueJson = WriteStructToJs(static_cast<EStructProperty*>(property)); break;
     case EValueType::ENUM: valueJson = WriteEnumToJs(static_cast<EEnumProperty*>(property)); break;
     case EValueType::UNKNOWN: return 0;

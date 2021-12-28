@@ -49,7 +49,8 @@ EDataBase::Entity EDataBase::CreateEntity()
         currentEntity++;
     }
     fAliveEntites.push_back(newEntity);
-    fEventDispatcher.Enqueue<EntityCreateEvent>({newEntity});
+    EntityChangeEvent event(EntityChangeType::ENTITY_CREATED, newEntity);
+    fEventDispatcher.Enqueue<EntityChangeEvent>(event);
     return newEntity;
 }
 
@@ -62,10 +63,11 @@ void EDataBase::DestroyEntity(Entity entity)
     }
     for (auto& entry : fComponentStorage)
     {
-        fEventDispatcher.Enqueue<ComponentDeleteEvent>({entry.first, entity});
         delete entry.second[entity];
         entry.second.erase(entity);
     }
+    EntityChangeEvent event(EntityChangeType::ENTITY_DESTROYED, entity);
+    fEventDispatcher.Enqueue<EntityChangeEvent>(event);
     fAliveEntites.erase(it);
     fDeadEntites.push_back(entity);
 }
@@ -81,11 +83,16 @@ void EDataBase::Clear()
     {
         for (auto& storage : entry.second)
         {
-            fEventDispatcher.Enqueue<ComponentDeleteEvent>({entry.first, storage.first});
             delete storage.second;
         }
     }
     fComponentStorage.clear();
+    for (auto& entity : fAliveEntites)
+    {
+        EntityChangeEvent event(EntityChangeType::ENTITY_DESTROYED, entity);
+        fEventDispatcher.Enqueue<EntityChangeEvent>(event);
+    }
+
     fAliveEntites.clear();
     fDeadEntites.clear();
 }
@@ -104,13 +111,21 @@ EStructProperty* EDataBase::AddComponent(Entity entity, const EValueDescription&
     if (!HasComponent(entity, description.GetId()))
     {
         EStructProperty* storage = static_cast<EStructProperty*>(EProperty::CreateFromDescription(description.GetId(), description));
-        storage->SetChangeFunc([this, entity](EString ident){
-            fEventDispatcher.Enqueue<ValueChangeEvent>({ident, entity});
+        storage->SetChangeFunc([this, entity, storage](EString ident){
+            EntityChangeEvent event(EntityChangeType::COMPONENT_CHANGED, entity);
+            ComponentChangeData data(ident);
+            data.NewValue.SetValue(ERef<EProperty>(storage->Clone()));
+            ERef<EProperty> newValue = ERef<EProperty>(EProperty::CreateFromDescription(ComponentChangeData::_dsc.GetId(), ComponentChangeData::_dsc));
+            convert::setter(newValue.get(), data);
+            event.Data.SetValue(newValue);
+            fEventDispatcher.Enqueue<EntityChangeEvent>(event);
         });
 
         fComponentStorage[description.GetId()][entity] = storage;
 
-        fEventDispatcher.Enqueue<ComponentCreateEvent>({description.GetId(), entity});
+        EntityChangeEvent event(EntityChangeType::COMPONENT_ADDED, entity);
+        event.Data.SetValue(ERef<EProperty>(storage->Clone()));
+        fEventDispatcher.Enqueue<EntityChangeEvent>(event);
         return storage;
     }
     return nullptr;
@@ -125,7 +140,13 @@ void EDataBase::RemoveComponent(Entity entity, const EValueDescription& componen
     delete fComponentStorage[componentId.GetId()][entity];
     fComponentStorage[componentId.GetId()].erase(entity);
 
-    fEventDispatcher.Enqueue<ComponentDeleteEvent>({componentId.GetId(), entity});
+    EntityChangeEvent event(EntityChangeType::COMPONENT_REMOVED, entity);
+    ComponentChangeData data(componentId.GetId());
+    ERef<EProperty> newValue = ERef<EProperty>(EProperty::CreateFromDescription(ComponentChangeData::_dsc.GetId(), ComponentChangeData::_dsc));
+    convert::setter(newValue.get(), data);
+    event.Data.SetValue(newValue);
+        
+    fEventDispatcher.Enqueue<EntityChangeEvent>(event);
 }
 
 bool EDataBase::HasComponent(Entity entity, const EValueDescription& componentId) 

@@ -6,42 +6,42 @@ using namespace Engine;
 EObjectView::EObjectView(Engine::EUIValueRegister* valueFieldRegister)
     : EUIField("OBJECTVIEW"), fSelectedEntity(0), fUIValueRegister(valueFieldRegister)
 {
-    
-    shared::Events().Connect<EntityCreateEvent>([this](EntityCreateEvent event){
-        if (fEntitiesTable.expired()) { return; }
-    
-        ERef<EUITableRow> newRow = EMakeRef<EUITableRow>();
-        fEntityRows.insert({event.Handle, newRow});
-        fEntitiesTable.lock()->AddChild(newRow);
-
-        EWeakRef<EUISelectable> selectabe = std::dynamic_pointer_cast<EUISelectable>(newRow->AddChild(EMakeRef<EUISelectable>(std::to_string(event.Handle))).lock());
-        selectabe.lock()->SetStretchToAllColumns(true);
-
-        selectabe.lock()->AddEventListener<events::ESelectableChangeEvent>([this, event](events::ESelectableChangeEvent se){
-            if (se.Selected)
-            {
-                if (fSelectedEntity)
-                {
-                    std::dynamic_pointer_cast<EUISelectable>(fEntityRows[fSelectedEntity].lock()->GetChildAt(0).lock())->SetSelected(false);
-                }
-
-                fSelectedEntity = event.Handle;
-            }
-            else
-            {
-                fSelectedEntity = 0;
-            }
-            fComponentsView.lock()->SetDirty();
-        });
-
-        //newRow->AddChild(EMakeRef<EUILabel>("Some Text"));
-    }, this);
-    shared::Events().Connect<ComponentCreateEvent>([this](ComponentCreateEvent event){
-        if (event.Handle == fSelectedEntity)
+    shared::Events().Connect<EntityChangeEvent>([this](EntityChangeEvent e){
+        if (e.Type == EntityChangeType::COMPONENT_ADDED && e.Entity.Handle == fSelectedEntity)
         {
             fComponentsView.lock()->SetDirty();
         }
+        else if (e.Type == EntityChangeType::ENTITY_CREATED)
+        {
+            if (fEntitiesTable.expired()) { return; }
+    
+            ERef<EUITableRow> newRow = EMakeRef<EUITableRow>();
+            fEntityRows.insert({e.Entity.Handle, newRow});
+            fEntitiesTable.lock()->AddChild(newRow);
+
+            EWeakRef<EUISelectable> selectabe = std::dynamic_pointer_cast<EUISelectable>(newRow->AddChild(EMakeRef<EUISelectable>(std::to_string(e.Entity.Handle))).lock());
+            selectabe.lock()->SetStretchToAllColumns(true);
+
+            selectabe.lock()->AddEventListener<events::ESelectableChangeEvent>([this, e](events::ESelectableChangeEvent se){
+                if (se.Selected)
+                {
+                    if (fSelectedEntity)
+                    {
+                        std::dynamic_pointer_cast<EUISelectable>(fEntityRows[fSelectedEntity].lock()->GetChildAt(0).lock())->SetSelected(false);
+                    }
+
+                    fSelectedEntity = e.Entity.Handle;
+                }
+                else
+                {
+                    fSelectedEntity = 0;
+                }
+                fComponentsView.lock()->SetDirty();
+            });
+        }
+        
     }, this);
+
     shared::Events().Connect<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent e){
         fComponentsView.lock()->GetContextMenu().lock()->SetDirty();
     }, this);
@@ -159,14 +159,22 @@ ERef<EUIField> EObjectView::RenderEnum(Engine::EEnumProperty* storage, EString n
     result->AddEventListener<events::ESelectChangeEvent>([this, nameIdent](events::ESelectChangeEvent event){
         shared::SetEnumValue(fSelectedEntity, nameIdent, event.Index);
     });
-    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](EDataBase::Entity entity, const EString& valueIdent){
+
+    shared::Events().Connect<EntityChangeEvent>([this, weakResult, nameIdent](EntityChangeEvent e){
+        if (e.Entity.Handle != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        if (entity == fSelectedEntity)
+        if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
         {
-            ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
-            weakResult.lock()->SetSelectedIndex(std::static_pointer_cast<EEnumProperty>(prop)->GetCurrentValue());
+            ComponentChangeData componentChangeData;
+            if (convert::getter(e.Data.Value(), &componentChangeData))
+            {
+                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                {
+                    weakResult.lock()->SetSelectedIndex(static_cast<EEnumProperty*>(componentChangeData.NewValue.Value())->GetCurrentValue());
+                }
+            }
         }
-    }, this);
+    }, result.get());
 
     return result;
 }
@@ -201,11 +209,22 @@ ERef<EUIField> EObjectView::RenderArray(Engine::EArrayProperty* storage, EString
     });
 
 
-
-    shared::Events().AddEntityChangeEventListener(nameIdent, [weakRef](EDataBase::Entity entity, const EString& valueIdent){
-        if (weakRef.expired()) { return;}
-        weakRef.lock()->SetDirty();
+    shared::Events().Connect<EntityChangeEvent>([this, weakRef, nameIdent](EntityChangeEvent e){
+        if (e.Entity.Handle != fSelectedEntity) { return; }
+        if (weakRef.expired()) { return; }
+        if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
+        {
+            ComponentChangeData componentChangeData;
+            if (convert::getter(e.Data.Value(), &componentChangeData))
+            {
+                if (componentChangeData.Identifier == nameIdent)
+                {
+                    weakRef.lock()->SetDirty();
+                }
+            }
+        }
     }, field.get());
+
     return field;
 }
 
@@ -219,11 +238,21 @@ ERef<EUIField> EObjectView::RenderBool(Engine::EValueProperty<bool>* storage, ES
     result->AddEventListener<events::ECheckboxEvent>([this, nameIdent](events::ECheckboxEvent event){
         shared::SetValue<bool>(fSelectedEntity, nameIdent, event.Checked);
     });
-    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](EDataBase::Entity entity, const EString& valueIdent){
-        if (entity != fSelectedEntity) { return; }
+
+    shared::Events().Connect<EntityChangeEvent>([this, weakResult, nameIdent](EntityChangeEvent e){
+        if (e.Entity.Handle != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
-        weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<bool>>(prop)->GetValue());
+        if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
+        {
+            ComponentChangeData componentChangeData;
+            if (convert::getter(e.Data.Value(), &componentChangeData))
+            {
+                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                {
+                    weakResult.lock()->SetValue(static_cast<EValueProperty<bool>*>(componentChangeData.NewValue.Value())->GetValue());
+                }
+            }
+        }
     }, result.get());
     return result;
 }
@@ -239,11 +268,20 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage, 
         shared::SetValue<i32>(fSelectedEntity, nameIdent, event.Value);
     });
 
-    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](EDataBase::Entity entity, const EString& valueIdent){
-        if (entity != fSelectedEntity) { return; }
+    shared::Events().Connect<EntityChangeEvent>([this, weakResult, nameIdent](EntityChangeEvent e){
+        if (e.Entity.Handle != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
-        weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<i32>>(prop)->GetValue());
+        if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
+        {
+            ComponentChangeData componentChangeData;
+            if (convert::getter(e.Data.Value(), &componentChangeData))
+            {
+                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                {
+                    weakResult.lock()->SetValue(static_cast<EValueProperty<i32>*>(componentChangeData.NewValue.Value())->GetValue());
+                }
+            }
+        }
     }, result.get());
     return result;
 }
@@ -259,11 +297,20 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u32>* storage, 
         shared::SetValue<i32>(fSelectedEntity, nameIdent, event.Value);
     });
 
-    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](EDataBase::Entity entity, const EString& valueIdent){
-        if (entity != fSelectedEntity) { return; }
+    shared::Events().Connect<EntityChangeEvent>([this, weakResult, nameIdent](EntityChangeEvent e){
+        if (e.Entity.Handle != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
-        weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<u32>>(prop)->GetValue());
+        if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
+        {
+            ComponentChangeData componentChangeData;
+            if (convert::getter(e.Data.Value(), &componentChangeData))
+            {
+                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                {
+                    weakResult.lock()->SetValue(static_cast<EValueProperty<u32>*>(componentChangeData.NewValue.Value())->GetValue());
+                }
+            }
+        }
     }, result.get());
     return result;
 }
@@ -278,12 +325,20 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u64>* storage, 
         shared::SetValue<i32>(fSelectedEntity, nameIdent, event.Value);
     });
 
-
-    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](EDataBase::Entity entity, const EString& valueIdent){
-        if (entity != fSelectedEntity) { return; }
+    shared::Events().Connect<EntityChangeEvent>([this, weakResult, nameIdent](EntityChangeEvent e){
+        if (e.Entity.Handle != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
-        weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<u64>>(prop)->GetValue());
+        if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
+        {
+            ComponentChangeData componentChangeData;
+            if (convert::getter(e.Data.Value(), &componentChangeData))
+            {
+                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                {
+                    weakResult.lock()->SetValue(static_cast<EValueProperty<u64>*>(componentChangeData.NewValue.Value())->GetValue());
+                }
+            }
+        }
     }, result.get());
     return result;
 }
@@ -299,12 +354,20 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<double>* storage
         shared::SetValue<double>(fSelectedEntity, nameIdent, event.Value);
     });
 
-
-    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](EDataBase::Entity entity, const EString& valueIdent){
-        if (entity != fSelectedEntity) { return; }
+    shared::Events().Connect<EntityChangeEvent>([this, weakResult, nameIdent](EntityChangeEvent e){
+        if (e.Entity.Handle != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
-        weakResult.lock()->SetValue((float)std::static_pointer_cast<EValueProperty<double>>(prop)->GetValue());
+        if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
+        {
+            ComponentChangeData componentChangeData;
+            if (convert::getter(e.Data.Value(), &componentChangeData))
+            {
+                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                {
+                    weakResult.lock()->SetValue(static_cast<EValueProperty<double>*>(componentChangeData.NewValue.Value())->GetValue());
+                }
+            }
+        }
     }, result.get());
     return result;
 }
@@ -320,12 +383,20 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<float>* storage,
         shared::SetValue<float>(fSelectedEntity, nameIdent, event.Value);
     });
 
-
-    shared::Events().AddEntityChangeEventListener(nameIdent, [this, weakResult](EDataBase::Entity entity, const EString& valueIdent){
-        if (entity != fSelectedEntity) { return; }
+    shared::Events().Connect<EntityChangeEvent>([this, weakResult, nameIdent](EntityChangeEvent e){
+        if (e.Entity.Handle != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
-        weakResult.lock()->SetValue((float)std::static_pointer_cast<EValueProperty<float>>(prop)->GetValue());
+        if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
+        {
+            ComponentChangeData componentChangeData;
+            if (convert::getter(e.Data.Value(), &componentChangeData))
+            {
+                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                {
+                    weakResult.lock()->SetValue(static_cast<EValueProperty<float>*>(componentChangeData.NewValue.Value())->GetValue());
+                }
+            }
+        }
     }, result.get());
     return result;
 }
@@ -340,11 +411,22 @@ ERef<EUIField> EObjectView::RenderString(Engine::EValueProperty<EString>* storag
         shared::SetValue<EString>(fSelectedEntity, nameIdent, event.Value);
     });
 
-    shared::Events().AddEntityChangeEventListener(nameIdent, [weakResult](EDataBase::Entity entity, const EString& valueIdent){
+    shared::Events().Connect<EntityChangeEvent>([this, weakResult, nameIdent](EntityChangeEvent e){
+        if (e.Entity.Handle != fSelectedEntity) { return; }
         if (weakResult.expired()) { return; }
-        ERef<EProperty> prop = shared::GetValueFromIdent(entity, valueIdent);
-        weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<EString>>(prop)->GetValue());
+        if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
+        {
+            ComponentChangeData componentChangeData;
+            if (convert::getter(e.Data.Value(), &componentChangeData))
+            {
+                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                {
+                    weakResult.lock()->SetValue(static_cast<EValueProperty<EString>*>(componentChangeData.NewValue.Value())->GetValue());
+                }
+            }
+        }
     }, result.get());
+
     return result;
 }
 
