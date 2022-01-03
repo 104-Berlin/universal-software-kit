@@ -66,7 +66,7 @@ namespace Engine {
         
         ESharedError E_INTER_API CreateComponent(const EString& componentId, EDataBase::Entity entity);
         ESharedError E_INTER_API CreateComponent(const EValueDescription& componentId, EDataBase::Entity entity);
-        ESharedError E_INTER_API CreateComponent(EStructProperty* componentValue, EDataBase::Entity entity);
+        ESharedError E_INTER_API CreateComponent(ERef<EProperty> componentValue, EDataBase::Entity entity);
 
         template <typename T>
         ESharedError CreateComponent(EDataBase::Entity entity)
@@ -86,9 +86,9 @@ namespace Engine {
             EValueDescription dsc = getdsc::GetDescription<T>();
             if (dsc.Valid())
             {
-                EProperty* property = EProperty::CreateFromDescription(dsc.GetId(), dsc);
-                convert::setter(property, value);
-                EString propertyValue = ESerializer::WritePropertyToJs(property).dump();
+                ERef<EProperty> property = EProperty::CreateFromDescription(dsc.GetId(), dsc);
+                convert::setter(property.get(), value);
+                EString propertyValue = ESerializer::WritePropertyToJs(property.get()).dump();
                 SetValue(entity, valueIdent, propertyValue);
             }
             return false;

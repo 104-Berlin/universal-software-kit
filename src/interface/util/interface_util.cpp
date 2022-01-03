@@ -35,11 +35,11 @@ void PrintProperty_Struct(EStructProperty* prop)
     std::cout << std::endl;
     for (auto& entry : dsc.GetStructFields())
     {
-        EProperty* childProp = prop->GetProperty(entry.first);
+        ERef<EProperty> childProp = prop->GetProperty(entry.first);
         if (childProp)
         {
             std::cout << "\t";
-            inter::PrintProperty(childProp);
+            inter::PrintProperty(childProp.get());
         }
     }
 }
@@ -49,7 +49,7 @@ void PrintProperty_Array(EArrayProperty* prop)
     std::cout << "[";
     for (auto& entry : prop->GetElements())
     {
-        inter::PrintProperty(entry);
+        inter::PrintProperty(entry.get());
         std::cout << ",";
     }
     std::cout << "]";
@@ -70,7 +70,7 @@ void inter::PrintProperty(EProperty* prop)
         EAny value;
         if (static_cast<EStructProperty*>(prop)->GetValue(value))
         {
-            PrintProperty(value.Value());
+            PrintProperty(value.Value().get());
         }
         break;
     }

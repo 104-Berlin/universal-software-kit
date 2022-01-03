@@ -59,14 +59,14 @@ EJson ESerializer::WriteSceneToJson(EDataBase* scene)
     for (EDataBase::Entity entity : scene->GetAllEntities())
     {
         EJson entityObject = EJson::object();
-        for (EStructProperty* component : scene->GetAllComponents(entity))
+        for (ERef<EProperty> component : scene->GetAllComponents(entity))
         {
             EValueDescription dsc = component->GetDescription();
             if (valueTypes.find(dsc.GetId()) == valueTypes.end())
             {
                 valueTypes[dsc.GetId()] = dsc;
             }
-            entityObject[component->GetPropertyName()] = WriteStructToJs(component);
+            entityObject[component->GetPropertyName()] = WritePropertyToJs(component.get());
         }
         entityArray.push_back(entityObject);
     }
@@ -126,19 +126,19 @@ EJson WriteStructToJs(EStructProperty* property)
     EJson result = EJson::object();
     for (auto& entry : structDsc.GetStructFields())
     {
-        result[entry.first] = ESerializer::WritePropertyToJs(property->GetProperty(entry.first));
+        result[entry.first] = ESerializer::WritePropertyToJs(property->GetProperty(entry.first).get());
     }
     return result;
 }
 
 EJson WriteAnyToJs(EStructProperty* property)
 {
-    EProperty* value = property->GetProperty("value");
+    ERef<EProperty> value = property->GetProperty("value");
     if (!value)
     {
         return EJson();
     }
-    return ESerializer::WritePropertyToJs(value, true);
+    return ESerializer::WritePropertyToJs(value.get(), true);
 }
 
 EJson WriteEnumToJs(EEnumProperty* property)
@@ -153,9 +153,9 @@ EJson WriteEnumToJs(EEnumProperty* property)
 EJson WriteArrayToJs(EArrayProperty* property)
 {
     EJson result = EJson::array();
-    for (EProperty* property : property->GetElements())
+    for (ERef<EProperty> property : property->GetElements())
     {
-        result.push_back(ESerializer::WritePropertyToJs(property));
+        result.push_back(ESerializer::WritePropertyToJs(property.get()));
     }
     return result;
 }

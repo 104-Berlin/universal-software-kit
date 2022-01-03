@@ -56,14 +56,14 @@ namespace Engine {
         ChangeFunc fChangeFunc;
     public:
         EProperty(const EString& name, EValueDescription description);
-        EProperty(EProperty&) = default;
+        EProperty(const EProperty&) = default;
         virtual ~EProperty() = default;
 
         const EString& GetPropertyName() const;
 
         EValueDescription GetDescription() const;
 
-        EProperty* Clone();
+        ERef<EProperty> Clone() const;
         void Copy(const EProperty* from);
 
         
@@ -71,7 +71,7 @@ namespace Engine {
         bool operator()() const;
     protected:
         virtual void OnCopy(const EProperty* from) = 0;
-        virtual EProperty* OnClone() = 0;
+        virtual ERef<EProperty> OnClone() const = 0;
         // Only used by register. Should stay this way
         // Register sends the events then
         void SetChangeFunc(ChangeFunc func);
@@ -79,12 +79,25 @@ namespace Engine {
     public:
         static void Copy(const EProperty* copyFrom, EProperty* copyTo);
 
-        static EProperty* CreateFromDescription(const EString& name, EValueDescription description);
+        static ERef<EProperty> CreateFromDescription(const EString& name, EValueDescription description);
+
+        template <typename T>
+        static ERef<EProperty> CreateFromTemplate(const EString& name)
+        {
+            EProperty* result = CreateFromDescription(name, getdsc::GetDescription<T>());
+            if (result)
+            {
+                T initValue;
+                convert::setter<T>(result, initValue);
+            }
+            return ERef<EProperty>(result);
+        }
+
     private:
-        static EProperty* CreatePropertyStruct(const EString& name, EValueDescription description);
-        static EProperty* CreatePropertyPrimitive(const EString& name, EValueDescription descrption);
-        static EProperty* CreatePropertyEnum(const EString& name, EValueDescription descrption);
-        static EProperty* CreatePropertyArray(const EString& name, EValueDescription description);
+        static ERef<EProperty> CreatePropertyStruct(const EString& name, EValueDescription description);
+        static ERef<EProperty> CreatePropertyPrimitive(const EString& name, EValueDescription descrption);
+        static ERef<EProperty> CreatePropertyEnum(const EString& name, EValueDescription descrption);
+        static ERef<EProperty> CreatePropertyArray(const EString& name, EValueDescription description);
     };
 
     template <typename ValueType>
@@ -99,7 +112,7 @@ namespace Engine {
             fValue = initValue;
         }
 
-        EValueProperty(EValueProperty&) = default;
+        EValueProperty(const EValueProperty&) = default;
 
         void SetValue(const ValueType& value)
         {
@@ -114,9 +127,9 @@ namespace Engine {
         }
 
     protected:
-        virtual EProperty* OnClone() override
+        virtual ERef<EProperty> OnClone() const override
         {
-            return new EValueProperty(*this);
+            return EMakeRef<EValueProperty>(*this);
         }
 
         virtual void OnCopy(const EProperty* from) override
@@ -129,9 +142,9 @@ namespace Engine {
     {
         friend class EAny;
     private:
-        EVector<EProperty*> fProperties;
+        EVector<ERef<EProperty>> fProperties;
     public:
-        EStructProperty(const EString& name, EValueDescription description, const EVector<EProperty*>& properties = {});
+        EStructProperty(const EString& name, EValueDescription description, const EVector<ERef<EProperty>>& properties = {});
         EStructProperty(const EStructProperty& other);
         ~EStructProperty();
 
@@ -161,17 +174,17 @@ namespace Engine {
 
         bool HasProperty(const EString& propertyName) const;
 
-        EProperty* GetProperty(const EString& propertyName);
-        const EProperty* GetProperty(const EString& propertyName) const;
+        ERef<EProperty> GetProperty(const EString& propertyName);
+        const ERef<EProperty> GetProperty(const EString& propertyName) const;
 
-        EProperty* GetPropertyByIdentifier(const EString& ident) const;
+        ERef<EProperty> GetPropertyByIdentifier(const EString& ident) const;
     private:
         /**
          * @brief Clears the fields and deletes them
          */
         void ResetFields();
     protected:
-        virtual EProperty* OnClone() override;
+        virtual ERef<EProperty> OnClone() const override;
         virtual void OnCopy(const EProperty* from) override;
     };
 
@@ -186,11 +199,9 @@ namespace Engine {
         u32 fValue;
     public:
         EEnumProperty(const EString& name, EValueDescription description, const EString& initValue = "");
-        EEnumProperty(EEnumProperty&) = default;
+        EEnumProperty(const EEnumProperty&) = default;
         ~EEnumProperty();
 
-        void SetCurrentValue(const EString& value);
-        void SetCurrentValue(u32 value);
         u32 GetCurrentValue() const;
         
         /**
@@ -219,25 +230,70 @@ namespace Engine {
             }
             return false;
         }
+        
+
+        template <>
+        bool SetCurrentValue<EString>(const EString& value) 
+        {
+            if (value.empty())
+            {
+                fValue = 0;
+                return false;
+            }
+            EValueDescription dsc = GetDescription();
+            E_ASSERT(dsc.GetType() == EValueType::ENUM);
+            const EVector<EString>& options = dsc.GetEnumOptions();
+            EVector<EString>::const_iterator foundOption = std::find(options.begin(), options.end(), value);
+            if (foundOption == options.end())
+            {
+                fValue = 0;
+            }
+            else
+            {
+                fValue = std::distance(options.begin(), foundOption);
+            }
+
+            if (fChangeFunc) { fChangeFunc(GetPropertyName()); }
+            return true;
+        }
+
+        template <>
+        bool SetCurrentValue<u32>(const u32& value)
+        {
+            EValueDescription dsc = GetDescription();
+            E_ASSERT(dsc.GetType() == EValueType::ENUM);
+            const EVector<EString>& options = dsc.GetEnumOptions();
+            if (value >= options.size())
+            {
+                fValue = 0;
+            }
+            else
+            {
+                fValue = value;
+            }
+
+            if (fChangeFunc) { fChangeFunc(GetPropertyName()); }
+            return true;
+        }
 
     protected:
-        virtual EProperty* OnClone() override;
+        virtual ERef<EProperty> OnClone() const override;
         virtual void OnCopy(const EProperty* from) override;
     };
 
     class E_API EArrayProperty : public EProperty
     {
     private:
-        EVector<EProperty*> fElements;
+        EVector<ERef<EProperty>> fElements;
     public:
         EArrayProperty(const EString& name, EValueDescription description);
-        EArrayProperty(EArrayProperty& other);
+        EArrayProperty(const EArrayProperty& other);
         ~EArrayProperty();
 
-        EProperty* AddElement();
-        EProperty* GetElement(size_t index);
+        ERef<EProperty> AddElement();
+        ERef<EProperty> GetElement(size_t index);
         void RemoveElement(size_t index);
-        const EVector<EProperty*>& GetElements() const;
+        const EVector<ERef<EProperty>>& GetElements() const;
         void Clear();
 
         template <typename T>
@@ -317,19 +373,19 @@ namespace Engine {
             for (const ArrayType& entry : vector)
             {
                 size_t currentIndex = fElements.size();
-                EProperty* newEntry = EProperty::CreateFromDescription(std::to_string(currentIndex), dsc);
-                ConnectChangeFunc(newEntry);
+                ERef<EProperty> newEntry = EProperty::CreateFromDescription(std::to_string(currentIndex), dsc);
+                ConnectChangeFunc(newEntry.get());
                 switch (dsc.GetType())
                 {
                 case EValueType::PRIMITIVE:
                 {
-                    static_cast<EValueProperty<typename T::value_type>*>(newEntry)->SetValue(entry);
+                    std::static_pointer_cast<EValueProperty<typename T::value_type>>(newEntry)->SetValue(entry);
                     break;
                 }
                 case EValueType::ANY:
                 case EValueType::STRUCT:
                 {
-                    if (!static_cast<EStructProperty*>(newEntry)->SetValue<typename T::value_type>(entry))
+                    if (!std::static_pointer_cast<EStructProperty>(newEntry)->SetValue<typename T::value_type>(entry))
                     {
                         return false;
                     }
@@ -366,7 +422,7 @@ namespace Engine {
             return true;
         }
     protected:
-        virtual EProperty* OnClone() override;
+        virtual ERef<EProperty> OnClone() const override;
         virtual void OnCopy(const EProperty* from) override;
     };
 
@@ -404,7 +460,7 @@ namespace Engine {
 
             if (value.fProperty)
             {
-                EProperty* newValueProperty = EProperty::CreateFromDescription("value", value.fProperty->GetDescription());
+                ERef<EProperty> newValueProperty = EProperty::CreateFromDescription("value", value.fProperty->GetDescription());
                 newValueProperty->Copy(value.fProperty.get());
                 structProperty->fProperties.push_back(newValueProperty);
             }
@@ -417,12 +473,12 @@ namespace Engine {
             if (dsc.GetType() != EValueType::ANY) { return false; }
             const ::Engine::EStructProperty* structProperty = static_cast<const ::Engine::EStructProperty*>(property);
             
-            const EProperty* valueProperty = structProperty->GetProperty("value");
+            const ERef<EProperty> valueProperty = structProperty->GetProperty("value");
 
             if (valueProperty)
             {
                 value.fProperty = ERef<EProperty>(EProperty::CreateFromDescription("value", valueProperty->GetDescription()));
-                value.fProperty->Copy(valueProperty);
+                value.fProperty->Copy(valueProperty.get());
             }
             else
             {
@@ -436,9 +492,9 @@ namespace Engine {
             fProperty = property;
         }
 
-        EProperty* Value() const
+        ERef<EProperty> Value() const
         {
-            return fProperty.get();
+            return fProperty;
         }
 
     public:

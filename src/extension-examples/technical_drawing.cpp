@@ -137,65 +137,45 @@ APP_ENTRY
         if (e.Type == EntityChangeType::COMPONENT_CHANGED)
         {
             ComponentChangeData data;
-            if (convert::getter(e.Data.Value(), &data))
+            if (convert::getter(e.Data.Value().get(), &data))
             {
                 if (data.Identifier.rfind("Plane", 0) == 0)
                 {
                     Plane plane;
-                    if (convert::getter(data.NewValue.Value(), &plane))
+                    if (convert::getter(data.NewValue.Value().get(), &plane))
                     {
                         RMesh* graphicsMesh = meshes[e.Entity.Handle][Plane::_dsc.GetId()];
 
-                        if (data.Identifier.rfind("Plane.Position", 0) == 0)
-                        {
-                            graphicsMesh->SetPosition(plane.Position);
-                        }
-                        else if (data.Identifier.rfind("Plane.Rotation", 0) == 0)
-                        {
-                            graphicsMesh->SetRotation(plane.Rotation);
-                        }
-                        else if (data.Identifier.rfind("Plane.Scale", 0) == 0)
-                        {
-                            graphicsMesh->SetScale(plane.Scale);
-                        }
+                        graphicsMesh->SetPosition(plane.Position);
+                        graphicsMesh->SetRotation(plane.Rotation);
+                        graphicsMesh->SetScale(plane.Scale);
                     }
                 }
                 else if (data.Identifier.rfind("Line", 0) == 0)
                 {
                     Line line;
-                    if (convert::getter(data.NewValue.Value(), &line))
+                    if (convert::getter(data.NewValue.Value().get(), &line))
                     {
                         RLine* entityLine = (RLine*) meshes[e.Entity.Handle][Line::_dsc.GetId()];
 
-                        if (data.Identifier.rfind("Line.Thickness", 0) == 0)
-                        {
-                            entityLine->SetThickness(line.Thickness);
-                        }
-                        else if (data.Identifier.rfind("Line.Positions", 0) == 0)
-                        {
-                            entityLine->SetPosition(line.Positions.Start);
-                            entityLine->SetEnd(line.Positions.End);
-                        }
+                        entityLine->SetThickness(line.Thickness);
+                        entityLine->SetStart(line.Positions.Start);
+                        entityLine->SetEnd(line.Positions.End);
                     }
                 }
                 else if (data.Identifier.rfind("Curve", 0) == 0)
                 {
                     Curve curve;
-                    if (convert::getter(data.NewValue.Value(), &curve))
+                    if (convert::getter(data.NewValue.Value().get(), &curve))
                     {
                         RBezierCurve* entityCurve = (RBezierCurve*) meshes[e.Entity.Handle][Curve::_dsc.GetId()];
 
-                        if (data.Identifier.rfind("Curve.Thickness", 0) == 0)
-                        {
-                            entityCurve->SetThickness(curve.Thickness);
-                        }
-                        else if (data.Identifier.rfind("Curve.Positions", 0) == 0)
-                        {
-                            entityCurve->SetPosition(curve.Positions.Start);
-                            entityCurve->SetEndPos(curve.Positions.End);
-                            entityCurve->SetControll1(curve.Positions.Controll1);
-                            entityCurve->SetControll2(curve.Positions.Controll2);
-                        }
+                        entityCurve->SetThickness(curve.Thickness);
+                        entityCurve->SetStartPos(curve.Positions.Start);
+                        entityCurve->SetEndPos(curve.Positions.End);
+                        entityCurve->SetControll1(curve.Positions.Controll1);
+                        entityCurve->SetControll2(curve.Positions.Controll2);
+                        entityCurve->SetSteps(curve.Steps);
                     }
                 }
             }
@@ -205,7 +185,7 @@ APP_ENTRY
             Line l;
             Curve c;
             Plane p;
-            if (convert::getter(e.Data.Value(), &l))
+            if (convert::getter(e.Data.Value().get(), &l))
             {
                 if (meshes[e.Entity.Handle][Line::_dsc.GetId()])
                 {
@@ -213,11 +193,14 @@ APP_ENTRY
                 }
                 RLine* newLine = new RLine();
                 meshes[e.Entity.Handle][Line::_dsc.GetId()] = newLine;
-                newLine->SetPosition(l.Positions.Start);
+                newLine->SetStart(l.Positions.Start);
                 newLine->SetEnd(l.Positions.End);
                 newLine->SetThickness(l.Thickness);
+                drawingViewport.lock()->GetScene().Add(newLine);
+                currentEditLineEntity = e.Entity.Handle;
+                lineEdit->SetLine(newLine);
             }
-            else if (convert::getter(e.Data.Value(), &c))
+            else if (convert::getter(e.Data.Value().get(), &c))
             {
                 if (meshes[e.Entity.Handle][Curve::_dsc.GetId()])
                 {
@@ -225,13 +208,17 @@ APP_ENTRY
                 }
                 RBezierCurve* newCurve = new RBezierCurve();
                 meshes[e.Entity.Handle][Curve::_dsc.GetId()] = newCurve;
-                newCurve->SetPosition(c.Positions.Start);
+                newCurve->SetStartPos(c.Positions.Start);
                 newCurve->SetEndPos(c.Positions.End);
                 newCurve->SetControll1(c.Positions.Controll1);
                 newCurve->SetControll2(c.Positions.Controll2);
                 newCurve->SetThickness(c.Thickness);
+                newCurve->SetSteps(c.Steps);
+                drawingViewport.lock()->GetScene().Add(newCurve);
+                currentEditCurveEntity = e.Entity.Handle;
+                bezierEdit->SetBezierCurve(newCurve);
             }
-            else if (convert::getter(e.Data.Value(), &p))
+            else if (convert::getter(e.Data.Value().get(), &p))
             {
                 if (meshes[e.Entity.Handle][Plane::_dsc.GetId()])
                 {
@@ -242,6 +229,7 @@ APP_ENTRY
                 newPlane->SetPosition(p.Position);
                 newPlane->SetRotation(p.Rotation);
                 newPlane->SetScale(p.Scale);
+                drawingViewport.lock()->GetScene().Add(newPlane);
             }
         }
         else if (e.Type == EntityChangeType::ENTITY_DESTROYED)
@@ -263,7 +251,7 @@ APP_ENTRY
         else if (e.Type == EntityChangeType::COMPONENT_REMOVED)
         {
             ComponentChangeData data;
-            if (e.Data.Value() && convert::getter(e.Data.Value(), &data))
+            if (e.Data.Value() && convert::getter(e.Data.Value().get(), &data))
             {
                 EString changeType = data.Identifier;
                 if (meshes[e.Entity.Handle][changeType])

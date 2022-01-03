@@ -18,7 +18,7 @@ namespace Engine {
         EResourceManager fResourceManager;
         EEventDispatcher fEventDispatcher;
 
-        EUnorderedMap<EValueDescription::t_ID, EUnorderedMap<Entity, EStructProperty*>> fComponentStorage;
+        EUnorderedMap<EValueDescription::t_ID, EUnorderedMap<Entity, ERef<EProperty>>> fComponentStorage;
         EVector<Entity>     fAliveEntites;
         EVector<Entity>     fDeadEntites;
     public:
@@ -34,21 +34,22 @@ namespace Engine {
 
         bool IsAlive(Entity entity);
 
-        EStructProperty* AddComponent(Entity entity, const EValueDescription& componentId);
+        EWeakRef<EProperty> AddComponent(Entity entity, const EValueDescription& componentId);
+        EWeakRef<EProperty> AddComponent(Entity entity, const ERef<const EProperty>& component);
         void RemoveComponent(Entity entity, const EValueDescription& componentId);
         bool HasComponent(Entity entity, const EValueDescription& componentId);
         bool HasComponent(Entity entity, const EValueDescription::t_ID& componentId);
-        EStructProperty* GetComponent(Entity entity, const EValueDescription& componentId);
-        EStructProperty* GetComponent(Entity entity, const EValueDescription::t_ID& componentId);
-        EProperty* GetValueByIdentifier(Entity entity, const EString& identifier);
-        EVector<EStructProperty*> GetAllComponents(Entity entity);
-        EUnorderedMap<Entity, EStructProperty*>& View(const EValueDescription& description);
+        EWeakRef<EProperty> GetComponent(Entity entity, const EValueDescription& componentId);
+        EWeakRef<EProperty> GetComponent(Entity entity, const EValueDescription::t_ID& componentId);
+        EWeakRef<EProperty> GetValueByIdentifier(Entity entity, const EString& identifier);
+        EVector<ERef<EProperty>> GetAllComponents(Entity entity);
+        EUnorderedMap<Entity, ERef<EProperty>>& View(const EValueDescription& description);
 
 
         template <typename T>
         T AddComponent(Entity entity)
         {
-            EStructProperty* inserted = AddComponent(entity, getdsc::GetDescription<T>());
+            ERef<EProperty> inserted = AddComponent(entity, EProperty::CreateFromTemplate<T>(getdsc::GetDescription<T>().GetId()));
             T result;
             if (inserted)
             {

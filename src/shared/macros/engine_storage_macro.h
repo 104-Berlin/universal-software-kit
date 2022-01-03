@@ -10,10 +10,10 @@
 #define E_CREATE_STRUCT_DSC2(type, name, ...) {E_STRINGIFY(name), ::Engine::getdsc::GetDescription<type>()},
 #define E_CREATE_STRUCT_DSC(nametype) EXPAND( E_CREATE_STRUCT_DSC2 nametype )
 
-#define E_GET_FROM_PROP2(type, name, ...) ::Engine::EProperty* EXPAND ( E_CONCATENATE(prop, name) ) = property->GetProperty(E_STRINGIFY(name));
+#define E_GET_FROM_PROP2(type, name, ...) ERef<::Engine::EProperty> EXPAND ( E_CONCATENATE(prop, name) ) = property->GetProperty(E_STRINGIFY(name));
 #define E_GET_FROM_PROP(nametype) EXPAND( E_GET_FROM_PROP2 nametype )
 
-#define E_GET_FROM_PROP_CONST2(type, name, ...) const ::Engine::EProperty* EXPAND ( E_CONCATENATE(prop, name) ) = property->GetProperty(E_STRINGIFY(name));
+#define E_GET_FROM_PROP_CONST2(type, name, ...) const ERef<::Engine::EProperty> EXPAND ( E_CONCATENATE(prop, name) ) = property->GetProperty(E_STRINGIFY(name));
 #define E_GET_FROM_PROP_CONST(nametype) EXPAND( E_GET_FROM_PROP_CONST2 nametype )
 
 #define E_CHECK_NULL_AND2(type, name, ...) EXPAND ( E_CONCATENATE(prop, name) ) &&
@@ -39,7 +39,7 @@
                                     {\
                                         if (valDsc.GetType() == ::Engine::EValueType::ARRAY)\
                                         {\
-                                            static_cast<::Engine::EArrayProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetValue<type>(value. s_name);\
+                                            std::dynamic_pointer_cast<::Engine::EArrayProperty>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetValue<type>(value. s_name);\
                                         }\
                                         else \
                                         {\
@@ -52,9 +52,9 @@
                                         switch (valDsc.GetType())\
                                         {\
                                         case ::Engine::EValueType::ANY:\
-                                        case ::Engine::EValueType::STRUCT: static_cast<::Engine::EStructProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetValue<type>(value. s_name ); break;\
-                                        case ::Engine::EValueType::PRIMITIVE: static_cast<::Engine::EValueProperty<type>*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetValue(value. s_name ); break;\
-                                        case ::Engine::EValueType::ENUM: static_cast<::Engine::EEnumProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetCurrentValue<type>(value. s_name ); break;/*TODO*/\
+                                        case ::Engine::EValueType::STRUCT: std::dynamic_pointer_cast<::Engine::EStructProperty>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetValue<type>(value. s_name ); break;\
+                                        case ::Engine::EValueType::PRIMITIVE: std::dynamic_pointer_cast<::Engine::EValueProperty<type>>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetValue(value. s_name ); break;\
+                                        case ::Engine::EValueType::ENUM: std::dynamic_pointer_cast<::Engine::EEnumProperty>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->SetCurrentValue<type>(value. s_name ); break;/*TODO*/\
                                         case ::Engine::EValueType::ARRAY:\
                                         case ::Engine::EValueType::UNKNOWN: break;\
                                         }\
@@ -70,7 +70,7 @@
                                     {\
                                         if (valDsc.GetType() == ::Engine::EValueType::ARRAY)\
                                         {\
-                                            static_cast<const ::Engine::EArrayProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetValue<type>(value. s_name);\
+                                            std::dynamic_pointer_cast<const ::Engine::EArrayProperty>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetValue<type>(value. s_name);\
                                         }\
                                         else\
                                         {\
@@ -83,9 +83,9 @@
                                         switch (valDsc.GetType())\
                                         {\
                                         case ::Engine::EValueType::ANY:\
-                                        case ::Engine::EValueType::STRUCT: static_cast<const ::Engine::EStructProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetValue<type>(value. s_name ); break;\
-                                        case ::Engine::EValueType::PRIMITIVE: value. s_name = static_cast<const ::Engine::EValueProperty<type>*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetValue(); break;\
-                                        case ::Engine::EValueType::ENUM: static_cast<const ::Engine::EEnumProperty*>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetCurrentValue<type>(value. s_name); break;/*TODO*/\
+                                        case ::Engine::EValueType::STRUCT: std::dynamic_pointer_cast<const ::Engine::EStructProperty>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetValue<type>(value. s_name ); break;\
+                                        case ::Engine::EValueType::PRIMITIVE: value. s_name = std::dynamic_pointer_cast<const ::Engine::EValueProperty<type>>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetValue(); break;\
+                                        case ::Engine::EValueType::ENUM: std::dynamic_pointer_cast<const ::Engine::EEnumProperty>(EXPAND ( E_CONCATENATE(prop, s_name) ) )->GetCurrentValue<type>(value. s_name); break;/*TODO*/\
                                         case ::Engine::EValueType::ARRAY:\
                                         case ::Engine::EValueType::UNKNOWN: break;\
                                         }\
@@ -113,6 +113,10 @@
                                         }\
                                         static bool ToProperty(const name & value, ::Engine::EStructProperty* property)\
                                         {\
+                                            if (_dsc.GetId() != property->GetDescription().GetId())\
+                                            {\
+                                                return false;\
+                                            }\
                                             EXPAND( E_LOOP_ARGS(E_GET_FROM_PROP, __VA_ARGS__) ) \
                                             if (\
                                                 EXPAND(E_LOOP_ARGS_L(E_CHECK_NULL_AND, __VA_ARGS__))\
@@ -124,6 +128,10 @@
                                         }\
                                         static bool FromProperty(name & value, const ::Engine::EStructProperty* property)\
                                         {\
+                                            if (_dsc.GetId() != property->GetDescription().GetId())\
+                                            {\
+                                                return false;\
+                                            }\
                                             EXPAND( E_LOOP_ARGS(E_GET_FROM_PROP_CONST, __VA_ARGS__) ) \
                                             if (\
                                                 EXPAND(E_LOOP_ARGS_L(E_CHECK_NULL_AND, __VA_ARGS__))\

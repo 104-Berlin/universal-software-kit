@@ -22,12 +22,12 @@ void ERegisterConnection::Send_CreateNewEntity()
     SendToServer(packet);
 }
 
-void ERegisterConnection::Send_CreateNewComponent(EDataBase::Entity entity, EStructProperty* initValue) 
+void ERegisterConnection::Send_CreateNewComponent(EDataBase::Entity entity, ERef<EProperty> initValue) 
 {
     E_ASSERT(initValue);
     if (!initValue) { return; }
 
-    EJson createJson = ESerializer::WritePropertyToJs(initValue, true);
+    EJson createJson = ESerializer::WritePropertyToJs(initValue.get(), true);
     createJson["Entity"] = entity;
 
 
@@ -168,10 +168,10 @@ EVector<ERef<EProperty>> ERegisterConnection::Send_GetAllValues(EDataBase::Entit
     for (EJson& valueJson : response)
     {
         if (!valueJson.is_object()) { continue; }
-        EProperty* property;
+        ERef<EProperty> property;
         if (EDeserializer::ReadPropertyFromJson_WithDescription(valueJson, &property))
         {
-            result.push_back(ERef<EProperty>(property));
+            result.push_back(property);
         }
     }
     return result;
@@ -386,7 +386,7 @@ void ERegisterConnection::GotPacket(const ERegisterPacket& packet)
 
             if (EDeserializer::ReadPropertyFromJson(packet.Body["Value"], resProperty.get()))
             {
-                fEventDispatcher.Enqueue_P(propertyDescription, resProperty.get());
+                fEventDispatcher.Enqueue_P(propertyDescription, resProperty);
             }
         }
     }

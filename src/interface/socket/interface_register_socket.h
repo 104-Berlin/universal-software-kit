@@ -61,7 +61,7 @@ namespace Engine {
         void ConnectionGotPacket(Connection* connection, const ERegisterPacket& packet);
 
 
-        void HandleRegisterEvent(EStructProperty* data);
+        void HandleRegisterEvent(ERef<EProperty> data);
 
         // All packet type functions
         EJson Pk_HandleCreateEntity(const ERegisterPacket& packet);

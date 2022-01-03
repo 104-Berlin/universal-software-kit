@@ -168,9 +168,13 @@ ERef<EUIField> EObjectView::RenderEnum(Engine::EEnumProperty* storage, EString n
             ComponentChangeData componentChangeData;
             if (convert::getter(e.Data.Value(), &componentChangeData))
             {
-                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                if (componentChangeData.NewValue.Value())
                 {
-                    weakResult.lock()->SetSelectedIndex(static_cast<EEnumProperty*>(componentChangeData.NewValue.Value())->GetCurrentValue());
+                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    if (valueProp)
+                    {
+                        weakResult.lock()->SetSelectedIndex(static_cast<EEnumProperty*>(valueProp)->GetCurrentValue());
+                    }
                 }
             }
         }
@@ -247,9 +251,13 @@ ERef<EUIField> EObjectView::RenderBool(Engine::EValueProperty<bool>* storage, ES
             ComponentChangeData componentChangeData;
             if (convert::getter(e.Data.Value(), &componentChangeData))
             {
-                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                if (componentChangeData.NewValue.Value())
                 {
-                    weakResult.lock()->SetValue(static_cast<EValueProperty<bool>*>(componentChangeData.NewValue.Value())->GetValue());
+                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    if (valueProp)
+                    {
+                        weakResult.lock()->SetValue(static_cast<EValueProperty<bool>*>(valueProp)->GetValue());
+                    }
                 }
             }
         }
@@ -276,9 +284,13 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage, 
             ComponentChangeData componentChangeData;
             if (convert::getter(e.Data.Value(), &componentChangeData))
             {
-                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                if (componentChangeData.NewValue.Value())
                 {
-                    weakResult.lock()->SetValue(static_cast<EValueProperty<i32>*>(componentChangeData.NewValue.Value())->GetValue());
+                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    if (valueProp)
+                    {
+                        weakResult.lock()->SetValue(static_cast<EValueProperty<i32>*>(valueProp)->GetValue());
+                    }
                 }
             }
         }
@@ -305,9 +317,13 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u32>* storage, 
             ComponentChangeData componentChangeData;
             if (convert::getter(e.Data.Value(), &componentChangeData))
             {
-                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                if (componentChangeData.NewValue.Value())
                 {
-                    weakResult.lock()->SetValue(static_cast<EValueProperty<u32>*>(componentChangeData.NewValue.Value())->GetValue());
+                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    if (valueProp)
+                    {
+                        weakResult.lock()->SetValue(static_cast<EValueProperty<u32>*>(valueProp)->GetValue());
+                    }
                 }
             }
         }
@@ -333,9 +349,13 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u64>* storage, 
             ComponentChangeData componentChangeData;
             if (convert::getter(e.Data.Value(), &componentChangeData))
             {
-                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                if (componentChangeData.NewValue.Value())
                 {
-                    weakResult.lock()->SetValue(static_cast<EValueProperty<u64>*>(componentChangeData.NewValue.Value())->GetValue());
+                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    if (valueProp)
+                    {
+                        weakResult.lock()->SetValue(static_cast<EValueProperty<u64>*>(valueProp)->GetValue());
+                    }
                 }
             }
         }
@@ -362,9 +382,13 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<double>* storage
             ComponentChangeData componentChangeData;
             if (convert::getter(e.Data.Value(), &componentChangeData))
             {
-                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                if (componentChangeData.NewValue.Value())
                 {
-                    weakResult.lock()->SetValue(static_cast<EValueProperty<double>*>(componentChangeData.NewValue.Value())->GetValue());
+                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    if (valueProp)
+                    {
+                        weakResult.lock()->SetValue(static_cast<EValueProperty<double>*>(valueProp)->GetValue());
+                    }
                 }
             }
         }
@@ -391,9 +415,13 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<float>* storage,
             ComponentChangeData componentChangeData;
             if (convert::getter(e.Data.Value(), &componentChangeData))
             {
-                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                if (componentChangeData.NewValue.Value())
                 {
-                    weakResult.lock()->SetValue(static_cast<EValueProperty<float>*>(componentChangeData.NewValue.Value())->GetValue());
+                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    if (valueProp)
+                    {
+                        weakResult.lock()->SetValue(static_cast<EValueProperty<float>*>(valueProp)->GetValue());
+                    }
                 }
             }
         }
@@ -419,9 +447,13 @@ ERef<EUIField> EObjectView::RenderString(Engine::EValueProperty<EString>* storag
             ComponentChangeData componentChangeData;
             if (convert::getter(e.Data.Value(), &componentChangeData))
             {
-                if (componentChangeData.NewValue.Value() && componentChangeData.Identifier == nameIdent)
+                if (componentChangeData.NewValue.Value())
                 {
-                    weakResult.lock()->SetValue(static_cast<EValueProperty<EString>*>(componentChangeData.NewValue.Value())->GetValue());
+                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    if (valueProp)
+                    {
+                        weakResult.lock()->SetValue(static_cast<EValueProperty<EString>*>(valueProp)->GetValue());
+                    }
                 }
             }
         }

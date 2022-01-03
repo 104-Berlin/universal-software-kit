@@ -92,8 +92,8 @@ bool EDeserializer::ReadSceneFromJson(const EJson& json, EDataBase* saveToScene)
                 if (description.Valid())
                 {
                     saveToScene->AddComponent(entity, description);
-                    EStructProperty* component = saveToScene->GetComponent(entity, description);
-                    ReadPropertyFromJson(entityObject[component->GetPropertyName()], component);
+                    EWeakRef<EProperty> component = saveToScene->GetComponent(entity, description);
+                    ReadPropertyFromJson(entityObject[component.lock()->GetPropertyName()], component.lock().get());
                 }
             }
         }
@@ -185,8 +185,8 @@ bool ReadArrayFromJson(const EJson& json, EArrayProperty* property)
     property->Clear();
     for (const EJson& entry : json)
     {
-        EProperty* newElement = property->AddElement();
-        EDeserializer::ReadPropertyFromJson(entry, newElement);
+        ERef<EProperty> newElement = property->AddElement();
+        EDeserializer::ReadPropertyFromJson(entry, newElement.get());
     }
     return true;
 }
@@ -199,9 +199,25 @@ bool ReadStructFromJson(const EJson& json, EStructProperty* property)
     {
         EValueType fieldType = entry.second.GetType();
 
-        EDeserializer::ReadPropertyFromJson(json[entry.first], property->GetProperty(entry.first));
+        EDeserializer::ReadPropertyFromJson(json[entry.first], property->GetProperty(entry.first).get());
     }
     return true;
+}
+
+bool ReadAnyFromJson(const EJson& json, EStructProperty* property)
+{
+    if (json.find("Value") != json.end())
+    {
+        ERef<EProperty> newValueProp;
+        EDeserializer::ReadPropertyFromJson_WithDescription(json, &newValueProp);
+        EAny newAny;
+        newAny.SetValue(ERef<EProperty>(newValueProp));
+        if (property->SetValue(newAny))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property) 
@@ -211,7 +227,7 @@ bool EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
 
     switch (currentType)
     {
-    case EValueType::ANY: 
+    case EValueType::ANY: ReadAnyFromJson(json, static_cast<EStructProperty*>(property)); break;
     case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json, property); break;
     case EValueType::ARRAY: ReadArrayFromJson(json, static_cast<EArrayProperty*>(property)); break;
     case EValueType::STRUCT: ReadStructFromJson(json, static_cast<EStructProperty*>(property)); break;
@@ -221,17 +237,17 @@ bool EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
     return true;
 }
 
-bool EDeserializer::ReadPropertyFromJson_WithDescription(const EJson& json, EProperty** property) 
+bool EDeserializer::ReadPropertyFromJson_WithDescription(const EJson& json, ERef<EProperty>* property) 
 {
     EValueDescription dsc;
     if (json["ValueDescription"].is_object() && ReadStorageDescriptionFromJson(json["ValueDescription"], &dsc))
     {
         *property = EProperty::CreateFromDescription(dsc.GetId(), dsc);
-        if (json["Value"].is_object() && ReadPropertyFromJson(json["Value"], *property))
+        if (json["Value"].is_object() && ReadPropertyFromJson(json["Value"], (*property).get()))
         {
             return true;
         }
-        delete *property;
+        *property = nullptr;
         return false;
     }
     return false;

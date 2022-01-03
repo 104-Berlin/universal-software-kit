@@ -10,20 +10,13 @@ using namespace Engine;
 EDataBase::EDataBase(const EString& name) 
     : fName(name)
 {
-    fResourceManager.GetEventDispatcher().ConnectAll([this](EProperty* prop){
+    fResourceManager.GetEventDispatcher().ConnectAll([this](ERef<EProperty> prop){
         this->fEventDispatcher.Enqueue_P(prop->GetDescription(), prop);
     });
 }
 
 Engine::EDataBase::~EDataBase() 
 {
-    for (auto& entry : fComponentStorage)
-    {
-        for (auto& values : entry.second)
-        {
-            delete values.second;
-        }
-    }
     fComponentStorage.clear();
 }
 
@@ -63,7 +56,6 @@ void EDataBase::DestroyEntity(Entity entity)
     }
     for (auto& entry : fComponentStorage)
     {
-        delete entry.second[entity];
         entry.second.erase(entity);
     }
     EntityChangeEvent event(EntityChangeType::ENTITY_DESTROYED, entity);
@@ -79,13 +71,6 @@ EVector<EDataBase::Entity> EDataBase::GetAllEntities() const
 
 void EDataBase::Clear() 
 {
-    for (auto& entry : fComponentStorage)
-    {
-        for (auto& storage : entry.second)
-        {
-            delete storage.second;
-        }
-    }
     fComponentStorage.clear();
     for (auto& entity : fAliveEntites)
     {
@@ -102,15 +87,28 @@ bool EDataBase::IsAlive(Entity entity)
     return std::find(fAliveEntites.begin(), fAliveEntites.end(), entity) != fAliveEntites.end();
 }
 
-EStructProperty* EDataBase::AddComponent(Entity entity, const EValueDescription& description) 
+
+EWeakRef<EProperty> EDataBase::AddComponent(Entity entity, const EValueDescription& componentId)
 {
+    return AddComponent(entity, EProperty::CreateFromDescription(componentId.GetId(), componentId));
+}
+
+EWeakRef<EProperty> EDataBase::AddComponent(Entity entity, const ERef<const EProperty>& value) 
+{
+    if (!value)
+    {
+        return {};
+    }
+    EValueDescription description = value->GetDescription();
     E_ASSERT_M(description.Valid(), "ERROR: Invalid value descrition!");
     E_ASSERT_M(description.GetType() == EValueType::STRUCT, "Component can only be inserted as struct");
-    if (!IsAlive(entity)) { return nullptr; }
+    if (!IsAlive(entity)) { return {}; }
 
     if (!HasComponent(entity, description.GetId()))
     {
-        EStructProperty* storage = static_cast<EStructProperty*>(EProperty::CreateFromDescription(description.GetId(), description));
+        ERef<EProperty> storage = EProperty::CreateFromDescription(description.GetId(), description);
+        storage->Copy(value.get());
+
         storage->SetChangeFunc([this, entity, storage](EString ident){
             EntityChangeEvent event(EntityChangeType::COMPONENT_CHANGED, entity);
             ComponentChangeData data(ident);
@@ -128,7 +126,7 @@ EStructProperty* EDataBase::AddComponent(Entity entity, const EValueDescription&
         fEventDispatcher.Enqueue<EntityChangeEvent>(event);
         return storage;
     }
-    return nullptr;
+    return {};
 }
 
 void EDataBase::RemoveComponent(Entity entity, const EValueDescription& componentId)
@@ -137,7 +135,6 @@ void EDataBase::RemoveComponent(Entity entity, const EValueDescription& componen
     if (!IsAlive(entity)) { return; }
     if (!HasComponent(entity, componentId)) { return; }
 
-    delete fComponentStorage[componentId.GetId()][entity];
     fComponentStorage[componentId.GetId()].erase(entity);
 
     EntityChangeEvent event(EntityChangeType::COMPONENT_REMOVED, entity);
@@ -160,16 +157,16 @@ bool Engine::EDataBase::HasComponent(Entity entity, const EValueDescription::t_I
     return fComponentStorage[componentId].find(entity) != fComponentStorage[componentId].end();
 }
 
-EStructProperty* EDataBase::GetComponent(Entity entity, const EValueDescription& componentId) 
+EWeakRef<EProperty> EDataBase::GetComponent(Entity entity, const EValueDescription& componentId) 
 {
     E_ASSERT_M(componentId.Valid(), "ERROR: Invalid value descrition!");
     return GetComponent(entity, componentId.GetId());
 }
 
-EStructProperty* EDataBase::GetComponent(Entity entity, const EValueDescription::t_ID& componentId) 
+EWeakRef<EProperty> EDataBase::GetComponent(Entity entity, const EValueDescription::t_ID& componentId) 
 {
-    if (!IsAlive(entity)) { return nullptr; }
-    if (!HasComponent(entity, componentId)) { return nullptr; }
+    if (!IsAlive(entity)) { return ERef<EProperty>(nullptr); }
+    if (!HasComponent(entity, componentId)) { return ERef<EProperty>(nullptr); }
 
     return fComponentStorage[componentId][entity];
 }
@@ -194,7 +191,7 @@ void Engine::EDataBase::UpdateEvents()
     fEventDispatcher.Update();
 }
 
-EProperty* EDataBase::GetValueByIdentifier(Entity entity, const EString& identifier) 
+EWeakRef<EProperty> EDataBase::GetValueByIdentifier(Entity entity, const EString& identifier) 
 {
     EVector<EString> identList;
     size_t start = 0;
@@ -208,16 +205,18 @@ EProperty* EDataBase::GetValueByIdentifier(Entity entity, const EString& identif
     identList.push_back(identifier.substr(start, identifier.length() - start));
     E_ASSERT(identList.size() > 0);
     // The first identifier is the component name
-    EStructProperty* currentProp = GetComponent(entity, identList[0]);
+    EWeakRef<EProperty> currentProp = GetComponent(entity, identList[0]);
     // if we couldnt find the component return
-    if (!currentProp) { return nullptr; }
+    if (!currentProp.lock()) { return currentProp; }
     if (identList.size() == 1) { return currentProp; }
-    return currentProp->GetPropertyByIdentifier(identifier.substr(identList[0].length() + 1));
+    if (currentProp.lock()->GetDescription().GetType() != EValueType::STRUCT) { return currentProp; }
+    EWeakRef<EStructProperty> asStructProp = std::dynamic_pointer_cast<EStructProperty>(currentProp.lock());
+    return asStructProp.lock()->GetPropertyByIdentifier(identifier.substr(identList[0].length() + 1));
 }
 
-EVector<EStructProperty*> EDataBase::GetAllComponents(Entity entity) 
+EVector<ERef<EProperty>> EDataBase::GetAllComponents(Entity entity) 
 {
-    EVector<EStructProperty*> result;
+    EVector<ERef<EProperty>> result;
     for (auto& entry : fComponentStorage)
     {
         if (entry.second.find(entity) != entry.second.end())
@@ -228,7 +227,7 @@ EVector<EStructProperty*> EDataBase::GetAllComponents(Entity entity)
     return result;
 }
 
-EUnorderedMap<EDataBase::Entity, EStructProperty*>& EDataBase::View(const EValueDescription& description) 
+EUnorderedMap<EDataBase::Entity, ERef<EProperty>>& EDataBase::View(const EValueDescription& description) 
 {
     return fComponentStorage[description.GetId()];
 }

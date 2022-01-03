@@ -24,8 +24,8 @@ namespace Engine {
         EBaseTask(const EString& name, u16 type, bool hasInput = false, bool hasOutput = false);
         virtual ~EBaseTask();
 
-        EStructProperty* Execute(EStructProperty* inValue);
-        virtual EStructProperty* OnExecute(EStructProperty* inValue) = 0;
+        ERef<EProperty> Execute(EWeakRef<EProperty> inValue);
+        virtual ERef<EProperty> OnExecute(EWeakRef<EProperty> inValue) = 0;
 
         const EString& GetName() const;
 
@@ -42,9 +42,9 @@ namespace Engine {
     {
     private:
         using CFunc_NoParam_NoReturn = std::function<void()>;
-        using CFunc_NoParam_Return = std::function<EStructProperty*()>;
-        using CFunc_Param_NoReturn = std::function<void(EStructProperty*)>;
-        using CFunc_Param_Return = std::function<EStructProperty*(EStructProperty*)>;
+        using CFunc_NoParam_Return = std::function<ERef<EProperty>()>;
+        using CFunc_Param_NoReturn = std::function<void(EWeakRef<EProperty>)>;
+        using CFunc_Param_Return = std::function<ERef<EProperty>(EWeakRef<EProperty>)>;
 
         CFunc_Param_Return fExecuteFunction;
     public:
@@ -55,7 +55,7 @@ namespace Engine {
         ECFuncTask(const EString& name, CFunc_NoParam_NoReturn func);
         ~ECFuncTask();
 
-        EStructProperty* OnExecute(EStructProperty* inValue);
+        ERef<EProperty> OnExecute(EWeakRef<EProperty> inValue);
 
         void SetFunc(CFunc_NoParam_NoReturn func);
         void SetFunc(CFunc_NoParam_Return func);

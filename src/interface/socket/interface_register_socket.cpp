@@ -54,7 +54,7 @@ void ERegisterSocket::Init()
     }
     fLoadedRegister = new EDataBase();
 
-    fLoadedRegister->CatchAllEvents([this](EStructProperty* data){
+    fLoadedRegister->CatchAllEvents([this](ERef<EProperty> data){
         HandleRegisterEvent(data);
     });
  
@@ -298,14 +298,13 @@ void ERegisterSocket::ConnectionGotPacket(Connection* connection, const ERegiste
     connection->SendPacket(responsePacket);
 }
 
-void ERegisterSocket::HandleRegisterEvent(EStructProperty* data) 
+void ERegisterSocket::HandleRegisterEvent(ERef<EProperty> data) 
 {
     ERegisterPacket packet;
     packet.PacketType = EPacketType::REGISTER_EVENT;
     packet.ID = 0;
     
-    packet.Body["ValueDescription"] = ESerializer::WriteStorageDescriptionToJson(data->GetDescription());
-    packet.Body["Value"] = ESerializer::WritePropertyToJs(data);
+    packet.Body = ESerializer::WritePropertyToJs(data.get(), true);
 
     for (Connection* con : fConnections)
     {
@@ -322,21 +321,20 @@ EJson ERegisterSocket::Pk_HandleCreateEntity(const ERegisterPacket& packet)
 
 EJson ERegisterSocket::Pk_HandleCreateComponent(const ERegisterPacket& packet) 
 {
-    EProperty* initValue;
+    ERef<EProperty> initValue;
     if (EDeserializer::ReadPropertyFromJson_WithDescription(packet.Body, &initValue))
     {
         if (packet.Body["Entity"].is_number_integer())
         {
             EDataBase::Entity entity = (EDataBase::Entity) packet.Body["Entity"].get<int>();
-            EStructProperty* property = fLoadedRegister->AddComponent(entity, initValue->GetDescription());
-            if (property)
+            EWeakRef<EProperty> property = fLoadedRegister->AddComponent(entity, initValue->GetDescription());
+            if (property.lock())
             {
                 E_INFO("Add Component " + initValue->GetDescription().GetId());
-                property->Copy(initValue);
-                inter::PrintProperty(property);
+                property.lock()->Copy(initValue.get());
+                inter::PrintProperty(property.lock().get());
             }
         }
-        delete initValue;
     }
     return EJson::object();
 }
@@ -367,13 +365,13 @@ EJson ERegisterSocket::Pk_HandleSetValue(const ERegisterPacket& packet)
         EString valueIdent = packet.Body["ValueIdent"].get<EString>();
         EString value = packet.Body["Value"].get<EString>();
 
-        EProperty* foundProperty = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
-        if (!foundProperty)
+        EWeakRef<EProperty> foundProperty = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
+        if (foundProperty.expired() || !foundProperty.lock())
         {
             E_ERROR("Could not set value. Value not found!");
             return EJson::object();
         }
-        if (EDeserializer::ReadPropertyFromJson(EJson::parse(value), foundProperty))
+        if (EDeserializer::ReadPropertyFromJson(EJson::parse(value), foundProperty.lock().get()))
         {
             E_INFO("Value " + valueIdent + " setted on entity " + std::to_string(entity) + "!");
         }
@@ -387,13 +385,13 @@ EJson ERegisterSocket::Pk_HandleAddArrayEntry(const ERegisterPacket& packet)
     {
         EDataBase::Entity entity = packet.Body["Entity"].get<int>();
         EString valueIdent = packet.Body["ValueIdent"].get<EString>();
-        EProperty* foundProperty = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
-        if (!foundProperty || foundProperty->GetDescription().GetType() != EValueType::ARRAY)
+        EWeakRef<EProperty> foundProperty = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
+        if (foundProperty.expired() || !foundProperty.lock() || foundProperty.lock()->GetDescription().GetType() != EValueType::ARRAY)
         {
             E_ERROR("Could not add array entry. Value not found or is not array!");
             return EJson::object();
         }
-        EArrayProperty* asArray = static_cast<EArrayProperty*>(foundProperty);
+        ERef<EArrayProperty> asArray = std::static_pointer_cast<EArrayProperty>(foundProperty.lock());
         asArray->AddElement();
     }
     return EJson::object();
@@ -406,12 +404,12 @@ EJson ERegisterSocket::Pk_HandleGetValue(const ERegisterPacket& packet)
     {
         EDataBase::Entity entity = packet.Body["Entity"].get<int>();
         EString valueIdent = packet.Body["ValueIdent"].get<EString>();
-        EProperty* foundValue = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
+        EWeakRef<EProperty> foundValue = fLoadedRegister->GetValueByIdentifier(entity, valueIdent);
 
-        if (foundValue)
+        if (!foundValue.expired() && foundValue.lock())
         {
-            result = ESerializer::WritePropertyToJs(foundValue, true /* With Description*/);
-            result["PropertyName"] = foundValue->GetPropertyName();
+            result = ESerializer::WritePropertyToJs(foundValue.lock().get(), true /* With Description*/);
+            result["PropertyName"] = foundValue.lock()->GetPropertyName();
         }
     }
     return result;
@@ -443,10 +441,10 @@ EJson ERegisterSocket::Pk_HandleGetAllValues(const ERegisterPacket& packet)
     {
         EDataBase::Entity entity = packet.Body["Entity"].get<int>();
         EJson propertyArrayJson = EJson::array();
-        EVector<EStructProperty*> properties = fLoadedRegister->GetAllComponents(entity);
-        for (EStructProperty* property : properties)
+        EVector<ERef<EProperty>> properties = fLoadedRegister->GetAllComponents(entity);
+        for (ERef<EProperty> property : properties)
         {
-            propertyArrayJson.push_back(ESerializer::WritePropertyToJs(property, true/*With description*/));
+            propertyArrayJson.push_back(ESerializer::WritePropertyToJs(property.get(), true/*With description*/));
         }
         result = propertyArrayJson;
     }
@@ -473,7 +471,7 @@ EJson ERegisterSocket::Pk_HandleGetResource(const ERegisterPacket& packet)
 EJson ERegisterSocket::Pk_HandleGetLoadedResources(const ERegisterPacket& packet) 
 {
     EString resourceString;
-    if (packet.Body["ResourceType"].is_string())
+    if (packet.Body.size() && packet.Body["ResourceType"].is_string())
     {
         resourceString = packet.Body["ResourceType"].get<EString>();
     }

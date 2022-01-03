@@ -140,7 +140,7 @@ TEST(RegisterTest, Basics)
 			stringValue->SetValue("Hello World");
 			vectorProperty->SetValue<Vector>(newVecValue);
 			boolValue->SetValue(true);
-			enumProperty->SetCurrentValue("Two");
+			enumProperty->SetCurrentValue<EString>("Two");
 
 			arrayProperty->AddElement();
 			arrayProperty->AddElement();
@@ -264,6 +264,13 @@ TEST(EDataBase, RegisterComponentWithCRepresenation)
 	{
 		EXPECT_EQ(myTestComponent2.MyDouble, 10.4);
 		EXPECT_STREQ(myTestComponent2.MyString.c_str(), "Hello World");
+		Vec v;
+		if (myTestComponent2.MyAny.Value() && convert::getter(myTestComponent.MyAny.Value(), &v))
+		{
+			EXPECT_EQ(v.X, 1);
+			EXPECT_EQ(v.Y, 2);
+			EXPECT_EQ(v.Z, 3);
+		}
 	}
 
 	

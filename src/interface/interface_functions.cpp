@@ -68,7 +68,7 @@ shared::ESharedError shared::CreateComponent(const EString& componentId, EDataBa
     }
     if (desc.DefaultValue)
     {
-        CreateComponent(desc.DefaultValue.get(), entity);
+        CreateComponent(desc.DefaultValue, entity);
     }
     else
     {
@@ -85,11 +85,11 @@ shared::ESharedError shared::CreateComponent(const EValueDescription& componentI
         E_ERROR("You have to add struct as component");
         return true;
     }
-    StaticSharedContext::instance().GetRegisterConnection().Send_CreateNewComponent(entity, static_cast<EStructProperty*>(EProperty::CreateFromDescription(componentId.GetId(), componentId)));
+    StaticSharedContext::instance().GetRegisterConnection().Send_CreateNewComponent(entity, EProperty::CreateFromDescription(componentId.GetId(), componentId));
     return false;
 }
 
-shared::ESharedError shared::CreateComponent(EStructProperty* componentValue, EDataBase::Entity entity)
+shared::ESharedError shared::CreateComponent(ERef<EProperty> componentValue, EDataBase::Entity entity)
 {
     if (!componentValue)
     {
@@ -201,10 +201,10 @@ namespace Engine {
             }
         #endif
 
-            fRegisterConnection.GetEventDispatcher().ConnectAll([this](EStructProperty* property){
+            fRegisterConnection.GetEventDispatcher().ConnectAll([this](ERef<EProperty> property){
                 fRegisterEventDispatcher.Post_P(property->GetDescription(), property);
             });
-            fExtensionManager.GetEventDispatcher().ConnectAll([this](EStructProperty* property){
+            fExtensionManager.GetEventDispatcher().ConnectAll([this](ERef<EProperty> property){
                 fRegisterEventDispatcher.Post_P(property->GetDescription(), property);
             });
 
@@ -214,9 +214,10 @@ namespace Engine {
 
             
 
-            ECFuncTask* createNewComponentTask = new ECFuncTask("CreateComponent", [this](EStructProperty* property){
+            ECFuncTask* createNewComponentTask = new ECFuncTask("CreateComponent", [this](EWeakRef<EProperty> property){
+                if (property.expired()) return;
                 CreateComponentInput input;
-                if (!property->GetValue(input))
+                if (!convert::getter(property.lock().get(), &input))
                 {
                     E_ERROR("Could not get value from property when creating component!");
                     return;
@@ -226,14 +227,7 @@ namespace Engine {
                     E_ERROR("No init value for creating component!");
                     return;
                 }
-                if (input.Value.Value()->GetDescription().GetType() != EValueType::STRUCT)
-                {
-                    E_ERROR("Init value for creating component has to be struct!");
-                    return;
-                }
-                EStructProperty* structProp = static_cast<EStructProperty*>(input.Value.Value());
-
-                shared::CreateComponent(structProp, input.Entity);
+                shared::CreateComponent(input.Value.Value(), input.Entity);
             });
             createNewComponentTask->SetInputDescription(CreateComponentInput::_dsc);
             fExtensionManager.GetTaskRegister().RegisterItem("Core", createNewComponentTask);

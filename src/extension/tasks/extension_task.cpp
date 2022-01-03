@@ -13,11 +13,11 @@ EBaseTask::~EBaseTask()
     
 }
 
-EStructProperty* EBaseTask::Execute(EStructProperty* inValue) 
+ERef<EProperty> EBaseTask::Execute(EWeakRef<EProperty> inValue) 
 {
     if (fHasInput)
     {
-        if (inValue == nullptr)
+        if (inValue.expired() || inValue.lock() == nullptr)
         {
             E_ERROR("EBaseTask::Execute: input value is null");
             return nullptr;
@@ -97,7 +97,7 @@ ECFuncTask::~ECFuncTask()
     
 }
 
-EStructProperty* ECFuncTask::OnExecute(EStructProperty* inValue) 
+ERef<EProperty> ECFuncTask::OnExecute(EWeakRef<EProperty> inValue) 
 {
     if (!fExecuteFunction)
     {
@@ -112,7 +112,7 @@ void ECFuncTask::SetFunc(CFunc_NoParam_NoReturn func)
 {
     fHasInput = false;
     fHasOutput = false;
-    fExecuteFunction = [func](EStructProperty* inValue) -> EStructProperty*
+    fExecuteFunction = [func](EWeakRef<EProperty> inValue) -> ERef<EProperty>
     {
         func();
         return nullptr;
@@ -123,7 +123,7 @@ void ECFuncTask::SetFunc(CFunc_NoParam_Return func)
 {
     fHasInput = false;
     fHasOutput = true;
-    fExecuteFunction = [func](EStructProperty* inValue) -> EStructProperty*
+    fExecuteFunction = [func](EWeakRef<EProperty> inValue) -> ERef<EProperty>
     {
         return func();
     };
@@ -133,7 +133,7 @@ void ECFuncTask::SetFunc(CFunc_Param_NoReturn func)
 {
     fHasInput = true;
     fHasOutput = false;
-    fExecuteFunction = [func](EStructProperty* inValue) -> EStructProperty*
+    fExecuteFunction = [func](EWeakRef<EProperty> inValue) -> ERef<EProperty>
     {
         func(inValue);
         return nullptr;

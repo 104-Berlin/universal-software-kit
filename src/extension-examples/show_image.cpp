@@ -30,7 +30,7 @@ public:
                 if (event.Data.Value())
                 {
                     ImageLayer imageLayer;
-                    if (convert::getter<ImageLayer>(event.Data.Value(), &imageLayer))
+                    if (convert::getter<ImageLayer>(event.Data.Value().get(), &imageLayer))
                     {
                         auto entity = event.Entity.Handle;
 
@@ -48,7 +48,7 @@ public:
                 if (event.Data.Value())
                 {
                     ImageLayer imageLayer;
-                    if (convert::getter<ImageLayer>(event.Data.Value(), &imageLayer))
+                    if (convert::getter<ImageLayer>(event.Data.Value().get(), &imageLayer))
                     {
                         ERef<EResourceData> data = shared::GetResource(imageLayer.resourceLink.ResourceId);
                         
