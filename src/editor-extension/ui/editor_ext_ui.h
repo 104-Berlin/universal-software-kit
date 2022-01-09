@@ -388,7 +388,7 @@ namespace events {
          * @param callbackFunction Function which will be invoked with given EventType when event is triggered
          */
         template <typename EventType, typename CB>
-        void AddEventListener(CB callbackFunction)
+        void AddEventListener(CB&& callbackFunction)
         {
             fEventDispatcher.Connect<EventType>(callbackFunction);
         }
