@@ -32,7 +32,7 @@ ERef<EUIField> EBasicRegisterView::CreateTaskView()
             EWeakRef<EUIButton> weakRunButton = runButton;
             runButton->AddEventListener<events::EButtonEvent>([task, weakRunButton](){
                 const EValueDescription& intputDescription = task->GetInputDescription();
-                EStructProperty* input = nullptr;
+                ERef<EProperty> input = nullptr;
                 if (task->HasInput() && intputDescription.Valid())
                 {
                     if (intputDescription.GetType() != EValueType::STRUCT)
@@ -41,7 +41,7 @@ ERef<EUIField> EBasicRegisterView::CreateTaskView()
                     }
                     else
                     {
-                        input = (EStructProperty*) EProperty::CreateFromDescription("IN", intputDescription);
+                        input = EProperty::CreateFromDescription("IN", intputDescription);
                         ERef<EUIField> editPopup = EMakeRef<EUIField>("EditPopup");
                         editPopup->AddChild(EMakeRef<EComponentEdit>(ERef<EProperty>(input)));
                         editPopup->AddChild(EMakeRef<EUIButton>("OK")).lock()->AddEventListener<events::EButtonEvent>([task, input](){

@@ -117,7 +117,7 @@ ERef<EUIField> EObjectView::RenderStruct(EStructProperty* storage, EString nameI
     {
         auto& entry = structFields[i];
         const EString& propertyName = entry.first;
-        result->AddChild(RenderProperty(storage->GetProperty(propertyName), nameIdent + "." + propertyName));
+        result->AddChild(RenderProperty(storage->GetProperty(propertyName).get(), nameIdent + "." + propertyName));
         if (i < structFields.size() - 1)
         {
             result->AddChild(EMakeRef<EUIDivider>());
@@ -166,14 +166,14 @@ ERef<EUIField> EObjectView::RenderEnum(Engine::EEnumProperty* storage, EString n
         if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
         {
             ComponentChangeData componentChangeData;
-            if (convert::getter(e.Data.Value(), &componentChangeData))
+            if (convert::getter(e.Data.Value().get(), &componentChangeData))
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
                     if (valueProp)
                     {
-                        weakResult.lock()->SetSelectedIndex(static_cast<EEnumProperty*>(valueProp)->GetCurrentValue());
+                        weakResult.lock()->SetSelectedIndex(std::dynamic_pointer_cast<EEnumProperty>(valueProp)->GetCurrentValue());
                     }
                 }
             }
@@ -196,14 +196,14 @@ ERef<EUIField> EObjectView::RenderArray(Engine::EArrayProperty* storage, EString
 
         
         Engine::EArrayProperty* storage = (EArrayProperty*)foundProp.get();
-        EVector<EProperty*> elements = storage->GetElements();
+        EVector<ERef<EProperty>> elements = storage->GetElements();
 
         for (size_t i = 0; i < elements.size(); i++)
         {
-            EProperty* element = elements[i];
+            ERef<EProperty> element = elements[i];
 
             EWeakRef<EUIField> groupPanel = weakRef.lock()->AddChild(EMakeRef<EUIGroupPanel>(element->GetPropertyName()));
-            groupPanel.lock()->AddChild(RenderProperty(element, nameIdent + "." + std::to_string(i)));
+            groupPanel.lock()->AddChild(RenderProperty(element.get(), nameIdent + "." + std::to_string(i)));
         }
 
         EWeakRef<EUIField> addElemButton = weakRef.lock()->AddChild(EMakeRef<EUIButton>("Add Element"));
@@ -219,7 +219,7 @@ ERef<EUIField> EObjectView::RenderArray(Engine::EArrayProperty* storage, EString
         if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
         {
             ComponentChangeData componentChangeData;
-            if (convert::getter(e.Data.Value(), &componentChangeData))
+            if (convert::getter(e.Data.Value().get(), &componentChangeData))
             {
                 if (componentChangeData.Identifier == nameIdent)
                 {
@@ -249,14 +249,14 @@ ERef<EUIField> EObjectView::RenderBool(Engine::EValueProperty<bool>* storage, ES
         if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
         {
             ComponentChangeData componentChangeData;
-            if (convert::getter(e.Data.Value(), &componentChangeData))
+            if (convert::getter(e.Data.Value().get(), &componentChangeData))
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
                     if (valueProp)
                     {
-                        weakResult.lock()->SetValue(static_cast<EValueProperty<bool>*>(valueProp)->GetValue());
+                        weakResult.lock()->SetValue(std::dynamic_pointer_cast<EValueProperty<bool>>(valueProp)->GetValue());
                     }
                 }
             }
@@ -282,14 +282,14 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage, 
         if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
         {
             ComponentChangeData componentChangeData;
-            if (convert::getter(e.Data.Value(), &componentChangeData))
+            if (convert::getter(e.Data.Value().get(), &componentChangeData))
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
                     if (valueProp)
                     {
-                        weakResult.lock()->SetValue(static_cast<EValueProperty<i32>*>(valueProp)->GetValue());
+                        weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<i32>>(valueProp)->GetValue());
                     }
                 }
             }
@@ -315,14 +315,14 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u32>* storage, 
         if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
         {
             ComponentChangeData componentChangeData;
-            if (convert::getter(e.Data.Value(), &componentChangeData))
+            if (convert::getter(e.Data.Value().get(), &componentChangeData))
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
                     if (valueProp)
                     {
-                        weakResult.lock()->SetValue(static_cast<EValueProperty<u32>*>(valueProp)->GetValue());
+                        weakResult.lock()->SetValue(std::dynamic_pointer_cast<EValueProperty<u32>>(valueProp)->GetValue());
                     }
                 }
             }
@@ -347,14 +347,14 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u64>* storage, 
         if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
         {
             ComponentChangeData componentChangeData;
-            if (convert::getter(e.Data.Value(), &componentChangeData))
+            if (convert::getter(e.Data.Value().get(), &componentChangeData))
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
                     if (valueProp)
                     {
-                        weakResult.lock()->SetValue(static_cast<EValueProperty<u64>*>(valueProp)->GetValue());
+                        weakResult.lock()->SetValue(std::dynamic_pointer_cast<EValueProperty<u64>>(valueProp)->GetValue());
                     }
                 }
             }
@@ -380,14 +380,14 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<double>* storage
         if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
         {
             ComponentChangeData componentChangeData;
-            if (convert::getter(e.Data.Value(), &componentChangeData))
+            if (convert::getter(e.Data.Value().get(), &componentChangeData))
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
                     if (valueProp)
                     {
-                        weakResult.lock()->SetValue(static_cast<EValueProperty<double>*>(valueProp)->GetValue());
+                        weakResult.lock()->SetValue(std::dynamic_pointer_cast<EValueProperty<double>>(valueProp)->GetValue());
                     }
                 }
             }
@@ -413,14 +413,14 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<float>* storage,
         if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
         {
             ComponentChangeData componentChangeData;
-            if (convert::getter(e.Data.Value(), &componentChangeData))
+            if (convert::getter(e.Data.Value().get(), &componentChangeData))
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
                     if (valueProp)
                     {
-                        weakResult.lock()->SetValue(static_cast<EValueProperty<float>*>(valueProp)->GetValue());
+                        weakResult.lock()->SetValue(std::dynamic_pointer_cast<EValueProperty<float>>(valueProp)->GetValue());
                     }
                 }
             }
@@ -445,14 +445,14 @@ ERef<EUIField> EObjectView::RenderString(Engine::EValueProperty<EString>* storag
         if (e.Type == EntityChangeType::COMPONENT_CHANGED && e.Data.Value())
         {
             ComponentChangeData componentChangeData;
-            if (convert::getter(e.Data.Value(), &componentChangeData))
+            if (convert::getter(e.Data.Value().get(), &componentChangeData))
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    EProperty* valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
                     if (valueProp)
                     {
-                        weakResult.lock()->SetValue(static_cast<EValueProperty<EString>*>(valueProp)->GetValue());
+                        weakResult.lock()->SetValue(std::dynamic_pointer_cast<EValueProperty<EString>>(valueProp)->GetValue());
                     }
                 }
             }
@@ -494,7 +494,7 @@ void EObjectView::RegenAddComponentMenu()
             item.lock()->AddEventListener<events::EButtonEvent>([this, dsc](){
                 if (dsc.DefaultValue)
                 {
-                    shared::CreateComponent(dsc.DefaultValue.get(), fSelectedEntity);
+                    shared::CreateComponent(dsc.DefaultValue, fSelectedEntity);
                 }
                 else
                 {
@@ -556,7 +556,7 @@ ERef<EUIField> EComponentEdit::RenderStruct(Engine::EStructProperty* storage, ES
     {
         auto& entry = structFields[i];
         const EString& propertyName = entry.first;
-        result->AddChild(RenderProperty(storage->GetProperty(propertyName), nameIdent + "." + propertyName));
+        result->AddChild(RenderProperty(storage->GetProperty(propertyName).get(), nameIdent + "." + propertyName));
         if (i < structFields.size() - 1)
         {
             result->AddChild(EMakeRef<EUIDivider>());
@@ -604,14 +604,14 @@ ERef<EUIField> EComponentEdit::RenderArray(Engine::EArrayProperty* storage, EStr
     field->SetDirty();
     field->SetCustomUpdateFunction([this, weakRef, storage, nameIdent](){
         weakRef.lock()->Clear();
-        EVector<EProperty*> elements = storage->GetElements();
+        EVector<ERef<EProperty>> elements = storage->GetElements();
 
         for (size_t i = 0; i < elements.size(); i++)
         {
-            EProperty* element = elements[i];
+            ERef<EProperty> element = elements[i];
 
             EWeakRef<EUIField> groupPanel = weakRef.lock()->AddChild(EMakeRef<EUIGroupPanel>(element->GetPropertyName()));
-            groupPanel.lock()->AddChild(RenderProperty(element, nameIdent + "." + std::to_string(i)));
+            groupPanel.lock()->AddChild(RenderProperty(element.get(), nameIdent + "." + std::to_string(i)));
         }
 
         EWeakRef<EUIField> addElemButton = weakRef.lock()->AddChild(EMakeRef<EUIButton>("Add Element"));
@@ -669,10 +669,10 @@ ERef<EUIField> EComponentEdit::RenderAny(Engine::EStructProperty* storage, EStri
         weakGroupPanel.lock()->Clear();
         
         EStructProperty* structProp = static_cast<EStructProperty*>(storage);
-        EProperty* valueProp = structProp->GetProperty("value");
+        ERef<EProperty> valueProp = structProp->GetProperty("value");
         if (valueProp)
         {
-            ERef<EUIField> propertyField = this->RenderProperty(valueProp, nameIdent + ".value");
+            ERef<EUIField> propertyField = this->RenderProperty(valueProp.get(), nameIdent + ".value");
             weakGroupPanel.lock()->AddChild(propertyField);
         }
     });

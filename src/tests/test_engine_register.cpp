@@ -16,9 +16,9 @@ bool convert::setter<Vector>(EProperty* prop, const Vector& vec)
 	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
 	EStructProperty* property = static_cast<EStructProperty*>(prop);
 
-	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
-	EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
-	EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
+	ERef<EValueProperty<double>> xProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("X"));
+	ERef<EValueProperty<double>> yProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Y"));
+	ERef<EValueProperty<double>> zProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Z"));
 	if (xProp && yProp && zProp)
 	{
 		xProp->SetValue(vec.x);
@@ -35,9 +35,9 @@ bool convert::getter<Vector>(const EProperty* prop, Vector* outVec)
 	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
 	const EStructProperty* property = static_cast<const EStructProperty*>(prop);
 
-	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
-	const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
-	const EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
+	const ERef<EValueProperty<double>> xProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("X"));
+	const ERef<EValueProperty<double>> yProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Y"));
+	const ERef<EValueProperty<double>> zProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Z"));
 	if (xProp && yProp && zProp)
 	{
 		outVec->x = (float)xProp->GetValue();
@@ -111,19 +111,19 @@ TEST(RegisterTest, Basics)
 
 	{
 		// Set some things to the component
-		EStructProperty* storage = scene.GetComponent(entity, myTestComponent);
+		EWeakRef<EStructProperty> storage = std::dynamic_pointer_cast<EStructProperty>(scene.GetComponent(entity, myTestComponent).lock());
 
-		EXPECT_STREQ(storage->GetDescription().GetId().c_str(), myTestComponent.GetId().c_str());
+		EXPECT_STREQ(storage.lock()->GetDescription().GetId().c_str(), myTestComponent.GetId().c_str());
 
 		Vector newVecValue{2, 3, 4};
 
-		EValueProperty<EString>* stringValue = static_cast<EValueProperty<EString>*>(storage->GetProperty("MyString"));
-		EValueProperty<double>* doubleValue = static_cast<EValueProperty<double>*>(storage->GetProperty("MyDouble"));
-		EValueProperty<bool>* boolValue = static_cast<EValueProperty<bool>*>(storage->GetProperty("MyBool"));
-		EStructProperty* vectorProperty = static_cast<EStructProperty*>(storage->GetProperty("Vector"));
-		EEnumProperty* enumProperty = static_cast<EEnumProperty*>(storage->GetProperty("Enum"));
-		EArrayProperty* arrayProperty = static_cast<EArrayProperty*>(storage->GetProperty("VectorArray"));
-		EXPECT_EQ(storage->GetProperty("UNKNOWN"), nullptr);
+		ERef<EValueProperty<EString>> stringValue = std::dynamic_pointer_cast<EValueProperty<EString>>(storage.lock()->GetProperty("MyString"));
+		ERef<EValueProperty<double>> doubleValue = std::dynamic_pointer_cast<EValueProperty<double>>(storage.lock()->GetProperty("MyDouble"));
+		ERef<EValueProperty<bool>> boolValue = std::dynamic_pointer_cast<EValueProperty<bool>>(storage.lock()->GetProperty("MyBool"));
+		ERef<EStructProperty> vectorProperty = std::dynamic_pointer_cast<EStructProperty>(storage.lock()->GetProperty("Vector"));
+		ERef<EEnumProperty> enumProperty = std::dynamic_pointer_cast<EEnumProperty>(storage.lock()->GetProperty("Enum"));
+		ERef<EArrayProperty> arrayProperty = std::dynamic_pointer_cast<EArrayProperty>(storage.lock()->GetProperty("VectorArray"));
+		EXPECT_EQ(storage.lock()->GetProperty("UNKNOWN"), nullptr);
 		EXPECT_NE(stringValue, nullptr);
 		EXPECT_NE(doubleValue, nullptr);
 		EXPECT_NE(boolValue, nullptr);
@@ -148,16 +148,16 @@ TEST(RegisterTest, Basics)
 	}
 
 	{
-		EStructProperty* storage = scene.GetComponent(entity, myTestComponent);
+		ERef<EStructProperty> storage = std::dynamic_pointer_cast<EStructProperty>(scene.GetComponent(entity, myTestComponent).lock());
 
 		Vector newVecValue{2, 3, 4};
 
-		EValueProperty<EString>* stringValue = static_cast<EValueProperty<EString>*>(storage->GetProperty("MyString"));
-		EValueProperty<double>* doubleValue = static_cast<EValueProperty<double>*>(storage->GetProperty("MyDouble"));
-		EValueProperty<bool>* boolValue = static_cast<EValueProperty<bool>*>(storage->GetProperty("MyBool"));
-		EStructProperty* vectorProperty = static_cast<EStructProperty*>(storage->GetProperty("Vector"));
-		EEnumProperty* enumProperty = static_cast<EEnumProperty*>(storage->GetProperty("Enum"));
-		EArrayProperty* arrayProperty = static_cast<EArrayProperty*>(storage->GetProperty("VectorArray"));
+		ERef<EValueProperty<EString>> stringValue = std::dynamic_pointer_cast<EValueProperty<EString>>(storage->GetProperty("MyString"));
+		ERef<EValueProperty<double>> doubleValue = std::dynamic_pointer_cast<EValueProperty<double>>(storage->GetProperty("MyDouble"));
+		ERef<EValueProperty<bool>> boolValue = std::dynamic_pointer_cast<EValueProperty<bool>>(storage->GetProperty("MyBool"));
+		ERef<EStructProperty> vectorProperty = std::dynamic_pointer_cast<EStructProperty>(storage->GetProperty("Vector"));
+		ERef<EEnumProperty> enumProperty = std::dynamic_pointer_cast<EEnumProperty>(storage->GetProperty("Enum"));
+		ERef<EArrayProperty> arrayProperty = std::dynamic_pointer_cast<EArrayProperty>(storage->GetProperty("VectorArray"));
 
 		EXPECT_NE(stringValue, nullptr);
 		EXPECT_NE(doubleValue, nullptr);
@@ -243,29 +243,28 @@ TEST(EDataBase, RegisterComponentWithCRepresenation)
 	EDataBase dataBase;
 	EDataBase::Entity entity1 = dataBase.CreateEntity();
 	dataBase.AddComponent<MyTestComponent>(entity1);
-	EStructProperty* storage = dataBase.GetComponent(entity1, MyTestComponent::_dsc);
-	storage->SetValue<MyTestComponent>(myTestComponent);
+	EWeakRef<EProperty> storage = dataBase.GetComponent(entity1, MyTestComponent::_dsc);
+	convert::setter<MyTestComponent>(storage.lock().get(), myTestComponent);
 
-	ERef<EStructProperty> someAnyValue = ERef<EStructProperty>(static_cast<EStructProperty*>(EProperty::CreateFromDescription(Vec::_dsc.GetId(), Vec::_dsc)));
+	ERef<EStructProperty> someAnyValue = std::dynamic_pointer_cast<EStructProperty>(EProperty::CreateFromDescription(Vec::_dsc.GetId(), Vec::_dsc));
 	someAnyValue->SetValue<Vec>(Vec{1, 2, 3});
 
-
-	if (storage->GetValue<MyTestComponent>(myTestComponent))
+	if (convert::getter<MyTestComponent>(storage.lock().get(), &myTestComponent))
 	{
 		myTestComponent.MyAny.SetValue(someAnyValue);
 		myTestComponent.MyDouble = 10.4;
 		myTestComponent.MyString = "Hello World";
 
-		storage->SetValue<MyTestComponent>(myTestComponent);
+		convert::setter(storage.lock().get(), myTestComponent);
 	}
 
 	MyTestComponent myTestComponent2;
-	if (storage->GetValue<MyTestComponent>(myTestComponent2))
+	if (convert::getter<MyTestComponent>(storage.lock().get(), &myTestComponent2))
 	{
 		EXPECT_EQ(myTestComponent2.MyDouble, 10.4);
 		EXPECT_STREQ(myTestComponent2.MyString.c_str(), "Hello World");
 		Vec v;
-		if (myTestComponent2.MyAny.Value() && convert::getter(myTestComponent.MyAny.Value(), &v))
+		if (myTestComponent2.MyAny.Value() && convert::getter(myTestComponent.MyAny.Value().get(), &v))
 		{
 			EXPECT_EQ(v.X, 1);
 			EXPECT_EQ(v.Y, 2);

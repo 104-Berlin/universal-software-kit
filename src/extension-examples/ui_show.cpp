@@ -12,7 +12,7 @@ APP_ENTRY
         E_INFO("Text changed: " + evt.Value);
     });
     ERef<EUIButton> button = EMakeRef<EUIButton>("Click Me");
-    button->AddEventListener<events::EButtonEvent>([](events::EMouseDownEvent e){
+    button->AddEventListener<events::EButtonEvent>([](events::EButtonEvent e){
         E_INFO("BUTTON CLICK");
     });
     button->AddEventListener<events::EMouseDownEvent>([](events::EMouseDownEvent e){

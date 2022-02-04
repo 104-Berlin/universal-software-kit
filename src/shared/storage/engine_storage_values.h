@@ -84,13 +84,13 @@ namespace Engine {
         template <typename T>
         static ERef<EProperty> CreateFromTemplate(const EString& name)
         {
-            EProperty* result = CreateFromDescription(name, getdsc::GetDescription<T>());
+            ERef<EProperty> result = CreateFromDescription(name, getdsc::GetDescription<T>());
             if (result)
             {
                 T initValue;
-                convert::setter<T>(result, initValue);
+                convert::setter<T>(result.get(), initValue);
             }
-            return ERef<EProperty>(result);
+            return result;
         }
 
     private:

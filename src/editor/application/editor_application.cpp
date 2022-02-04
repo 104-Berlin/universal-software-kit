@@ -342,7 +342,7 @@ void EApplication::RegisterDefaultComponentRender()
                 newLink.Type = event.ResourceType;
                 newLink.ResourceId = event.ResourceID;
 
-                EStructProperty* structProp = static_cast<EStructProperty*>(EProperty::CreateFromDescription(EResourceLink::_dsc.GetId(), EResourceLink::_dsc));
+                EStructProperty* structProp = static_cast<EStructProperty*>(EProperty::CreateFromDescription(EResourceLink::_dsc.GetId(), EResourceLink::_dsc).get());
                 if (convert::setter(structProp, newLink))
                 {
                     callbackFn(structProp);

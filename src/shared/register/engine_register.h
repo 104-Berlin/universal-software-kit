@@ -49,11 +49,11 @@ namespace Engine {
         template <typename T>
         T AddComponent(Entity entity)
         {
-            ERef<EProperty> inserted = AddComponent(entity, EProperty::CreateFromTemplate<T>(getdsc::GetDescription<T>().GetId()));
+            EWeakRef<EProperty> inserted = AddComponent(entity, EProperty::CreateFromTemplate<T>(getdsc::GetDescription<T>().GetId()));
             T result;
-            if (inserted)
+            if (!inserted.expired() && inserted.lock())
             {
-                convert::getter<T>(inserted, &result);
+                convert::getter<T>(inserted.lock().get(), &result);
             }
             return result;
         }
