@@ -41,9 +41,10 @@ namespace events {
     {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
-        EComponentRegister                       fTypeRegister;
+        EComponentRegister                  fTypeRegister;
         EResourceRegister                   fResourceRegister;
         EEventDispatcher                    fEventDispatcher;
+        ETaskRegister                       fTaskRegister;
     public:
         EExtensionManager();
         ~EExtensionManager();
@@ -87,8 +88,12 @@ namespace events {
         EResourceRegister& GetResourceRegister();
         const EResourceRegister& GetResourceRegister() const;
 
+        ETaskRegister& GetTaskRegister();
+        const ETaskRegister& GetTaskRegister() const;
+
         EEventDispatcher& GetEventDispatcher();
         const EEventDispatcher& GetEventDispatcher() const;
+
 
         void Reload();
         void ReloadExtension(const EString& extensionName);

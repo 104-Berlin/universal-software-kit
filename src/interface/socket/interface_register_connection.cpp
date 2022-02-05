@@ -22,12 +22,12 @@ void ERegisterConnection::Send_CreateNewEntity()
     SendToServer(packet);
 }
 
-void ERegisterConnection::Send_CreateNewComponent(ERegister::Entity entity, EStructProperty* initValue) 
+void ERegisterConnection::Send_CreateNewComponent(EDataBase::Entity entity, ERef<EProperty> initValue) 
 {
     E_ASSERT(initValue);
     if (!initValue) { return; }
 
-    EJson createJson = ESerializer::WritePropertyToJs(initValue, true);
+    EJson createJson = ESerializer::WritePropertyToJs(initValue.get(), true);
     createJson["Entity"] = entity;
 
 
@@ -63,7 +63,7 @@ void ERegisterConnection::Send_LoadRegister(ESharedBuffer buffer)
     SendToServer(packet);
 }
 
-void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString) 
+void ERegisterConnection::Send_SetValue(EDataBase::Entity entity, const EString& valueIdent, const EString& valueString) 
 {
     EJson requestJson = EJson::object();
     requestJson["Entity"] = entity;
@@ -78,7 +78,7 @@ void ERegisterConnection::Send_SetValue(ERegister::Entity entity, const EString&
     SendToServer(packet);
 }
 
-void ERegisterConnection::Send_AddArrayEntry(ERegister::Entity entity, const EString& valueIdent) 
+void ERegisterConnection::Send_AddArrayEntry(EDataBase::Entity entity, const EString& valueIdent) 
 {
     EJson requestJson = EJson::object();
     requestJson["Entity"] = entity;
@@ -92,7 +92,7 @@ void ERegisterConnection::Send_AddArrayEntry(ERegister::Entity entity, const ESt
     SendToServer(packet);
 }
 
-EVector<ERegister::Entity> ERegisterConnection::Send_GetAllEntites() 
+EVector<EDataBase::Entity> ERegisterConnection::Send_GetAllEntites() 
 {
     ERegisterPacket packet;
     packet.PacketType = EPacketType::GET_ALL_ENTITES;
@@ -103,20 +103,20 @@ EVector<ERegister::Entity> ERegisterConnection::Send_GetAllEntites()
 
     EJson response = WaitForRequest(packet.ID);
 
-    EVector<ERegister::Entity> result;
+    EVector<EDataBase::Entity> result;
 
     if (response.is_array())
     {
         for (const EJson& entityJson : response)
         {
-            result.push_back(entityJson.get<ERegister::Entity>());
+            result.push_back(entityJson.get<EDataBase::Entity>());
         }
     }
 
     return result;
 }
 
-ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, const EString& valueIdent) 
+ERef<EProperty> ERegisterConnection::Send_GetValue(EDataBase::Entity entity, const EString& valueIdent) 
 {
     EJson request = EJson::object();
     request["Entity"] = entity;
@@ -149,7 +149,7 @@ ERef<EProperty> ERegisterConnection::Send_GetValue(ERegister::Entity entity, con
     return nullptr;
 }
 
-EVector<ERef<EProperty>> ERegisterConnection::Send_GetAllValues(ERegister::Entity entity) 
+EVector<ERef<EProperty>> ERegisterConnection::Send_GetAllValues(EDataBase::Entity entity) 
 {
     EJson request = EJson::object();
     request["Entity"] = entity;
@@ -168,10 +168,10 @@ EVector<ERef<EProperty>> ERegisterConnection::Send_GetAllValues(ERegister::Entit
     for (EJson& valueJson : response)
     {
         if (!valueJson.is_object()) { continue; }
-        EProperty* property;
+        ERef<EProperty> property;
         if (EDeserializer::ReadPropertyFromJson_WithDescription(valueJson, &property))
         {
-            result.push_back(ERef<EProperty>(property));
+            result.push_back(property);
         }
     }
     return result;
@@ -259,6 +259,8 @@ ESharedBuffer ERegisterConnection::Send_GetRegisterBuffer()
 
 void ERegisterConnection::Init() 
 {
+    fConnectionStatus = Status::Disconnected;
+    
     int socketDomain = AF_INET;
     fSocketId = socket(socketDomain, SOCK_STREAM, 0);
     if (fSocketId == -1)
@@ -384,7 +386,7 @@ void ERegisterConnection::GotPacket(const ERegisterPacket& packet)
 
             if (EDeserializer::ReadPropertyFromJson(packet.Body["Value"], resProperty.get()))
             {
-                fEventDispatcher.Enqueue_P(propertyDescription, resProperty.get());
+                fEventDispatcher.Enqueue_P(propertyDescription, resProperty);
             }
         }
     }

@@ -28,6 +28,8 @@ E_STORAGE_STRUCT(EnumTest,
     (MyEnum, SomeEnum)
 )
 
+static EApplication* runningInstance = nullptr;
+
 EApplication::EApplication() 
     : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
 {
@@ -48,6 +50,7 @@ EApplication::EApplication()
             initImGui();
         }
     });
+
 
     shared::ExtensionManager().AddEventListener<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
         for (ERef<EUIPanel> panel : fUIRegister.GetItems(event.ExtensionName))
@@ -71,8 +74,19 @@ EApplication::EApplication()
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<EnumTest>("Core");
 }
 
+EApplication::~EApplication() 
+{
+    runningInstance = nullptr;
+}
+
 void EApplication::Start(const EString& defaultRegisterPath) 
 {
+    if (runningInstance)
+    {
+        E_ERROR("Application already started");
+        return;
+    }
+    runningInstance = this;
     fLoadOnStartRegister = defaultRegisterPath;
     Wrapper::RunApplicationLoop(std::bind(&EApplication::Init, this, std::placeholders::_1), std::bind(&EApplication::Render, this), std::bind(&EApplication::RenderImGui, this), std::bind(&EApplication::CleanUp, this), &Wrapper::SetImGuiContext);
 }
@@ -286,13 +300,18 @@ void EApplication::RegisterDefaultPanels()
     ERef<EUIPanel> universalSceneView4 = EMakeRef<EUIPanel>("Basic Scene View 4");
     universalSceneView4->AddChild(EMakeRef<EObjectView>(&fUIValueRegister));
 
+
+    ERef<EUIPanel> registerPanel = EMakeRef<EUIPanel>("Register Panel");
+    registerPanel->AddChild(EMakeRef<EBasicRegisterView>());
+
     fUIRegister.RegisterItem("Core", universalSceneView1);
-    fUIRegister.RegisterItem("Core", universalSceneView2);
-    fUIRegister.RegisterItem("Core", universalSceneView3);
-    fUIRegister.RegisterItem("Core", universalSceneView4);
+    //fUIRegister.RegisterItem("Core", universalSceneView2);
+    //fUIRegister.RegisterItem("Core", universalSceneView3);
+    //fUIRegister.RegisterItem("Core", universalSceneView4);
     fUIRegister.RegisterItem("Core", resourcePanel);
     fUIRegister.RegisterItem("Core", extensionPanel);
     fUIRegister.RegisterItem("Core", connectionStatePanel);
+    fUIRegister.RegisterItem("Core", registerPanel);
 }
 
 void EApplication::RegisterDefaultResources() 
@@ -313,16 +332,31 @@ void EApplication::RegisterDefaultResources()
 
 void EApplication::RegisterDefaultComponentRender() 
 {
-    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, ERegister::Entity entity, const EString& nameIdent)->ERef<EUIField>{
+    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, const EString& nameIdent, std::function<void(EProperty*)> callbackFn)->ERef<EUIField>{
         EResourceLink link;
         if (convert::getter(prop, &link))
         {
             ERef<EUIResourceSelect> resourceSelect = EMakeRef<EUIResourceSelect>(link.Type);
-            resourceSelect->AddEventListener<events::EResourceSelectChangeEvent>([nameIdent, entity, link](events::EResourceSelectChangeEvent event){
-                shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink(link.Type, event.ResourceID));
+            resourceSelect->AddEventListener<events::EResourceSelectChangeEvent>([nameIdent, callbackFn, link](events::EResourceSelectChangeEvent event){
+                EResourceLink newLink;
+                newLink.Type = event.ResourceType;
+                newLink.ResourceId = event.ResourceID;
+
+                EStructProperty* structProp = static_cast<EStructProperty*>(EProperty::CreateFromDescription(EResourceLink::_dsc.GetId(), EResourceLink::_dsc).get());
+                if (convert::setter(structProp, newLink))
+                {
+                    callbackFn(structProp);
+                }
+                delete structProp;
             });
             return resourceSelect;
         }
         return EMakeRef<EUIField>("ResourceLink");
     }});
+}
+
+EApplication* EApplication::gApp() 
+{
+    E_ASSERT_M(runningInstance != nullptr, "Application not initialized");
+    return runningInstance;
 }

@@ -147,11 +147,13 @@ namespace Engine {
         }
     };
 
+    typedef EExtensionRegister<EBaseTask*> ETaskRegister;
+
 
     struct EComponentRegisterEntry
     {
         EValueDescription Description;
-        ERef<EStructProperty> DefaultValue;
+        ERef<EProperty> DefaultValue;
     };
 
     class EComponentRegister : public EExtensionRegister<EComponentRegisterEntry>
@@ -168,7 +170,7 @@ namespace Engine {
             if (dsc.Valid() && dsc.GetType() == EValueType::STRUCT)
             {
                 T initValue = T();
-                ERef<EStructProperty> initProperty = ERef<EStructProperty>(static_cast<EStructProperty*>(EProperty::CreateFromDescription(dsc.GetId(), dsc)));
+                ERef<EProperty> initProperty = EProperty::CreateFromDescription(dsc.GetId(), dsc);
                 if (!convert::setter<T>(initProperty.get(), initValue))
                 {
                     E_WARN("Could not register the correct default value for type " + dsc.GetId());

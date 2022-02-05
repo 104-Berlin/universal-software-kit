@@ -16,9 +16,12 @@ namespace Editor {
         EString                     fLoadOnStartRegister;
     public:
         EApplication();
+        ~EApplication();
 
         void Start(const EString& defaultRegisterPath = "");
         void RegenerateMainMenuBar();
+
+        Engine::EUIValueRegister& GetUIValueRegister() { return fUIValueRegister; }
     private:
         void Init(Graphics::GContext* context);
         void CleanUp();
@@ -28,6 +31,9 @@ namespace Editor {
         void RegisterDefaultPanels();
         void RegisterDefaultResources();
         void RegisterDefaultComponentRender();
+
+    public:
+        static EApplication* gApp();
     };
 
 }

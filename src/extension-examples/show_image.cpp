@@ -19,44 +19,56 @@ E_STORAGE_STRUCT(ImageLayer,
 class ImageLayerView : public EUIField
 {
 private:
-    EUnorderedMap<ERegister::Entity, EWeakRef<EUIImageView>> fImageViews;
+    EUnorderedMap<EDataBase::Entity, EWeakRef<EUIImageView>> fImageViews;
 public:
     ImageLayerView()
         : EUIField("ImageView")
     {
-        shared::Events().AddComponentCreateEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
-            ImageLayer imageLayer;
-            if (shared::GetValue<ImageLayer>(handle, &imageLayer))
+        shared::Events().Connect<EntityChangeEvent>([this](EntityChangeEvent event){
+            if (event.Type == EntityChangeType::COMPONENT_ADDED)
             {
-                ERef<EUIImageView> newImageView = EMakeRef<EUIImageView>();
-                newImageView->SetSize(250, 250);
-                fImageViews[handle] = newImageView;
-                AddChild(newImageView);
-            }
-        }, this);
-
-        shared::Events().AddComponentDeleteEventListener(ImageLayer::_dsc, [this](ERegister::Entity handle){
-            EUnorderedMap<ERegister::Entity, EWeakRef<EUIImageView>>::iterator it = fImageViews.find(handle);
-            if (it != fImageViews.end())
-            {
-                RemoveChild(it->second);
-                fImageViews.erase(it);
-            }
-        }, this);
-
-        shared::Events().AddEntityChangeEventListener("ImageLayer.resourceLink", [this](ERegister::Entity handle, const EString&){
-            ImageLayer imageLayer;
-            if (shared::GetValue<ImageLayer>(handle, &imageLayer))
-            {
-                ERef<EResourceData> data = shared::GetResource(imageLayer.resourceLink.ResourceId);
-                
-                if (data && fImageViews.find(handle) != fImageViews.end())
+                if (event.Data.Value())
                 {
-                    Editor::EImageUserData* userData = (Editor::EImageUserData*)data->UserData;
-                    if (userData)
+                    ImageLayer imageLayer;
+                    if (convert::getter<ImageLayer>(event.Data.Value().get(), &imageLayer))
                     {
-                        fImageViews[handle].lock()->SetTextureData(data->Data, userData->width, userData->height);
+                        auto entity = event.Entity.Handle;
+
+                        ERef<EUIImageView> imageView = EMakeRef<EUIImageView>();
+                        //imageView->SetTextureData(imageLayer.resourceLink);
+                        //imageView->SetVisible(imageLayer.Visible);
+                        imageView->SetSize(100, 100);
+                        fImageViews[entity] = imageView;
+                        EUIField::AddChild(imageView);
                     }
+                }
+            }
+            else if (event.Type == EntityChangeType::COMPONENT_CHANGED)
+            {
+                if (event.Data.Value())
+                {
+                    ImageLayer imageLayer;
+                    if (convert::getter<ImageLayer>(event.Data.Value().get(), &imageLayer))
+                    {
+                        ERef<EResourceData> data = shared::GetResource(imageLayer.resourceLink.ResourceId);
+                        
+                        if (data && fImageViews.find(event.Entity.Handle) != fImageViews.end())
+                        {
+                            Editor::EImageUserData* userData = (Editor::EImageUserData*)data->UserData;
+                            if (userData)
+                            {
+                                fImageViews[event.Entity.Handle].lock()->SetTextureData(data->Data, userData->width, userData->height);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (event.Type == EntityChangeType::COMPONENT_REMOVED || event.Type == EntityChangeType::ENTITY_DESTROYED)
+            {
+                if (fImageViews.find(event.Entity.Handle) != fImageViews.end())
+                {
+                    EUIField::RemoveChild(fImageViews[event.Entity.Handle]);
+                    fImageViews.erase(event.Entity.Handle);
                 }
             }
         }, this);

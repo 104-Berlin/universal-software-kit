@@ -11,6 +11,7 @@ EJson ESerializer::WriteStorageDescriptionToJson(const EValueDescription& descri
     result["ID"] = description.GetId();
     switch (description.GetType())
     {
+        case EValueType::ANY:
         case EValueType::PRIMITIVE:
         case EValueType::UNKNOWN: break;
         case EValueType::ARRAY:
@@ -49,23 +50,23 @@ EJson ESerializer::WriteStorageDescriptionToJson(const EValueDescription& descri
 EJson WriteStructToJs(EStructProperty* property);
 
 
-EJson ESerializer::WriteSceneToJson(ERegister* scene) 
+EJson ESerializer::WriteSceneToJson(EDataBase* scene) 
 {
     EUnorderedMap<EValueDescription::t_ID, EValueDescription> valueTypes;
     EJson result = EJson::object();
 
     EJson entityArray = EJson::array();
-    for (ERegister::Entity entity : scene->GetAllEntities())
+    for (EDataBase::Entity entity : scene->GetAllEntities())
     {
         EJson entityObject = EJson::object();
-        for (EStructProperty* component : scene->GetAllComponents(entity))
+        for (ERef<EProperty> component : scene->GetAllComponents(entity))
         {
             EValueDescription dsc = component->GetDescription();
             if (valueTypes.find(dsc.GetId()) == valueTypes.end())
             {
                 valueTypes[dsc.GetId()] = dsc;
             }
-            entityObject[component->GetPropertyName()] = WriteStructToJs(component);
+            entityObject[component->GetPropertyName()] = WritePropertyToJs(component.get());
         }
         entityArray.push_back(entityObject);
     }
@@ -125,9 +126,19 @@ EJson WriteStructToJs(EStructProperty* property)
     EJson result = EJson::object();
     for (auto& entry : structDsc.GetStructFields())
     {
-        result[entry.first] = ESerializer::WritePropertyToJs(property->GetProperty(entry.first));
+        result[entry.first] = ESerializer::WritePropertyToJs(property->GetProperty(entry.first).get());
     }
     return result;
+}
+
+EJson WriteAnyToJs(EStructProperty* property)
+{
+    ERef<EProperty> value = property->GetProperty("value");
+    if (!value)
+    {
+        return EJson();
+    }
+    return ESerializer::WritePropertyToJs(value.get(), true);
 }
 
 EJson WriteEnumToJs(EEnumProperty* property)
@@ -142,9 +153,9 @@ EJson WriteEnumToJs(EEnumProperty* property)
 EJson WriteArrayToJs(EArrayProperty* property)
 {
     EJson result = EJson::array();
-    for (EProperty* property : property->GetElements())
+    for (ERef<EProperty> property : property->GetElements())
     {
-        result.push_back(ESerializer::WritePropertyToJs(property));
+        result.push_back(ESerializer::WritePropertyToJs(property.get()));
     }
     return result;
 }
@@ -158,6 +169,7 @@ EJson ESerializer::WritePropertyToJs(EProperty* property, bool writeDescription)
     {
     case EValueType::PRIMITIVE: valueJson = WritePrimitiveToJs(property); break;
     case EValueType::ARRAY: valueJson = WriteArrayToJs(static_cast<EArrayProperty*>(property)); break;
+    case EValueType::ANY: valueJson = WriteAnyToJs(static_cast<EStructProperty*>(property)); break;
     case EValueType::STRUCT: valueJson = WriteStructToJs(static_cast<EStructProperty*>(property)); break;
     case EValueType::ENUM: valueJson = WriteEnumToJs(static_cast<EEnumProperty*>(property)); break;
     case EValueType::UNKNOWN: return 0;
@@ -178,7 +190,7 @@ EJson ESerializer::WritePropertyToJs(EProperty* property, bool writeDescription)
     return 0;
 }
 
-ESharedBuffer ESerializer::WriteFullSceneBuffer(ERegister* reg) 
+ESharedBuffer ESerializer::WriteFullSceneBuffer(EDataBase* reg) 
 {
     EFileCollection fileCollection;
 

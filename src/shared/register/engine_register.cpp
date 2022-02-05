@@ -7,33 +7,26 @@ using namespace Engine;
 
 
 
-ERegister::ERegister(const EString& name) 
+EDataBase::EDataBase(const EString& name) 
     : fName(name)
 {
-    fResourceManager.GetEventDispatcher().ConnectAll([this](EProperty* prop){
+    fResourceManager.GetEventDispatcher().ConnectAll([this](ERef<EProperty> prop){
         this->fEventDispatcher.Enqueue_P(prop->GetDescription(), prop);
     });
 }
 
-Engine::ERegister::~ERegister() 
+Engine::EDataBase::~EDataBase() 
 {
-    for (auto& entry : fComponentStorage)
-    {
-        for (auto& values : entry.second)
-        {
-            delete values.second;
-        }
-    }
     fComponentStorage.clear();
 }
 
 
-EResourceManager& ERegister::GetResourceManager() 
+EResourceManager& EDataBase::GetResourceManager() 
 {
     return fResourceManager;
 }
 
-ERegister::Entity ERegister::CreateEntity() 
+EDataBase::Entity EDataBase::CreateEntity() 
 {
     static Entity currentEntity = 1;
     
@@ -49,11 +42,12 @@ ERegister::Entity ERegister::CreateEntity()
         currentEntity++;
     }
     fAliveEntites.push_back(newEntity);
-    fEventDispatcher.Enqueue<EntityCreateEvent>({newEntity});
+    EntityChangeEvent event(EntityChangeType::ENTITY_CREATED, newEntity);
+    fEventDispatcher.Enqueue<EntityChangeEvent>(event);
     return newEntity;
 }
 
-void ERegister::DestroyEntity(Entity entity) 
+void EDataBase::DestroyEntity(Entity entity) 
 {
     EVector<Entity>::iterator it = std::find(fAliveEntites.begin(), fAliveEntites.end(), entity);
     if (it == fAliveEntites.end())
@@ -62,118 +56,142 @@ void ERegister::DestroyEntity(Entity entity)
     }
     for (auto& entry : fComponentStorage)
     {
-        fEventDispatcher.Enqueue<ComponentDeleteEvent>({entry.first, entity});
-        delete entry.second[entity];
         entry.second.erase(entity);
     }
+    EntityChangeEvent event(EntityChangeType::ENTITY_DESTROYED, entity);
+    fEventDispatcher.Enqueue<EntityChangeEvent>(event);
     fAliveEntites.erase(it);
     fDeadEntites.push_back(entity);
 }
 
-EVector<ERegister::Entity> ERegister::GetAllEntities() const
+EVector<EDataBase::Entity> EDataBase::GetAllEntities() const
 {
     return fAliveEntites;
 }
 
-void ERegister::Clear() 
+void EDataBase::Clear() 
 {
-    for (auto& entry : fComponentStorage)
-    {
-        for (auto& storage : entry.second)
-        {
-            fEventDispatcher.Enqueue<ComponentDeleteEvent>({entry.first, storage.first});
-            delete storage.second;
-        }
-    }
     fComponentStorage.clear();
+    for (auto& entity : fAliveEntites)
+    {
+        EntityChangeEvent event(EntityChangeType::ENTITY_DESTROYED, entity);
+        fEventDispatcher.Enqueue<EntityChangeEvent>(event);
+    }
+
     fAliveEntites.clear();
     fDeadEntites.clear();
 }
 
-bool ERegister::IsAlive(Entity entity) 
+bool EDataBase::IsAlive(Entity entity) 
 {
     return std::find(fAliveEntites.begin(), fAliveEntites.end(), entity) != fAliveEntites.end();
 }
 
-EStructProperty* ERegister::AddComponent(Entity entity, const EValueDescription& description) 
+
+EWeakRef<EProperty> EDataBase::AddComponent(Entity entity, const EValueDescription& componentId)
 {
+    return AddComponent(entity, EProperty::CreateFromDescription(componentId.GetId(), componentId));
+}
+
+EWeakRef<EProperty> EDataBase::AddComponent(Entity entity, const ERef<const EProperty>& value) 
+{
+    if (!value)
+    {
+        return {};
+    }
+    EValueDescription description = value->GetDescription();
     E_ASSERT_M(description.Valid(), "ERROR: Invalid value descrition!");
     E_ASSERT_M(description.GetType() == EValueType::STRUCT, "Component can only be inserted as struct");
-    if (!IsAlive(entity)) { return nullptr; }
+    if (!IsAlive(entity)) { return {}; }
 
     if (!HasComponent(entity, description.GetId()))
     {
-        EStructProperty* storage = static_cast<EStructProperty*>(EProperty::CreateFromDescription(description.GetId(), description));
-        storage->SetChangeFunc([this, entity](EString ident){
-            fEventDispatcher.Enqueue<ValueChangeEvent>({ident, entity});
+        ERef<EProperty> storage = EProperty::CreateFromDescription(description.GetId(), description);
+        storage->Copy(value.get());
+
+        storage->SetChangeFunc([this, entity, storage](EString ident){
+            EntityChangeEvent event(EntityChangeType::COMPONENT_CHANGED, entity);
+            ComponentChangeData data(ident);
+            data.NewValue.SetValue(ERef<EProperty>(storage->Clone()));
+            ERef<EProperty> newValue = ERef<EProperty>(EProperty::CreateFromDescription(ComponentChangeData::_dsc.GetId(), ComponentChangeData::_dsc));
+            convert::setter(newValue.get(), data);
+            event.Data.SetValue(newValue);
+            fEventDispatcher.Enqueue<EntityChangeEvent>(event);
         });
 
         fComponentStorage[description.GetId()][entity] = storage;
 
-        fEventDispatcher.Enqueue<ComponentCreateEvent>({description.GetId(), entity});
+        EntityChangeEvent event(EntityChangeType::COMPONENT_ADDED, entity);
+        event.Data.SetValue(ERef<EProperty>(storage->Clone()));
+        fEventDispatcher.Enqueue<EntityChangeEvent>(event);
         return storage;
     }
-    return nullptr;
+    return {};
 }
 
-void ERegister::RemoveComponent(Entity entity, const EValueDescription& componentId)
+void EDataBase::RemoveComponent(Entity entity, const EValueDescription& componentId)
 {
     E_ASSERT_M(componentId.Valid(), "ERROR: Invalid value descrition!");
     if (!IsAlive(entity)) { return; }
     if (!HasComponent(entity, componentId)) { return; }
 
-    delete fComponentStorage[componentId.GetId()][entity];
     fComponentStorage[componentId.GetId()].erase(entity);
 
-    fEventDispatcher.Enqueue<ComponentDeleteEvent>({componentId.GetId(), entity});
+    EntityChangeEvent event(EntityChangeType::COMPONENT_REMOVED, entity);
+    ComponentChangeData data(componentId.GetId());
+    ERef<EProperty> newValue = ERef<EProperty>(EProperty::CreateFromDescription(ComponentChangeData::_dsc.GetId(), ComponentChangeData::_dsc));
+    convert::setter(newValue.get(), data);
+    event.Data.SetValue(newValue);
+        
+    fEventDispatcher.Enqueue<EntityChangeEvent>(event);
 }
 
-bool ERegister::HasComponent(Entity entity, const EValueDescription& componentId) 
+bool EDataBase::HasComponent(Entity entity, const EValueDescription& componentId) 
 {
     E_ASSERT_M(componentId.Valid(), "ERROR: Invalid value descrition!");
     return HasComponent(entity, componentId.GetId());
 }
 
-bool Engine::ERegister::HasComponent(Entity entity, const EValueDescription::t_ID& componentId) 
+bool Engine::EDataBase::HasComponent(Entity entity, const EValueDescription::t_ID& componentId) 
 {
     return fComponentStorage[componentId].find(entity) != fComponentStorage[componentId].end();
 }
 
-EStructProperty* ERegister::GetComponent(Entity entity, const EValueDescription& componentId) 
+EWeakRef<EProperty> EDataBase::GetComponent(Entity entity, const EValueDescription& componentId) 
 {
     E_ASSERT_M(componentId.Valid(), "ERROR: Invalid value descrition!");
     return GetComponent(entity, componentId.GetId());
 }
 
-EStructProperty* ERegister::GetComponent(Entity entity, const EValueDescription::t_ID& componentId) 
+EWeakRef<EProperty> EDataBase::GetComponent(Entity entity, const EValueDescription::t_ID& componentId) 
 {
-    if (!IsAlive(entity)) { return nullptr; }
-    if (!HasComponent(entity, componentId)) { return nullptr; }
+    if (!IsAlive(entity)) { return ERef<EProperty>(nullptr); }
+    if (!HasComponent(entity, componentId)) { return ERef<EProperty>(nullptr); }
 
     return fComponentStorage[componentId][entity];
 }
 
-void Engine::ERegister::DisconnectEvents() 
+void Engine::EDataBase::DisconnectEvents() 
 {
     fEventDispatcher.DisconnectEvents();
 }
 
-void Engine::ERegister::WaitForEvent() 
+void Engine::EDataBase::WaitForEvent() 
 {
     fEventDispatcher.WaitForEvent();
 }
 
-EEventDispatcher& Engine::ERegister::GetEventDispatcher()
+EEventDispatcher& Engine::EDataBase::GetEventDispatcher()
 {
     return fEventDispatcher;
 }
 
-void Engine::ERegister::UpdateEvents() 
+void Engine::EDataBase::UpdateEvents() 
 {
     fEventDispatcher.Update();
 }
 
-EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identifier) 
+EWeakRef<EProperty> EDataBase::GetValueByIdentifier(Entity entity, const EString& identifier) 
 {
     EVector<EString> identList;
     size_t start = 0;
@@ -187,16 +205,18 @@ EProperty* ERegister::GetValueByIdentifier(Entity entity, const EString& identif
     identList.push_back(identifier.substr(start, identifier.length() - start));
     E_ASSERT(identList.size() > 0);
     // The first identifier is the component name
-    EStructProperty* currentProp = GetComponent(entity, identList[0]);
+    EWeakRef<EProperty> currentProp = GetComponent(entity, identList[0]);
     // if we couldnt find the component return
-    if (!currentProp) { return nullptr; }
+    if (!currentProp.lock()) { return currentProp; }
     if (identList.size() == 1) { return currentProp; }
-    return currentProp->GetPropertyByIdentifier(identifier.substr(identList[0].length() + 1));
+    if (currentProp.lock()->GetDescription().GetType() != EValueType::STRUCT) { return currentProp; }
+    EWeakRef<EStructProperty> asStructProp = std::dynamic_pointer_cast<EStructProperty>(currentProp.lock());
+    return asStructProp.lock()->GetPropertyByIdentifier(identifier.substr(identList[0].length() + 1));
 }
 
-EVector<EStructProperty*> ERegister::GetAllComponents(Entity entity) 
+EVector<ERef<EProperty>> EDataBase::GetAllComponents(Entity entity) 
 {
-    EVector<EStructProperty*> result;
+    EVector<ERef<EProperty>> result;
     for (auto& entry : fComponentStorage)
     {
         if (entry.second.find(entity) != entry.second.end())
@@ -207,7 +227,7 @@ EVector<EStructProperty*> ERegister::GetAllComponents(Entity entity)
     return result;
 }
 
-EUnorderedMap<ERegister::Entity, EStructProperty*>& ERegister::View(const EValueDescription& description) 
+EUnorderedMap<EDataBase::Entity, ERef<EProperty>>& EDataBase::View(const EValueDescription& description) 
 {
     return fComponentStorage[description.GetId()];
 }

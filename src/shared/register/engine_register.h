@@ -8,7 +8,7 @@
 namespace Engine {
 
 
-    class E_API ERegister
+    class E_API EDataBase
     {
     public:
         using Entity = u64;
@@ -18,12 +18,12 @@ namespace Engine {
         EResourceManager fResourceManager;
         EEventDispatcher fEventDispatcher;
 
-        EUnorderedMap<EValueDescription::t_ID, EUnorderedMap<Entity, EStructProperty*>> fComponentStorage;
+        EUnorderedMap<EValueDescription::t_ID, EUnorderedMap<Entity, ERef<EProperty>>> fComponentStorage;
         EVector<Entity>     fAliveEntites;
         EVector<Entity>     fDeadEntites;
     public:
-        ERegister(const EString& name = "Unknown");
-        ~ERegister();
+        EDataBase(const EString& name = "Unknown");
+        ~EDataBase();
         
         EResourceManager& GetResourceManager();
 
@@ -34,25 +34,26 @@ namespace Engine {
 
         bool IsAlive(Entity entity);
 
-        EStructProperty* AddComponent(Entity entity, const EValueDescription& componentId);
+        EWeakRef<EProperty> AddComponent(Entity entity, const EValueDescription& componentId);
+        EWeakRef<EProperty> AddComponent(Entity entity, const ERef<const EProperty>& component);
         void RemoveComponent(Entity entity, const EValueDescription& componentId);
         bool HasComponent(Entity entity, const EValueDescription& componentId);
         bool HasComponent(Entity entity, const EValueDescription::t_ID& componentId);
-        EStructProperty* GetComponent(Entity entity, const EValueDescription& componentId);
-        EStructProperty* GetComponent(Entity entity, const EValueDescription::t_ID& componentId);
-        EProperty* GetValueByIdentifier(Entity entity, const EString& identifier);
-        EVector<EStructProperty*> GetAllComponents(Entity entity);
-        EUnorderedMap<Entity, EStructProperty*>& View(const EValueDescription& description);
+        EWeakRef<EProperty> GetComponent(Entity entity, const EValueDescription& componentId);
+        EWeakRef<EProperty> GetComponent(Entity entity, const EValueDescription::t_ID& componentId);
+        EWeakRef<EProperty> GetValueByIdentifier(Entity entity, const EString& identifier);
+        EVector<ERef<EProperty>> GetAllComponents(Entity entity);
+        EUnorderedMap<Entity, ERef<EProperty>>& View(const EValueDescription& description);
 
 
         template <typename T>
         T AddComponent(Entity entity)
         {
-            EStructProperty* inserted = AddComponent(entity, getdsc::GetDescription<T>());
+            EWeakRef<EProperty> inserted = AddComponent(entity, EProperty::CreateFromTemplate<T>(getdsc::GetDescription<T>().GetId()));
             T result;
-            if (inserted)
+            if (!inserted.expired() && inserted.lock())
             {
-                convert::getter<T>(inserted, result);
+                convert::getter<T>(inserted.lock().get(), &result);
             }
             return result;
         }
@@ -84,41 +85,27 @@ namespace Engine {
         void UpdateEvents();
     };
 
-    
-    E_STORAGE_STRUCT(EntityCreateEvent,
-        (ERegister::Entity, Handle)
+    E_STORAGE_STRUCT(EntityHandle,
+        (EDataBase::Entity, Handle)
     )
 
-    E_STORAGE_STRUCT(ComponentCreateEvent, 
-        (EValueDescription::t_ID, ValueId),
-        (ERegister::Entity, Handle)
-    )
-
-    E_STORAGE_STRUCT(ComponentDeleteEvent,
-        (EValueDescription::t_ID, ValueId),
-        (ERegister::Entity, Handle)
-    )
-
-    E_STORAGE_STRUCT(ValueChangeEvent,
+    E_STORAGE_STRUCT(ComponentChangeData,
         (EString, Identifier),
-        (ERegister::Entity, Handle)
+        (EAny, NewValue)
     )
 
+    E_STORAGE_ENUM(EntityChangeType,
+        ENTITY_CREATED,
+        ENTITY_DESTROYED,
+        COMPONENT_ADDED,
+        COMPONENT_REMOVED,
+        COMPONENT_CHANGED
+    )
 
-
-    namespace events {
-
-        
-
-        struct EComponentChangeEvent {
-            ERegister::Entity Entity;
-            EStructProperty* Property;
-        };
-
-        struct EComponentDeleteEvent {
-            ERegister::Entity Entity;
-        };
-
-    }
+    E_STORAGE_STRUCT(EntityChangeEvent,
+        (EntityChangeType, Type),
+        (EntityHandle, Entity),
+        (EAny, Data)
+    )
 
 }

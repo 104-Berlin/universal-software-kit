@@ -9,7 +9,8 @@ namespace Engine {
         STRUCT,
         ARRAY,
         ENUM,
-        PRIMITIVE
+        PRIMITIVE,
+        ANY
     };
 
     class E_API EValueDescription
