@@ -746,7 +746,7 @@ namespace events
         E_STORAGE_STRUCT(EResourceSelectChangeEvent,
             (EString, ResourceType),
             (EString, ResourceName),
-            (EResourceData::t_ID, ResourceID)
+            (EResourceBase::t_ID, ResourceID)
         )
     }
 
@@ -754,7 +754,7 @@ namespace events
     {
         struct ResourceOption
         {
-            EResourceData::t_ID ResourceID;
+            EResourceBase::t_ID ResourceID;
             EString Name;
         };
     private:

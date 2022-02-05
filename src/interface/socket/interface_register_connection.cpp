@@ -39,12 +39,12 @@ void ERegisterConnection::Send_CreateNewComponent(EDataBase::Entity entity, ERef
     SendToServer(packet);
 }
 
-void ERegisterConnection::Send_AddResource(EResourceData* data) 
+void ERegisterConnection::Send_AddResource(EResourceBase* data) 
 {
     ERegisterPacket packet;
     packet.PacketType = EPacketType::ADD_RESOURCE;
     packet.ID = GetNewPacketID();
-    packet.Body = ESerializer::WriteResourceDataToJson(*data, true);
+    packet.Body = ESerializer::WritEResourceBaseToJson(*data, true);
 
     SendToServer(packet);
 }
@@ -177,7 +177,7 @@ EVector<ERef<EProperty>> ERegisterConnection::Send_GetAllValues(EDataBase::Entit
     return result;
 }
 
-ERef<EResourceData> ERegisterConnection::Send_GetResourceData(EResourceData::t_ID resourceId) 
+ERef<EResourceBase> ERegisterConnection::Send_GetResourceData(EResourceBase::t_ID resourceId) 
 {
     EJson req = EJson::object();
     req["ID"] = resourceId;
@@ -191,7 +191,7 @@ ERef<EResourceData> ERegisterConnection::Send_GetResourceData(EResourceData::t_I
 
     EJson response = WaitForRequest(packet.ID);
 
-    ERef<EResourceData> resourceData = EMakeRef<EResourceData>();
+    ERef<EResourceBase> resourceData = EMakeRef<EResourceBase>();
     if (!EDeserializer::ReadResourceFromJson(response, resourceData.get(), true))
     {
         return nullptr;
@@ -199,9 +199,9 @@ ERef<EResourceData> ERegisterConnection::Send_GetResourceData(EResourceData::t_I
     return resourceData;
 }
 
-EVector<ERef<EResourceData>> ERegisterConnection::Send_GetAllResources(const EString& resourceType) 
+EVector<ERef<EResourceBase>> ERegisterConnection::Send_GetAllResources(const EString& resourceType) 
 {
-    EVector<ERef<EResourceData>> result;
+    EVector<ERef<EResourceBase>> result;
 
     ERegisterPacket packet;
     packet.PacketType = EPacketType::GET_LOADED_RESOURCES;
@@ -222,7 +222,7 @@ EVector<ERef<EResourceData>> ERegisterConnection::Send_GetAllResources(const ESt
     {
         for (EJson& arrayEntry : res)
         {
-            ERef<EResourceData> newData = EMakeRef<EResourceData>();
+            ERef<EResourceBase> newData = EMakeRef<EResourceBase>();
             if (EDeserializer::ReadResourceFromJson(arrayEntry, newData.get(), false))
             {
                 result.push_back(newData);

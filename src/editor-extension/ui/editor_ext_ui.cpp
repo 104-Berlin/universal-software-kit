@@ -1069,7 +1069,7 @@ EUIResourceSelect::EUIResourceSelect(const EString& resourceType)
     });
 
     dropDown.lock()->AddEventListener<events::EDropEvent>([this, dropDown](events::EDropEvent e){
-        EResourceData::t_ID resourceID = e.DragDataAsID;
+        EResourceBase::t_ID resourceID = e.DragDataAsID;
         EString resourceName = e.DragDataAsString;
 
         // Find index for dropdown

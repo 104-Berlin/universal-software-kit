@@ -13,12 +13,12 @@ EResourceManager::~EResourceManager()
     Clear();
 }
 
-bool EResourceManager::HasResource(const EResourceData::t_ID& id) const
+bool EResourceManager::HasResource(const EResourceBase::t_ID& id) const
 {
     return fLoadedResources.find(id) != fLoadedResources.end();
 }
 
-bool EResourceManager::AddResource(EResourceData* data) 
+bool EResourceManager::AddResource(EResourceBase* data) 
 {
     if (data->ID == 0) { data->ID = CreateNewId(); }
 
@@ -45,7 +45,7 @@ bool EResourceManager::ImportResource(const EString& name, const EResourceDescri
             return false;
         }
     }
-    EResourceData* newData = new EResourceData(CreateNewId(), description.ResourceName, name, buffer.Data, buffer.Size);
+    EResourceBase* newData = new EResourceBase(CreateNewId(), description.ResourceName, name, buffer.Data, buffer.Size);
     if (buffer.UserData)
     {
         newData->SetUserData(buffer.UserData, buffer.UserDataSize);
@@ -92,7 +92,7 @@ void EResourceManager::Clear()
     fLoadedResources.clear();
 }
 
-EResourceData* EResourceManager::GetResource(const EResourceData::t_ID& path) const
+EResourceBase* EResourceManager::GetResource(const EResourceBase::t_ID& path) const
 {
     if (HasResource(path))
     {
@@ -101,9 +101,9 @@ EResourceData* EResourceManager::GetResource(const EResourceData::t_ID& path) co
     return nullptr;
 }
 
-EVector<EResourceData*> EResourceManager::GetAllResource() const
+EVector<EResourceBase*> EResourceManager::GetAllResource() const
 {
-    EVector<EResourceData*> result;
+    EVector<EResourceBase*> result;
     for (auto& entry : fLoadedResources)
     {
         result.push_back(entry.second);
@@ -111,9 +111,9 @@ EVector<EResourceData*> EResourceManager::GetAllResource() const
     return result;
 }
 
-EVector<EResourceData*> EResourceManager::GetAllResource(const EString& type) const
+EVector<EResourceBase*> EResourceManager::GetAllResource(const EString& type) const
 {
-    EVector<EResourceData*> result;
+    EVector<EResourceBase*> result;
 
     for (auto& entry : fLoadedResources)
     {
@@ -126,9 +126,9 @@ EVector<EResourceData*> EResourceManager::GetAllResource(const EString& type) co
     return result;
 }
 
-EResourceData::t_ID EResourceManager::CreateNewId() 
+EResourceBase::t_ID EResourceManager::CreateNewId() 
 {
-    EResourceData::t_ID result = 1;
+    EResourceBase::t_ID result = 1;
     while (HasResource(result) && result != 0)
     {
         result *= 3;
@@ -148,18 +148,18 @@ const EEventDispatcher& EResourceManager::GetEventDispatcher() const
     return fEventDispacher;
 }
 
-EResourceData* EResourceManager::CreateResourceFromFile(EFile& file, const EResourceDescription& description) 
+EResourceBase* EResourceManager::CreateResourceFromFile(EFile& file, const EResourceDescription& description) 
 {
     if (!file.Exist()) { return nullptr; }
     file.LoadToMemory();
 
-    EResourceData* result = nullptr;
+    EResourceBase* result = nullptr;
 
     if (description.ImportFunction)
     {
         EResourceDescription::ResBuffer buffer = description.ImportFunction({file.GetBuffer().Data<u8>(), file.GetBuffer().GetSizeInByte()});
 
-        result = new EResourceData(0, description.ResourceName, file.GetFileName(), buffer.Data, buffer.Size);
+        result = new EResourceBase(0, description.ResourceName, file.GetFileName(), buffer.Data, buffer.Size);
         result->SetUserData(buffer.UserData, buffer.UserDataSize);
     }
     else
@@ -167,12 +167,12 @@ EResourceData* EResourceManager::CreateResourceFromFile(EFile& file, const EReso
         size_t bufferLen = file.GetBuffer().GetSizeInByte();
         u8* copiedFileBuffer = new u8[bufferLen];
         memcpy(copiedFileBuffer, file.GetBuffer().Data(), bufferLen);
-        result = new EResourceData(0, description.ResourceName, file.GetFileName(), copiedFileBuffer, bufferLen);
+        result = new EResourceBase(0, description.ResourceName, file.GetFileName(), copiedFileBuffer, bufferLen);
     }
     return result;
 }
 
-EResourceData* EResourceManager::CreateResourceFromFile(const EString& filePath, const EResourceDescription& description) 
+EResourceBase* EResourceManager::CreateResourceFromFile(const EString& filePath, const EResourceDescription& description) 
 {
     EFile file(filePath);
     return CreateResourceFromFile(file, description);

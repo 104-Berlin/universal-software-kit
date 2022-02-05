@@ -203,9 +203,9 @@ ESharedBuffer ESerializer::WriteFullSceneBuffer(EDataBase* reg)
 
     fileCollection.AddFile("CORE/scene.json", jsonBuffer);
 
-    for (EResourceData* resourceData : reg->GetResourceManager().GetAllResource())
+    for (EResourceBase* resourceData : reg->GetResourceManager().GetAllResource())
     {
-        size_t bufferSize = resourceData->Type.length() + 1 + sizeof(EResourceData::t_ID) + sizeof(u64) + resourceData->DataSize + sizeof(u64) + resourceData->UserDataSize;
+        size_t bufferSize = resourceData->Type.length() + 1 + sizeof(EResourceBase::t_ID) + sizeof(u64) + resourceData->DataSize + sizeof(u64) + resourceData->UserDataSize;
         ESharedBuffer resourceBuffer;
         resourceBuffer.InitWith<u8>(bufferSize);
 
@@ -215,7 +215,7 @@ ESharedBuffer ESerializer::WriteFullSceneBuffer(EDataBase* reg)
         pointer += resourceData->Type.size() + 1;
 
         EFileCollection::WriteU64(pointer, resourceData->ID);
-        pointer += sizeof(EResourceData::t_ID);
+        pointer += sizeof(EResourceBase::t_ID);
 
         EFileCollection::WriteU64(pointer, resourceData->DataSize);
         pointer += sizeof(u64);
@@ -251,7 +251,7 @@ ESharedBuffer ESerializer::WriteFullSceneBuffer(EDataBase* reg)
     return fileCollection.GetCompleteBuffer();
 }
 
-EJson ESerializer::WriteResourceDataToJson(const EResourceData& data, bool writeData) 
+EJson ESerializer::WritEResourceBaseToJson(const EResourceBase& data, bool writeData) 
 {
     EJson result = EJson::object();
 

@@ -50,7 +50,7 @@ public:
                     ImageLayer imageLayer;
                     if (convert::getter<ImageLayer>(event.Data.Value().get(), &imageLayer))
                     {
-                        ERef<EResourceData> data = shared::GetResource(imageLayer.resourceLink.ResourceId);
+                        ERef<EResourceBase> data = shared::GetResource(imageLayer.resourceLink.ResourceId);
                         
                         if (data && fImageViews.find(event.Entity.Handle) != fImageViews.end())
                         {

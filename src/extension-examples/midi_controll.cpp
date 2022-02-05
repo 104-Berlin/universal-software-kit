@@ -12,7 +12,7 @@ static RtMidiIn* midi = nullptr;
 static std::condition_variable waitForInput;
 static u8 lastUsedInput = 0;
 static size_t selectedMidiInputIndex = 0;
-static EResourceData::t_ID currentResourceId;
+static EResourceBase::t_ID currentResourceId;
 
 
 enum class MidiInputType : size_t

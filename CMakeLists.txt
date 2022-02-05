@@ -21,6 +21,8 @@ option(BUILD_TEST "Toggle the unittest" TRUE)
 option(BUILD_CLT "Toggle the Command-Line-Tool" TRUE)
 option(BUILD_TOOLS "Toogle the build of the tools" TRUE)
 option(BUILD_MIDI_TOOL "Toggle the midi extension" TRUE)
+option(BUILD_ASSIMP "Toggle the assimp build" TRUE)
+
 
 # Editor only for windows and mac supported
 if (NOT WIN32 AND NOT APPLE)
@@ -53,6 +55,15 @@ add_subdirectory(src/extension)
 add_subdirectory(src/scripting)
 
 add_subdirectory(src/interface)
+
+#########################
+######## ASSIMP #########
+if (${BUILD_ASSIMP})
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+set(ASSIMP_BUILD_TESTS OFF)
+set(ASSIMP_INSTALL OFF)
+add_subdirectory(deps/assimp)
+endif()
 
 #########################
 ######### TOOLS #########

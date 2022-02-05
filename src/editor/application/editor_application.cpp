@@ -52,7 +52,7 @@ EApplication::EApplication()
     });
 
 
-    shared::ExtensionManager().AddEventListener<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
+    shared::Events().Connect<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
         for (ERef<EUIPanel> panel : fUIRegister.GetItems(event.ExtensionName))
         {
             panel->DisconnectAllEvents();
@@ -135,7 +135,7 @@ void EApplication::RegenerateMainMenuBar()
                 if (shared::ExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
                     foundDescription.ImportFunction)
                 {
-                    EResourceData* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
+                    EResourceBase* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
                     if (data)
                     {
                         shared::CreateResource(data);

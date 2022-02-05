@@ -19,6 +19,11 @@ add_library(SHOW_IMAGE MODULE show_image.cpp)
 set_target_properties(SHOW_IMAGE PROPERTIES SUFFIX ".uex")
 set_target_properties(SHOW_IMAGE PROPERTIES PREFIX "")
 
+add_library(RENDERING_TESTS MODULE rendering_tests.cpp)
+set_target_properties(RENDERING_TESTS PROPERTIES SUFFIX ".uex")
+set_target_properties(RENDERING_TESTS PROPERTIES PREFIX "")
+
+
 if (${BUILD_MIDI_TOOL})
 add_library(MIDI_CONTROLL MODULE midi_controll.cpp)
 set_target_properties(MIDI_CONTROLL PROPERTIES SUFFIX ".uex")
@@ -32,6 +37,7 @@ target_link_libraries(Example1 EEditorExtension)
 target_link_libraries(TECHDRAW EEditorExtension)
 target_link_libraries(UISHOW EEditorExtension)
 target_link_libraries(SHOW_IMAGE EEditorExtension)
+target_link_libraries(RENDERING_TESTS EEditorExtension)
 
 
 

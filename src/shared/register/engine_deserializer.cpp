@@ -253,13 +253,13 @@ bool EDeserializer::ReadPropertyFromJson_WithDescription(const EJson& json, ERef
     return false;
 }
 
-bool EDeserializer::ReadResourceFromJson(const EJson& json, EResourceData* resData, bool withData) 
+bool EDeserializer::ReadResourceFromJson(const EJson& json, EResourceBase* resData, bool withData) 
 {
     if (!json.is_object()) { return false; }
     if (json.size() == 0)  { return false;}
     if (json["ID"].is_number_integer() && json["Type"].is_string() && json["Name"].is_string() && json["PathToFile"].is_string())
     {
-        resData->ID = json["ID"].get<EResourceData::t_ID>();
+        resData->ID = json["ID"].get<EResourceBase::t_ID>();
         resData->Type = json["Type"].get<EString>();
         resData->Name = json["Name"].get<EString>();
         resData->PathToFile = json["PathToFile"].get<EString>();
@@ -319,8 +319,8 @@ bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, EDataBase* sav
         EString type = EString((char*)pointer);
         pointer += type.length() + 1;
 
-        EResourceData::t_ID id = *(EResourceData::t_ID*)pointer;
-        pointer += sizeof(EResourceData::t_ID);
+        EResourceBase::t_ID id = *(EResourceBase::t_ID*)pointer;
+        pointer += sizeof(EResourceBase::t_ID);
         
         u64 dataSize = *(u64*)pointer;
         pointer += sizeof(u64);
@@ -340,7 +340,7 @@ bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, EDataBase* sav
         }
 
         EFile file(entry.first);
-        EResourceData* finalResourceData = new EResourceData(id, type, file.GetFileName(), resourceData, dataSize);
+        EResourceBase* finalResourceData = new EResourceBase(id, type, file.GetFileName(), resourceData, dataSize);
         finalResourceData->SetUserData(userData, userDataSize);
         if (!saveToScene->GetResourceManager().AddResource(finalResourceData))
         {

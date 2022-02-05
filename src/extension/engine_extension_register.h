@@ -45,6 +45,7 @@ namespace Engine {
         void ClearRegisteredItems(const EString& extensionName)
         {
             fRegisteredItems[extensionName].clear();
+            fRegisteredItems.erase(extensionName);
             ERegisterChangedEvent event;
             event.ExtensionName = extensionName;
             fEventDispatcher.Post<ERegisterChangedEvent>(event);
