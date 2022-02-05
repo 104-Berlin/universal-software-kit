@@ -225,15 +225,14 @@ namespace Engine {
         {
             if constexpr (has_member_Value <T>::value)
             {
-                SetCurrentValue(static_cast<u32>(Value.Value));
+                SetCurrentValueIndex(static_cast<u32>(Value.Value));
                 return true;
             }
             return false;
         }
         
 
-        template <>
-        bool SetCurrentValue<EString>(const EString& value) 
+        bool SetCurrentValueOption(const EString& value) 
         {
             if (value.empty())
             {
@@ -257,8 +256,7 @@ namespace Engine {
             return true;
         }
 
-        template <>
-        bool SetCurrentValue<u32>(const u32& value)
+        bool SetCurrentValueIndex(const u32& value)
         {
             EValueDescription dsc = GetDescription();
             E_ASSERT(dsc.GetType() == EValueType::ENUM);

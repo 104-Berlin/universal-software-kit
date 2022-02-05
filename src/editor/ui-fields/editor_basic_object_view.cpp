@@ -589,7 +589,7 @@ ERef<EUIField> EComponentEdit::RenderEnum(Engine::EEnumProperty* storage, EStrin
     result->SetOptions(enumValues);
     result->SetSelectedIndex(storage->GetCurrentValue());
     result->AddEventListener<events::ESelectChangeEvent>([this, nameIdent, storage](events::ESelectChangeEvent event){
-        storage->SetCurrentValue(event.Index);
+        storage->SetCurrentValueIndex(event.Index);
         fEventDispatcher.Enqueue<events::ComponentEditChangeEvent>({nameIdent});
     });
 

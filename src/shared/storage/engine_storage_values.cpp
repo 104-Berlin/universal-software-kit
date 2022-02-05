@@ -271,7 +271,7 @@ void EStructProperty::ResetFields()
 EEnumProperty::EEnumProperty(const EString& name, EValueDescription description, const EString& initValue)
     : EProperty(name, description), fValue(0)
 {
-    SetCurrentValue(initValue);
+    SetCurrentValueOption(initValue);
 }
 
 EEnumProperty::~EEnumProperty() 

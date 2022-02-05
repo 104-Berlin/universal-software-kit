@@ -140,7 +140,7 @@ TEST(RegisterTest, Basics)
 			stringValue->SetValue("Hello World");
 			vectorProperty->SetValue<Vector>(newVecValue);
 			boolValue->SetValue(true);
-			enumProperty->SetCurrentValue<EString>("Two");
+			enumProperty->SetCurrentValueOption("Two");
 
 			arrayProperty->AddElement();
 			arrayProperty->AddElement();

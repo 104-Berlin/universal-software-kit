@@ -183,7 +183,7 @@
                                     {\
                                         EProperty* prop = property;\
                                         EEnumProperty* enumProp = static_cast<EEnumProperty*>(prop);\
-                                        enumProp->SetCurrentValue(static_cast<u32>(value.Value));\
+                                        enumProp->SetCurrentValueIndex(static_cast<u32>(value.Value));\
                                         return true;\
                                     }\
                                     static bool FromProperty(name & value, const ::Engine::EStructProperty* property)\
