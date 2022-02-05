@@ -395,7 +395,7 @@ namespace Engine {
                 {
                     if constexpr (is_vector<ArrayType>::value)
                     {
-                        if (!static_cast<EArrayProperty*>(newEntry)->SetValue<typename T::value_type>(entry))
+                        if (!std::static_pointer_cast<EArrayProperty>(newEntry)->SetValue<typename T::value_type>(entry))
                         {
                             return false;
                         }
