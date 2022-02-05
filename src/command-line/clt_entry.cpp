@@ -13,6 +13,7 @@ int main(int argc, char** argv)
     
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<CommandType>("CommandLine");
 
+    E_INFO(std::filesystem::temp_directory_path().string());
     EString input;
     do
     {
