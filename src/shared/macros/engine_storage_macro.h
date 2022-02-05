@@ -198,3 +198,5 @@
                                     }\
                                     bool operator!=(const name& other) const { return !((*this) == other);}\
                                 };
+
+                                
