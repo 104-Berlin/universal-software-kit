@@ -311,14 +311,14 @@ namespace Engine {
                 return false;
             };
 
-            for (EProperty* prop : fElements)
+            for (ERef<EProperty> prop : fElements)
             {
                 switch (fDescription.GetType())
                 {
                     case EValueType::ANY:
                     case EValueType::STRUCT: 
                     {
-                        if (!insert_element(static_cast<EStructProperty*>(prop)))
+                        if (!insert_element(std::static_pointer_cast<EStructProperty>(prop)))
                         {
                             return false;
                         }
@@ -326,7 +326,7 @@ namespace Engine {
                     }
                     case EValueType::ARRAY:
                     {
-                        if (!insert_element(static_cast<EArrayProperty*>(prop)))
+                        if (!insert_element(std::static_pointer_cast<EArrayProperty>(prop)))
                         {
                             return false;
                         }
@@ -334,7 +334,7 @@ namespace Engine {
                     }
                     case EValueType::PRIMITIVE:
                     {
-                        if (!insert_element(static_cast<EValueProperty<T>*>(prop)))
+                        if (!insert_element(std::static_pointer_cast<EValueProperty<T>>(prop)))
                         {
                             return false;
                         }
