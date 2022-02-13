@@ -101,6 +101,7 @@ bool EResourceManager::ImportResource(const EString& name, const EResourceDescri
         }
         return AddResource(newResourceBase);
     }
+    return false;
 }
 
 bool EResourceManager::ImportResourceFromFile(const EString& filePath, const EResourceDescription& description) 
