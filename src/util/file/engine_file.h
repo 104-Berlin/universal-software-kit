@@ -114,6 +114,12 @@ namespace Engine {
          * @param sharedBuffer The buffer to override to current loaded
          */
         void SetFileBuffer(ESharedBuffer sharedBuffer);
+
+
+        /**
+         * @return Returns the temporary file directory for the app
+         */
+        static EString GetTempPath();
     private:
         void CreatePathStrings();
     };

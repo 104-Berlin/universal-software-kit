@@ -13,7 +13,7 @@ namespace Engine {
         static bool ReadPropertyFromJson(const EJson& json, EProperty* property);
         static bool ReadPropertyFromJson_WithDescription(const EJson& json, ERef<EProperty>* property);
 
-        static bool ReadResourceFromJson(const EJson& json, EResourceBase* data, bool withData);
+        static bool ReadResourceFromJson(const EJson& json, EResourceBase** data, bool withData);
 
         static bool ReadSceneFromFileBuffer(ESharedBuffer buffer, EDataBase* saveToScene);
     };

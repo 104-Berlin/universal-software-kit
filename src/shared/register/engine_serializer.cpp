@@ -205,65 +205,32 @@ ESharedBuffer ESerializer::WriteFullSceneBuffer(EDataBase* reg)
 
     for (EResourceBase* resourceData : reg->GetResourceManager().GetAllResource())
     {
-        size_t bufferSize = resourceData->Type.length() + 1 + sizeof(EResourceBase::t_ID) + sizeof(u64) + resourceData->DataSize + sizeof(u64) + resourceData->UserDataSize;
-        ESharedBuffer resourceBuffer;
-        resourceBuffer.InitWith<u8>(bufferSize);
+        EFile file(resourceData->GetTempFilePath());
+        if (!file.Exist()) { continue; }
+        file.LoadToMemory();
+        ESharedBuffer resourceBuffer = file.GetBuffer();
 
-        u8* pointer = resourceBuffer.Data<u8>();
-
-        strcpy((char*) pointer, resourceData->Type.c_str());
-        pointer += resourceData->Type.size() + 1;
-
-        EFileCollection::WriteU64(pointer, resourceData->ID);
-        pointer += sizeof(EResourceBase::t_ID);
-
-        EFileCollection::WriteU64(pointer, resourceData->DataSize);
-        pointer += sizeof(u64);
-
-        memcpy(pointer, resourceData->Data, resourceData->DataSize);
-        pointer += resourceData->DataSize;
-
-        if (!resourceData->UserData)
-        {
-            EFileCollection::WriteU64(pointer, 0);
-        }
-        else
-        {
-            EFileCollection::WriteU64(pointer, resourceData->UserDataSize);
-            pointer += sizeof(u64);
-            
-            memcpy(pointer, resourceData->UserData, resourceData->UserDataSize);
-        }
-        EString fileName;
-        if (!resourceData->PathToFile.empty())
-        {
-            fileName = resourceData->PathToFile;
-        }
-        else 
-        {
-            fileName = resourceData->Type + resourceData->Name;
-        }
-        fileCollection.AddFile(fileName, resourceBuffer);
-
+        fileCollection.AddFile(std::to_string(resourceData->ID), resourceBuffer);
     }
 
     
     return fileCollection.GetCompleteBuffer();
 }
 
-EJson ESerializer::WritEResourceBaseToJson(const EResourceBase& data, bool writeData) 
+EJson ESerializer::WritEResourceBaseToJson(EResourceBase* data, bool writeData) 
 {
     EJson result = EJson::object();
 
-    result["ID"] = data.ID;
-    result["Type"] = data.Type;
-    result["Name"] = data.Name;
-    result["PathToFile"] = data.PathToFile;
+    result["ID"] = data->ID;
+    result["Type"] = data->ResourceType;
 
     if (writeData)
     {
-        result["Data"] = Base64::Encode(data.Data, data.DataSize);
-        result["UserData"] = Base64::Encode(data.UserData, data.UserDataSize);
+        ESharedBuffer resourceData;
+        if (!resourceData.IsNull())
+        {
+            result["Data"] = Base64::Encode(resourceData.Data<u8>(), resourceData.GetSizeInByte());
+        }
     }
 
     return result;

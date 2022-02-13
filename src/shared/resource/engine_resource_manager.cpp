@@ -3,6 +3,59 @@
 
 using namespace Engine;
 
+
+static EResourceBase::t_ID GetNextID()
+{
+    static EResourceBase::t_ID next = 1;
+    while (next != 0) 
+        next++;
+    return next;
+}
+
+
+
+
+EResourceBase::EResourceBase(const EString& resourceType)
+    : ResourceType(resourceType)
+{
+    fName = "Unknown";
+}
+
+void EResourceBase::SaveToTempFile(const u8* data, const u32& data_size)
+{
+    ESharedBuffer buffer;
+    buffer.InitWith<u8>(data, data_size);
+}
+
+void EResourceBase::SaveToTempFile(ESharedBuffer buffer)
+{
+    EFile file(EFile::GetTempPath());
+    file.SetFileBuffer(buffer);
+    file.SaveBufferToDisk();
+}
+
+const EString& EResourceBase::GetTempFilePath() const
+{
+    if (fTempFilePath.empty())
+    {
+        EFile file(Path::Join(EFile::GetTempPath(), fName + ".temp"));
+        //fTempFilePath = file.GetFullPath();
+        EResourceBase* self = (EResourceBase*)this;
+        self->fTempFilePath = file.GetFullPath();
+    }
+    return fTempFilePath;
+}
+
+const EString& EResourceBase::GetName() const
+{
+    return fName;
+}
+
+void EResourceBase::SetName(const EString& name)
+{
+    fName = name;
+}
+
 EResourceManager::EResourceManager() 
 {
     
@@ -20,37 +73,34 @@ bool EResourceManager::HasResource(const EResourceBase::t_ID& id) const
 
 bool EResourceManager::AddResource(EResourceBase* data) 
 {
-    if (data->ID == 0) { data->ID = CreateNewId(); }
-
     if (HasResource(data->ID))
     {
         return false;
     }
     fLoadedResources.insert({data->ID, data});
-    fEventDispacher.Post<events::EResourceAddedEvent>({data->ID, data->Name, data->PathToFile, data->Type});
+    //fEventDispacher.Post<events::EResourceAddedEvent>({data->ID, data->Name, data->PathToFile, data->Type});
     return true;
 }
 
 bool EResourceManager::ImportResource(const EString& name, const EResourceDescription& description, u8* rawData, size_t data_size) 
 {
-    EResourceDescription::ResBuffer buffer;
-    buffer.Data = rawData;
-    buffer.Size = data_size;
+    E_ASSERT_M(description.AcceptedFileEndings.size() > 0, "No accepted file endings specified!");
+    ESharedBuffer buffer;
+    buffer.InitWith<u8>(rawData, data_size);
+    EFile file(Path::Join(EFile::GetTempPath(), name + description.AcceptedFileEndings[0]));
+    file.SetFileBuffer(buffer);
+    
+
     if (description.ImportFunction)
     {
-        buffer = description.ImportFunction({rawData, data_size});
-        if (!buffer.Data)
+        EResourceBase* newResourceBase  = description.ImportFunction(rawData, data_size);
+        if (!newResourceBase)
         {
             E_ERROR("Resource " + name + " could not be imported!");
             return false;
         }
+        return AddResource(newResourceBase);
     }
-    EResourceBase* newData = new EResourceBase(CreateNewId(), description.ResourceName, name, buffer.Data, buffer.Size);
-    if (buffer.UserData)
-    {
-        newData->SetUserData(buffer.UserData, buffer.UserDataSize);
-    }
-    return AddResource(newData);
 }
 
 bool EResourceManager::ImportResourceFromFile(const EString& filePath, const EResourceDescription& description) 
@@ -117,7 +167,7 @@ EVector<EResourceBase*> EResourceManager::GetAllResource(const EString& type) co
 
     for (auto& entry : fLoadedResources)
     {
-        if (entry.second->Type == type)
+        if (entry.second->ResourceType == type)
         {
             result.push_back(entry.second);
         }
@@ -157,17 +207,14 @@ EResourceBase* EResourceManager::CreateResourceFromFile(EFile& file, const EReso
 
     if (description.ImportFunction)
     {
-        EResourceDescription::ResBuffer buffer = description.ImportFunction({file.GetBuffer().Data<u8>(), file.GetBuffer().GetSizeInByte()});
-
-        result = new EResourceBase(0, description.ResourceName, file.GetFileName(), buffer.Data, buffer.Size);
-        result->SetUserData(buffer.UserData, buffer.UserDataSize);
+        result = description.ImportFunction(file.GetBuffer().Data<u8>(), file.GetBuffer().GetSizeInByte());
     }
     else
     {
         size_t bufferLen = file.GetBuffer().GetSizeInByte();
         u8* copiedFileBuffer = new u8[bufferLen];
         memcpy(copiedFileBuffer, file.GetBuffer().Data(), bufferLen);
-        result = new EResourceBase(0, description.ResourceName, file.GetFileName(), copiedFileBuffer, bufferLen);
+        //result = new EResourceBase(0, description.ResourceName, file.GetFileName(), copiedFileBuffer, bufferLen);
     }
     return result;
 }

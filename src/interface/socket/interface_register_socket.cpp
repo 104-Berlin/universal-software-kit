@@ -341,8 +341,8 @@ EJson ERegisterSocket::Pk_HandleCreateComponent(const ERegisterPacket& packet)
 
 EJson ERegisterSocket::Pk_HandleAddResource(const ERegisterPacket& packet) 
 {
-    EResourceBase* data = new EResourceBase();
-    if (EDeserializer::ReadResourceFromJson(packet.Body, data, true))
+    EResourceBase* data;
+    if (EDeserializer::ReadResourceFromJson(packet.Body, &data, true))
     {
         if (!fLoadedRegister->GetResourceManager().AddResource(data))
         {

@@ -6,14 +6,30 @@ namespace Engine {
     {
     public:
         using t_ID = u64;
+    private:
+        EString fTempFilePath;
+        EString fName;
 
+        ESharedBuffer fFileBuffer;
     public:
+        const EString ResourceType;
+
+        t_ID ID;
+    public:
+        EResourceBase(const EString& resourceType);
         virtual ~EResourceBase() = default;
     
         virtual void* GetData() = 0;
 
-        virtual void Import(const u8* buffer, const u32& buffer_size) {}
-        virtual void Export(u8** out_buffer, u32* out_buffer_size) {}
+        virtual bool Import(const u8* buffer, const u32& buffer_size) { return false; }
+        virtual bool Export(u8** out_buffer, u32* out_buffer_size) { return false; }
+
+        const EString& GetTempFilePath() const;
+        const EString& GetName() const;
+        void SetName(const EString& name);
+
+        static void SaveToTempFile(const u8* data, const u32& data_size);
+        static void SaveToTempFile(ESharedBuffer buffer);
     };
 
 

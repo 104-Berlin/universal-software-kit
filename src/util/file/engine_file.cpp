@@ -139,3 +139,7 @@ void EFile::SetFileBuffer(ESharedBuffer sharedBuffer)
     fFileBuffer = sharedBuffer;
 }
 
+EString EFile::GetTempPath()
+{
+    return std::filesystem::temp_directory_path().string() + kPathSeparator + "universal_software_kit";
+}

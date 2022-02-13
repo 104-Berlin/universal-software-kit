@@ -60,6 +60,7 @@ typedef uint_fast64_t u64;
 typedef uint_fast8_t byte;
 
 typedef std::string EString;
+typedef std::string_view EStringView;
 
 template <typename... T>
 using EVector = std::vector<T...>;

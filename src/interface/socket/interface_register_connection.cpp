@@ -44,7 +44,7 @@ void ERegisterConnection::Send_AddResource(EResourceBase* data)
     ERegisterPacket packet;
     packet.PacketType = EPacketType::ADD_RESOURCE;
     packet.ID = GetNewPacketID();
-    packet.Body = ESerializer::WritEResourceBaseToJson(*data, true);
+    packet.Body = ESerializer::WritEResourceBaseToJson(data, true);
 
     SendToServer(packet);
 }
