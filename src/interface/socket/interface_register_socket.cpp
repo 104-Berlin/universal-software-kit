@@ -461,7 +461,7 @@ EJson ERegisterSocket::Pk_HandleGetResource(const ERegisterPacket& packet)
         EResourceBase* foundData = fLoadedRegister->GetResourceManager().GetResource(id);
         if (foundData)
         {
-            result = ESerializer::WritEResourceBaseToJson(*foundData, true);
+            result = ESerializer::WritEResourceBaseToJson(foundData, true);
         }
     }
 
@@ -483,7 +483,7 @@ EJson ERegisterSocket::Pk_HandleGetLoadedResources(const ERegisterPacket& packet
 
     for (EResourceBase* data : resources)
     {
-        result.push_back(ESerializer::WritEResourceBaseToJson(*data, false));
+        result.push_back(ESerializer::WritEResourceBaseToJson(data, false));
     }
 
     return result;

@@ -317,7 +317,7 @@ void EApplication::RegisterDefaultPanels()
 void EApplication::RegisterDefaultResources() 
 {
     EResourceDescription imageDsc("Image",{"png", "jpeg", "bmp"});
-    imageDsc.ImportFunction = &ResImage::ImportImage;
+    //imageDsc.ImportFunction = &ResImage::ImportImage;
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", imageDsc);
 
 

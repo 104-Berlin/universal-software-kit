@@ -19,7 +19,7 @@ namespace Engine {
         EResourceBase(const EString& resourceType);
         virtual ~EResourceBase() = default;
     
-        virtual void* GetData() = 0;
+        virtual void* GetData() { return nullptr; }
 
         virtual bool Import(const u8* buffer, const u32& buffer_size) { return false; }
         virtual bool Export(u8** out_buffer, u32* out_buffer_size) { return false; }
@@ -28,8 +28,34 @@ namespace Engine {
         const EString& GetName() const;
         void SetName(const EString& name);
 
+
         static void SaveToTempFile(const u8* data, const u32& data_size);
         static void SaveToTempFile(ESharedBuffer buffer);
+    };
+
+
+    class EResource 
+    {
+    private:
+        EResourceBase::t_ID fID;
+        ESharedBuffer fFileBuffer;
+
+        void*           fCPtr;
+    public:
+        EResource();
+
+        void SetID(const EResourceBase::t_ID& id);
+        const EResourceBase::t_ID& GetID() const;
+        void SetBuffer(ESharedBuffer buffer);
+        const ESharedBuffer& GetBuffer() const;
+
+
+        template <typename T>
+        auto Load()
+        -> decltype(std::declval<T>().Load(std::declval<ESharedBuffer>()))
+        {
+
+        }
     };
 
 
@@ -48,8 +74,8 @@ namespace Engine {
             u8* Data = nullptr;
             size_t Size = 0;
         };
-        using ImpFunction = std::function<EResourceBase*(const u8* data, const u32& data_size)>;
-        using ExpFunction = std::function<EResourceBase*(u8** out_data, u32* out_data_size)>;
+        using ImpFunction = std::function<EResourceBase*(ESharedBuffer)>;
+        using ExpFunction = std::function<ESharedBuffer(EResourceBase*)>;
 
         EString             ResourceName;
         EVector<EString>    AcceptedFileEndings;

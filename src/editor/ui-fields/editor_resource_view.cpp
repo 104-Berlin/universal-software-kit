@@ -72,10 +72,10 @@ EResourceView::EResourceView()
         EWeakRef<EUIField> resourceGrid = resourceList.lock()->AddChild(EMakeRef<EUIGrid>(fPreviewSize));
 
         createButton.lock()->AddEventListener<events::EButtonEvent>([this](){
-            EResourceBase resourceData(0, fSelectedResourceType.TypeName, "New " + fSelectedResourceType.TypeName, nullptr, 0);
-            resourceData.Name = "New " + fSelectedResourceType.TypeName;
-            resourceData.Type = fSelectedResourceType.TypeName;
-            shared::CreateResource(&resourceData);
+            //EResourceBase resourceData(0, fSelectedResourceType.TypeName, "New " + fSelectedResourceType.TypeName, nullptr, 0);
+            //resourceData.Name = "New " + fSelectedResourceType.TypeName;
+            //resourceData.Type = fSelectedResourceType.TypeName;
+            //shared::CreateResource(&resourceData);
         });
 
         changeSize.lock()->AddEventListener<events::EFloatChangeEvent>([this, resourceGrid](events::EFloatChangeEvent event){

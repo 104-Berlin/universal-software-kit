@@ -11,7 +11,7 @@ APP_ENTRY
 
     RScene& scene = viewport->GetScene();
     RMesh* model = new RMesh();
-    scene.AddObject(model);
+    scene.Add(model);
 
 
     showPanel->AddChild(viewport);

@@ -52,14 +52,14 @@ public:
                     {
                         ERef<EResourceBase> data = shared::GetResource(imageLayer.resourceLink.ResourceId);
                         
-                        if (data && fImageViews.find(event.Entity.Handle) != fImageViews.end())
+                        /*if (data && fImageViews.find(event.Entity.Handle) != fImageViews.end())
                         {
                             Editor::EImageUserData* userData = (Editor::EImageUserData*)data->UserData;
                             if (userData)
                             {
                                 fImageViews[event.Entity.Handle].lock()->SetTextureData(data->Data, userData->width, userData->height);
                             }
-                        }
+                        }*/
                     }
                 }
             }

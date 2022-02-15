@@ -191,12 +191,12 @@ ERef<EResourceBase> ERegisterConnection::Send_GetResourceData(EResourceBase::t_I
 
     EJson response = WaitForRequest(packet.ID);
 
-    ERef<EResourceBase> resourceData = EMakeRef<EResourceBase>();
-    if (!EDeserializer::ReadResourceFromJson(response, resourceData.get(), true))
+    /*ERef<EResourceBase> resourceData = EMakeRef<EResourceBase>();
+    if (EDeserializer::ReadResourceFromJson(response, &resourceData.get(), true))
     {
-        return nullptr;
-    }
-    return resourceData;
+        return resourceData;
+    }*/
+    return nullptr;
 }
 
 EVector<ERef<EResourceBase>> ERegisterConnection::Send_GetAllResources(const EString& resourceType) 
@@ -222,11 +222,11 @@ EVector<ERef<EResourceBase>> ERegisterConnection::Send_GetAllResources(const ESt
     {
         for (EJson& arrayEntry : res)
         {
-            ERef<EResourceBase> newData = EMakeRef<EResourceBase>();
+            /*ERef<EResourceBase> newData = EMakeRef<EResourceBase>();
             if (EDeserializer::ReadResourceFromJson(arrayEntry, newData.get(), false))
             {
                 result.push_back(newData);
-            }
+            }*/
         }
     }
 

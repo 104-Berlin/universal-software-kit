@@ -93,7 +93,7 @@ bool EResourceManager::ImportResource(const EString& name, const EResourceDescri
 
     if (description.ImportFunction)
     {
-        EResourceBase* newResourceBase  = description.ImportFunction(rawData, data_size);
+        EResourceBase* newResourceBase = description.ImportFunction(buffer);
         if (!newResourceBase)
         {
             E_ERROR("Resource " + name + " could not be imported!");
@@ -208,7 +208,7 @@ EResourceBase* EResourceManager::CreateResourceFromFile(EFile& file, const EReso
 
     if (description.ImportFunction)
     {
-        result = description.ImportFunction(file.GetBuffer().Data<u8>(), file.GetBuffer().GetSizeInByte());
+        result = description.ImportFunction(file.GetBuffer());
     }
     else
     {
