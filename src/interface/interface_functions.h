@@ -75,7 +75,7 @@ namespace Engine {
         }
 
 
-        ESharedError E_INTER_API CreateResource(EResourceBase* data);
+        ESharedError E_INTER_API CreateResource(EResource* data);
 
         ESharedError E_INTER_API SetValue(EDataBase::Entity entity, const EString& valueIdent, const EString& valueString);
         ESharedError E_INTER_API SetValue(EDataBase::Entity entity, const EString& valueIdent, EProperty* value);
@@ -122,8 +122,8 @@ namespace Engine {
         }
 
        E_INTER_API EVector<ERef<EProperty>> GetAllComponents(EDataBase::Entity entity);
-       E_INTER_API ERef<EResourceBase> GetResource(EResourceBase::t_ID id);
-       E_INTER_API EVector<ERef<EResourceBase>> GetLoadedResource(const EString& resourceType = ""); // This wont return the data of the resource. Fetch them manuel
+       E_INTER_API ERef<EResource> GetResource(EResourceBase::t_ID id);
+       E_INTER_API EVector<ERef<EResource>> GetLoadedResource(const EString& resourceType = ""); // This wont return the data of the resource. Fetch them manuel
        E_INTER_API ESharedBuffer GetRegisterAsBuffer();
     }
 

@@ -135,7 +135,7 @@ void EApplication::RegenerateMainMenuBar()
                 if (shared::ExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
                     foundDescription.ImportFunction)
                 {
-                    EResourceBase* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
+                    EResource* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
                     if (data)
                     {
                         shared::CreateResource(data);
@@ -318,6 +318,12 @@ void EApplication::RegisterDefaultResources()
 {
     EResourceDescription imageDsc("Image",{"png", "jpeg", "bmp"});
     //imageDsc.ImportFunction = &ResImage::ImportImage;
+    imageDsc.ImportFunction = [](ESharedBuffer buffer) -> EResource*{
+        EResource* result = new EResource("Image");
+        result->SetBuffer(buffer);
+        result->Load<EImageResource>();
+        return result;
+    };
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", imageDsc);
 
 
@@ -342,12 +348,11 @@ void EApplication::RegisterDefaultComponentRender()
                 newLink.Type = event.ResourceType;
                 newLink.ResourceId = event.ResourceID;
 
-                EStructProperty* structProp = static_cast<EStructProperty*>(EProperty::CreateFromDescription(EResourceLink::_dsc.GetId(), EResourceLink::_dsc).get());
-                if (convert::setter(structProp, newLink))
+                ERef<EStructProperty> structProp = std::dynamic_pointer_cast<EStructProperty>(EProperty::CreateFromDescription(EResourceLink::_dsc.GetId(), EResourceLink::_dsc));
+                if (convert::setter(structProp.get(), newLink))
                 {
-                    callbackFn(structProp);
+                    callbackFn(structProp.get());
                 }
-                delete structProp;
             });
             return resourceSelect;
         }

@@ -341,7 +341,7 @@ EJson ERegisterSocket::Pk_HandleCreateComponent(const ERegisterPacket& packet)
 
 EJson ERegisterSocket::Pk_HandleAddResource(const ERegisterPacket& packet) 
 {
-    EResourceBase* data;
+    EResource* data;
     if (EDeserializer::ReadResourceFromJson(packet.Body, &data, true))
     {
         if (!fLoadedRegister->GetResourceManager().AddResource(data))
@@ -458,7 +458,7 @@ EJson ERegisterSocket::Pk_HandleGetResource(const ERegisterPacket& packet)
     if (packet.Body["ID"].is_number_integer())
     {
         EResourceBase::t_ID id = packet.Body["ID"].get<EResourceBase::t_ID>();
-        EResourceBase* foundData = fLoadedRegister->GetResourceManager().GetResource(id);
+        EResource* foundData = fLoadedRegister->GetResourceManager().GetResource(id);
         if (foundData)
         {
             result = ESerializer::WritEResourceBaseToJson(foundData, true);
@@ -477,11 +477,11 @@ EJson ERegisterSocket::Pk_HandleGetLoadedResources(const ERegisterPacket& packet
     }
     EJson result = EJson::array();
 
-    EVector<EResourceBase*> resources;
+    EVector<EResource*> resources;
     if (resourceString.empty()) { resources = fLoadedRegister->GetResourceManager().GetAllResource(); }
     else { resources = fLoadedRegister->GetResourceManager().GetAllResource(resourceString); }
 
-    for (EResourceBase* data : resources)
+    for (EResource* data : resources)
     {
         result.push_back(ESerializer::WritEResourceBaseToJson(data, false));
     }

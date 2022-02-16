@@ -39,7 +39,7 @@ void ERegisterConnection::Send_CreateNewComponent(EDataBase::Entity entity, ERef
     SendToServer(packet);
 }
 
-void ERegisterConnection::Send_AddResource(EResourceBase* data) 
+void ERegisterConnection::Send_AddResource(EResource* data) 
 {
     ERegisterPacket packet;
     packet.PacketType = EPacketType::ADD_RESOURCE;
@@ -177,7 +177,7 @@ EVector<ERef<EProperty>> ERegisterConnection::Send_GetAllValues(EDataBase::Entit
     return result;
 }
 
-ERef<EResourceBase> ERegisterConnection::Send_GetResourceData(EResourceBase::t_ID resourceId) 
+ERef<EResource> ERegisterConnection::Send_GetResourceData(EResourceBase::t_ID resourceId) 
 {
     EJson req = EJson::object();
     req["ID"] = resourceId;
@@ -191,17 +191,17 @@ ERef<EResourceBase> ERegisterConnection::Send_GetResourceData(EResourceBase::t_I
 
     EJson response = WaitForRequest(packet.ID);
 
-    /*ERef<EResourceBase> resourceData = EMakeRef<EResourceBase>();
-    if (EDeserializer::ReadResourceFromJson(response, &resourceData.get(), true))
+    EResource* result;
+    if (EDeserializer::ReadResourceFromJson(response, &result, true))
     {
-        return resourceData;
-    }*/
+        return ERef<EResource>(result);
+    }
     return nullptr;
 }
 
-EVector<ERef<EResourceBase>> ERegisterConnection::Send_GetAllResources(const EString& resourceType) 
+EVector<ERef<EResource>> ERegisterConnection::Send_GetAllResources(const EString& resourceType) 
 {
-    EVector<ERef<EResourceBase>> result;
+    EVector<ERef<EResource>> result;
 
     ERegisterPacket packet;
     packet.PacketType = EPacketType::GET_LOADED_RESOURCES;
@@ -222,11 +222,11 @@ EVector<ERef<EResourceBase>> ERegisterConnection::Send_GetAllResources(const ESt
     {
         for (EJson& arrayEntry : res)
         {
-            /*ERef<EResourceBase> newData = EMakeRef<EResourceBase>();
-            if (EDeserializer::ReadResourceFromJson(arrayEntry, newData.get(), false))
+            EResource* newData;
+            if (EDeserializer::ReadResourceFromJson(arrayEntry, &newData, false))
             {
-                result.push_back(newData);
-            }*/
+                result.push_back(ERef<EResource>(newData));
+            }
         }
     }
 

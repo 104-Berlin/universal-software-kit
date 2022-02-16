@@ -2,6 +2,15 @@
 
 namespace Editor {
 
+    struct EImageResource
+    {
+        int Width;
+        int Height;
+        int Channels;
+        u8* Data;
+
+        void FromBuffer(Engine::ESharedBuffer buffer);
+    };
 
     struct EImageUserData
     {

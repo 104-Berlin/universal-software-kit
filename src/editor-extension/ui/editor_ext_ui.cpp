@@ -1051,7 +1051,7 @@ EUIResourceSelect::EUIResourceSelect(const EString& resourceType)
 
     for(auto& entry : shared::GetLoadedResource(resourceType))
     {
-        fOptions.push_back({entry->ID, entry->GetName()});
+        fOptions.push_back({entry->GetID(), entry->GetName()});
     }
     EVector<EString> stringOptions;
     for (const auto& opt : fOptions)

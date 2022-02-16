@@ -253,24 +253,27 @@ bool EDeserializer::ReadPropertyFromJson_WithDescription(const EJson& json, ERef
     return false;
 }
 
-bool EDeserializer::ReadResourceFromJson(const EJson& json, EResourceBase** resData, bool withData) 
+bool EDeserializer::ReadResourceFromJson(const EJson& json, EResource** resData, bool withData) 
 {
     if (!json.is_object()) { return false; }
     if (json.size() == 0)  { return false;}
     if (json["ID"].is_number_integer() && json["Type"].is_string())
     {
-        *resData = new EResourceBase(json["Type"].get<EString>());
-        EResourceBase* result = *resData;
+        *resData = new EResource(json["Type"].get<EString>());
+        EResource* result = *resData;
 
-        result->ID = json["ID"].get<EResourceBase::t_ID>();
+        result->SetID(json["ID"].get<EResourceBase::t_ID>());
         
-        if (withData && json["Data"].is_string())
+        if (withData && json.find("Data") != json.end() && json["Data"].is_string())
         {
             u8* data;
             size_t dataLen;
             if (Base64::Decode(json["Data"].get<EString>(), &data, &dataLen))
             {
-                return result->Import(data, dataLen);
+                ESharedBuffer buffer;
+                buffer.InitWith<u8>(data, dataLen);
+                result->SetBuffer(buffer);
+                return true;
             }
         }
         return !withData;

@@ -6,6 +6,14 @@
 using namespace Editor;
 using namespace Engine;
 
+void EImageResource::FromBuffer(ESharedBuffer buffer)
+{
+    stbi_uc* imageData = stbi_load_from_memory(buffer.Data<u8>(), buffer.GetSizeInByte(), &Width, &Height, &Channels, 0);
+    Data = new u8[Width * Height * Channels];
+    memcpy(Data, imageData, Width * Height * Channels);
+    stbi_image_free(imageData);
+}
+
 
 EResourceDescription::ResBuffer ResImage::ImportImage(const EResourceDescription::RawBuffer data)
 {

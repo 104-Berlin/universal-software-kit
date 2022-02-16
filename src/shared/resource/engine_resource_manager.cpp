@@ -4,17 +4,6 @@
 using namespace Engine;
 
 
-static EResourceBase::t_ID GetNextID()
-{
-    static EResourceBase::t_ID next = 1;
-    while (next != 0) 
-        next++;
-    return next;
-}
-
-
-
-
 EResourceBase::EResourceBase(const EString& resourceType)
     : ResourceType(resourceType)
 {
@@ -56,6 +45,58 @@ void EResourceBase::SetName(const EString& name)
     fName = name;
 }
 
+
+EResource::EResource(const EString& type)
+    : fID(0), fFileBuffer(), fType(type), fCPtr(nullptr), fPtrTypeHash(0)
+{
+
+}
+
+void EResource::SetID(const EResourceBase::t_ID& id)
+{
+    fID = id;
+}
+
+const EResourceBase::t_ID& EResource::GetID() const
+{
+    return fID;
+}
+
+void EResource::SetBuffer(ESharedBuffer buffer)
+{
+    fFileBuffer = buffer;
+}
+
+const ESharedBuffer& EResource::GetBuffer() const
+{
+    return fFileBuffer;
+}
+
+void EResource::SetName(const EString& name)
+{
+    fName = name;
+}
+
+const EString& EResource::GetName() const
+{
+    return fName;
+}
+
+
+const EString& EResource::GetResourceType() const
+{
+    return fType;
+}
+
+
+EString EResource::GetTempFilePath() const
+{
+    return Path::Join(EFile::GetTempPath(), fName + ".temp");
+}
+
+
+
+
 EResourceManager::EResourceManager() 
 {
     
@@ -71,14 +112,18 @@ bool EResourceManager::HasResource(const EResourceBase::t_ID& id) const
     return fLoadedResources.find(id) != fLoadedResources.end();
 }
 
-bool EResourceManager::AddResource(EResourceBase* data) 
+bool EResourceManager::AddResource(EResource* data) 
 {
-    if (HasResource(data->ID))
+    if (data->GetID() == 0)
+    {
+        data->SetID(CreateNewId());
+    }
+    if (HasResource(data->GetID()))
     {
         return false;
     }
-    fLoadedResources.insert({data->ID, data});
-    //fEventDispacher.Post<events::EResourceAddedEvent>({data->ID, data->Name, data->PathToFile, data->Type});
+    fLoadedResources.insert({data->GetID(), data});
+    fEventDispacher.Post<events::EResourceAddedEvent>({data->GetID(), data->GetName(), data->GetTempFilePath(), data->GetResourceType()});
     return true;
 }
 
@@ -93,7 +138,7 @@ bool EResourceManager::ImportResource(const EString& name, const EResourceDescri
 
     if (description.ImportFunction)
     {
-        EResourceBase* newResourceBase = description.ImportFunction(buffer);
+        EResource* newResourceBase = description.ImportFunction(buffer);
         if (!newResourceBase)
         {
             E_ERROR("Resource " + name + " could not be imported!");
@@ -143,7 +188,7 @@ void EResourceManager::Clear()
     fLoadedResources.clear();
 }
 
-EResourceBase* EResourceManager::GetResource(const EResourceBase::t_ID& path) const
+EResource* EResourceManager::GetResource(const EResourceBase::t_ID& path) const
 {
     if (HasResource(path))
     {
@@ -152,9 +197,9 @@ EResourceBase* EResourceManager::GetResource(const EResourceBase::t_ID& path) co
     return nullptr;
 }
 
-EVector<EResourceBase*> EResourceManager::GetAllResource() const
+EVector<EResource*> EResourceManager::GetAllResource() const
 {
-    EVector<EResourceBase*> result;
+    EVector<EResource*> result;
     for (auto& entry : fLoadedResources)
     {
         result.push_back(entry.second);
@@ -162,13 +207,13 @@ EVector<EResourceBase*> EResourceManager::GetAllResource() const
     return result;
 }
 
-EVector<EResourceBase*> EResourceManager::GetAllResource(const EString& type) const
+EVector<EResource*> EResourceManager::GetAllResource(const EString& type) const
 {
-    EVector<EResourceBase*> result;
+    EVector<EResource*> result;
 
     for (auto& entry : fLoadedResources)
     {
-        if (entry.second->ResourceType == type)
+        if (entry.second->GetResourceType() == type)
         {
             result.push_back(entry.second);
         }
@@ -199,12 +244,12 @@ const EEventDispatcher& EResourceManager::GetEventDispatcher() const
     return fEventDispacher;
 }
 
-EResourceBase* EResourceManager::CreateResourceFromFile(EFile& file, const EResourceDescription& description) 
+EResource* EResourceManager::CreateResourceFromFile(EFile& file, const EResourceDescription& description) 
 {
     if (!file.Exist()) { return nullptr; }
     file.LoadToMemory();
 
-    EResourceBase* result = nullptr;
+    EResource* result = nullptr;
 
     if (description.ImportFunction)
     {
@@ -220,7 +265,7 @@ EResourceBase* EResourceManager::CreateResourceFromFile(EFile& file, const EReso
     return result;
 }
 
-EResourceBase* EResourceManager::CreateResourceFromFile(const EString& filePath, const EResourceDescription& description) 
+EResource* EResourceManager::CreateResourceFromFile(const EString& filePath, const EResourceDescription& description) 
 {
     EFile file(filePath);
     return CreateResourceFromFile(file, description);

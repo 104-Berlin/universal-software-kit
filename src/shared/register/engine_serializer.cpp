@@ -203,30 +203,30 @@ ESharedBuffer ESerializer::WriteFullSceneBuffer(EDataBase* reg)
 
     fileCollection.AddFile("CORE/scene.json", jsonBuffer);
 
-    for (EResourceBase* resourceData : reg->GetResourceManager().GetAllResource())
+    for (EResource* resourceData : reg->GetResourceManager().GetAllResource())
     {
         EFile file(resourceData->GetTempFilePath());
         if (!file.Exist()) { continue; }
         file.LoadToMemory();
         ESharedBuffer resourceBuffer = file.GetBuffer();
 
-        fileCollection.AddFile(std::to_string(resourceData->ID), resourceBuffer);
+        fileCollection.AddFile(std::to_string(resourceData->GetID()), resourceBuffer);
     }
 
     
     return fileCollection.GetCompleteBuffer();
 }
 
-EJson ESerializer::WritEResourceBaseToJson(EResourceBase* data, bool writeData) 
+EJson ESerializer::WritEResourceBaseToJson(EResource* data, bool writeData) 
 {
     EJson result = EJson::object();
 
-    result["ID"] = data->ID;
-    result["Type"] = data->ResourceType;
+    result["ID"] = data->GetID();
+    result["Type"] = data->GetResourceType();
 
-    if (writeData)
+    if (writeData && data)
     {
-        ESharedBuffer resourceData;
+        ESharedBuffer resourceData = data->GetBuffer();
         if (!resourceData.IsNull())
         {
             result["Data"] = Base64::Encode(resourceData.Data<u8>(), resourceData.GetSizeInByte());
