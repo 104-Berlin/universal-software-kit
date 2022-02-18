@@ -223,6 +223,7 @@ EJson ESerializer::WritEResourceBaseToJson(EResource* data, bool writeData)
 
     result["ID"] = data->GetID();
     result["Type"] = data->GetResourceType();
+    result["Name"] = data->GetName();
 
     if (writeData && data)
     {

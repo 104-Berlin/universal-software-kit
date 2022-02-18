@@ -144,6 +144,7 @@ bool EResourceManager::ImportResource(const EString& name, const EResourceDescri
             E_ERROR("Resource " + name + " could not be imported!");
             return false;
         }
+        newResourceBase->SetName(name);
         return AddResource(newResourceBase);
     }
     return false;
@@ -261,6 +262,10 @@ EResource* EResourceManager::CreateResourceFromFile(EFile& file, const EResource
         u8* copiedFileBuffer = new u8[bufferLen];
         memcpy(copiedFileBuffer, file.GetBuffer().Data(), bufferLen);
         //result = new EResourceBase(0, description.ResourceName, file.GetFileName(), copiedFileBuffer, bufferLen);
+    }
+    if (result)
+    {
+        result->SetName(file.GetFileName());
     }
     return result;
 }

@@ -262,6 +262,11 @@ bool EDeserializer::ReadResourceFromJson(const EJson& json, EResource** resData,
         *resData = new EResource(json["Type"].get<EString>());
         EResource* result = *resData;
 
+        if (json.contains("Name") && json["Name"].is_string())
+        {
+            result->SetName(json["Name"].get<EString>());
+        }
+        
         result->SetID(json["ID"].get<EResourceBase::t_ID>());
         
         if (withData && json.find("Data") != json.end() && json["Data"].is_string())
