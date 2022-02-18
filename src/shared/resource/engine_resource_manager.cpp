@@ -258,11 +258,11 @@ EResource* EResourceManager::CreateResourceFromFile(EFile& file, const EResource
     }
     else
     {
-        size_t bufferLen = file.GetBuffer().GetSizeInByte();
-        u8* copiedFileBuffer = new u8[bufferLen];
-        memcpy(copiedFileBuffer, file.GetBuffer().Data(), bufferLen);
-        //result = new EResourceBase(0, description.ResourceName, file.GetFileName(), copiedFileBuffer, bufferLen);
+        result = new EResource(description.ResourceName);
+        result->SetBuffer(file.GetBuffer());
     }
+
+    
     if (result)
     {
         result->SetName(file.GetFileName());
