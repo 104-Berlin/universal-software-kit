@@ -15,6 +15,7 @@ E_STORAGE_STRUCT(MyType,
     (float, Other),
     (EString, SomeString),
     (EResourceLink, ImageLink, "Image"),
+    (EResourceLink, MeshLink, "Mesh"),
     (EVector<MySubType>, Working)
 )
 
@@ -317,14 +318,23 @@ void EApplication::RegisterDefaultPanels()
 void EApplication::RegisterDefaultResources() 
 {
     EResourceDescription imageDsc("Image",{"png", "jpeg", "bmp"});
-    //imageDsc.ImportFunction = &ResImage::ImportImage;
     imageDsc.ImportFunction = [](ESharedBuffer buffer) -> EResource*{
         EResource* result = new EResource("Image");
         result->SetBuffer(buffer);
         result->Load<EImageResource>();
         return result;
     };
+
+    EResourceDescription meshDsc("Mesh",{"obj", "fbx", "dae", "3ds", "glb", "gltf"});
+    meshDsc.ImportFunction = [](ESharedBuffer buffer) -> EResource*{
+        EResource* result = new EResource("Mesh");
+        result->SetBuffer(buffer);
+        result->Load<EMeshResource>();
+        return result;
+    };
+
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", imageDsc);
+    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", meshDsc);
 
 
     // FOR TESTING PURPOSES

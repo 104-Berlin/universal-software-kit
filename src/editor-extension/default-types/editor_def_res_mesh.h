@@ -2,12 +2,12 @@
 
 namespace Editor {
 
-    struct EMeshUserData
+    struct EMeshResource
     {
-        char Name[255];
-        int VerticesCount;
-        int IndicesCount;
+        EVector<Renderer::RMesh::Vertex> Vertices;
+        EVector<u32> Indices;
 
+        void FromBuffer(Engine::ESharedBuffer buffer);
     };
 
     namespace ResMesh {
