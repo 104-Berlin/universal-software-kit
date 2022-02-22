@@ -1132,7 +1132,7 @@ bool EUIGroupPanel::OnRender()
 
     ImVec2 effectiveSize = {fWidthOverride, fHeightOverride};
     if (fWidthOverride <= 0.0f)
-        effectiveSize.x = ImGui::GetContentRegionAvailWidth();
+        effectiveSize.x = ImGui::GetContentRegionAvail().x;
     else
         effectiveSize.x = fWidthOverride;
     ImGui::Dummy(ImVec2(effectiveSize.x, 0.0f));
