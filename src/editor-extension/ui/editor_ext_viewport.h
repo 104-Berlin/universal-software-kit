@@ -2,6 +2,21 @@
 
 namespace Engine {
 
+    class E_EDEXAPI EUICameraControlls
+    {
+    protected:
+        Renderer::RCamera* fCamera;
+    public:
+        EUICameraControlls(const Renderer::RCamera& camera);
+
+        virtual void OnMouseDrag(const events::EMouseDragEvent& event);
+        virtual void OnMouseScroll(const events::EMouseScrollEvent& event);
+    };
+
+    class E_EDEXAPI EUIBasic3DCameraControlls : public EUICameraControlls
+    {
+
+    };
 
     class E_EDEXAPI EUIViewport : public EUIField
     {
@@ -19,6 +34,8 @@ namespace Engine {
         Renderer::RRenderer3D fRenderer;
         Renderer::RCamera fCamera;
         Renderer::RScene fScene;
+
+        EUICameraControlls* fCameraControlls;
     public:
         Renderer::RScene& GetScene();
         const Renderer::RScene& GetScene() const;
