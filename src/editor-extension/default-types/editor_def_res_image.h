@@ -2,7 +2,7 @@
 
 namespace Editor {
 
-    struct EImageResource
+    struct E_EDEXAPI EImageResource
     {
         int Width;
         int Height;

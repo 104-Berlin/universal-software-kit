@@ -21,6 +21,7 @@
 #include <regex>
 #include <atomic>
 #include <future>
+#include <limits>
 
 #ifdef M_PI
 #undef M_PI

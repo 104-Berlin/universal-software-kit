@@ -34,7 +34,7 @@ namespace Engine {
     };
 
 
-    class EResource 
+    class E_API EResource 
     {
     private:
         EResourceBase::t_ID fID;

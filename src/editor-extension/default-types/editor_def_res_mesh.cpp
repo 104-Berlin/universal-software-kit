@@ -13,7 +13,7 @@ void EMeshResource::FromBuffer(Engine::ESharedBuffer buffer)
     Indices.clear();
 
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFileFromMemory(buffer.Data(), buffer.GetSizeInByte(), aiProcess_Triangulate | aiProcess_GenSmoothNormals);
+    const aiScene* scene = importer.ReadFileFromMemory(buffer.Data(), buffer.GetSizeInByte(), aiProcess_Triangulate | aiProcess_GenNormals);
 
     if(!scene)
     {
@@ -33,7 +33,7 @@ void EMeshResource::FromBuffer(Engine::ESharedBuffer buffer)
             const aiVector3D& v = mesh->mVertices[j];
             const aiVector3D& n = mesh->mNormals[j];
             const aiVector3D& u = mesh->mTextureCoords[0][j];
-            Vertices.push_back({EVec3(v.x, v.y, v.z)});
+            Vertices.push_back({EVec3(v.x, v.y, v.z), EVec3(n.x, n.y, n.z)});
         }
 
         // Load indices

@@ -2,19 +2,33 @@
 
 namespace Engine {
 
-    class E_EDEXAPI EUICameraControlls
+    class E_EDEXAPI EUICameraControls
     {
     protected:
         Renderer::RCamera* fCamera;
     public:
-        EUICameraControlls(const Renderer::RCamera& camera);
+        EUICameraControls(Renderer::RCamera* camera);
 
-        virtual void OnMouseDrag(const events::EMouseDragEvent& event);
-        virtual void OnMouseScroll(const events::EMouseScrollEvent& event);
+        virtual void OnMouseDrag(const events::EMouseDragEvent& event) {}
+        virtual void OnMouseScroll(const events::EMouseScrollEvent& event) {}
     };
 
-    class E_EDEXAPI EUIBasic3DCameraControlls : public EUICameraControlls
+    E_STORAGE_STRUCT(Basic3DCameraControlsSettings,
+        (float, MoveSpeed),
+        (float, RotateSpeed),
+        (float, ZoomSpeed)
+    );
+
+    class E_EDEXAPI EUIBasic3DCameraControls : public EUICameraControls
     {
+    private:
+        Basic3DCameraControlsSettings fSettings;
+        EVec3                         fTarget;
+        double                        fDistance;
+    public:
+        EUIBasic3DCameraControls(Renderer::RCamera* camera, Basic3DCameraControlsSettings initialSettings);
+        virtual void OnMouseDrag(const events::EMouseDragEvent& event);
+        virtual void OnMouseScroll(const events::EMouseScrollEvent& event);
 
     };
 
@@ -35,7 +49,7 @@ namespace Engine {
         Renderer::RCamera fCamera;
         Renderer::RScene fScene;
 
-        EUICameraControlls* fCameraControlls;
+        EUICameraControls* fCameraControls;
     public:
         Renderer::RScene& GetScene();
         const Renderer::RScene& GetScene() const;

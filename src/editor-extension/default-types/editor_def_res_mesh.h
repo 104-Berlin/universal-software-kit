@@ -2,7 +2,7 @@
 
 namespace Editor {
 
-    struct EMeshResource
+    struct E_EDEXAPI EMeshResource
     {
         EVector<Renderer::RMesh::Vertex> Vertices;
         EVector<u32> Indices;
