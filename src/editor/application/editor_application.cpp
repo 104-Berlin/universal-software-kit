@@ -281,6 +281,7 @@ void EApplication::CleanUp()
 
 void EApplication::Render() 
 {        
+    return;
     EVec2 mousePos(ImGui::GetMousePos().x, ImGui::GetMousePos().y);
     
 
@@ -314,7 +315,6 @@ void EApplication::Render()
 
 void EApplication::RenderImGui() 
 {
-    return;
     for (ERef<EUIPanel> panel : fUIRegister.GetAllItems())
     {
         panel->UpdateEventDispatcher();
