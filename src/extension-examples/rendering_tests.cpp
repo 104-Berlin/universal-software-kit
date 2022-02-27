@@ -20,6 +20,26 @@ APP_ENTRY
     ERef<EUIViewport> viewport = EMakeRef<EUIViewport>(camera);
     EWeakRef<EUIViewport> weakViewport = viewport;
 
+    ERef<EUIDropdown> viewTypeDropdown = EMakeRef<EUIDropdown>("View Type");
+    viewTypeDropdown->AddOption("Diffuse");
+    viewTypeDropdown->AddOption("Normal");
+    viewTypeDropdown->AddOption("Depth");
+    viewTypeDropdown->AddEventListener<events::ESelectChangeEvent>([weakViewport](events::ESelectChangeEvent e){
+        if (e.Index == 0)
+        {
+            weakViewport.lock()->SetViewType(EUIViewport::ViewType::DIFFUSE);
+        }
+        else if (e.Index == 1)
+        {
+            weakViewport.lock()->SetViewType(EUIViewport::ViewType::NORMAL);
+        }
+        else if (e.Index == 2)
+        {
+            weakViewport.lock()->SetViewType(EUIViewport::ViewType::DEPTH);
+        }
+    });
+
+    showPanel->AddChild(viewTypeDropdown);
     showPanel->AddChild(viewport);
     info.PanelRegister->RegisterItem(extensionName, showPanel);
 

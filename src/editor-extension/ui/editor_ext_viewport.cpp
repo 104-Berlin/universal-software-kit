@@ -7,6 +7,7 @@ using namespace Engine;
 EUIViewport::EUIViewport(const Renderer::RCamera& camera) 
     :   EUIField("VIEWPORT"), 
         fActiveTool(nullptr),
+        fViewType(ViewType::NORMAL),
         fFrameBuffer(Graphics::Wrapper::CreateFrameBuffer(100, 100)), 
         fRenderer(Graphics::Wrapper::GetMainContext(), fFrameBuffer),
         fCamera(camera),
@@ -71,6 +72,12 @@ EViewportTool* EUIViewport::AddTool(EViewportTool* newTool)
     return newTool;
 }
 
+void EUIViewport::SetViewType(ViewType type)
+{
+    fViewType = type;
+}
+
+
 EVector<EViewportTool*> EUIViewport::GetRegisteredTools()
 {
     return fRegisteredTools;
@@ -101,7 +108,15 @@ bool EUIViewport::OnRender()
 
     fFrameBuffer->Resize(contentRegion.x, contentRegion.y, Graphics::GFrameBufferFormat::RGBA8);
     fRenderer.Render(&fScene, &fCamera);
-    ImGui::Image((ImTextureID)(unsigned long long)(unsigned long)fFrameBuffer->GetColorAttachment(), {contentRegion.x, contentRegion.y}, {0, 1}, {1, 0});
+    u32 textureId = fFrameBuffer->GetColorAttachment();
+    switch (fViewType)
+    {
+        case ViewType::DIFFUSE: textureId = fFrameBuffer->GetColorAttachment(); break;
+        case ViewType::NORMAL: textureId = fFrameBuffer->GetNormalAttachment(); break;
+        case ViewType::DEPTH: textureId = fFrameBuffer->GetDepthAttachment(); break;
+    }
+
+    ImGui::Image((ImTextureID)(unsigned long long)(unsigned long)textureId, {contentRegion.x, contentRegion.y}, {0, 1}, {1, 0});
 
     if (fActiveTool && fActiveTool->IsVisible())
     {

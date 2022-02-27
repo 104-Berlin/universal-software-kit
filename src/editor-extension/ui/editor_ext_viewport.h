@@ -34,9 +34,17 @@ namespace Engine {
 
     class E_EDEXAPI EUIViewport : public EUIField
     {
+    public:
+        enum class ViewType
+        {
+            DIFFUSE,
+            NORMAL,
+            DEPTH
+        };
     private:
         EVector<EViewportTool*> fRegisteredTools;
         EViewportTool*          fActiveTool;
+        ViewType                fViewType;
     public:
         EUIViewport(const Renderer::RCamera& = Renderer::RCamera(Renderer::ECameraMode::ORTHOGRAPHIC));
         virtual ~EUIViewport();
@@ -59,6 +67,7 @@ namespace Engine {
 
         EViewportTool* AddTool(EViewportTool* newTool);
 
+        void SetViewType(ViewType type);
 
         EVec2 Project(const EVec3& point) const;
         EVec3 Unproject(const EVec3& point) const;
