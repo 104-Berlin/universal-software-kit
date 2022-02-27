@@ -101,7 +101,7 @@ bool EUIViewport::OnRender()
 
     fFrameBuffer->Resize(contentRegion.x, contentRegion.y, Graphics::GFrameBufferFormat::RGBA8);
     fRenderer.Render(&fScene, &fCamera);
-    ImGui::Image((ImTextureID)(unsigned long long)(unsigned long)fFrameBuffer->GetDepthAttachment(), {contentRegion.x, contentRegion.y}, {0, 1}, {1, 0});
+    ImGui::Image((ImTextureID)(unsigned long long)(unsigned long)fFrameBuffer->GetColorAttachment(), {contentRegion.x, contentRegion.y}, {0, 1}, {1, 0});
 
     if (fActiveTool && fActiveTool->IsVisible())
     {
