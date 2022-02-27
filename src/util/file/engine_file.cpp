@@ -90,7 +90,11 @@ const EString& EFile::GetFileName() const
 
 void EFile::LoadToMemory() 
 {
-    if (!Exist()) { return; }
+    if (!Exist()) 
+    { 
+        E_WARN("Could not load file: " + GetFullPath());
+        return; 
+    }
     if (!fFileBuffer.IsNull())
     {
         fFileBuffer.Dispose();

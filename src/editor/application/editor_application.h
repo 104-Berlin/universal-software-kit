@@ -6,6 +6,16 @@ namespace Editor {
     {
     private:
         Graphics::GContext* fGraphicsContext;
+        Renderer::RMesh* fTestMesh;
+        EMeshResource* fTestMeshResource;
+        Renderer::RRenderer3D* fRenderer;
+        Graphics::GFrameBuffer* fFrameBuffer;
+        Renderer::RCamera fCamera;
+
+        Renderer::RScene fScene;
+        Engine::EUICameraControls* fCameraControls;
+
+
 
         ERef<Engine::EUIMainMenuBar>            fMainMenu;
 

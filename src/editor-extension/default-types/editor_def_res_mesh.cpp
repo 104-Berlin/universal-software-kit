@@ -51,6 +51,7 @@ void EMeshResource::FromBuffer(Engine::ESharedBuffer buffer)
             Indices.push_back(face.mIndices[1] + indexOffset);
             Indices.push_back(face.mIndices[2] + indexOffset);
         }
+        indexOffset += numVertices;
     }
 }
 

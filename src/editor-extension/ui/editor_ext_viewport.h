@@ -26,7 +26,7 @@ namespace Engine {
         EVec3                         fTarget;
         double                        fDistance;
     public:
-        EUIBasic3DCameraControls(Renderer::RCamera* camera, Basic3DCameraControlsSettings initialSettings);
+        EUIBasic3DCameraControls(Renderer::RCamera* camera, Basic3DCameraControlsSettings initialSettings = Basic3DCameraControlsSettings(0.1f, 0.01f, 0.1f));
         virtual void OnMouseDrag(const events::EMouseDragEvent& event);
         virtual void OnMouseScroll(const events::EMouseScrollEvent& event);
 
