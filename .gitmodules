@@ -9,4 +9,4 @@
 	url = https://github.com/ChaiScript/ChaiScript.git
 [submodule "deps/rtmidi"]
 	path = deps/rtmidi
-	url = https://github.com/thestk/rtmidi.git
+	url = https://github.com/104-Berlin/rtmidi.git
