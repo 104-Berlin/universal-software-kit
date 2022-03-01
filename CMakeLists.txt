@@ -59,6 +59,7 @@ add_subdirectory(src/interface)
 #########################
 ######## ASSIMP #########
 if (${BUILD_ASSIMP})
+set(ASSIMP_INJECT_DEBUG_POSTFIX OFF)
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
 set(ASSIMP_BUILD_TESTS OFF)
 set(ASSIMP_INSTALL OFF)

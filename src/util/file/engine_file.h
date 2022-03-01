@@ -116,10 +116,18 @@ namespace Engine {
         void SetFileBuffer(ESharedBuffer sharedBuffer);
 
 
+
         /**
-         * @return Returns the temporary file directory for the app
+         * 
+         * @brief Get the App Data Path object
+         * 
+         * - MAC: ~/Library/Application Support/Universal-Software-Kit 
+         * - WINDOWS: C:\Users\{username}\AppData\Roaming\Universal-Software-Kit \
+         * - LINUX: ~/.config/Universal-Software-Kit
+         * 
+         * @return EString 
          */
-        static EString GetTempPath();
+        static EString GetAppDataPath();
     private:
         void CreatePathStrings();
     };

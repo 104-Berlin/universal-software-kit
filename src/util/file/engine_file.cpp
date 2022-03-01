@@ -143,7 +143,13 @@ void EFile::SetFileBuffer(ESharedBuffer sharedBuffer)
     fFileBuffer = sharedBuffer;
 }
 
-EString EFile::GetTempPath()
+EString EFile::GetAppDataPath()
 {
-    return std::filesystem::temp_directory_path().string() + kPathSeparator + "universal_software_kit";
+#ifdef EMAC
+return std::filesystem::path(getenv("HOME")).string() + kPathSeparator + "Library" + kPathSeparator + "Application Support" + kPathSeparator + "Universal_Software_Kit";
+#elif defined(EWIN)
+return std::filesystem::path(getenv("APPDATA")).string() + kPathSeparator + "Universal_Software_Kit";
+#elif defined(EUNI)
+return std::filesystem::path(getenv("HOME")).string() + kPathSeparator + ".config" + kPathSeparator + "Universal_Software_Kit";
+#endif
 }
