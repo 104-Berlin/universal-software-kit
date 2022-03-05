@@ -12,6 +12,7 @@ void EMeshResource::FromBuffer(Engine::ESharedBuffer buffer)
     Vertices.clear();
     Indices.clear();
 
+#ifdef E_BUILD_ASSIMP
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFileFromMemory(buffer.Data(), buffer.GetSizeInByte(), aiProcess_Triangulate | aiProcess_GenNormals);
 
@@ -53,15 +54,13 @@ void EMeshResource::FromBuffer(Engine::ESharedBuffer buffer)
         }
         indexOffset += numVertices;
     }
+#endif
 }
 
 
 Engine::EResourceDescription::ResBuffer ResMesh::ImportMesh(const Engine::EResourceDescription::RawBuffer data)
 {
     EResourceDescription::ResBuffer result;
-
-    Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFileFromMemory(data.Data, data.Size, aiProcess_Triangulate | aiProcess_GenSmoothNormals);
     
 
     return result;

@@ -60,10 +60,13 @@ add_subdirectory(src/interface)
 ######## ASSIMP #########
 if (${BUILD_ASSIMP})
 set(ASSIMP_INJECT_DEBUG_POSTFIX OFF CACHE BOOL "disable debug postfix")
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
-set(ASSIMP_BUILD_TESTS OFF)
-set(ASSIMP_INSTALL OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL)
+set(ASSIMP_INSTALL OFF CACHE BOOL)
 add_subdirectory(deps/assimp)
+
+add_compile_definitions(E_BUILD_ASSIMP)
+
 endif()
 
 #########################
