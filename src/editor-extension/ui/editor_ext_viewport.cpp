@@ -7,7 +7,7 @@ using namespace Engine;
 EUIViewport::EUIViewport(const Renderer::RCamera& camera) 
     :   EUIField("VIEWPORT"), 
         fActiveTool(nullptr),
-        fViewType(ViewType::NORMAL),
+        fViewType(ViewType::DIFFUSE),
         fFrameBuffer(Graphics::Wrapper::CreateFrameBuffer(100, 100)), 
         fRenderer(Graphics::Wrapper::GetMainContext(), fFrameBuffer),
         fCamera(camera),
