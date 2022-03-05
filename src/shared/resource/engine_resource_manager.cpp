@@ -18,20 +18,11 @@ void EResourceBase::SaveToTempFile(const u8* data, const u32& data_size)
 
 void EResourceBase::SaveToTempFile(ESharedBuffer buffer)
 {
-    EFile file(EFile::GetTempPath());
-    file.SetFileBuffer(buffer);
-    file.SaveBufferToDisk();
+    E_ERROR("NOT IMPLEMENTED");
 }
 
 const EString& EResourceBase::GetTempFilePath() const
 {
-    if (fTempFilePath.empty())
-    {
-        EFile file(Path::Join(EFile::GetTempPath(), fName + ".temp"));
-        //fTempFilePath = file.GetFullPath();
-        EResourceBase* self = (EResourceBase*)this;
-        self->fTempFilePath = file.GetFullPath();
-    }
     return fTempFilePath;
 }
 
@@ -91,7 +82,7 @@ const EString& EResource::GetResourceType() const
 
 EString EResource::GetTempFilePath() const
 {
-    return Path::Join(EFile::GetTempPath(), fName + ".temp");
+    return "";
 }
 
 
@@ -132,8 +123,6 @@ bool EResourceManager::ImportResource(const EString& name, const EResourceDescri
     E_ASSERT_M(description.AcceptedFileEndings.size() > 0, "No accepted file endings specified!");
     ESharedBuffer buffer;
     buffer.InitWith<u8>(rawData, data_size);
-    EFile file(Path::Join(EFile::GetTempPath(), name + description.AcceptedFileEndings[0]));
-    file.SetFileBuffer(buffer);
     
 
     if (description.ImportFunction)
