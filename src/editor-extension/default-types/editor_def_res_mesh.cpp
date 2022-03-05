@@ -1,8 +1,10 @@
 #include "editor_extension.h"
 
+#ifdef E_BUILD_ASSIMP
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
+#endif
 
 using namespace Editor;
 using namespace Engine;
