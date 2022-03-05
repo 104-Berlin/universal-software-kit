@@ -18,7 +18,7 @@ jobs:
       run: |
             mkdir build
             cd build
-            cmake ..
+            cmake -DBUILD_ASSIMP=FALSE ..
     - name: build
       run: |
             cd build
@@ -38,7 +38,7 @@ jobs:
       run: |
             mkdir build
             cd build
-            cmake -DUSE_COV=TRUE ..
+            cmake -DUSE_COV=TRUE -DBUILD_ASSIMP=FALSE ..
     - name: build
       run: |
             cd build
