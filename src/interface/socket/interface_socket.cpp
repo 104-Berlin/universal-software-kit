@@ -13,32 +13,55 @@ void _sock::close(int socketId)
 
 int _sock::read(int socketId, u8* data, size_t data_size) 
 {
-    int n = 0;
-#ifdef EWIN
-    n = recv(socketId, (char*) data, data_size, 0);
-#else
-    n = ::read(socketId, data, data_size);
-#endif
-    if (n == -1)
+    size_t bytesRead = 0;
+    while (bytesRead < data_size) 
     {
-        print_last_socket_error();
+        int n = 0;
+    #ifdef EWIN
+        n = recv(socketId, (char*) (data + bytesRead), data_size - bytesRead, 0);
+    #else
+        n = ::read(socketId, data + bytesRead, data_size - bytesRead);
+    #endif
+        if (n == -1)
+        {
+            print_last_socket_error();
+            return n;
+        }
+        else if (n == 0)
+        {
+            E_WARN("Could not read data anymore!");
+            print_last_socket_error();
+            return bytesRead;
+        }
+        else
+        {
+            bytesRead += n;
+        }
     }
-    return n;
+
+    return bytesRead;
 }
 
 int _sock::send(int socketId, const u8* data, size_t data_size) 
 {
-    int n = -1;
-#ifdef EWIN
-    n = ::send(socketId, (const char*) data, data_size, 0);
-#else
-    n = write(socketId, data, data_size);
-#endif
-    if (n == -1)
+    size_t bytesSend = 0;
+
+    while (bytesSend < data_size)
     {
-        print_last_socket_error();
+        int n = -1;
+    #ifdef EWIN
+        n = ::send(socketId, (const char*) (data + bytesSend), data_size - bytesSend, 0);
+    #else
+        n = write(socketId, data + bytesSend, data_size - bytesSend);
+    #endif
+        if (n == -1)
+        {
+            print_last_socket_error();
+            return n;
+        }
+        bytesSend += n;
     }
-    return n;
+    return bytesSend;
 }
 
 void _sock::send_packet(int socketId, const ERegisterPacket& packet) 
