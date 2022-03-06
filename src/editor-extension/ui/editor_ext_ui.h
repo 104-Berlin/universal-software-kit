@@ -760,8 +760,12 @@ namespace events
     private:
         EResourceLink fResourceLink;
         EVector<ResourceOption> fOptions;
+
+        EWeakRef<EUIDropdown> fDropdown;
     public:
         EUIResourceSelect(const EString& resourceType);
+
+        void SetResourceLink(const EResourceLink& link);
     };
 
     class E_EDEXAPI EUICollapsable : public EUIField

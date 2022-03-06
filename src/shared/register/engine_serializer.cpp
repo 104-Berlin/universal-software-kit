@@ -205,12 +205,25 @@ ESharedBuffer ESerializer::WriteFullSceneBuffer(EDataBase* reg)
 
     for (EResource* resourceData : reg->GetResourceManager().GetAllResource())
     {
-        EFile file(resourceData->GetTempFilePath());
-        if (!file.Exist()) { continue; }
-        file.LoadToMemory();
-        ESharedBuffer resourceBuffer = file.GetBuffer();
+        size_t bufferSize = resourceData->GetResourceType().length() + 1 + resourceData->GetBuffer().GetSizeInByte() + resourceData->GetName().length() + 1 + sizeof(EResourceBase::t_ID);
+        ESharedBuffer resourceBuffer;
+        resourceBuffer.InitWith<u8>(bufferSize);
 
-        fileCollection.AddFile(std::to_string(resourceData->GetID()), resourceBuffer);
+        u8* pointer = resourceBuffer.Data<u8>();
+
+        strcpy((char*) pointer, resourceData->GetResourceType().c_str());
+        pointer += resourceData->GetResourceType().size() + 1;
+
+        strcpy((char*) pointer, resourceData->GetName().c_str());
+        pointer += resourceData->GetName().size() + 1;
+
+        EFileCollection::WriteU64(pointer, resourceData->GetID());
+        pointer += sizeof(EResourceBase::t_ID);
+
+        memcpy(pointer, resourceData->GetBuffer().Data<u8>(), resourceData->GetBuffer().GetSizeInByte());
+
+        EString fileName = resourceData->GetResourceType() + "/" + resourceData->GetName();
+        fileCollection.AddFile(fileName, resourceBuffer);
     }
 
     

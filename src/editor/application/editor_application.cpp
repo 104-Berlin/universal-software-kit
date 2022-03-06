@@ -424,6 +424,7 @@ void EApplication::RegisterDefaultComponentRender()
                     callbackFn(structProp.get());
                 }
             });
+            resourceSelect->SetResourceLink(link);
             return resourceSelect;
         }
         return EMakeRef<EUIField>("ResourceLink");

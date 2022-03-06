@@ -306,39 +306,36 @@ bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, EDataBase* sav
         }
 
 
-        /*const u8* pointer = entry.second.Data<u8>();
+        const u8* pointer = entry.second.Data<u8>();
 
         EString type = EString((char*)pointer);
         pointer += type.length() + 1;
 
+        EString name = EString((char*)pointer);
+        pointer += name.length() + 1;
+
         EResourceBase::t_ID id = *(EResourceBase::t_ID*)pointer;
         pointer += sizeof(EResourceBase::t_ID);
-        
-        u64 dataSize = *(u64*)pointer;
-        pointer += sizeof(u64);
 
+        size_t dataSize = entry.second.GetSizeInByte() - (pointer - entry.second.Data<u8>());
         u8* resourceData = new u8[dataSize];
         memcpy(resourceData, pointer, dataSize);
         pointer += dataSize;
 
-        u64 userDataSize = *(u64*)pointer;
-        u8* userData = nullptr;
-        if (userDataSize > 0)
-        {
-            pointer += sizeof(u64);
 
-            userData = new u8[userDataSize];
-            memcpy(userData, pointer, userDataSize);
-        }
+        ESharedBuffer dataBuffer;
+        dataBuffer.InitWith<u8>(resourceData, dataSize);
 
-        EFile file(entry.first);
-        EResourceBase* finalResourceData = new EResourceBase(id, type, file.GetFileName(), resourceData, dataSize);
-        finalResourceData->SetUserData(userData, userDataSize);
+        EResource* finalResourceData = new EResource(type);
+        finalResourceData->SetBuffer(dataBuffer);
+        finalResourceData->SetName(name);
+        finalResourceData->SetID(id);
+
         if (!saveToScene->GetResourceManager().AddResource(finalResourceData))
         {
             E_ERROR("Could not add resource. Resource with same ids allready exist!");
             delete finalResourceData;
-        }*/
+        }
     }
 
     return ReadSceneFromJson(sceneJson, saveToScene);
