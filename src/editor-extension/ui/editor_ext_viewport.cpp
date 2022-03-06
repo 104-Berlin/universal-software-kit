@@ -193,7 +193,7 @@ EUICameraControls::EUICameraControls(Renderer::RCamera* camera)
 
 
 EUIBasic3DCameraControls::EUIBasic3DCameraControls(Renderer::RCamera* camera, Basic3DCameraControlsSettings initialSettings)
-    : EUICameraControls(camera), fSettings(initialSettings), fTarget(), fDistance(1.0f)
+    : EUICameraControls(camera), fSettings(initialSettings), fTarget(), fDistance(1.0f), fPinchEnabled(false), fDragPlaneEnabled(false), fMoveUpDownEnabled(false)
 {
 
 }
@@ -202,19 +202,67 @@ void EUIBasic3DCameraControls::OnMouseDrag(const events::EMouseDragEvent& event)
 {
     if (event.MouseButton == 0)
     {
-        fCamera->SetPosition(fTarget);
+        if (fPinchEnabled)
+        {
+            fTarget += fCamera->GetRight() * -event.MouseDelta.x;
+        }
+        else if (fDragPlaneEnabled)
+        {
 
-        fCamera->TurnRight(-event.MouseDelta.x * fSettings.RotateSpeed);
-        fCamera->TurnUp(-event.MouseDelta.y * fSettings.RotateSpeed);
+        }
+        else if (fMoveUpDownEnabled)
+        {
 
-        fCamera->MoveForward(-fDistance);
+        }
+        else
+        {
+            fCamera->SetPosition(fTarget);
+
+            fCamera->TurnRight(-event.MouseDelta.x * fSettings.RotateSpeed);
+            fCamera->TurnUp(-event.MouseDelta.y * fSettings.RotateSpeed);
+
+            fCamera->MoveForward(-fDistance);
+        }
     }
 }
 
 void EUIBasic3DCameraControls::OnMouseScroll(const events::EMouseScrollEvent& event)
 {
-    fDistance -= event.ScrollX * fSettings.ZoomSpeed;
+    E_INFO("Scroll: " + std::to_string(event.ScrollX) + " " + std::to_string(event.ScrollY));
+    fDistance = fDistance * (1.0f - event.ScrollX * fSettings.ZoomSpeed);
+
     fCamera->SetPosition(fTarget);
     fCamera->MoveForward(-fDistance);
 }
 
+void EUIBasic3DCameraControls::OnKeyDown(const events::EKeyDownEvent& event)
+{
+    if (event.KeyCode == ImGuiKey_Space)
+    {
+        fPinchEnabled = true;
+    }
+    if (event.Ctrl)
+    {
+        fDragPlaneEnabled = true;
+    }
+    if (event.Alt)
+    {
+        fMoveUpDownEnabled = true;
+    }
+}
+
+void EUIBasic3DCameraControls::OnKeyUp(const events::EKeyUpEvent& event)
+{
+    if (event.KeyCode == ImGuiKey_Space)
+    {
+        fPinchEnabled = false;
+    }
+    if (event.Ctrl)
+    {
+        fDragPlaneEnabled = false;
+    }
+    if (event.Alt)
+    {
+        fMoveUpDownEnabled = false;
+    }
+}

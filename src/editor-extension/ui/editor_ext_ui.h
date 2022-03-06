@@ -46,6 +46,20 @@ namespace events {
         (float, ScrollX),
         (float, ScrollY)
     )
+
+    E_STORAGE_STRUCT(EKeyDownEvent, 
+        (u32, KeyCode),
+        (bool, Shift),
+        (bool, Ctrl),
+        (bool, Alt)
+    )
+
+    E_STORAGE_STRUCT(EKeyUpEvent, 
+        (u32, KeyCode),
+        (bool, Shift),
+        (bool, Ctrl),
+        (bool, Alt)
+    )
 }
 
     struct EUIDragData

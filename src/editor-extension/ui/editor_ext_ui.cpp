@@ -247,6 +247,20 @@ void EUIField::HandleRenderEnd()
             fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag2, 2});
         }
     }    
+    if (ImGui::IsItemFocused())
+    {
+        for (int i = 0; i < ImGuiKey_COUNT; i++)
+        {
+            if (ImGui::IsKeyPressed(i, false))
+            {
+                fEventDispatcher.Enqueue<events::EKeyDownEvent>(events::EKeyDownEvent{i, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyAlt});
+            }
+            if (ImGui::IsKeyReleased(i))
+            {
+                fEventDispatcher.Enqueue<events::EKeyUpEvent>(events::EKeyUpEvent{i, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyAlt});
+            }
+        }
+    }
 }
 
 void EUIField::OnRenderEnd(bool renderResult) 

@@ -11,6 +11,8 @@ namespace Engine {
 
         virtual void OnMouseDrag(const events::EMouseDragEvent& event) {}
         virtual void OnMouseScroll(const events::EMouseScrollEvent& event) {}
+        virtual void OnKeyDown(const events::EKeyDownEvent& event) {}
+        virtual void OnKeyUp(const events::EKeyUpEvent& event) {}
     };
 
     E_STORAGE_STRUCT(Basic3DCameraControlsSettings,
@@ -25,11 +27,17 @@ namespace Engine {
         Basic3DCameraControlsSettings fSettings;
         EVec3                         fTarget;
         double                        fDistance;
+        double                        fCameraPitch;
+        double                        fCameraYaw;
+        bool                          fPinchEnabled;
+        bool                          fDragPlaneEnabled;
+        bool                          fMoveUpDownEnabled;
     public:
         EUIBasic3DCameraControls(Renderer::RCamera* camera, Basic3DCameraControlsSettings initialSettings = Basic3DCameraControlsSettings(0.1f, 0.01f, 0.1f));
         virtual void OnMouseDrag(const events::EMouseDragEvent& event);
         virtual void OnMouseScroll(const events::EMouseScrollEvent& event);
-
+        virtual void OnKeyDown(const events::EKeyDownEvent& event);
+        virtual void OnKeyUp(const events::EKeyUpEvent& event);
     };
 
     class E_EDEXAPI EUIViewport : public EUIField
