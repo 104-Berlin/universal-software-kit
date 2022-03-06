@@ -42,7 +42,6 @@ jobs:
     - name: build
       run: |
             cd build
-            make install -j
             make -j
     - name: Test
       run: |
