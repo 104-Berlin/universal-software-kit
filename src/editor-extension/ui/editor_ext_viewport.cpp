@@ -1,5 +1,5 @@
 #include "editor_extension.h"
-
+ 
 #include "imgui_internal.h"
 
 using namespace Engine;
@@ -230,6 +230,7 @@ void EUIBasic3DCameraControls::OnMouseScroll(const events::EMouseScrollEvent& ev
 {
     //fDistance = fDistance * (1.0f - event.ScrollX * fSettings.ZoomSpeed);
     fDistance -= event.ScrollX * fSettings.ZoomSpeed;
+    fCamera->SetZoom(fDistance);
 
     fCamera->SetPosition(fTarget);
     fCamera->MoveForward(-fDistance);

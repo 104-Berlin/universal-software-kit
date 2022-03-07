@@ -40,7 +40,21 @@ APP_ENTRY
         }
     });
 
+    ERef<EUICheckbox> cameraMode = EMakeRef<EUICheckbox>("Perspective Camera");
+    cameraMode->AddEventListener<events::ECheckboxEvent>([weakViewport](events::ECheckboxEvent e){
+        if (e.Checked)
+        {
+            weakViewport.lock()->GetCamera().SetMode(ECameraMode::PERSPECTIVE);
+        }
+        else
+        {
+            weakViewport.lock()->GetCamera().SetMode(ECameraMode::ORTHOGRAPHIC);
+        }
+    });
+
     showPanel->AddChild(viewTypeDropdown);
+    showPanel->AddChild(EMakeRef<EUISameLine>());
+    showPanel->AddChild(cameraMode);
     showPanel->AddChild(viewport);
     info.PanelRegister->RegisterItem(extensionName, showPanel);
 

@@ -249,7 +249,7 @@ void EUIField::HandleRenderEnd()
     }    
     if (ImGui::IsItemFocused())
     {
-        for (int i = 0; i < ImGuiKey_COUNT; i++)
+        for (i32 i = 0; i < ImGuiKey_COUNT; i++)
         {
             if (ImGui::IsKeyPressed(i, false))
             {
