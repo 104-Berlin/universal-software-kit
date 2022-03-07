@@ -32,14 +32,8 @@ E_STORAGE_STRUCT(EnumTest,
 static EApplication* runningInstance = nullptr;
 
 EApplication::EApplication() 
-    : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister(), fRenderer(nullptr), fCamera(Renderer::ECameraMode::PERSPECTIVE, glm::vec3(0, 0, -10)), fScene(), fCameraControls(new Engine::EUIBasic3DCameraControls(&fCamera)) 
+    : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
 {
-
-    EFile meshFile("../../torus.fbx");
-    meshFile.LoadToMemory();
-    fTestMeshResource = new EMeshResource();
-    fTestMeshResource->FromBuffer(meshFile.GetBuffer());
-
     shared::ExtensionManager().AddEventListener<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent event) {
         EExtension* extension = shared::ExtensionManager().GetExtension(event.Extension);
         auto entry = (void(*)(const char*, Engine::EAppInit))extension->GetFunction("app_entry");
@@ -84,11 +78,6 @@ EApplication::EApplication()
 EApplication::~EApplication() 
 {
     runningInstance = nullptr;
-    if (fTestMeshResource)
-    {
-        delete fTestMeshResource;
-        fTestMeshResource = nullptr;
-    }
 }
 
 void EApplication::Start(const EString& defaultRegisterPath) 
@@ -215,14 +204,6 @@ void EApplication::RegenerateMainMenuBar()
 void EApplication::Init(Graphics::GContext* context) 
 {
     fGraphicsContext = context;
-    fFrameBuffer = Graphics::Wrapper::CreateFrameBuffer(1270, 720, GFrameBufferFormat::RGBA8);
-    fFrameBuffer->Unbind();
-    fRenderer = new Renderer::RRenderer3D(context, fFrameBuffer);
-    fTestMesh = new Renderer::RMesh();
-    fTestMesh->SetRotation(glm::quat(glm::vec3(0.0f, 2.0f, 3.0f)));
-    fTestMesh->SetData(fTestMeshResource->Vertices, fTestMeshResource->Indices);
-    fScene.Add(fTestMesh);
-
 
     fMainMenu = EMakeRef<EUIMainMenuBar>();
     RegisterDefaultPanels();
@@ -266,17 +247,6 @@ void EApplication::Init(Graphics::GContext* context)
 void EApplication::CleanUp() 
 {
     fUIRegister.ClearAllItems();
-
-    if (fRenderer)
-    {
-        delete fRenderer;
-        fRenderer = nullptr;
-    }
-    if (fCameraControls)
-    {
-        delete fCameraControls;
-        fCameraControls = nullptr;
-    }
 }
 
 void EApplication::Render() 
@@ -294,7 +264,7 @@ void EApplication::Render()
         dragEvent.MouseButton = 0;
         dragEvent.MouseDelta = mouseDrag0;
         dragEvent.Position = mousePos;
-        fCameraControls->OnMouseDrag(dragEvent);
+        //fCameraControls->OnMouseDrag(dragEvent);
     }
 
     float scrollX = ImGui::GetIO().MouseWheel;
@@ -305,12 +275,12 @@ void EApplication::Render()
         events::EMouseScrollEvent scrollEvent;
         scrollEvent.ScrollX = scrollX;
         scrollEvent.ScrollY = scrollY;
-        fCameraControls->OnMouseScroll(scrollEvent);
+        //fCameraControls->OnMouseScroll(scrollEvent);
     }
 
     fGraphicsContext->EnableDepthTest(true);
     fGraphicsContext->SetFaceCullingMode(Graphics::GCullMode::NONE);
-    fRenderer->Render(&fScene, &fCamera);
+    
 }
 
 void EApplication::RenderImGui() 

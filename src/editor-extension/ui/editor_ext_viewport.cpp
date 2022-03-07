@@ -204,7 +204,7 @@ void EUIBasic3DCameraControls::OnMouseDrag(const events::EMouseDragEvent& event)
     {
         if (fPinchEnabled)
         {
-            fTarget += fCamera->GetRight() * -event.MouseDelta.x;
+            //fTarget += fCamera->GetRight() * -event.MouseDelta.x;
         }
         else if (fDragPlaneEnabled)
         {
@@ -216,20 +216,20 @@ void EUIBasic3DCameraControls::OnMouseDrag(const events::EMouseDragEvent& event)
         }
         else
         {
-            fCamera->SetPosition(fTarget);
-
-            fCamera->TurnRight(-event.MouseDelta.x * fSettings.RotateSpeed);
-            fCamera->TurnUp(-event.MouseDelta.y * fSettings.RotateSpeed);
-
-            fCamera->MoveForward(-fDistance);
         }
+        fCamera->SetPosition(fTarget);
+
+        fCamera->TurnRight(-event.MouseDelta.x * fSettings.RotateSpeed);
+        fCamera->TurnUp(-event.MouseDelta.y * fSettings.RotateSpeed);
+
+        fCamera->MoveForward(-fDistance);
     }
 }
 
 void EUIBasic3DCameraControls::OnMouseScroll(const events::EMouseScrollEvent& event)
 {
-    E_INFO("Scroll: " + std::to_string(event.ScrollX) + " " + std::to_string(event.ScrollY));
-    fDistance = fDistance * (1.0f - event.ScrollX * fSettings.ZoomSpeed);
+    //fDistance = fDistance * (1.0f - event.ScrollX * fSettings.ZoomSpeed);
+    fDistance -= event.ScrollX * fSettings.ZoomSpeed;
 
     fCamera->SetPosition(fTarget);
     fCamera->MoveForward(-fDistance);

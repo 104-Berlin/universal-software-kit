@@ -14,7 +14,8 @@ EUnorderedMap<EDataBase::Entity, RMesh*> fMeshes;
 APP_ENTRY
 {
     RCamera camera(ECameraMode::PERSPECTIVE);
-    camera.SetPosition({10, 10, -10});
+    camera.SetPosition({0, 0, -100});
+    //camera.LookAt({0, 0, 0});
 
     ERef<EUIPanel> showPanel = EMakeRef<EUIPanel>("Show Panel");
     ERef<EUIViewport> viewport = EMakeRef<EUIViewport>(camera);
