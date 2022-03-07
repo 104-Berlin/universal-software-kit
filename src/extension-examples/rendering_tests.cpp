@@ -41,6 +41,7 @@ APP_ENTRY
     });
 
     ERef<EUICheckbox> cameraMode = EMakeRef<EUICheckbox>("Perspective Camera");
+    cameraMode->SetValue(true);
     cameraMode->AddEventListener<events::ECheckboxEvent>([weakViewport](events::ECheckboxEvent e){
         if (e.Checked)
         {
