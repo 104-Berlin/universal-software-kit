@@ -11,7 +11,7 @@ EUIViewport::EUIViewport(const Renderer::RCamera& camera)
         fFrameBuffer(Graphics::Wrapper::CreateFrameBuffer(100, 100)), 
         fRenderer(Graphics::Wrapper::GetMainContext(), fFrameBuffer),
         fCamera(camera),
-        fCameraControls(new EUIBasic3DCameraControls(&fCamera, Basic3DCameraControlsSettings(0.1f, 0.01f, 0.1f)))
+        fCameraControls(new EUIBasic3DCameraControls(&fCamera))
 {
     AddEventListener<events::EMouseDragEvent>([this](events::EMouseDragEvent event){
         if (this->fCameraControls)
@@ -23,6 +23,18 @@ EUIViewport::EUIViewport(const Renderer::RCamera& camera)
         if (this->fCameraControls)
         {
             this->fCameraControls->OnMouseScroll(event);
+        }
+    });
+    AddEventListener<events::EKeyDownEvent>([this](events::EKeyDownEvent event){
+        if (this->fCameraControls)
+        {
+            this->fCameraControls->OnKeyDown(event);
+        }
+    });
+    AddEventListener<events::EKeyUpEvent>([this](events::EKeyUpEvent event){
+        if (this->fCameraControls)
+        {
+            this->fCameraControls->OnKeyUp(event);
         }
     });
 }
@@ -204,25 +216,41 @@ void EUIBasic3DCameraControls::OnMouseDrag(const events::EMouseDragEvent& event)
     {
         if (fPinchEnabled)
         {
-            //fTarget += fCamera->GetRight() * -event.MouseDelta.x;
+            fTarget += fCamera->GetRight() * -event.MouseDelta.x * fSettings.MoveSpeed;
+            fTarget += fCamera->GetUp() * event.MouseDelta.y * fSettings.MoveSpeed;
+
+            SetCameraToDistance();
         }
         else if (fDragPlaneEnabled)
         {
+            EVec3 rightNoY = fCamera->GetRight();
+            E_INFO(EString("rightNoY: ") + std::to_string(rightNoY.x) + " " + std::to_string(rightNoY.y) + " " + std::to_string(rightNoY.z));
+            rightNoY.y = 0.0f;
+            EVec3 forwardNoY = fCamera->GetForward();
+            E_INFO(EString("Forward: ") + std::to_string(forwardNoY.x) + " " + std::to_string(forwardNoY.y) + " " + std::to_string(forwardNoY.z));
+            forwardNoY.y = 0.0f;
+            
+            glm::normalize(rightNoY);
+            glm::normalize(forwardNoY);
 
+            fTarget -= rightNoY * event.MouseDelta.x * fSettings.MoveSpeed;
+            fTarget -= forwardNoY * event.MouseDelta.y * fSettings.MoveSpeed;
+
+            SetCameraToDistance();
         }
         else if (fMoveUpDownEnabled)
         {
+            fTarget.y -= event.MouseDelta.y * fSettings.MoveSpeed;
 
+            SetCameraToDistance();
         }
         else
         {
+            fCamera->TurnRight(-event.MouseDelta.x * fSettings.RotateSpeed);
+            fCamera->TurnUp(-event.MouseDelta.y * fSettings.RotateSpeed);
+
+            SetCameraToDistance();
         }
-        fCamera->SetPosition(fTarget);
-
-        fCamera->TurnRight(-event.MouseDelta.x * fSettings.RotateSpeed);
-        fCamera->TurnUp(-event.MouseDelta.y * fSettings.RotateSpeed);
-
-        fCamera->MoveForward(-fDistance);
     }
 }
 
@@ -232,8 +260,7 @@ void EUIBasic3DCameraControls::OnMouseScroll(const events::EMouseScrollEvent& ev
     fDistance -= event.ScrollX * fSettings.ZoomSpeed;
     fCamera->SetZoom(fDistance);
 
-    fCamera->SetPosition(fTarget);
-    fCamera->MoveForward(-fDistance);
+    SetCameraToDistance();
 }
 
 void EUIBasic3DCameraControls::OnKeyDown(const events::EKeyDownEvent& event)
@@ -258,12 +285,19 @@ void EUIBasic3DCameraControls::OnKeyUp(const events::EKeyUpEvent& event)
     {
         fPinchEnabled = false;
     }
-    if (event.Ctrl)
+    if (!event.Ctrl)
     {
         fDragPlaneEnabled = false;
     }
-    if (event.Alt)
+    if (!event.Alt)
     {
         fMoveUpDownEnabled = false;
     }
+}
+
+
+void EUIBasic3DCameraControls::SetCameraToDistance()
+{
+    fCamera->SetPosition(fTarget);
+    fCamera->MoveForward(-fDistance);
 }

@@ -246,10 +246,9 @@ void EUIField::HandleRenderEnd()
         {
             fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag2, 2});
         }
-    }    
-    if (ImGui::IsItemFocused())
-    {
-        for (i32 i = 0; i < ImGuiKey_COUNT; i++)
+
+        // Keyboard
+        for (i32 i = ImGuiKey_NamedKey_BEGIN; i < ImGuiKey_COUNT; i++)
         {
             if (ImGui::IsKeyPressed(i, false))
             {
@@ -257,10 +256,11 @@ void EUIField::HandleRenderEnd()
             }
             if (ImGui::IsKeyReleased(i))
             {
+                E_INFO("Key released: " + std::to_string(i));
                 fEventDispatcher.Enqueue<events::EKeyUpEvent>(events::EKeyUpEvent{i, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyAlt});
             }
         }
-    }
+    }    
 }
 
 void EUIField::OnRenderEnd(bool renderResult) 
