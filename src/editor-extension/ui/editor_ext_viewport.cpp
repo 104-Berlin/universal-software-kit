@@ -232,14 +232,12 @@ void EUIBasic3DCameraControls::OnMouseDrag(const events::EMouseDragEvent& event)
 
             forward = rotationQuat * forward;
             right = rotationQuat * right;
-            /*forward *= rotationQuat;
-            right *= rotationQuat;*/
 
             glm::normalize(forward);
             glm::normalize(right);
 
-            fTarget -= forward * event.MouseDelta.x * fSettings.MoveSpeed;
-            fTarget -= right * event.MouseDelta.y * fSettings.MoveSpeed;
+            fTarget += forward * event.MouseDelta.x * fSettings.MoveSpeed;
+            fTarget += right * event.MouseDelta.y * fSettings.MoveSpeed;
 
             SetCameraToDistance();
         }
