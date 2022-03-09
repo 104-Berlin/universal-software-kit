@@ -280,8 +280,9 @@ bool EDeserializer::ReadResourceFromJson(const EJson& json, EResource** resData,
                 result->SetBuffer(buffer);
                 return true;
             }
+            E_WARN("Failed to decode resource data");
         }
-        return !withData;
+        return true;
     }
     return false;
 }
