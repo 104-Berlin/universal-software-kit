@@ -223,24 +223,29 @@ void EUIBasic3DCameraControls::OnMouseDrag(const events::EMouseDragEvent& event)
         }
         else if (fDragPlaneEnabled)
         {
-            EVec3 rightNoY = fCamera->GetRight();
-            E_INFO(EString("rightNoY: ") + std::to_string(rightNoY.x) + " " + std::to_string(rightNoY.y) + " " + std::to_string(rightNoY.z));
-            rightNoY.y = 0.0f;
-            EVec3 forwardNoY = fCamera->GetForward();
-            E_INFO(EString("Forward: ") + std::to_string(forwardNoY.x) + " " + std::to_string(forwardNoY.y) + " " + std::to_string(forwardNoY.z));
-            forwardNoY.y = 0.0f;
-            
-            glm::normalize(rightNoY);
-            glm::normalize(forwardNoY);
+            float rotation = fCamera->GetYaw();
 
-            fTarget -= rightNoY * event.MouseDelta.x * fSettings.MoveSpeed;
-            fTarget -= forwardNoY * event.MouseDelta.y * fSettings.MoveSpeed;
+            EVec3 forward = EVec3(1, 0, 0);
+            EVec3 right = EVec3(0, 0, 1);
+            
+            EQuat rotationQuat = EQuat(EVec3(0.0f, rotation, 0.0f));
+
+            forward = rotationQuat * forward;
+            right = rotationQuat * right;
+            /*forward *= rotationQuat;
+            right *= rotationQuat;*/
+
+            glm::normalize(forward);
+            glm::normalize(right);
+
+            fTarget -= forward * event.MouseDelta.x * fSettings.MoveSpeed;
+            fTarget -= right * event.MouseDelta.y * fSettings.MoveSpeed;
 
             SetCameraToDistance();
         }
         else if (fMoveUpDownEnabled)
         {
-            fTarget.y -= event.MouseDelta.y * fSettings.MoveSpeed;
+            fTarget.y += event.MouseDelta.y * fSettings.MoveSpeed;
 
             SetCameraToDistance();
         }

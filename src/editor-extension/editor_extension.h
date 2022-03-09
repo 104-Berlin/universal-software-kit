@@ -37,6 +37,8 @@ typedef glm::vec4 EVec4;
 
 typedef glm::mat4 EMat4;
 
+typedef glm::quat EQuat;
+
 #include "default-types/editor_def_res_image.h"
 #include "default-types/editor_def_res_mesh.h"
 
