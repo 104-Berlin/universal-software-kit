@@ -47,17 +47,21 @@ public:
             {
                 if (event.Data.Value())
                 {
-                    ImageLayer imageLayer;
-                    if (convert::getter<ImageLayer>(event.Data.Value().get(), &imageLayer))
+                    ComponentChangeData changeData;
+                    if (convert::getter(event.Data.Value().get(), &changeData))
                     {
-                        ERef<EResourceData> data = shared::GetResource(imageLayer.resourceLink.ResourceId);
-                        
-                        if (data && fImageViews.find(event.Entity.Handle) != fImageViews.end())
+                        ImageLayer imageLayer;
+                        if (convert::getter<ImageLayer>(changeData.NewValue.Value().get(), &imageLayer))
                         {
-                            Editor::EImageUserData* userData = (Editor::EImageUserData*)data->UserData;
-                            if (userData)
+                            ERef<EResource> data = shared::GetResource(imageLayer.resourceLink.ResourceId);
+                            
+                            if (data && fImageViews.find(event.Entity.Handle) != fImageViews.end())
                             {
-                                fImageViews[event.Entity.Handle].lock()->SetTextureData(data->Data, userData->width, userData->height);
+                                Editor::EImageResource* image = data->GetCPtr<Editor::EImageResource>();
+                                if (image)
+                                {
+                                    fImageViews[event.Entity.Handle].lock()->SetTextureData(image->Data, image->Width, image->Height);
+                                }
                             }
                         }
                     }

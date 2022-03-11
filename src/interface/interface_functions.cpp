@@ -101,7 +101,7 @@ shared::ESharedError shared::CreateComponent(ERef<EProperty> componentValue, EDa
 }
 
 
-shared::ESharedError shared::CreateResource(EResourceData* data) 
+shared::ESharedError shared::CreateResource(EResource* data) 
 {
     StaticSharedContext::instance().GetRegisterConnection().Send_AddResource(data);
     return false;
@@ -165,12 +165,12 @@ EVector<ERef<EProperty>> shared::GetAllComponents(EDataBase::Entity entity)
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllValues(entity);
 }
 
-ERef<EResourceData> shared::GetResource(EResourceData::t_ID id) 
+ERef<EResource> shared::GetResource(EResource::t_ID id) 
 {
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetResourceData(id);
 }
 
-EVector<ERef<EResourceData>> shared::GetLoadedResource(const EString& resourceType) 
+EVector<ERef<EResource>> shared::GetLoadedResource(const EString& resourceType) 
 {
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllResources(resourceType);
 }

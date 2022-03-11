@@ -253,43 +253,36 @@ bool EDeserializer::ReadPropertyFromJson_WithDescription(const EJson& json, ERef
     return false;
 }
 
-bool EDeserializer::ReadResourceFromJson(const EJson& json, EResourceData* resData, bool withData) 
+bool EDeserializer::ReadResourceFromJson(const EJson& json, EResource** resData, bool withData) 
 {
     if (!json.is_object()) { return false; }
     if (json.size() == 0)  { return false;}
-    if (json["ID"].is_number_integer() && json["Type"].is_string() && json["Name"].is_string() && json["PathToFile"].is_string())
+    if (json["ID"].is_number_integer() && json["Type"].is_string())
     {
-        resData->ID = json["ID"].get<EResourceData::t_ID>();
-        resData->Type = json["Type"].get<EString>();
-        resData->Name = json["Name"].get<EString>();
-        resData->PathToFile = json["PathToFile"].get<EString>();
-        if (withData && json["Data"].is_string() && json["UserData"].is_string())
+        *resData = new EResource(json["Type"].get<EString>());
+        EResource* result = *resData;
+
+        if (json.contains("Name") && json["Name"].is_string())
+        {
+            result->SetName(json["Name"].get<EString>());
+        }
+        
+        result->SetID(json["ID"].get<EResource::t_ID>());
+        
+        if (withData && json.find("Data") != json.end() && json["Data"].is_string())
         {
             u8* data;
             size_t dataLen;
-            u8* userData;
-            size_t userDataLen;
-            if (Base64::Decode(json["Data"].get<EString>(), &data, &dataLen) &&
-                Base64::Decode(json["UserData"].get<EString>(), &userData, &userDataLen))
+            if (Base64::Decode(json["Data"].get<EString>(), &data, &dataLen))
             {
-                if (resData->Data)
-                {
-                    delete resData->Data;
-                    resData->Data = nullptr;
-                }
-                if (resData->UserData)
-                {
-                    delete resData->UserData;
-                    resData->UserData = nullptr;
-                }
-                resData->Data = data;
-                resData->DataSize = dataLen;
-                resData->UserData = userData;
-                resData->UserDataSize = userDataLen;
+                ESharedBuffer buffer;
+                buffer.InitWith<u8>(data, dataLen);
+                result->SetBuffer(buffer);
                 return true;
             }
+            E_WARN("Failed to decode resource data");
         }
-        return !withData;
+        return true;
     }
     return false;
 }
@@ -319,29 +312,26 @@ bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, EDataBase* sav
         EString type = EString((char*)pointer);
         pointer += type.length() + 1;
 
-        EResourceData::t_ID id = *(EResourceData::t_ID*)pointer;
-        pointer += sizeof(EResourceData::t_ID);
-        
-        u64 dataSize = *(u64*)pointer;
-        pointer += sizeof(u64);
+        EString name = EString((char*)pointer);
+        pointer += name.length() + 1;
 
+        EResource::t_ID id = *(EResource::t_ID*)pointer;
+        pointer += sizeof(EResource::t_ID);
+
+        size_t dataSize = entry.second.GetSizeInByte() - (pointer - entry.second.Data<u8>());
         u8* resourceData = new u8[dataSize];
         memcpy(resourceData, pointer, dataSize);
         pointer += dataSize;
 
-        u64 userDataSize = *(u64*)pointer;
-        u8* userData = nullptr;
-        if (userDataSize > 0)
-        {
-            pointer += sizeof(u64);
 
-            userData = new u8[userDataSize];
-            memcpy(userData, pointer, userDataSize);
-        }
+        ESharedBuffer dataBuffer;
+        dataBuffer.InitWith<u8>(resourceData, dataSize);
 
-        EFile file(entry.first);
-        EResourceData* finalResourceData = new EResourceData(id, type, file.GetFileName(), resourceData, dataSize);
-        finalResourceData->SetUserData(userData, userDataSize);
+        EResource* finalResourceData = new EResource(type);
+        finalResourceData->SetBuffer(dataBuffer);
+        finalResourceData->SetName(name);
+        finalResourceData->SetID(id);
+
         if (!saveToScene->GetResourceManager().AddResource(finalResourceData))
         {
             E_ERROR("Could not add resource. Resource with same ids allready exist!");

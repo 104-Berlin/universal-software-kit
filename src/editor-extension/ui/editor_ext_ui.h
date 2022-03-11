@@ -46,6 +46,20 @@ namespace events {
         (float, ScrollX),
         (float, ScrollY)
     )
+
+    E_STORAGE_STRUCT(EKeyDownEvent, 
+        (i32, KeyCode),
+        (bool, Shift),
+        (bool, Ctrl),
+        (bool, Alt)
+    )
+
+    E_STORAGE_STRUCT(EKeyUpEvent, 
+        (i32, KeyCode),
+        (bool, Shift),
+        (bool, Ctrl),
+        (bool, Alt)
+    )
 }
 
     struct EUIDragData
@@ -746,7 +760,7 @@ namespace events
         E_STORAGE_STRUCT(EResourceSelectChangeEvent,
             (EString, ResourceType),
             (EString, ResourceName),
-            (EResourceData::t_ID, ResourceID)
+            (EResource::t_ID, ResourceID)
         )
     }
 
@@ -754,14 +768,18 @@ namespace events
     {
         struct ResourceOption
         {
-            EResourceData::t_ID ResourceID;
+            EResource::t_ID ResourceID;
             EString Name;
         };
     private:
         EResourceLink fResourceLink;
         EVector<ResourceOption> fOptions;
+
+        EWeakRef<EUIDropdown> fDropdown;
     public:
         EUIResourceSelect(const EString& resourceType);
+
+        void SetResourceLink(const EResourceLink& link);
     };
 
     class E_EDEXAPI EUICollapsable : public EUIField

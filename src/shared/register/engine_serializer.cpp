@@ -203,67 +203,48 @@ ESharedBuffer ESerializer::WriteFullSceneBuffer(EDataBase* reg)
 
     fileCollection.AddFile("CORE/scene.json", jsonBuffer);
 
-    for (EResourceData* resourceData : reg->GetResourceManager().GetAllResource())
+    for (EResource* resourceData : reg->GetResourceManager().GetAllResource())
     {
-        size_t bufferSize = resourceData->Type.length() + 1 + sizeof(EResourceData::t_ID) + sizeof(u64) + resourceData->DataSize + sizeof(u64) + resourceData->UserDataSize;
+        size_t bufferSize = resourceData->GetResourceType().length() + 1 + resourceData->GetBuffer().GetSizeInByte() + resourceData->GetName().length() + 1 + sizeof(EResource::t_ID);
         ESharedBuffer resourceBuffer;
         resourceBuffer.InitWith<u8>(bufferSize);
 
         u8* pointer = resourceBuffer.Data<u8>();
 
-        strcpy((char*) pointer, resourceData->Type.c_str());
-        pointer += resourceData->Type.size() + 1;
+        strcpy((char*) pointer, resourceData->GetResourceType().c_str());
+        pointer += resourceData->GetResourceType().size() + 1;
 
-        EFileCollection::WriteU64(pointer, resourceData->ID);
-        pointer += sizeof(EResourceData::t_ID);
+        strcpy((char*) pointer, resourceData->GetName().c_str());
+        pointer += resourceData->GetName().size() + 1;
 
-        EFileCollection::WriteU64(pointer, resourceData->DataSize);
-        pointer += sizeof(u64);
+        EFileCollection::WriteU64(pointer, resourceData->GetID());
+        pointer += sizeof(EResource::t_ID);
 
-        memcpy(pointer, resourceData->Data, resourceData->DataSize);
-        pointer += resourceData->DataSize;
+        memcpy(pointer, resourceData->GetBuffer().Data<u8>(), resourceData->GetBuffer().GetSizeInByte());
 
-        if (!resourceData->UserData)
-        {
-            EFileCollection::WriteU64(pointer, 0);
-        }
-        else
-        {
-            EFileCollection::WriteU64(pointer, resourceData->UserDataSize);
-            pointer += sizeof(u64);
-            
-            memcpy(pointer, resourceData->UserData, resourceData->UserDataSize);
-        }
-        EString fileName;
-        if (!resourceData->PathToFile.empty())
-        {
-            fileName = resourceData->PathToFile;
-        }
-        else 
-        {
-            fileName = resourceData->Type + resourceData->Name;
-        }
+        EString fileName = resourceData->GetResourceType() + "/" + resourceData->GetName();
         fileCollection.AddFile(fileName, resourceBuffer);
-
     }
 
     
     return fileCollection.GetCompleteBuffer();
 }
 
-EJson ESerializer::WriteResourceDataToJson(const EResourceData& data, bool writeData) 
+EJson ESerializer::WritEResourceBaseToJson(EResource* data, bool writeData) 
 {
     EJson result = EJson::object();
 
-    result["ID"] = data.ID;
-    result["Type"] = data.Type;
-    result["Name"] = data.Name;
-    result["PathToFile"] = data.PathToFile;
+    result["ID"] = data->GetID();
+    result["Type"] = data->GetResourceType();
+    result["Name"] = data->GetName();
 
-    if (writeData)
+    if (writeData && data)
     {
-        result["Data"] = Base64::Encode(data.Data, data.DataSize);
-        result["UserData"] = Base64::Encode(data.UserData, data.UserDataSize);
+        ESharedBuffer resourceData = data->GetBuffer();
+        if (!resourceData.IsNull())
+        {
+            result["Data"] = Base64::Encode(resourceData.Data<u8>(), resourceData.GetSizeInByte());
+        }
     }
 
     return result;

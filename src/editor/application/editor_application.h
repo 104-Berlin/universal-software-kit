@@ -6,7 +6,7 @@ namespace Editor {
     {
     private:
         Graphics::GContext* fGraphicsContext;
-
+        
         ERef<Engine::EUIMainMenuBar>            fMainMenu;
 
         Engine::EUIRegister         fUIRegister;

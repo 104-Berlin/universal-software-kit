@@ -246,6 +246,20 @@ void EUIField::HandleRenderEnd()
         {
             fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag2, 2});
         }
+
+        // Keyboard
+        for (i32 i = ImGuiKey_NamedKey_BEGIN; i < ImGuiKey_COUNT; i++)
+        {
+            if (ImGui::IsKeyPressed(i, false))
+            {
+                fEventDispatcher.Enqueue<events::EKeyDownEvent>(events::EKeyDownEvent{i, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyAlt});
+            }
+            if (ImGui::IsKeyReleased(i))
+            {
+                E_INFO("Key released: " + std::to_string(i));
+                fEventDispatcher.Enqueue<events::EKeyUpEvent>(events::EKeyUpEvent{i, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyAlt});
+            }
+        }
     }    
 }
 
@@ -887,6 +901,7 @@ bool EUIDropdown::OnRender()
         for (size_t i = 0; i < fOptions.size(); i++)
         {
             const EString& opt = fOptions[i];
+            if (opt.length() == 0) { continue; }
             bool selected = i == fSelected;
             if (ImGui::Selectable(opt.c_str(), &selected))
             {
@@ -1051,7 +1066,7 @@ EUIResourceSelect::EUIResourceSelect(const EString& resourceType)
 
     for(auto& entry : shared::GetLoadedResource(resourceType))
     {
-        fOptions.push_back({entry->ID, entry->Name});
+        fOptions.push_back({entry->GetID(), entry->GetName()});
     }
     EVector<EString> stringOptions;
     for (const auto& opt : fOptions)
@@ -1059,17 +1074,17 @@ EUIResourceSelect::EUIResourceSelect(const EString& resourceType)
         stringOptions.push_back(opt.Name);
     }
 
-    EWeakRef<EUIDropdown> dropDown = std::static_pointer_cast<EUIDropdown>(AddChild(EMakeRef<EUIDropdown>()).lock());
-    dropDown.lock()->AcceptDrag("Resource" + resourceType);
-    dropDown.lock()->SetOptions(stringOptions);
-    dropDown.lock()->AddEventListener<events::ESelectChangeEvent>([this](events::ESelectChangeEvent event){
+    fDropdown = std::static_pointer_cast<EUIDropdown>(AddChild(EMakeRef<EUIDropdown>()).lock());
+    fDropdown.lock()->AcceptDrag("Resource" + resourceType);
+    fDropdown.lock()->SetOptions(stringOptions);
+    fDropdown.lock()->AddEventListener<events::ESelectChangeEvent>([this](events::ESelectChangeEvent event){
         fResourceLink.ResourceId = fOptions[event.Index].ResourceID;
         
         fEventDispatcher.Enqueue<events::EResourceSelectChangeEvent>({fResourceLink.Type, fOptions[event.Index].Name, fOptions[event.Index].ResourceID});
     });
 
-    dropDown.lock()->AddEventListener<events::EDropEvent>([this, dropDown](events::EDropEvent e){
-        EResourceData::t_ID resourceID = e.DragDataAsID;
+    fDropdown.lock()->AddEventListener<events::EDropEvent>([this](events::EDropEvent e){
+        EResource::t_ID resourceID = e.DragDataAsID;
         EString resourceName = e.DragDataAsString;
 
         // Find index for dropdown
@@ -1077,15 +1092,32 @@ EUIResourceSelect::EUIResourceSelect(const EString& resourceType)
         if (it != fOptions.end())
         {
             size_t index = std::distance(fOptions.begin(), it);
-            dropDown.lock()->SetSelectedIndex(index);
+            fDropdown.lock()->SetSelectedIndex(index);
             fResourceLink.ResourceId = resourceID;
             fEventDispatcher.Enqueue<events::EResourceSelectChangeEvent>({fResourceLink.Type, resourceName, resourceID});
         }
    });
-    shared::Events().Connect<events::EResourceAddedEvent>([this, dropDown](events::EResourceAddedEvent event){
+    shared::Events().Connect<events::EResourceAddedEvent>([this](events::EResourceAddedEvent event){
         fOptions.push_back({event.ResourceID, event.Name});
-        dropDown.lock()->AddOption(event.Name);
+        fDropdown.lock()->AddOption(event.Name);
     }, this);
+}
+
+void EUIResourceSelect::SetResourceLink(const EResourceLink& link)
+{
+    fResourceLink = link;
+    if (fDropdown.expired())
+    {
+        return;
+    }
+    for (size_t i = 0; i < fOptions.size(); i++)
+    {
+        if (fOptions[i].ResourceID == link.ResourceId)
+        {
+            fDropdown.lock()->SetSelectedIndex(i);
+            break;
+        }
+    }
 }
 
 EUICollapsable::EUICollapsable(const EString& label, bool defaultOpen)
@@ -1132,7 +1164,7 @@ bool EUIGroupPanel::OnRender()
 
     ImVec2 effectiveSize = {fWidthOverride, fHeightOverride};
     if (fWidthOverride <= 0.0f)
-        effectiveSize.x = ImGui::GetContentRegionAvailWidth();
+        effectiveSize.x = ImGui::GetContentRegionAvail().x;
     else
         effectiveSize.x = fWidthOverride;
     ImGui::Dummy(ImVec2(effectiveSize.x, 0.0f));

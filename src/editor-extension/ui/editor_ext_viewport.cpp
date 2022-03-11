@@ -1,5 +1,5 @@
 #include "editor_extension.h"
-
+ 
 #include "imgui_internal.h"
 
 using namespace Engine;
@@ -7,26 +7,34 @@ using namespace Engine;
 EUIViewport::EUIViewport(const Renderer::RCamera& camera) 
     :   EUIField("VIEWPORT"), 
         fActiveTool(nullptr),
+        fViewType(ViewType::DIFFUSE),
         fFrameBuffer(Graphics::Wrapper::CreateFrameBuffer(100, 100)), 
         fRenderer(Graphics::Wrapper::GetMainContext(), fFrameBuffer),
-        fCamera(camera)
+        fCamera(camera),
+        fCameraControls(new EUIBasic3DCameraControls(&fCamera))
 {
     AddEventListener<events::EMouseDragEvent>([this](events::EMouseDragEvent event){
-        if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Space)))
+        if (this->fCameraControls)
         {
-            fCamera.MoveRight(event.MouseDelta.x);
-            fCamera.MoveUp(-event.MouseDelta.y);
+            this->fCameraControls->OnMouseDrag(event);
         }
     });
     AddEventListener<events::EMouseScrollEvent>([this](events::EMouseScrollEvent event){
-        E_INFO("Mouse scroll " + std::to_string(event.ScrollX) + "; " + std::to_string(event.ScrollY));
-        if (fCamera.GetMode() == Renderer::ECameraMode::ORTHOGRAPHIC)
+        if (this->fCameraControls)
         {
-            fCamera.SetZoom(fCamera.GetZoom() + (event.ScrollX / 10.0f));
+            this->fCameraControls->OnMouseScroll(event);
         }
-        else
+    });
+    AddEventListener<events::EKeyDownEvent>([this](events::EKeyDownEvent event){
+        if (this->fCameraControls)
         {
-            fCamera.MoveForward(-event.ScrollX);
+            this->fCameraControls->OnKeyDown(event);
+        }
+    });
+    AddEventListener<events::EKeyUpEvent>([this](events::EKeyUpEvent event){
+        if (this->fCameraControls)
+        {
+            this->fCameraControls->OnKeyUp(event);
         }
     });
 }
@@ -76,6 +84,12 @@ EViewportTool* EUIViewport::AddTool(EViewportTool* newTool)
     return newTool;
 }
 
+void EUIViewport::SetViewType(ViewType type)
+{
+    fViewType = type;
+}
+
+
 EVector<EViewportTool*> EUIViewport::GetRegisteredTools()
 {
     return fRegisteredTools;
@@ -106,7 +120,15 @@ bool EUIViewport::OnRender()
 
     fFrameBuffer->Resize(contentRegion.x, contentRegion.y, Graphics::GFrameBufferFormat::RGBA8);
     fRenderer.Render(&fScene, &fCamera);
-    ImGui::Image((ImTextureID)(unsigned long long)(unsigned long)fFrameBuffer->GetColorAttachment(), contentRegion, {0, 1}, {1, 0});
+    u32 textureId = fFrameBuffer->GetColorAttachment();
+    switch (fViewType)
+    {
+        case ViewType::DIFFUSE: textureId = fFrameBuffer->GetColorAttachment(); break;
+        case ViewType::NORMAL: textureId = fFrameBuffer->GetNormalAttachment(); break;
+        case ViewType::DEPTH: textureId = fFrameBuffer->GetDepthAttachment(); break;
+    }
+
+    ImGui::Image((ImTextureID)(unsigned long long)(unsigned long)textureId, {contentRegion.x, contentRegion.y}, {0, 1}, {1, 0});
 
     if (fActiveTool && fActiveTool->IsVisible())
     {
@@ -165,4 +187,120 @@ void EUIViewportToolbar::Regenerate()
             fViewport.lock()->SetActiveTool(toolName);
         });
     }
+}
+
+
+/***
+ * 
+ * #####################################################################################################################
+ * CAMERA CONTROLS
+ * 
+ */
+EUICameraControls::EUICameraControls(Renderer::RCamera* camera)
+    : fCamera(camera)
+{
+    fCamera->SetMaxPitch(M_PI / 2);
+    fCamera->SetMinPitch(-M_PI / 2);
+}
+
+
+EUIBasic3DCameraControls::EUIBasic3DCameraControls(Renderer::RCamera* camera, Basic3DCameraControlsSettings initialSettings)
+    : EUICameraControls(camera), fSettings(initialSettings), fTarget(), fDistance(1.0f), fPinchEnabled(false), fDragPlaneEnabled(false), fMoveUpDownEnabled(false)
+{
+
+}
+
+void EUIBasic3DCameraControls::OnMouseDrag(const events::EMouseDragEvent& event)
+{
+    if (event.MouseButton == 0)
+    {
+        if (fPinchEnabled)
+        {
+            fTarget += fCamera->GetRight() * -event.MouseDelta.x * fSettings.MoveSpeed;
+            fTarget += fCamera->GetUp() * event.MouseDelta.y * fSettings.MoveSpeed;
+
+            SetCameraToDistance();
+        }
+        else if (fDragPlaneEnabled)
+        {
+            float rotation = fCamera->GetYaw();
+
+            EVec3 forward = EVec3(1, 0, 0);
+            EVec3 right = EVec3(0, 0, 1);
+            
+            EQuat rotationQuat = EQuat(EVec3(0.0f, rotation, 0.0f));
+
+            forward = rotationQuat * forward;
+            right = rotationQuat * right;
+
+            glm::normalize(forward);
+            glm::normalize(right);
+
+            fTarget += forward * event.MouseDelta.x * fSettings.MoveSpeed;
+            fTarget += right * event.MouseDelta.y * fSettings.MoveSpeed;
+
+            SetCameraToDistance();
+        }
+        else if (fMoveUpDownEnabled)
+        {
+            fTarget.y += event.MouseDelta.y * fSettings.MoveSpeed;
+
+            SetCameraToDistance();
+        }
+        else
+        {
+            fCamera->TurnRight(-event.MouseDelta.x * fSettings.RotateSpeed);
+            fCamera->TurnUp(-event.MouseDelta.y * fSettings.RotateSpeed);
+
+            SetCameraToDistance();
+        }
+    }
+}
+
+void EUIBasic3DCameraControls::OnMouseScroll(const events::EMouseScrollEvent& event)
+{
+    //fDistance = fDistance * (1.0f - event.ScrollX * fSettings.ZoomSpeed);
+    fDistance -= event.ScrollX * fSettings.ZoomSpeed;
+    fCamera->SetZoom(fDistance);
+
+    SetCameraToDistance();
+}
+
+void EUIBasic3DCameraControls::OnKeyDown(const events::EKeyDownEvent& event)
+{
+    if (event.KeyCode == ImGuiKey_Space)
+    {
+        fPinchEnabled = true;
+    }
+    if (event.Ctrl)
+    {
+        fDragPlaneEnabled = true;
+    }
+    if (event.Alt)
+    {
+        fMoveUpDownEnabled = true;
+    }
+}
+
+void EUIBasic3DCameraControls::OnKeyUp(const events::EKeyUpEvent& event)
+{
+    if (event.KeyCode == ImGuiKey_Space)
+    {
+        fPinchEnabled = false;
+    }
+    if (!event.Ctrl)
+    {
+        fDragPlaneEnabled = false;
+    }
+    if (!event.Alt)
+    {
+        fMoveUpDownEnabled = false;
+    }
+}
+
+
+void EUIBasic3DCameraControls::SetCameraToDistance()
+{
+    fCamera->SetPosition(fTarget);
+    fCamera->MoveForward(-fDistance);
 }

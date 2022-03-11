@@ -63,20 +63,25 @@ EResourceView::EResourceView()
     resourceList.lock()->SetCustomUpdateFunction([this, resourceList](){
         if (resourceList.expired()) { return; }
         resourceList.lock()->Clear();
+        if (fSelectedResourceType.TypeName.empty())
+        {
+            return;
+        }
         EWeakRef<EUIField> changeSize = resourceList.lock()->AddChild(EMakeRef<EUIFloatEdit>("Size"));
-        EWeakRef<EUIField> sameline = resourceList.lock()->AddChild(EMakeRef<EUISameLine>());
-        EWeakRef<EUIField> createButton = sameline.lock()->AddChild(EMakeRef<EUIButton>("Create"));
-        sameline.lock()->SetVisible(fSelectedResourceType.CanCreate);
+        if (fSelectedResourceType.CanCreate)
+        {
+            EWeakRef<EUIField> sameline = resourceList.lock()->AddChild(EMakeRef<EUISameLine>());
+            EWeakRef<EUIField> createButton = resourceList.lock()->AddChild(EMakeRef<EUIButton>("Create"));
+
+            createButton.lock()->AddEventListener<events::EButtonEvent>([this](){
+                EResource* newResource = new EResource(this->fSelectedResourceType.TypeName);
+                newResource->SetName("New " + fSelectedResourceType.TypeName);
+                shared::CreateResource(newResource);
+            });
+        }
 
         static_cast<EUIFloatEdit*>(changeSize.lock().get())->SetValue(fPreviewSize);
         EWeakRef<EUIField> resourceGrid = resourceList.lock()->AddChild(EMakeRef<EUIGrid>(fPreviewSize));
-
-        createButton.lock()->AddEventListener<events::EButtonEvent>([this](){
-            EResourceData resourceData(0, fSelectedResourceType.TypeName, "New " + fSelectedResourceType.TypeName, nullptr, 0);
-            resourceData.Name = "New " + fSelectedResourceType.TypeName;
-            resourceData.Type = fSelectedResourceType.TypeName;
-            shared::CreateResource(&resourceData);
-        });
 
         changeSize.lock()->AddEventListener<events::EFloatChangeEvent>([this, resourceGrid](events::EFloatChangeEvent event){
             if (resourceGrid.expired()) { return; }

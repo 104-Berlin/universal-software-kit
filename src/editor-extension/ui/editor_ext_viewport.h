@@ -2,12 +2,58 @@
 
 namespace Engine {
 
+    class E_EDEXAPI EUICameraControls
+    {
+    protected:
+        Renderer::RCamera* fCamera;
+    public:
+        EUICameraControls(Renderer::RCamera* camera);
+
+        virtual void OnMouseDrag(const events::EMouseDragEvent& event) {}
+        virtual void OnMouseScroll(const events::EMouseScrollEvent& event) {}
+        virtual void OnKeyDown(const events::EKeyDownEvent& event) {}
+        virtual void OnKeyUp(const events::EKeyUpEvent& event) {}
+    };
+
+    E_STORAGE_STRUCT(Basic3DCameraControlsSettings,
+        (float, MoveSpeed, 0.01f),
+        (float, RotateSpeed, 0.01f),
+        (float, ZoomSpeed, 0.1f)
+    );
+
+    class E_EDEXAPI EUIBasic3DCameraControls : public EUICameraControls
+    {
+    private:
+        Basic3DCameraControlsSettings fSettings;
+        EVec3                         fTarget;
+        double                        fDistance;
+        bool                          fPinchEnabled;
+        bool                          fDragPlaneEnabled;
+        bool                          fMoveUpDownEnabled;
+    public:
+        EUIBasic3DCameraControls(Renderer::RCamera* camera, Basic3DCameraControlsSettings initialSettings = Basic3DCameraControlsSettings());
+        virtual void OnMouseDrag(const events::EMouseDragEvent& event);
+        virtual void OnMouseScroll(const events::EMouseScrollEvent& event);
+        virtual void OnKeyDown(const events::EKeyDownEvent& event);
+        virtual void OnKeyUp(const events::EKeyUpEvent& event);
+
+    private:
+        void SetCameraToDistance();
+    };
 
     class E_EDEXAPI EUIViewport : public EUIField
     {
+    public:
+        enum class ViewType
+        {
+            DIFFUSE,
+            NORMAL,
+            DEPTH
+        };
     private:
         EVector<EViewportTool*> fRegisteredTools;
         EViewportTool*          fActiveTool;
+        ViewType                fViewType;
     public:
         EUIViewport(const Renderer::RCamera& = Renderer::RCamera(Renderer::ECameraMode::ORTHOGRAPHIC));
         virtual ~EUIViewport();
@@ -19,6 +65,8 @@ namespace Engine {
         Renderer::RRenderer3D fRenderer;
         Renderer::RCamera fCamera;
         Renderer::RScene fScene;
+
+        EUICameraControls* fCameraControls;
     public:
         Renderer::RScene& GetScene();
         const Renderer::RScene& GetScene() const;
@@ -28,6 +76,7 @@ namespace Engine {
 
         EViewportTool* AddTool(EViewportTool* newTool);
 
+        void SetViewType(ViewType type);
 
         EVec2 Project(const EVec3& point) const;
         EVec3 Unproject(const EVec3& point) const;

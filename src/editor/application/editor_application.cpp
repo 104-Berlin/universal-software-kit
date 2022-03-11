@@ -15,6 +15,7 @@ E_STORAGE_STRUCT(MyType,
     (float, Other),
     (EString, SomeString),
     (EResourceLink, ImageLink, "Image"),
+    (EResourceLink, MeshLink, "Mesh"),
     (EVector<MySubType>, Working)
 )
 
@@ -52,7 +53,7 @@ EApplication::EApplication()
     });
 
 
-    shared::ExtensionManager().AddEventListener<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
+    shared::Events().Connect<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
         for (ERef<EUIPanel> panel : fUIRegister.GetItems(event.ExtensionName))
         {
             panel->DisconnectAllEvents();
@@ -135,7 +136,7 @@ void EApplication::RegenerateMainMenuBar()
                 if (shared::ExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
                     foundDescription.ImportFunction)
                 {
-                    EResourceData* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
+                    EResource* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
                     if (data)
                     {
                         shared::CreateResource(data);
@@ -203,6 +204,7 @@ void EApplication::RegenerateMainMenuBar()
 void EApplication::Init(Graphics::GContext* context) 
 {
     fGraphicsContext = context;
+
     fMainMenu = EMakeRef<EUIMainMenuBar>();
     RegisterDefaultPanels();
     RegisterDefaultResources();
@@ -248,7 +250,36 @@ void EApplication::CleanUp()
 }
 
 void EApplication::Render() 
-{
+{        
+    return;
+    EVec2 mousePos(ImGui::GetMousePos().x, ImGui::GetMousePos().y);
+    
+
+    ImVec2 md0 = ImGui::GetMouseDragDelta(0, 0.0f);
+    EVec2 mouseDrag0(md0.x, md0.y);
+    ImGui::ResetMouseDragDelta(0);
+    if (glm::length(mouseDrag0) > 0.0f)
+    {
+        events::EMouseDragEvent dragEvent;
+        dragEvent.MouseButton = 0;
+        dragEvent.MouseDelta = mouseDrag0;
+        dragEvent.Position = mousePos;
+        //fCameraControls->OnMouseDrag(dragEvent);
+    }
+
+    float scrollX = ImGui::GetIO().MouseWheel;
+    float scrollY = ImGui::GetIO().MouseWheelH;
+
+    if (scrollX != 0.0f || scrollY != 0.0f)
+    {
+        events::EMouseScrollEvent scrollEvent;
+        scrollEvent.ScrollX = scrollX;
+        scrollEvent.ScrollY = scrollY;
+        //fCameraControls->OnMouseScroll(scrollEvent);
+    }
+
+    fGraphicsContext->EnableDepthTest(true);
+    fGraphicsContext->SetFaceCullingMode(Graphics::GCullMode::NONE);
     
 }
 
@@ -271,7 +302,7 @@ void EApplication::RenderImGui()
     fCommandLine.UpdateEventDispatcher();
     fCommandLine.Render();
 
-    ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
 
     shared::StaticSharedContext::instance().GetRegisterConnection().GetEventDispatcher().Update();
 }
@@ -317,8 +348,23 @@ void EApplication::RegisterDefaultPanels()
 void EApplication::RegisterDefaultResources() 
 {
     EResourceDescription imageDsc("Image",{"png", "jpeg", "bmp"});
-    imageDsc.ImportFunction = &ResImage::ImportImage;
+    imageDsc.ImportFunction = [](ESharedBuffer buffer) -> EResource*{
+        EResource* result = new EResource("Image");
+        result->SetBuffer(buffer);
+        result->Load<EImageResource>();
+        return result;
+    };
+
+    EResourceDescription meshDsc("Mesh",{"obj", "fbx", "dae", "3ds", "glb", "gltf"});
+    meshDsc.ImportFunction = [](ESharedBuffer buffer) -> EResource*{
+        EResource* result = new EResource("Mesh");
+        result->SetBuffer(buffer);
+        result->Load<EMeshResource>();
+        return result;
+    };
+
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", imageDsc);
+    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", meshDsc);
 
 
     // FOR TESTING PURPOSES
@@ -342,13 +388,13 @@ void EApplication::RegisterDefaultComponentRender()
                 newLink.Type = event.ResourceType;
                 newLink.ResourceId = event.ResourceID;
 
-                EStructProperty* structProp = static_cast<EStructProperty*>(EProperty::CreateFromDescription(EResourceLink::_dsc.GetId(), EResourceLink::_dsc).get());
-                if (convert::setter(structProp, newLink))
+                ERef<EStructProperty> structProp = std::dynamic_pointer_cast<EStructProperty>(EProperty::CreateFromDescription(EResourceLink::_dsc.GetId(), EResourceLink::_dsc));
+                if (convert::setter(structProp.get(), newLink))
                 {
-                    callbackFn(structProp);
+                    callbackFn(structProp.get());
                 }
-                delete structProp;
             });
+            resourceSelect->SetResourceLink(link);
             return resourceSelect;
         }
         return EMakeRef<EUIField>("ResourceLink");

@@ -13,7 +13,7 @@ namespace Engine {
         
         static ESharedBuffer WriteFullSceneBuffer(EDataBase* reg);
 
-        static EJson WriteResourceDataToJson(const EResourceData& data, bool writeData);
+        static EJson WritEResourceBaseToJson(EResource* data, bool writeData);
     };
 
 }

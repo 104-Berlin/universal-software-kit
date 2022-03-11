@@ -42,7 +42,6 @@ jobs:
     - name: build
       run: |
             cd build
-            make install -j
             make -j
     - name: Test
       run: |
@@ -69,7 +68,7 @@ jobs:
       run: |
             mkdir build
             cd build
-            cmake -DUSE_COV=TRUE ..
+            cmake -DUSE_COV=TRUE -DBUILD_ASSIMP=FALSE ..
     - name: build
       run: |
             cd build
