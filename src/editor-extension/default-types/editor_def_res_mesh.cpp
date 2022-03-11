@@ -1,6 +1,6 @@
 #include "editor_extension.h"
 
-#ifdef E_BUILD_ASSIMP
+#ifdef BUILD_ASSIMP
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
@@ -14,7 +14,7 @@ void EMeshResource::FromBuffer(Engine::ESharedBuffer buffer)
     Vertices.clear();
     Indices.clear();
 
-#ifdef E_BUILD_ASSIMP
+#ifdef BUILD_ASSIMP
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFileFromMemory(buffer.Data(), buffer.GetSizeInByte(), aiProcess_Triangulate | aiProcess_GenNormals);
 
