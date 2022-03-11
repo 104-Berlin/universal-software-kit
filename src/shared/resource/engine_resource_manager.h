@@ -2,42 +2,12 @@
 
 namespace Engine {
 
-    class EResourceBase
+    class E_API EResource 
     {
     public:
         using t_ID = u64;
     private:
-        EString fTempFilePath;
-        EString fName;
-
-        ESharedBuffer fFileBuffer;
-    public:
-        const EString ResourceType;
-
-        t_ID ID;
-    public:
-        EResourceBase(const EString& resourceType);
-        virtual ~EResourceBase() = default;
-    
-        virtual void* GetData() { return nullptr; }
-
-        virtual bool Import(const u8* buffer, const u32& buffer_size) { return false; }
-        virtual bool Export(u8** out_buffer, u32* out_buffer_size) { return false; }
-
-        const EString& GetTempFilePath() const;
-        const EString& GetName() const;
-        void SetName(const EString& name);
-
-
-        static void SaveToTempFile(const u8* data, const u32& data_size);
-        static void SaveToTempFile(ESharedBuffer buffer);
-    };
-
-
-    class E_API EResource 
-    {
-    private:
-        EResourceBase::t_ID fID;
+        t_ID fID;
         ESharedBuffer fFileBuffer;
 
         EString         fType;
@@ -48,8 +18,8 @@ namespace Engine {
     public:
         EResource(const EString& type);
 
-        void SetID(const EResourceBase::t_ID& id);
-        const EResourceBase::t_ID& GetID() const;
+        void SetID(const t_ID& id);
+        const t_ID& GetID() const;
         void SetBuffer(ESharedBuffer buffer);
         const ESharedBuffer& GetBuffer() const;
         void SetName(const EString& name);
@@ -126,7 +96,7 @@ namespace Engine {
     namespace events {
 
         E_STORAGE_STRUCT(EResourceAddedEvent,
-            (EResourceBase::t_ID, ResourceID),
+            (EResource::t_ID, ResourceID),
             (EString, Name),
             (EString, PathToFile),
             (EString, ResourceType)
@@ -137,13 +107,13 @@ namespace Engine {
     class E_API EResourceManager
     {
     private:
-        EUnorderedMap<EResourceBase::t_ID, EResource*> fLoadedResources;
+        EUnorderedMap<EResource::t_ID, EResource*> fLoadedResources;
         EEventDispatcher                                   fEventDispacher;
     public:
         EResourceManager();
         ~EResourceManager();
         
-        bool HasResource(const EResourceBase::t_ID& id) const;
+        bool HasResource(const EResource::t_ID& id) const;
         bool AddResource(EResource* data); // Delete the Resource data if function returns false!!
         bool ImportResource(const EString& name, const EResourceDescription& description, u8* rawData, size_t data_size);
         bool ImportResourceFromFile(const EString& filePath, const EResourceDescription& description);
@@ -152,11 +122,11 @@ namespace Engine {
         void Clear();
         
 
-        EResource* GetResource(const EResourceBase::t_ID& id) const;
+        EResource* GetResource(const EResource::t_ID& id) const;
         EVector<EResource*> GetAllResource() const;
         EVector<EResource*> GetAllResource(const EString& type) const;
 
-        EResourceBase::t_ID CreateNewId();
+        EResource::t_ID CreateNewId();
 
         EEventDispatcher& GetEventDispatcher();
         const EEventDispatcher& GetEventDispatcher() const;

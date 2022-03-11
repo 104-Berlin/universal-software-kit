@@ -267,7 +267,7 @@ bool EDeserializer::ReadResourceFromJson(const EJson& json, EResource** resData,
             result->SetName(json["Name"].get<EString>());
         }
         
-        result->SetID(json["ID"].get<EResourceBase::t_ID>());
+        result->SetID(json["ID"].get<EResource::t_ID>());
         
         if (withData && json.find("Data") != json.end() && json["Data"].is_string())
         {
@@ -315,8 +315,8 @@ bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, EDataBase* sav
         EString name = EString((char*)pointer);
         pointer += name.length() + 1;
 
-        EResourceBase::t_ID id = *(EResourceBase::t_ID*)pointer;
-        pointer += sizeof(EResourceBase::t_ID);
+        EResource::t_ID id = *(EResource::t_ID*)pointer;
+        pointer += sizeof(EResource::t_ID);
 
         size_t dataSize = entry.second.GetSizeInByte() - (pointer - entry.second.Data<u8>());
         u8* resourceData = new u8[dataSize];

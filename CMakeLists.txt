@@ -64,9 +64,6 @@ set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "disable assimp tools")
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "disable assimp tests")
 set(ASSIMP_INSTALL OFF CACHE BOOL "disable assimp install")
 add_subdirectory(deps/assimp)
-
-add_compile_definitions(E_BUILD_ASSIMP)
-
 endif()
 
 #########################

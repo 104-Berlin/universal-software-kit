@@ -165,7 +165,7 @@ EVector<ERef<EProperty>> shared::GetAllComponents(EDataBase::Entity entity)
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllValues(entity);
 }
 
-ERef<EResource> shared::GetResource(EResourceBase::t_ID id) 
+ERef<EResource> shared::GetResource(EResource::t_ID id) 
 {
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetResourceData(id);
 }

@@ -122,7 +122,7 @@ namespace Engine {
         }
 
        E_INTER_API EVector<ERef<EProperty>> GetAllComponents(EDataBase::Entity entity);
-       E_INTER_API ERef<EResource> GetResource(EResourceBase::t_ID id);
+       E_INTER_API ERef<EResource> GetResource(EResource::t_ID id);
        E_INTER_API EVector<ERef<EResource>> GetLoadedResource(const EString& resourceType = ""); // This wont return the data of the resource. Fetch them manuel
        E_INTER_API ESharedBuffer GetRegisterAsBuffer();
     }

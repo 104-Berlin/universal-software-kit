@@ -177,7 +177,7 @@ EVector<ERef<EProperty>> ERegisterConnection::Send_GetAllValues(EDataBase::Entit
     return result;
 }
 
-ERef<EResource> ERegisterConnection::Send_GetResourceData(EResourceBase::t_ID resourceId) 
+ERef<EResource> ERegisterConnection::Send_GetResourceData(EResource::t_ID resourceId) 
 {
     EJson req = EJson::object();
     req["ID"] = resourceId;

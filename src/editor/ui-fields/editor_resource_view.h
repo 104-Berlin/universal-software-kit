@@ -10,7 +10,7 @@ namespace Editor {
         };
         struct Resource
         {
-            Engine::EResourceBase::t_ID ID;
+            Engine::EResource::t_ID ID;
             EString                     Name;
             EString                     Path;
         };

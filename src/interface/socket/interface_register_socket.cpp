@@ -457,7 +457,7 @@ EJson ERegisterSocket::Pk_HandleGetResource(const ERegisterPacket& packet)
 
     if (packet.Body["ID"].is_number_integer())
     {
-        EResourceBase::t_ID id = packet.Body["ID"].get<EResourceBase::t_ID>();
+        EResource::t_ID id = packet.Body["ID"].get<EResource::t_ID>();
         EResource* foundData = fLoadedRegister->GetResourceManager().GetResource(id);
         if (foundData)
         {

@@ -3,52 +3,18 @@
 
 using namespace Engine;
 
-
-EResourceBase::EResourceBase(const EString& resourceType)
-    : ResourceType(resourceType)
-{
-    fName = "Unknown";
-}
-
-void EResourceBase::SaveToTempFile(const u8* data, const u32& data_size)
-{
-    ESharedBuffer buffer;
-    buffer.InitWith<u8>(data, data_size);
-}
-
-void EResourceBase::SaveToTempFile(ESharedBuffer buffer)
-{
-    E_ERROR("NOT IMPLEMENTED");
-}
-
-const EString& EResourceBase::GetTempFilePath() const
-{
-    return fTempFilePath;
-}
-
-const EString& EResourceBase::GetName() const
-{
-    return fName;
-}
-
-void EResourceBase::SetName(const EString& name)
-{
-    fName = name;
-}
-
-
 EResource::EResource(const EString& type)
     : fID(0), fFileBuffer(), fType(type), fCPtr(nullptr), fPtrTypeHash(0)
 {
 
 }
 
-void EResource::SetID(const EResourceBase::t_ID& id)
+void EResource::SetID(const EResource::t_ID& id)
 {
     fID = id;
 }
 
-const EResourceBase::t_ID& EResource::GetID() const
+const EResource::t_ID& EResource::GetID() const
 {
     return fID;
 }
@@ -98,7 +64,7 @@ EResourceManager::~EResourceManager()
     Clear();
 }
 
-bool EResourceManager::HasResource(const EResourceBase::t_ID& id) const
+bool EResourceManager::HasResource(const EResource::t_ID& id) const
 {
     return fLoadedResources.find(id) != fLoadedResources.end();
 }
@@ -178,7 +144,7 @@ void EResourceManager::Clear()
     fLoadedResources.clear();
 }
 
-EResource* EResourceManager::GetResource(const EResourceBase::t_ID& path) const
+EResource* EResourceManager::GetResource(const EResource::t_ID& path) const
 {
     if (HasResource(path))
     {
@@ -212,9 +178,9 @@ EVector<EResource*> EResourceManager::GetAllResource(const EString& type) const
     return result;
 }
 
-EResourceBase::t_ID EResourceManager::CreateNewId() 
+EResource::t_ID EResourceManager::CreateNewId() 
 {
-    EResourceBase::t_ID result = 1;
+    EResource::t_ID result = 1;
     while (HasResource(result) && result != 0)
     {
         result *= 3;

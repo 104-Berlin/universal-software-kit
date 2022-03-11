@@ -54,7 +54,7 @@ namespace Engine {
         EVector<EDataBase::Entity> Send_GetAllEntites();
         ERef<EProperty> Send_GetValue(EDataBase::Entity entity, const EString& valueIdent);
         EVector<ERef<EProperty>> Send_GetAllValues(EDataBase::Entity entity);
-        ERef<EResource> Send_GetResourceData(EResourceBase::t_ID resourceId);
+        ERef<EResource> Send_GetResourceData(EResource::t_ID resourceId);
         EVector<ERef<EResource>> Send_GetAllResources(const EString& resourceType = "");
         ESharedBuffer Send_GetRegisterBuffer();
 
