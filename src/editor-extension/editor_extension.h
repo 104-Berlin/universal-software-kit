@@ -46,6 +46,7 @@ typedef glm::quat EQuat;
 #include "editor_vector_dsc.h"
 
 #include "ui/editor_ext_ui.h"
-#include "ui/editor_ext_viewport_tools.h"
-#include "ui/editor_ext_viewport.h"
+#include "ui/viewport/editor_ext_camera_cotrols.h"
+#include "ui/viewport/editor_ext_viewport_tools.h"
+#include "ui/viewport/editor_ext_viewport.h"
 #include "ui/editor_ui_register.h"
