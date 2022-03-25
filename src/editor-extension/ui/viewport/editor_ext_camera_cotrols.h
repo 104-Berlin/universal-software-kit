@@ -44,7 +44,7 @@ namespace Engine {
     E_STORAGE_STRUCT(Basic2DCameraControlsSettings,
         (float, MoveSpeed, 0.01f),
         (float, RotateSpeed, 0.01f),
-        (float, ZoomSpeed, 0.1f)
+        (float, ZoomSpeed, 0.05f)
     )
 
     class E_EDEXAPI EUIBasic2DCameraControls : public EUICameraControls

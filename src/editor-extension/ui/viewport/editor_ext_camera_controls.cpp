@@ -134,8 +134,8 @@ void EUIBasic2DCameraControls::OnMouseDrag(const events::EMouseDragEvent& event)
     {
         if (fDragEnabled)
         {
-            fCamera->MoveRight(-event.MouseDelta.x * fSettings.MoveSpeed);
-            fCamera->MoveUp(event.MouseDelta.y * fSettings.MoveSpeed);
+            fCamera->MoveRight((-event.MouseDelta.x * fDistance) * fSettings.MoveSpeed);
+            fCamera->MoveUp((event.MouseDelta.y * fDistance) * fSettings.MoveSpeed);
         }
     }
 }
@@ -143,7 +143,10 @@ void EUIBasic2DCameraControls::OnMouseDrag(const events::EMouseDragEvent& event)
 void EUIBasic2DCameraControls::OnMouseScroll(const events::EMouseScrollEvent& event)
 {
     fDistance -= event.ScrollX * fSettings.ZoomSpeed;
-
+    if (fDistance < 0.0f)
+    {
+        fDistance = 0.0f;
+    }
     EVec3 cameraPos = fCamera->GetPosition();
     fCamera->SetPosition({cameraPos.x, cameraPos.y, -fDistance});
     fCamera->SetZoom(fDistance);
