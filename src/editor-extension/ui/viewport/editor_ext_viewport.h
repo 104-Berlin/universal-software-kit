@@ -2,45 +2,7 @@
 
 namespace Engine {
 
-    class E_EDEXAPI EUICameraControls
-    {
-    protected:
-        Renderer::RCamera* fCamera;
-    public:
-        EUICameraControls(Renderer::RCamera* camera);
-
-        virtual void OnMouseDrag(const events::EMouseDragEvent& event) {}
-        virtual void OnMouseScroll(const events::EMouseScrollEvent& event) {}
-        virtual void OnKeyDown(const events::EKeyDownEvent& event) {}
-        virtual void OnKeyUp(const events::EKeyUpEvent& event) {}
-    };
-
-    E_STORAGE_STRUCT(Basic3DCameraControlsSettings,
-        (float, MoveSpeed, 0.01f),
-        (float, RotateSpeed, 0.01f),
-        (float, ZoomSpeed, 0.1f)
-    );
-
-    class E_EDEXAPI EUIBasic3DCameraControls : public EUICameraControls
-    {
-    private:
-        Basic3DCameraControlsSettings fSettings;
-        EVec3                         fTarget;
-        double                        fDistance;
-        bool                          fPinchEnabled;
-        bool                          fDragPlaneEnabled;
-        bool                          fMoveUpDownEnabled;
-    public:
-        EUIBasic3DCameraControls(Renderer::RCamera* camera, Basic3DCameraControlsSettings initialSettings = Basic3DCameraControlsSettings());
-        virtual void OnMouseDrag(const events::EMouseDragEvent& event);
-        virtual void OnMouseScroll(const events::EMouseScrollEvent& event);
-        virtual void OnKeyDown(const events::EKeyDownEvent& event);
-        virtual void OnKeyUp(const events::EKeyUpEvent& event);
-
-    private:
-        void SetCameraToDistance();
-    };
-
+    
     class E_EDEXAPI EUIViewport : public EUIField
     {
     public:
@@ -84,6 +46,26 @@ namespace Engine {
         EVector<EViewportTool*> GetRegisteredTools();
         EViewportTool* GetActiveTool();
         void SetActiveTool(const EString& toolName);
+
+        template <typename T>
+        void SetCameraControls()
+        {
+            if (fCameraControls)
+            {
+                delete fCameraControls;
+            }
+            fCameraControls = new T(&fCamera);
+        }
+
+        template <typename T, typename U>
+        void SetCameraControls(const U& settings)
+        {
+            if (fCameraControls)
+            {
+                delete fCameraControls;
+            }
+            fCameraControls = new T(&fCamera, settings);
+        }
     };
 
     class E_EDEXAPI EUIViewportToolbar : public EUIField

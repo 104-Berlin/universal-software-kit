@@ -123,6 +123,7 @@ APP_ENTRY
 {
     ERef<EUIPanel> someDrawingPanel = EMakeRef<EUIPanel>("Drawing Canvas");
     drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()).lock());
+    drawingViewport.lock()->SetCameraControls<EUIBasic2DCameraControls>();
     someDrawingPanel->SetMenuBar(EMakeRef<EUIViewportToolbar>(drawingViewport));
     bezierEdit = static_cast<EBezierEditTool*>(drawingViewport.lock()->AddTool(new EBezierEditTool()));
     lineEdit = static_cast<ELineEditTool*>(drawingViewport.lock()->AddTool(new ELineEditTool()));
