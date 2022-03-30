@@ -2,6 +2,10 @@
 
 namespace Editor {
 
+    E_STORAGE_STRUCT(ApplicationState,
+        (EVector<EString>, AutoLoadExtensions)
+    )
+
     class EApplication
     {
     private:
@@ -22,6 +26,8 @@ namespace Editor {
         void RegenerateMainMenuBar();
 
         Engine::EUIValueRegister& GetUIValueRegister() { return fUIValueRegister; }
+
+        bool ExtensionDefaultLoad() const;
     private:
         void Init(Graphics::GContext* context);
         void CleanUp();
@@ -32,6 +38,8 @@ namespace Editor {
         void RegisterDefaultResources();
         void RegisterDefaultComponentRender();
 
+        void SaveApplicationState() const;
+        void LoadApplicationState();
     public:
         static EApplication* gApp();
     };

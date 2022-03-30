@@ -15,6 +15,9 @@ namespace Engine {
 
         const EString& GetName() const;
         const EString& GetFilePath() const;
+
+        void SetAutoLoad(bool autoLoad);
+        bool GetAutoLoad() const;
     private:
         EString fExtensionName;
         EString fFilePath;
@@ -23,6 +26,7 @@ namespace Engine {
 #else
         void* fHandle;
 #endif
+        bool fAutoLoad;
     };
 
 namespace events {
@@ -41,6 +45,7 @@ namespace events {
     {
     private:
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
+        EHashSet<EString>                   fAutoLoadExtensions;
         EComponentRegister                  fTypeRegister;
         EResourceRegister                   fResourceRegister;
         EEventDispatcher                    fEventDispatcher;
@@ -75,6 +80,23 @@ namespace events {
          * @return IsLoaded
          */
         bool IsLoaded(const EString& extensionName);
+
+
+        /**
+         * @brief Set the Extension Auto Load
+         * 
+         * @param extensionName The extension
+         * @param autoLoad Wether the extension should be auto loaded
+         */
+        void SetExtensionAutoLoad(const EString& extensionName, bool autoLoad);
+
+        /**
+         * @brief Check if Extension should load on startup
+         * 
+         * @param extensionName 
+         * @return IsAutoLoaded
+         */
+        bool IsAutoLoad(const EString& extensionName);
 
         /**
          * Gets a value description by name

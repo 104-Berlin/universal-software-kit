@@ -43,6 +43,12 @@ bool EExtensionView::OnRender()
                     shared::ExtensionManager().UnloadExtension(ext);
                 }
             }
+            ImGui::SameLine();
+            bool isAutoLoad = shared::ExtensionManager().IsAutoLoad(name);
+            if (ImGui::Checkbox("Auto Load", &isAutoLoad))
+            {
+                shared::ExtensionManager().SetExtensionAutoLoad(name, isAutoLoad);
+            }
         }
         // Refetch the loaded extensions. If the reload was clicked one of the pointers is invalid. Refetching them solves the problem!
     }

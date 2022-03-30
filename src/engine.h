@@ -7,6 +7,7 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <math.h>
 #include <chrono>
 #include <stdarg.h>
@@ -77,6 +78,12 @@ using EPair = std::pair<A, B>;
 
 template <typename K, typename V, class Hash = std::hash<K>, class Pred = std::equal_to<K>, class Alloc = std::allocator<std::pair<const K, V>>>
 using EUnorderedMap = std::unordered_map<K, V, Hash, Pred, Alloc>;
+
+template <typename T>
+using ESet = std::set<T>;
+
+template <typename T>
+using EHashSet = std::unordered_set<T>;
 
 template <typename T>
 using EQueue = std::queue<T>;

@@ -74,6 +74,15 @@ const EString& EExtension::GetFilePath() const
     return fFilePath;
 }
 
+void EExtension::SetAutoLoad(bool autoLoad)
+{
+    fAutoLoad = autoLoad;
+}
+
+bool EExtension::GetAutoLoad() const
+{
+    return fAutoLoad;
+}
 
 EExtensionManager::EExtensionManager()
 {
@@ -130,6 +139,19 @@ bool EExtensionManager::IsLoaded(const EString& extensionName)
 {
     return fLoadedExtensions.find(extensionName) != fLoadedExtensions.end();
 }
+
+void EExtensionManager::SetExtensionAutoLoad(const EString& extensionName, bool autoLoad)
+{
+    if (!IsLoaded(extensionName)) { E_WARN("Could not find extension \"" + extensionName + "\""); return; }
+    fLoadedExtensions[extensionName]->SetAutoLoad(autoLoad);
+}
+
+bool EExtensionManager::IsAutoLoad(const EString& extensionName)
+{
+    if (!IsLoaded(extensionName)) { E_WARN("Could not find extension \"" + extensionName + "\""); return false; }
+    return fLoadedExtensions[extensionName]->GetAutoLoad();
+}
+
 
 EValueDescription EExtensionManager::GetValueDescriptionById(const EString& extensionName, const EString& typeId) 
 {
