@@ -412,10 +412,25 @@ void EApplication::RegisterDefaultComponentRender()
     }});
 }
 
+ApplicationState EApplication::CreateApplicationState() const
+{
+    ApplicationState result;
+
+    for (EExtension* ext : shared::ExtensionManager().GetLoadedExtensions())
+    {
+        if (ext->GetAutoLoad())
+        {
+            result.AutoLoadExtensions.push_back(ext->GetFilePath());
+        }
+    }
+
+    return result;
+}
+
 void EApplication::SaveApplicationState() const
 {
     ERef<EProperty> appStateProp = EProperty::CreateFromDescription(ApplicationState::_dsc.GetId(), ApplicationState::_dsc);
-    convert::setter(appStateProp.get(), fApplicationState);
+    convert::setter(appStateProp.get(), CreateApplicationState());
 
     EString appStateJsonString = ESerializer::WritePropertyToJs(appStateProp.get(), false).dump();
 
@@ -445,7 +460,7 @@ void EApplication::LoadApplicationState()
 
     for (const EString& autoLoadExtension : state.AutoLoadExtensions)
     {
-        shared::ExtensionManager().LoadExtension(autoLoadExtension);
+        shared::ExtensionManager().LoadExtension(autoLoadExtension, true);
     }
 }
 

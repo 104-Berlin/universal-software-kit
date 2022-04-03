@@ -36,7 +36,7 @@ bool EExtensionView::OnRender()
             {
                 if (isLoaded)
                 {
-                    shared::ExtensionManager().LoadExtension(fullPath);
+                    shared::ExtensionManager().LoadExtension(fullPath, false);
                 }
                 else
                 {
@@ -57,7 +57,7 @@ bool EExtensionView::OnRender()
         EVector<EString> loadingPaths = Graphics::Wrapper::OpenFileDialog("Load Extension", {"uex"});
         for (const EString& extPath : loadingPaths)
         {
-            shared::ExtensionManager().LoadExtension(extPath);
+            shared::ExtensionManager().LoadExtension(extPath, false);
         }
     }
     return true;

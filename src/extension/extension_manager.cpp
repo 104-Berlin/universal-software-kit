@@ -92,7 +92,7 @@ EExtensionManager::~EExtensionManager()
 {
 }
 
-bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
+bool EExtensionManager::LoadExtension(const EString& pathToExtensio, bool autoLoad)
 {
     EFile file(pathToExtensio);
     if (!file.Exist()) { E_ERROR("Could not find Plugin File \"" + file.GetFullPath() + "\""); return false; }
@@ -104,6 +104,7 @@ bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
     }
 
     EExtension* newExtension = new EExtension(file.GetFullPath());
+    newExtension->SetAutoLoad(autoLoad);
     newExtension->InitImGui();
     // Run load function
     
@@ -219,7 +220,7 @@ void EExtensionManager::Reload()
 
     for (const EString& extensionPath : extensionToLoad)
     {
-        LoadExtension(extensionPath);
+        LoadExtension(extensionPath, false);
     }
 }
 
@@ -242,7 +243,7 @@ void EExtensionManager::ReloadExtension(EExtension* extension)
     UnloadExtension(extension);
     // TODO: We have to find all events that got queued be the extension.
     // If we call these functions they will be deleted i guess
-    LoadExtension(extensionPath);
+    LoadExtension(extensionPath, false);
 }
 
 void EExtensionManager::UnloadExtension(EExtension* extension) 

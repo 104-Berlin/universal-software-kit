@@ -38,6 +38,8 @@ namespace Editor {
         void RegisterDefaultResources();
         void RegisterDefaultComponentRender();
 
+        ApplicationState CreateApplicationState() const;
+
         void SaveApplicationState() const;
         void LoadApplicationState();
     public:
