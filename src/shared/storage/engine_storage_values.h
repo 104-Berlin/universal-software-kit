@@ -317,8 +317,8 @@ namespace Engine {
                 using ArrayType = typename T::value_type;
 
                 auto& insert_element = [&outVector, this](auto property)mutable{
-                    T::value_type value;
-                    if (property->GetValue<T::value_type>(value))
+                    typename T::value_type value;
+                    if (property->GetValue<typename T::value_type>(value))
                     {
                         outVector.push_back(value);
                         return true;
@@ -353,7 +353,7 @@ namespace Engine {
                         }
                         case EValueType::PRIMITIVE:
                         {
-                            if (!insert_element(std::static_pointer_cast<EValueProperty<T::value_type>>(prop)))
+                            if (!insert_element(std::static_pointer_cast<EValueProperty<typename T::value_type>>(prop)))
                             {
                                 return false;
                             } 
