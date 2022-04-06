@@ -318,7 +318,7 @@ namespace Engine {
 
                 auto& insert_element = [&outVector, this](auto property)mutable{
                     typename T::value_type value;
-                    if (property->GetValue<typename T::value_type>(value))
+                    if (property->template GetValue<typename T::value_type>(value))
                     {
                         outVector.push_back(value);
                         return true;
