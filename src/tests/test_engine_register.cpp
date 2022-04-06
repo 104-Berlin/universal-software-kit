@@ -254,6 +254,10 @@ TEST(EDataBase, RegisterComponentWithCRepresenation)
 		myTestComponent.MyAny.SetValue(someAnyValue);
 		myTestComponent.MyDouble = 10.4;
 		myTestComponent.MyString = "Hello World";
+		myTestComponent.VectorArray = {
+			{1, 2, 3},
+			{4, 5, 6}
+		};
 
 		convert::setter(storage.lock().get(), myTestComponent);
 	}
@@ -270,6 +274,13 @@ TEST(EDataBase, RegisterComponentWithCRepresenation)
 			EXPECT_EQ(v.Y, 2);
 			EXPECT_EQ(v.Z, 3);
 		}
+		EXPECT_EQ(myTestComponent2.VectorArray.size(), 2);
+		EXPECT_EQ(myTestComponent2.VectorArray[0].X, 1);
+		EXPECT_EQ(myTestComponent2.VectorArray[0].Y, 2);
+		EXPECT_EQ(myTestComponent2.VectorArray[0].Z, 3);
+		EXPECT_EQ(myTestComponent2.VectorArray[1].X, 4);
+		EXPECT_EQ(myTestComponent2.VectorArray[1].Y, 5);
+		EXPECT_EQ(myTestComponent2.VectorArray[1].Z, 6);
 	}
 
 	

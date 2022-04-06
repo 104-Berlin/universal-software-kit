@@ -98,7 +98,6 @@ void EApplication::Start(const EString& defaultRegisterPath)
     }
     E_INFO(EFile::GetAppDataPath());
     runningInstance = this;
-    LoadApplicationState();
     fLoadOnStartRegister = defaultRegisterPath;
     Wrapper::RunApplicationLoop(std::bind(&EApplication::Init, this, std::placeholders::_1), std::bind(&EApplication::Render, this), std::bind(&EApplication::RenderImGui, this), std::bind(&EApplication::CleanUp, this), &Wrapper::SetImGuiContext);
 }
@@ -243,6 +242,7 @@ void EApplication::Init(Graphics::GContext* context)
 
 
 
+    LoadApplicationState();
 
     if (!fLoadOnStartRegister.empty())
     {
