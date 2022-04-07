@@ -212,6 +212,14 @@ namespace Engine {
                 CreateEntity();
             }));
 
+            fRegisterEventDispatcher.Connect<EntityChangeEvent>([this](EntityChangeEvent event){
+                if (event.Type == EntityChangeType::COMPONENT_ADDED) {
+                    if (event.Data.Value()) {
+                        EVector<EComponentDependsOn> deps = fExtensionManager.GetComponentDependsOnRegister().GetAllItems();
+                    }
+                }
+            });
+
             
 
             ECFuncTask* createNewComponentTask = new ECFuncTask("CreateComponent", [this](EWeakRef<EProperty> property){

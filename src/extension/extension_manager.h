@@ -47,6 +47,7 @@ namespace events {
         EUnorderedMap<EString, EExtension*> fLoadedExtensions;
         EHashSet<EString>                   fAutoLoadExtensions;
         EComponentRegister                  fTypeRegister;
+        EComponentDependsOnRegister         fDependsOnRegister;
         EResourceRegister                   fResourceRegister;
         EEventDispatcher                    fEventDispatcher;
         ETaskRegister                       fTaskRegister;
@@ -106,6 +107,9 @@ namespace events {
 
         EComponentRegister& GetComponentRegister();
         const EComponentRegister& GetComponentRegister() const;
+
+        EComponentDependsOnRegister& GetComponentDependsOnRegister();
+        const EComponentDependsOnRegister& GetComponentDependsOnRegister() const;
 
         EResourceRegister& GetResourceRegister();
         const EResourceRegister& GetResourceRegister() const;
