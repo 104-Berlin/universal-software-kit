@@ -182,15 +182,16 @@ namespace Engine {
     };
 
 
-    using EComponentDependsOn = EUnorderedMap<EValueDescription::t_ID, EValueDescription>;
+    using EComponentDependsOn = EUnorderedMap<EValueDescription::t_ID, EVector<EValueDescription>>;
 
     class EComponentDependsOnRegister : public EExtensionRegister<EComponentDependsOn>
     {
         template <typename ...T>
-        void RegisterTypes(const EString& extensionName)
+        void RegisterTypes(const EString& extensionName, const EValueDescription& entry)
         {
             EComponentDependsOn dependsOn;
-            (dependsOn.push_back(getdsc::GetDescription<T>()), ...);
+            EVector<EValueDescription>& dependsOnVector = dependsOn[entry.GetId()];
+            (dependsOnVector.push_back(getdsc::GetDescription<T>()), ...);
             RegisterItem(extensionName, dependsOn);
         }
     };

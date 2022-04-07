@@ -316,7 +316,7 @@ namespace Engine {
             {
                 using ArrayType = typename T::value_type;
 
-                auto& insert_element = [&outVector, this](auto property)mutable{
+                auto insert_element = [&outVector, this](auto property)mutable{
                     typename T::value_type value;
                     if (property->template GetValue<typename T::value_type>(value))
                     {
@@ -324,7 +324,7 @@ namespace Engine {
                         return true;
                     }                  
                     E_ERROR("Getting array property as vector has some type conflicts!");
-                    E_ERROR("Trying to get array of " + fDescription.GetId() + " as Vector<" + typeid(T::value_type).name() + ">");
+                    E_ERROR("Trying to get array of " + fDescription.GetId() + " as Vector<" + typeid(typename T::value_type).name() + ">");
 
                     return false;
                 };

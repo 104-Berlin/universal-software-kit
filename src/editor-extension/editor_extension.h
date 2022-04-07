@@ -39,12 +39,13 @@ typedef glm::mat4 EMat4;
 
 typedef glm::quat EQuat;
 
+#include "editor_vector_dsc.h"
+
 #include "default-types/editor_def_res_image.h"
 #include "default-types/editor_def_res_mesh.h"
 #include "default-types/editor_def_transform.h"
 
 
-#include "editor_vector_dsc.h"
 
 #include "ui/editor_ext_ui.h"
 #include "ui/viewport/editor_ext_camera_cotrols.h"
