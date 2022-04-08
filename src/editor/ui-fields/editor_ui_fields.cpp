@@ -36,12 +36,18 @@ bool EExtensionView::OnRender()
             {
                 if (isLoaded)
                 {
-                    shared::ExtensionManager().LoadExtension(fullPath);
+                    shared::ExtensionManager().LoadExtension(fullPath, false);
                 }
                 else
                 {
                     shared::ExtensionManager().UnloadExtension(ext);
                 }
+            }
+            ImGui::SameLine();
+            bool isAutoLoad = shared::ExtensionManager().IsAutoLoad(name);
+            if (ImGui::Checkbox("Auto Load", &isAutoLoad))
+            {
+                shared::ExtensionManager().SetExtensionAutoLoad(name, isAutoLoad);
             }
         }
         // Refetch the loaded extensions. If the reload was clicked one of the pointers is invalid. Refetching them solves the problem!
@@ -51,7 +57,7 @@ bool EExtensionView::OnRender()
         EVector<EString> loadingPaths = Graphics::Wrapper::OpenFileDialog("Load Extension", {"uex"});
         for (const EString& extPath : loadingPaths)
         {
-            shared::ExtensionManager().LoadExtension(extPath);
+            shared::ExtensionManager().LoadExtension(extPath, false);
         }
     }
     return true;

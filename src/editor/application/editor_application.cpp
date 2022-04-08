@@ -34,6 +34,12 @@ static EApplication* runningInstance = nullptr;
 EApplication::EApplication() 
     : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
 {
+    EFolder folder(EFile::GetAppDataPath());
+    if (!folder.Exist())
+    {
+        folder.Create();
+    }
+
     shared::ExtensionManager().AddEventListener<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent event) {
         EExtension* extension = shared::ExtensionManager().GetExtension(event.Extension);
         auto entry = (void(*)(const char*, Engine::EAppInit))extension->GetFunction("app_entry");
@@ -71,12 +77,15 @@ EApplication::EApplication()
     fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
         this->RegenerateMainMenuBar();
     });
+
+    // Temp
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<MyType>("Core");
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<EnumTest>("Core");
 }
 
 EApplication::~EApplication() 
 {
+    SaveApplicationState();
     runningInstance = nullptr;
 }
 
@@ -87,6 +96,7 @@ void EApplication::Start(const EString& defaultRegisterPath)
         E_ERROR("Application already started");
         return;
     }
+    E_INFO(EFile::GetAppDataPath());
     runningInstance = this;
     fLoadOnStartRegister = defaultRegisterPath;
     Wrapper::RunApplicationLoop(std::bind(&EApplication::Init, this, std::placeholders::_1), std::bind(&EApplication::Render, this), std::bind(&EApplication::RenderImGui, this), std::bind(&EApplication::CleanUp, this), &Wrapper::SetImGuiContext);
@@ -232,6 +242,7 @@ void EApplication::Init(Graphics::GContext* context)
 
 
 
+    LoadApplicationState();
 
     if (!fLoadOnStartRegister.empty())
     {
@@ -399,6 +410,58 @@ void EApplication::RegisterDefaultComponentRender()
         }
         return EMakeRef<EUIField>("ResourceLink");
     }});
+}
+
+ApplicationState EApplication::CreateApplicationState() const
+{
+    ApplicationState result;
+
+    for (EExtension* ext : shared::ExtensionManager().GetLoadedExtensions())
+    {
+        if (ext->GetAutoLoad())
+        {
+            result.AutoLoadExtensions.push_back(ext->GetFilePath());
+        }
+    }
+
+    return result;
+}
+
+void EApplication::SaveApplicationState() const
+{
+    ERef<EProperty> appStateProp = EProperty::CreateFromDescription(ApplicationState::_dsc.GetId(), ApplicationState::_dsc);
+    convert::setter(appStateProp.get(), CreateApplicationState());
+
+    EString appStateJsonString = ESerializer::WritePropertyToJs(appStateProp.get(), false).dump();
+
+    EFile stateFile(Path::Join(EFile::GetAppDataPath(), "application_state.uas"));
+    stateFile.SetFileAsString(appStateJsonString);
+    E_INFO("Saving application state to: " + stateFile.GetFullPath());
+}
+
+void EApplication::LoadApplicationState()
+{
+    EFile stateFile(Path::Join(EFile::GetAppDataPath(), "application_state.uas"));
+    if (!stateFile.Exist())
+    {
+        E_WARN("Application state file not found");
+        return;
+    }
+
+    EString stateString = stateFile.GetFileAsString();
+    EJson appStateJson = EJson::parse(stateString);
+
+    ERef<EProperty> appStateProp = EProperty::CreateFromDescription(ApplicationState::_dsc.GetId(), ApplicationState::_dsc);
+    EDeserializer::ReadPropertyFromJson(appStateJson, appStateProp.get());
+
+
+    ApplicationState state;
+    convert::getter(appStateProp.get(), &state);
+
+    for (const EString& autoLoadExtension : state.AutoLoadExtensions)
+    {
+        shared::ExtensionManager().LoadExtension(autoLoadExtension, true);
+    }
 }
 
 EApplication* EApplication::gApp() 

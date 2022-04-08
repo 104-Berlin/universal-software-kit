@@ -126,6 +126,17 @@ namespace Engine {
             return fValue;
         }
 
+        template <typename T>
+        bool GetValue(T& outValue) const
+        {
+            if (typeid(T) != typeid(ValueType))
+            {
+                return false;
+            }
+            outValue = (T)fValue;
+            return true;
+        }
+
     protected:
         virtual ERef<EProperty> OnClone() const override
         {
@@ -295,67 +306,70 @@ namespace Engine {
         void Clear();
 
         template <typename T>
-        auto GetValue(EVector<T>& outVector) const
-        -> std::enable_if_t<is_vector<T>::value, bool>
+        bool GetValue(T& outVector) const
         {
-            auto& insert_element = [&outVector, this](auto property){
-                T value;
-                if (property->template GetValue<T>(value))
-                {
-                    outVector.push_back(value);
-                    return true;
-                }                  
-                E_ERROR("Getting array property as vector has some type conflicts!");
-                E_ERROR("Trying to get array of " + fDescription.GetId() + " as Vector<" + typeid(T).name() + ">");
-
-                return false;
-            };
-
-            for (ERef<EProperty> prop : fElements)
+            if constexpr (!is_vector<T>::value)
             {
-                switch (fDescription.GetType())
+                return false;
+            }
+            else
+            {
+                using ArrayType = typename T::value_type;
+
+                auto insert_element = [&outVector, this](auto property)mutable{
+                    typename T::value_type value;
+                    if (property->template GetValue<typename T::value_type>(value))
+                    {
+                        outVector.push_back(value);
+                        return true;
+                    }                  
+                    E_ERROR("Getting array property as vector has some type conflicts!");
+                    E_ERROR("Trying to get array of " + fDescription.GetId() + " as Vector<" + typeid(typename T::value_type).name() + ">");
+
+                    return false;
+                };
+
+                EValueDescription dsc = fDescription.GetAsPrimitive();
+                for (ERef<EProperty> prop : fElements)
                 {
-                    case EValueType::ANY:
-                    case EValueType::STRUCT: 
+                    switch (dsc.GetType())
                     {
-                        if (!insert_element(std::static_pointer_cast<EStructProperty>(prop)))
+                        case EValueType::ANY:
+                        case EValueType::STRUCT: 
                         {
-                            return false;
+                            if (!insert_element(std::static_pointer_cast<EStructProperty>(prop)))
+                            {
+                                return false;
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    case EValueType::ARRAY:
-                    {
-                        if (!insert_element(std::static_pointer_cast<EArrayProperty>(prop)))
+                        case EValueType::ARRAY:
                         {
-                            return false;
+                            if (!insert_element(std::static_pointer_cast<EArrayProperty>(prop)))
+                            {
+                                return false;
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    case EValueType::PRIMITIVE:
-                    {
-                        if (!insert_element(std::static_pointer_cast<EValueProperty<T>>(prop)))
+                        case EValueType::PRIMITIVE:
                         {
+                            if (!insert_element(std::static_pointer_cast<EValueProperty<typename T::value_type>>(prop)))
+                            {
+                                return false;
+                            } 
+                            break;
+                        } 
+                        case EValueType::ENUM:
+                        {
+                            E_WARN("Array of enums is not supported. Use the enum inside an struct please!");
                             return false;
+                            break;
                         }
-                        break;
-                    } 
-                    case EValueType::ENUM:
-                    {
-                        E_WARN("Array of enums is not supported. Use the enum inside an struct please!");
-                        return false;
-                        break;
+                        case EValueType::UNKNOWN: return false;
                     }
-                    case EValueType::UNKNOWN: return false;
                 }
             }
             return true;
-        }
-
-        template <typename T>
-        bool GetValue(T& outVector) const
-        {
-            return false;
         }
 
         template <typename T>

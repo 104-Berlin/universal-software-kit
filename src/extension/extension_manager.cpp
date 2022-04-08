@@ -74,6 +74,15 @@ const EString& EExtension::GetFilePath() const
     return fFilePath;
 }
 
+void EExtension::SetAutoLoad(bool autoLoad)
+{
+    fAutoLoad = autoLoad;
+}
+
+bool EExtension::GetAutoLoad() const
+{
+    return fAutoLoad;
+}
 
 EExtensionManager::EExtensionManager()
 {
@@ -83,7 +92,7 @@ EExtensionManager::~EExtensionManager()
 {
 }
 
-bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
+bool EExtensionManager::LoadExtension(const EString& pathToExtensio, bool autoLoad)
 {
     EFile file(pathToExtensio);
     if (!file.Exist()) { E_ERROR("Could not find Plugin File \"" + file.GetFullPath() + "\""); return false; }
@@ -95,6 +104,7 @@ bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
     }
 
     EExtension* newExtension = new EExtension(file.GetFullPath());
+    newExtension->SetAutoLoad(autoLoad);
     newExtension->InitImGui();
     // Run load function
     
@@ -131,6 +141,19 @@ bool EExtensionManager::IsLoaded(const EString& extensionName)
     return fLoadedExtensions.find(extensionName) != fLoadedExtensions.end();
 }
 
+void EExtensionManager::SetExtensionAutoLoad(const EString& extensionName, bool autoLoad)
+{
+    if (!IsLoaded(extensionName)) { E_WARN("Could not find extension \"" + extensionName + "\""); return; }
+    fLoadedExtensions[extensionName]->SetAutoLoad(autoLoad);
+}
+
+bool EExtensionManager::IsAutoLoad(const EString& extensionName)
+{
+    if (!IsLoaded(extensionName)) { E_WARN("Could not find extension \"" + extensionName + "\""); return false; }
+    return fLoadedExtensions[extensionName]->GetAutoLoad();
+}
+
+
 EValueDescription EExtensionManager::GetValueDescriptionById(const EString& extensionName, const EString& typeId) 
 {
     const EVector<EComponentRegisterEntry>& registeredTypes = fTypeRegister.GetItems(extensionName);
@@ -152,6 +175,16 @@ EComponentRegister& EExtensionManager::GetComponentRegister()
 const EComponentRegister& EExtensionManager::GetComponentRegister() const
 {
     return fTypeRegister;
+}
+
+EComponentDependsOnRegister& EExtensionManager::GetComponentDependsOnRegister()
+{
+    return fDependsOnRegister;
+}
+
+const EComponentDependsOnRegister& EExtensionManager::GetComponentDependsOnRegister() const
+{
+    return fDependsOnRegister;
 }
 
 EResourceRegister& EExtensionManager::GetResourceRegister() 
@@ -197,7 +230,7 @@ void EExtensionManager::Reload()
 
     for (const EString& extensionPath : extensionToLoad)
     {
-        LoadExtension(extensionPath);
+        LoadExtension(extensionPath, false);
     }
 }
 
@@ -220,7 +253,7 @@ void EExtensionManager::ReloadExtension(EExtension* extension)
     UnloadExtension(extension);
     // TODO: We have to find all events that got queued be the extension.
     // If we call these functions they will be deleted i guess
-    LoadExtension(extensionPath);
+    LoadExtension(extensionPath, false);
 }
 
 void EExtensionManager::UnloadExtension(EExtension* extension) 
