@@ -9,6 +9,15 @@ EJson ESerializer::WriteStorageDescriptionToJson(const EValueDescription& descri
 
     result["Type"] = description.GetType();
     result["ID"] = description.GetId();
+
+    result["DependsOn"] = EJson::array();
+    for (const EValueDescription& depends : description.GetDependsOn())
+    {
+        result["DependsOn"].push_back(WriteStorageDescriptionToJson(depends));
+    }
+
+
+
     switch (description.GetType())
     {
         case EValueType::ANY:

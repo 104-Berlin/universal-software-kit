@@ -177,16 +177,6 @@ const EComponentRegister& EExtensionManager::GetComponentRegister() const
     return fTypeRegister;
 }
 
-EComponentDependsOnRegister& EExtensionManager::GetComponentDependsOnRegister()
-{
-    return fDependsOnRegister;
-}
-
-const EComponentDependsOnRegister& EExtensionManager::GetComponentDependsOnRegister() const
-{
-    return fDependsOnRegister;
-}
-
 EResourceRegister& EExtensionManager::GetResourceRegister() 
 {
     return fResourceRegister;

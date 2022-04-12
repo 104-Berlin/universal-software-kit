@@ -31,6 +31,10 @@ namespace Engine {
         
         // For struct
         EVector<StructStorage> fStructFields;
+
+
+        // Values it depends on
+        EVector<EValueDescription*> fDependsOn;
     public:
         EValueDescription(EValueType type = EValueType::UNKNOWN, t_ID id = "");
         EValueDescription(const EValueDescription&);
@@ -57,6 +61,8 @@ namespace Engine {
         EValueDescription GetAsPrimitive() const;
 
 
+        void AddDependsOn(const EValueDescription& value);
+        EVector<EValueDescription> GetDependsOn() const;
 
         static EValueDescription CreateStruct(const t_ID& id, EVector<StructField> childs);
         static EValueDescription CreateEnum(const t_ID& id, EVector<EString> options);

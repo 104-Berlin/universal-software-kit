@@ -117,5 +117,6 @@ APP_ENTRY
 
 EXT_ENTRY
 {
-   info.GetComponentRegister().RegisterStruct<MeshComponent>(extensionName);
+    MeshComponent::_dsc.AddDependsOn(Editor::ETransform::_dsc);
+    info.GetComponentRegister().RegisterStruct<MeshComponent>(extensionName);
 }

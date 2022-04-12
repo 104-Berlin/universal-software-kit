@@ -25,6 +25,11 @@ EValueDescription::EValueDescription(const EValueDescription& other)
     {
         fArrayType = new EValueDescription(*other.fArrayType);
     }
+
+    for (EValueDescription* depends : other.fDependsOn)
+    {
+        fDependsOn.push_back(new EValueDescription(*depends));
+    }
 }
 
 
@@ -44,6 +49,10 @@ EValueDescription& EValueDescription::operator=(const EValueDescription& other)
     {
         fArrayType = new EValueDescription(*other.fArrayType);
     }
+    for (EValueDescription* depends : other.fDependsOn)
+    {
+        fDependsOn.push_back(new EValueDescription(*depends));
+    }
     return *this;
 }
 
@@ -57,6 +66,10 @@ EValueDescription::~EValueDescription()
     if (fArrayType)
     {
         delete fArrayType;
+    }
+    for (auto& entry : fDependsOn)
+    {
+        delete entry;
     }
 }
 
@@ -87,6 +100,22 @@ EValueDescription EValueDescription::GetAsPrimitive() const
 {
     return *fArrayType;
 }
+
+void EValueDescription::AddDependsOn(const EValueDescription& value)
+{
+    fDependsOn.push_back(new EValueDescription(value));
+}
+
+EVector<EValueDescription> EValueDescription::GetDependsOn() const
+{
+    EVector<EValueDescription> result;
+    for (auto& entry : fDependsOn)
+    {
+        result.push_back(EValueDescription(*entry));
+    }
+    return result;  
+}
+
 
 EValueDescription EValueDescription::CreateStruct(const t_ID& id,  EVector<StructField> childs) 
 {

@@ -107,6 +107,10 @@ EWeakRef<EProperty> EDataBase::AddComponent(Entity entity, const ERef<const EPro
     if (!HasComponent(entity, description.GetId()))
     {
         ERef<EProperty> storage = EProperty::CreateFromDescription(description.GetId(), description);
+        for (const EValueDescription& depends : description.GetDependsOn())
+        {
+            AddComponent(entity, depends);
+        }
         storage->Copy(value.get());
 
         storage->SetChangeFunc([this, entity, storage](EString ident){
