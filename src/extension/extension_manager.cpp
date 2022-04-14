@@ -211,16 +211,16 @@ void EExtensionManager::Reload()
 {
     // Cache pointers to extension, because map will change with reload
     EVector<EExtension*> allExtensions = GetLoadedExtensions();
-    EVector<EString> extensionToLoad;
+    EVector<EPair<EString, bool>> extensionToLoad;
     for (EExtension* ext : allExtensions)
     {
-        extensionToLoad.push_back(ext->GetFilePath());
+        extensionToLoad.push_back({ext->GetFilePath(), ext->GetAutoLoad()});
         UnloadExtension(ext);
     }
 
-    for (const EString& extensionPath : extensionToLoad)
+    for (const auto& exInfo : extensionToLoad)
     {
-        LoadExtension(extensionPath, false);
+        LoadExtension(exInfo.first, exInfo.second);
     }
 }
 
