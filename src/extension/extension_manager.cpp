@@ -240,10 +240,11 @@ void EExtensionManager::ReloadExtension(const EString& extensionName)
 void EExtensionManager::ReloadExtension(EExtension* extension) 
 {
     EString extensionPath = extension->GetFilePath();
+    bool autoLoad = extension->GetAutoLoad();
     UnloadExtension(extension);
     // TODO: We have to find all events that got queued be the extension.
     // If we call these functions they will be deleted i guess
-    LoadExtension(extensionPath, false);
+    LoadExtension(extensionPath, autoLoad);
 }
 
 void EExtensionManager::UnloadExtension(EExtension* extension) 
