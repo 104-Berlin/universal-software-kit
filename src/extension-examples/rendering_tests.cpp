@@ -13,6 +13,9 @@ EUnorderedMap<EDataBase::Entity, RMesh*> fMeshes;
 
 APP_ENTRY
 {
+    Editor::ETransform transform;
+    E_INFO("Transform: " + std::to_string(transform.Scale.x));
+
     RCamera camera(ECameraMode::PERSPECTIVE);
     camera.SetPosition({0, 0, -100});
     //camera.LookAt({0, 0, 0});

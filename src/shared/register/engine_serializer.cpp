@@ -16,7 +16,10 @@ EJson ESerializer::WriteStorageDescriptionToJson(const EValueDescription& descri
         result["DependsOn"].push_back(WriteStorageDescriptionToJson(depends));
     }
 
-
+    if (description.GetDefaultValue())
+    {
+        result["DefaultValue"] = WritePropertyToJs(description.GetDefaultValue().get(), false);
+    }
 
     switch (description.GetType())
     {

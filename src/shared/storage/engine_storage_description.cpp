@@ -4,7 +4,7 @@
 using namespace Engine;
 
 EValueDescription::EValueDescription(EValueType type, EValueDescription::t_ID id) 
-    : fType(type), fID(id), fArrayType(nullptr)
+    : fType(type), fID(id), fArrayType(nullptr), fDefaultValue(nullptr)
 {
     if (type == EValueType::ARRAY)
     {
@@ -20,6 +20,8 @@ EValueDescription::EValueDescription(const EValueDescription& other)
     {
         fStructFields.push_back({entry.first, new EValueDescription(*entry.second)});
     }
+
+    fDefaultValue = other.fDefaultValue;
 
     if (other.fArrayType)
     {
@@ -38,6 +40,7 @@ EValueDescription& EValueDescription::operator=(const EValueDescription& other)
     fType = other.fType;
     fID = other.fID;
     fEnumOptions = other.fEnumOptions;
+    fDefaultValue = other.fDefaultValue;
 
     fStructFields.clear();
     for (auto& entry : other.fStructFields)
@@ -101,6 +104,25 @@ EValueDescription EValueDescription::GetAsPrimitive() const
     return *fArrayType;
 }
 
+void EValueDescription::SetDefaultValue(EProperty* value)
+{
+    if (!value)
+    {
+        E_WARN("Default value is nullptr");
+        return;
+    }
+    if (!fDefaultValue)
+    {
+        fDefaultValue = EProperty::CreateFromDescription(GetId(), *this);
+    }
+    fDefaultValue->Copy(value);
+}
+
+ERef<EProperty> EValueDescription::GetDefaultValue() const
+{
+    return fDefaultValue;
+}
+
 void EValueDescription::AddDependsOn(const EValueDescription& value)
 {
     fDependsOn.push_back(new EValueDescription(value));
@@ -117,12 +139,20 @@ EVector<EValueDescription> EValueDescription::GetDependsOn() const
 }
 
 
-EValueDescription EValueDescription::CreateStruct(const t_ID& id,  EVector<StructField> childs) 
+EValueDescription EValueDescription::CreateStruct(const t_ID& id,  EVector<StructField> childs, EProperty* defaultValue) 
 {
     EValueDescription result(EValueType::STRUCT, id);
+    if (id == "ETransform")
+    {
+        E_INFO("ETransform");
+    }
     for (const StructField& entry : childs)
     {
         result.AddStructField(entry.first, entry.second);
+    }
+    if (defaultValue)
+    {
+        result.SetDefaultValue(defaultValue);
     }
     return result;
 }
@@ -141,12 +171,12 @@ EValueDescription EValueDescription::CreateEnum(const t_ID& id, EVector<EString>
 }
 
 
-bool EValueDescription::operator==(const EValueDescription& other) 
+bool EValueDescription::operator==(const EValueDescription& other) const
 {
     return fID == other.fID && fType == other.fType && (fType != EValueType::ARRAY || *fArrayType == *other.fArrayType);
 }
 
-bool EValueDescription::operator!=(const EValueDescription& other) 
+bool EValueDescription::operator!=(const EValueDescription& other) const
 {
     return !((*this) == other);
 }

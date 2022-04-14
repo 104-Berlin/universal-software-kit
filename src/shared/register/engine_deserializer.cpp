@@ -70,6 +70,18 @@ bool EDeserializer::ReadStorageDescriptionFromJson(const EJson& json, EValueDesc
             break;
         }
         }
+
+        if (json.contains("DefaultValue") && json["DefaultValue"].is_object())
+        {
+            const EJson& defaultValueJson = json["DefaultValue"];
+            ERef<EProperty> defaultValue = EProperty::CreateFromDescription(newValueType.GetId(), newValueType);
+            ReadPropertyFromJson(defaultValueJson, defaultValue.get());
+            if (defaultValue)
+            {
+                newValueType.SetDefaultValue(defaultValue.get());
+            }
+        }
+
         *description = newValueType;
     }
     return true;

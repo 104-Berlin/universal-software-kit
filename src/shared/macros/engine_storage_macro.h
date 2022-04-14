@@ -101,19 +101,20 @@
 #define E_CHECK_EQUEL_LAST(typename) EXPAND (E_CHECK_EQUEL_LAST2 typename )
 
 
-#define E_STORAGE_STRUCT(name, ...) struct name {\
-                                        EXPAND (E_LOOP_ARGS(E_CREATE_STRUCT_PROP, __VA_ARGS__) )\
-                                        static inline ::Engine::EValueDescription _dsc = ::Engine::EValueDescription::CreateStruct(EXPAND(E_STRINGIFY(name)), {\
+#define E_STRUCT_DESCRIPTION(name, ...) ::Engine::EValueDescription::CreateStruct(EXPAND(E_STRINGIFY(name)), {\
                                             EXPAND (E_LOOP_ARGS(E_CREATE_STRUCT_DSC, __VA_ARGS__))\
-                                        });\
-                                        \
+                                        });
+
+
+#define E_STORAGE_STRUCT(name, ...) struct name {\
                                         name ( EXPAND ( E_LOOP_ARGS_L( E_CONSTRUCTOR_ARG, __VA_ARGS__ ) ) )\
                                         {\
                                             EXPAND ( E_LOOP_ARGS ( E_COMPLETE_CONSTRUCTOR, __VA_ARGS__ ) )\
                                         }\
                                         static bool ToProperty(const name & value, ::Engine::EStructProperty* property)\
                                         {\
-                                            if (_dsc.GetId() != property->GetDescription().GetId())\
+                                            static ::Engine::EValueDescription dsc = E_STRUCT_DESCRIPTION(name, __VA_ARGS__);\
+                                            if (dsc.GetId() != property->GetDescription().GetId())\
                                             {\
                                                 return false;\
                                             }\
@@ -146,6 +147,19 @@
                                             EXPAND(E_LOOP_ARGS_L(E_CHECK_EQUEL, __VA_ARGS__));\
                                         }\
                                         bool operator!=(const name& other) const { return !((*this) == other);}\
+                                        static ERef<::Engine::EProperty> CreateDefaultValue() {\
+                                            static ::Engine::EValueDescription dsc = E_STRUCT_DESCRIPTION(name, __VA_ARGS__);\
+                                            static ERef<::Engine::EProperty> result = ::Engine::EProperty::CreateFromDescription(dsc.GetId(), dsc);\
+                                            if (result)\
+                                            {\
+                                                convert::setter(result.get(), name()); \
+                                            }\
+                                            return result;\
+                                        }\
+                                        EXPAND (E_LOOP_ARGS(E_CREATE_STRUCT_PROP, __VA_ARGS__) )\
+                                        static inline ::Engine::EValueDescription _dsc = ::Engine::EValueDescription::CreateStruct(EXPAND(E_STRINGIFY(name)), {\
+                                            EXPAND (E_LOOP_ARGS(E_CREATE_STRUCT_DSC, __VA_ARGS__))\
+                                        }, name ::CreateDefaultValue().get());\
                                     };
 
 
