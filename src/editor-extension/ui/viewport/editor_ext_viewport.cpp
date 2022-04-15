@@ -225,7 +225,7 @@ void EUIViewportToolbar::Regenerate()
 
 
 EUIViewportTransformControls::EUIViewportTransformControls(EUIViewport* viewport)
-    : fViewport(viewport), fAttachedObject(nullptr), fVisible(false)
+    : fViewport(viewport), fAttachedObject(nullptr), fVisible(false), fWasUsing(false)
 {
 
 }
@@ -238,8 +238,13 @@ void EUIViewportTransformControls::OnRender()
     EMat4 viewMatrix = fViewport->GetCamera().GetViewMatrix();
     EMat4 projectionMatrix = fViewport->GetCamera().GetProjectionMatrix(fViewport->GetWidth(), fViewport->GetHeight());
     EMat4 transformMatrix = fAttachedObject->GetModelMatrix();
-    ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::UNIVERSAL, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformMatrix));
+    ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformMatrix));
     
+    if (fWasUsing && !ImGuizmo::IsUsing())
+    {
+        fWasUsing = false;
+    }
+
     if (ImGuizmo::IsUsing())
     {
         EVec3 position, rotation, scale;
@@ -250,6 +255,7 @@ void EUIViewportTransformControls::OnRender()
         fAttachedObject->SetRotation(EVec3(glm::radians(rotation.x), glm::radians(rotation.y), glm::radians(rotation.z)));
         
         fAttachedObject->SetScale(scale);
+        fWasUsing = true;
     }
 }
 

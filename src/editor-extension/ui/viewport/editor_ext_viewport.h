@@ -10,6 +10,7 @@ namespace Engine {
         EUIViewport*           fViewport;
         Renderer::RObject*    fAttachedObject;
         bool                  fVisible;
+        bool                  fWasUsing;
     public:
         EUIViewportTransformControls(EUIViewport* viewport);
 
