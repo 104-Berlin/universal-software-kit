@@ -2,10 +2,11 @@
 
 namespace Editor {
 
+    
     E_STORAGE_STRUCT(ETransform,
         (EVec3, Position),
         (EVec3, Rotation),
-        (EVec3, Scale)
+        (EVec3, Scale, {1.0, 1.0, 1.0})
     )
 
     namespace ETransformHelper

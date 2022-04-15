@@ -88,12 +88,13 @@ APP_ENTRY
                 ComponentChangeData changeData;
                 if (convert::getter(event.Data.Value().get(), &changeData))
                 {
+                    RMesh* mesh = fMeshes[event.Entity.Handle];
+                    if (!mesh) { return; }
+
                     MeshComponent meshComponent;
+                    Editor::ETransform transform;
                     if (convert::getter<MeshComponent>(changeData.NewValue.Value().get(), &meshComponent))
                     {
-                        RMesh* mesh = fMeshes[event.Entity.Handle];
-                        if (!mesh) { return; }
-
                         auto meshResource = shared::GetResource(meshComponent.Mesh.ResourceId);
                         
                         if (meshResource)
@@ -105,6 +106,12 @@ APP_ENTRY
                         {
                             mesh->SetData({}, {});
                         }
+                    }
+                    else if (convert::getter<Editor::ETransform>(changeData.NewValue.Value().get(), &transform))
+                    {
+                        mesh->SetPosition(transform.Position);
+                        mesh->SetRotation(transform.Rotation);
+                        mesh->SetScale(transform.Scale);
                     }
                 }
             }
@@ -118,5 +125,6 @@ APP_ENTRY
 
 EXT_ENTRY
 {
-   info.GetComponentRegister().RegisterStruct<MeshComponent>(extensionName);
+    MeshComponent::_dsc.AddDependsOn(Editor::ETransform::_dsc);
+    info.GetComponentRegister().RegisterStruct<MeshComponent>(extensionName);
 }

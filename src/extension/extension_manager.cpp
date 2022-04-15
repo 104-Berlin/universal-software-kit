@@ -177,16 +177,6 @@ const EComponentRegister& EExtensionManager::GetComponentRegister() const
     return fTypeRegister;
 }
 
-EComponentDependsOnRegister& EExtensionManager::GetComponentDependsOnRegister()
-{
-    return fDependsOnRegister;
-}
-
-const EComponentDependsOnRegister& EExtensionManager::GetComponentDependsOnRegister() const
-{
-    return fDependsOnRegister;
-}
-
 EResourceRegister& EExtensionManager::GetResourceRegister() 
 {
     return fResourceRegister;
@@ -221,16 +211,16 @@ void EExtensionManager::Reload()
 {
     // Cache pointers to extension, because map will change with reload
     EVector<EExtension*> allExtensions = GetLoadedExtensions();
-    EVector<EString> extensionToLoad;
+    EVector<EPair<EString, bool>> extensionToLoad;
     for (EExtension* ext : allExtensions)
     {
-        extensionToLoad.push_back(ext->GetFilePath());
+        extensionToLoad.push_back({ext->GetFilePath(), ext->GetAutoLoad()});
         UnloadExtension(ext);
     }
 
-    for (const EString& extensionPath : extensionToLoad)
+    for (const auto& exInfo : extensionToLoad)
     {
-        LoadExtension(extensionPath, false);
+        LoadExtension(exInfo.first, exInfo.second);
     }
 }
 
@@ -250,10 +240,11 @@ void EExtensionManager::ReloadExtension(const EString& extensionName)
 void EExtensionManager::ReloadExtension(EExtension* extension) 
 {
     EString extensionPath = extension->GetFilePath();
+    bool autoLoad = extension->GetAutoLoad();
     UnloadExtension(extension);
     // TODO: We have to find all events that got queued be the extension.
     // If we call these functions they will be deleted i guess
-    LoadExtension(extensionPath, false);
+    LoadExtension(extensionPath, autoLoad);
 }
 
 void EExtensionManager::UnloadExtension(EExtension* extension) 

@@ -90,7 +90,8 @@ bool EDataBase::IsAlive(Entity entity)
 
 EWeakRef<EProperty> EDataBase::AddComponent(Entity entity, const EValueDescription& componentId)
 {
-    return AddComponent(entity, EProperty::CreateFromDescription(componentId.GetId(), componentId));
+    ERef<EProperty> defaultValue = componentId.GetDefaultValue();
+    return AddComponent(entity, defaultValue ? defaultValue : EProperty::CreateFromDescription(componentId.GetId(), componentId));
 }
 
 EWeakRef<EProperty> EDataBase::AddComponent(Entity entity, const ERef<const EProperty>& value) 
@@ -107,6 +108,10 @@ EWeakRef<EProperty> EDataBase::AddComponent(Entity entity, const ERef<const EPro
     if (!HasComponent(entity, description.GetId()))
     {
         ERef<EProperty> storage = EProperty::CreateFromDescription(description.GetId(), description);
+        for (const EValueDescription& depends : description.GetDependsOn())
+        {
+            AddComponent(entity, depends);
+        }
         storage->Copy(value.get());
 
         storage->SetChangeFunc([this, entity, storage](EString ident){

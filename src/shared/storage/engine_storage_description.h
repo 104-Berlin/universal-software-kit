@@ -13,6 +13,8 @@ namespace Engine {
         ANY
     };
 
+    class EProperty;
+
     class E_API EValueDescription
     {
     public:
@@ -31,6 +33,12 @@ namespace Engine {
         
         // For struct
         EVector<StructStorage> fStructFields;
+
+
+        // Values it depends on
+        EVector<EValueDescription*> fDependsOn;
+
+        ERef<EProperty> fDefaultValue;
     public:
         EValueDescription(EValueType type = EValueType::UNKNOWN, t_ID id = "");
         EValueDescription(const EValueDescription&);
@@ -57,12 +65,24 @@ namespace Engine {
         EValueDescription GetAsPrimitive() const;
 
 
+        /**
+         * @brief Set the Default Value object
+         * 
+         * @param value The Default Value.
+         * NOTE: This function will not take ownership of the object.
+         */
+        void SetDefaultValue(EProperty* value);
 
-        static EValueDescription CreateStruct(const t_ID& id, EVector<StructField> childs);
+        ERef<EProperty> GetDefaultValue() const;
+
+        void AddDependsOn(const EValueDescription& value);
+        EVector<EValueDescription> GetDependsOn() const;
+
+        static EValueDescription CreateStruct(const t_ID& id, EVector<StructField> childs, EProperty* defaultValue = nullptr);
         static EValueDescription CreateEnum(const t_ID& id, EVector<EString> options);
 
-        bool operator==(const EValueDescription& other);
-        bool operator!=(const EValueDescription& other);
+        bool operator==(const EValueDescription& other) const;
+        bool operator!=(const EValueDescription& other) const;
     };
 
 
