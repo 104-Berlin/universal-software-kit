@@ -184,7 +184,6 @@ void EUIField::HandleRenderEnd()
         }
     }
 
-
     ImRect itemRect = g.LastItemData.Rect;
     
     fCalculatedSize.x = itemRect.GetWidth();

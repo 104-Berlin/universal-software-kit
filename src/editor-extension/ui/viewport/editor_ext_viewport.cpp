@@ -6,6 +6,7 @@ using namespace Engine;
 
 EUIViewport::EUIViewport(const Renderer::RCamera& camera) 
     :   EUIField("VIEWPORT"), 
+        fTransformControls(this),
         fActiveTool(nullptr),
         fViewType(ViewType::DIFFUSE),
         fFrameBuffer(Graphics::Wrapper::CreateFrameBuffer(100, 100)), 
@@ -13,26 +14,28 @@ EUIViewport::EUIViewport(const Renderer::RCamera& camera)
         fCamera(camera),
         fCameraControls(new EUIBasic3DCameraControls(&fCamera))
 {
+    fTransformControls.SetVisible(true);
+
     AddEventListener<events::EMouseDragEvent>([this](events::EMouseDragEvent event){
-        if (this->fCameraControls)
+        if (this->fCameraControls && !ImGuizmo::IsUsing())
         {
             this->fCameraControls->OnMouseDrag(event);
         }
     });
     AddEventListener<events::EMouseScrollEvent>([this](events::EMouseScrollEvent event){
-        if (this->fCameraControls)
+        if (this->fCameraControls && !ImGuizmo::IsUsing())
         {
             this->fCameraControls->OnMouseScroll(event);
         }
     });
     AddEventListener<events::EKeyDownEvent>([this](events::EKeyDownEvent event){
-        if (this->fCameraControls)
+        if (this->fCameraControls && !ImGuizmo::IsUsing())
         {
             this->fCameraControls->OnKeyDown(event);
         }
     });
     AddEventListener<events::EKeyUpEvent>([this](events::EKeyUpEvent event){
-        if (this->fCameraControls)
+        if (this->fCameraControls && !ImGuizmo::IsUsing())
         {
             this->fCameraControls->OnKeyUp(event);
         }
@@ -138,6 +141,17 @@ bool EUIViewport::OnRender()
         }
     }
 
+    ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
+    ImRect itemRect = g.LastItemData.Rect;
+    
+
+    ImGuizmo::SetOrthographic(fCamera.GetMode() == Renderer::ECameraMode::ORTHOGRAPHIC);
+    ImGuizmo::SetID(1);
+    ImGuizmo::SetDrawlist();
+    ImGuizmo::SetRect(itemRect.GetTL().x, itemRect.GetTL().y, itemRect.GetWidth(), itemRect.GetHeight());
+    fTransformControls.OnRender();
+
+
     return true;
 }
 
@@ -151,6 +165,26 @@ EVec3 EUIViewport::Unproject(const EVec3& point) const
 {
     EVec4 result = glm::inverse(fCamera.GetProjectionMatrix(fFrameBuffer->GetWidth(), fFrameBuffer->GetHeight()) * fCamera.GetViewMatrix()) * EVec4(point.x / fFrameBuffer->GetWidth() * 2.0f - 1.0f, -(point.y / fFrameBuffer->GetHeight() * 2.0f - 1.0f), point.z, 1.0f);
     return {result.x, result.y, result.z};
+}
+
+float EUIViewport::GetWidth() const
+{
+    return fFrameBuffer->GetWidth();
+}
+
+float EUIViewport::GetHeight() const
+{
+    return fFrameBuffer->GetHeight();
+}
+
+EUIViewportTransformControls& EUIViewport::GetTransformControls()
+{
+    return fTransformControls;
+}
+
+const EUIViewportTransformControls& EUIViewport::GetTransformControls() const
+{
+    return fTransformControls;
 }
 
 EUIViewportToolbar::EUIViewportToolbar(EWeakRef<EUIViewport> viewport) 
@@ -189,3 +223,45 @@ void EUIViewportToolbar::Regenerate()
     }
 }
 
+
+EUIViewportTransformControls::EUIViewportTransformControls(EUIViewport* viewport)
+    : fViewport(viewport), fAttachedObject(nullptr), fVisible(false)
+{
+
+}
+
+void EUIViewportTransformControls::OnRender()
+{
+    if (!fVisible) { return; }
+    if (!fAttachedObject) { return; }
+
+    EMat4 viewMatrix = fViewport->GetCamera().GetViewMatrix();
+    EMat4 projectionMatrix = fViewport->GetCamera().GetProjectionMatrix(fViewport->GetWidth(), fViewport->GetHeight());
+    EMat4 transformMatrix = fAttachedObject->GetModelMatrix();
+    ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::UNIVERSAL, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformMatrix));
+    
+    if (ImGuizmo::IsUsing())
+    {
+        EVec3 position, rotation, scale;
+        ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transformMatrix), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
+        
+        fAttachedObject->SetPosition(position);
+        fAttachedObject->SetRotation(rotation);
+        fAttachedObject->SetScale(scale);
+    }
+}
+
+void EUIViewportTransformControls::SetAttachedObject(Renderer::RObject* object)
+{
+    fAttachedObject = object;
+}
+
+void EUIViewportTransformControls::SetVisible(bool visible)
+{
+    fVisible = visible;
+}
+
+bool EUIViewportTransformControls::IsVisible() const
+{
+    return fVisible;
+}

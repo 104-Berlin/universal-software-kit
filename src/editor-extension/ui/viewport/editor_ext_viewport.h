@@ -2,6 +2,25 @@
 
 namespace Engine {
 
+    class EUIViewport;
+
+    class E_EDEXAPI EUIViewportTransformControls
+    {
+    private:
+        EUIViewport*           fViewport;
+        Renderer::RObject*    fAttachedObject;
+        bool                  fVisible;
+    public:
+        EUIViewportTransformControls(EUIViewport* viewport);
+
+        void OnRender();
+
+        void SetAttachedObject(Renderer::RObject* object);
+
+        void SetVisible(bool visible);
+        bool IsVisible() const;
+    };
+
     
     class E_EDEXAPI EUIViewport : public EUIField
     {
@@ -13,6 +32,7 @@ namespace Engine {
             DEPTH
         };
     private:
+        EUIViewportTransformControls fTransformControls;
         EVector<EViewportTool*> fRegisteredTools;
         EViewportTool*          fActiveTool;
         ViewType                fViewType;
@@ -42,6 +62,12 @@ namespace Engine {
 
         EVec2 Project(const EVec3& point) const;
         EVec3 Unproject(const EVec3& point) const;
+
+        float GetWidth() const;
+        float GetHeight() const;
+
+        EUIViewportTransformControls& GetTransformControls();
+        const EUIViewportTransformControls& GetTransformControls() const;
 
         EVector<EViewportTool*> GetRegisteredTools();
         EViewportTool* GetActiveTool();
@@ -78,6 +104,8 @@ namespace Engine {
     private:
         void Regenerate();
     };
+
+    
 
 
 }
