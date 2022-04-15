@@ -244,9 +244,11 @@ void EUIViewportTransformControls::OnRender()
     {
         EVec3 position, rotation, scale;
         ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transformMatrix), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
+        E_INFO("Rotation: " + std::to_string(rotation.x) + ", " + std::to_string(rotation.y) + ", " + std::to_string(rotation.z));
         
         fAttachedObject->SetPosition(position);
-        fAttachedObject->SetRotation(rotation);
+        fAttachedObject->SetRotation(EVec3(glm::radians(rotation.x), glm::radians(rotation.y), glm::radians(rotation.z)));
+        
         fAttachedObject->SetScale(scale);
     }
 }
