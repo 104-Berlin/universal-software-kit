@@ -6,11 +6,17 @@ namespace Engine {
 
     class E_EDEXAPI EUIViewportTransformControls
     {
+        using TransformUpdateFunction = std::function<void(Editor::ETransform)>;
     private:
-        EUIViewport*           fViewport;
+        EUIViewport*          fViewport;
         Renderer::RObject*    fAttachedObject;
         bool                  fVisible;
         bool                  fWasUsing;
+        TransformUpdateFunction fOnChange;
+        
+        EVec3 fLastPosition;
+        EVec3 fLastRotation; 
+        EVec3 fLastScale;
     public:
         EUIViewportTransformControls(EUIViewport* viewport);
 
@@ -20,6 +26,7 @@ namespace Engine {
 
         void SetVisible(bool visible);
         bool IsVisible() const;
+        void SetOnChange(TransformUpdateFunction func);
     };
 
     

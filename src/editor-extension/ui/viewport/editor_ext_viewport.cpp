@@ -243,18 +243,22 @@ void EUIViewportTransformControls::OnRender()
     if (fWasUsing && !ImGuizmo::IsUsing())
     {
         fWasUsing = false;
+        if (fOnChange)
+        {
+            fOnChange(Editor::ETransform(fLastPosition, fLastRotation, fLastScale));
+        }
     }
 
     if (ImGuizmo::IsUsing())
     {
-        EVec3 position, rotation, scale;
-        ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transformMatrix), glm::value_ptr(position), glm::value_ptr(rotation), glm::value_ptr(scale));
-        E_INFO("Rotation: " + std::to_string(rotation.x) + ", " + std::to_string(rotation.y) + ", " + std::to_string(rotation.z));
+        ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transformMatrix), glm::value_ptr(fLastPosition), glm::value_ptr(fLastRotation), glm::value_ptr(fLastScale));
+        fLastRotation = EVec3(glm::radians(fLastRotation.x), glm::radians(fLastRotation.y), glm::radians(fLastRotation.z));
+
+
+        fAttachedObject->SetPosition(fLastPosition);
+        fAttachedObject->SetRotation(fLastRotation);
         
-        fAttachedObject->SetPosition(position);
-        fAttachedObject->SetRotation(EVec3(glm::radians(rotation.x), glm::radians(rotation.y), glm::radians(rotation.z)));
-        
-        fAttachedObject->SetScale(scale);
+        fAttachedObject->SetScale(fLastScale);
         fWasUsing = true;
     }
 }
@@ -272,4 +276,10 @@ void EUIViewportTransformControls::SetVisible(bool visible)
 bool EUIViewportTransformControls::IsVisible() const
 {
     return fVisible;
+}
+
+
+void EUIViewportTransformControls::SetOnChange(TransformUpdateFunction func)
+{
+    fOnChange = func;
 }

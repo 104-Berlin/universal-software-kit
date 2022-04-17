@@ -10,6 +10,7 @@ E_STORAGE_STRUCT(MeshComponent,
 
 EUnorderedMap<EDataBase::Entity, RMesh*> fMeshes;
 
+EDataBase::Entity currentTransformObject = 0;
 
 APP_ENTRY
 {
@@ -19,6 +20,11 @@ APP_ENTRY
 
     ERef<EUIPanel> showPanel = EMakeRef<EUIPanel>("Show Panel");
     ERef<EUIViewport> viewport = EMakeRef<EUIViewport>(camera);
+
+    viewport->GetTransformControls().SetOnChange([](Editor::ETransform transform) {
+        shared::SetValue(currentTransformObject, "ETransform", transform);
+    });
+
     EWeakRef<EUIViewport> weakViewport = viewport;
 
     ERef<EUIDropdown> viewTypeDropdown = EMakeRef<EUIDropdown>("View Type");
@@ -70,6 +76,7 @@ APP_ENTRY
                     RMesh* mesh = new RMesh();
                     fMeshes[event.Entity.Handle] = mesh;
                     weakViewport.lock()->GetTransformControls().SetAttachedObject(mesh);
+                    currentTransformObject = event.Entity.Handle;
                     weakViewport.lock()->GetScene().Add(mesh);
                     auto meshResource = shared::GetResource(meshComponent.Mesh.ResourceId);
                     
