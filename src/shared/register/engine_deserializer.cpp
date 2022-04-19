@@ -223,8 +223,10 @@ bool ReadStructFromJson(const EJson& json, EStructProperty* property)
     for (auto& entry : description.GetStructFields())
     {
         EValueType fieldType = entry.second.GetType();
-
-        EDeserializer::ReadPropertyFromJson(json[entry.first], property->GetProperty(entry.first).get());
+        if (json.contains(entry.first))
+        {
+            EDeserializer::ReadPropertyFromJson(json[entry.first], property->GetProperty(entry.first).get());
+        }
     }
     return true;
 }
