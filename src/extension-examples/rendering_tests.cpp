@@ -24,6 +24,10 @@ APP_ENTRY
     viewport->GetTransformControls().SetOnChange([](Editor::ETransform transform) {
         shared::SetValue(currentTransformObject, "ETransform", transform);
     });
+    Renderer::RGid* grid = new Renderer::RGid(100, 100, 1.0f, 1.0f);
+    grid->SetRotation(EVec3(glm::radians(90.0), 0, 0));
+    grid->SetPosition(EVec3(-50, 0, -50));
+    viewport->GetScene().Add(grid);
 
     EWeakRef<EUIViewport> weakViewport = viewport;
 

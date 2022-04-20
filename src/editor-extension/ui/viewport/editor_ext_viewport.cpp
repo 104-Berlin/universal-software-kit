@@ -145,7 +145,7 @@ bool EUIViewport::OnRender()
     ImRect itemRect = g.LastItemData.Rect;
     
 
-    ImGuizmo::SetOrthographic(fCamera.GetMode() == Renderer::ECameraMode::ORTHOGRAPHIC);
+    ImGuizmo::SetOrthographic(false);
     ImGuizmo::SetID(1);
     ImGuizmo::SetDrawlist();
     ImGuizmo::SetRect(itemRect.GetTL().x, itemRect.GetTL().y, itemRect.GetWidth(), itemRect.GetHeight());
