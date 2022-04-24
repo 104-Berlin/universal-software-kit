@@ -109,6 +109,34 @@ namespace Engine {
         virtual EString GetIcon() const override;
     };
 
+    class E_EDEXAPI ETransformTool : public EViewportTool
+    {
+        using TransformUpdateFunction = std::function<void(Editor::ETransform)>;
+    private:
+        Renderer::RObject*    fAttachedObject;
+        bool                  fWasUsing;
+        TransformUpdateFunction fOnChange;
+        
+        EVec3 fLastPosition;
+        EVec3 fLastRotation; 
+        EVec3 fLastScale;
+    public:
+        ETransformTool();
+
+        virtual bool OnRender() override;
+
+        void SetAttachedObject(Renderer::RObject* object);
+
+        Editor::ETransform GetTransform() const;
+
+        void SetOnChange(TransformUpdateFunction func);
+
+        static EString sGetName();
+
+        virtual EString GetIcon() const override;
+    };
+
+
 
     namespace events {
         E_STORAGE_STRUCT(EViewportToolFinishEvent,

@@ -6,7 +6,6 @@ using namespace Engine;
 
 EUIViewport::EUIViewport(const Renderer::RCamera& camera) 
     :   EUIField("VIEWPORT"), 
-        fTransformControls(this),
         fActiveTool(nullptr),
         fViewType(ViewType::DIFFUSE),
         fFrameBuffer(Graphics::Wrapper::CreateFrameBuffer(100, 100)), 
@@ -14,8 +13,6 @@ EUIViewport::EUIViewport(const Renderer::RCamera& camera)
         fCamera(camera),
         fCameraControls(new EUIBasic3DCameraControls(&fCamera))
 {
-    fTransformControls.SetVisible(true);
-
     AddEventListener<events::EMouseDragEvent>([this](events::EMouseDragEvent event){
         if (this->fCameraControls && !ImGuizmo::IsUsing())
         {
@@ -131,16 +128,10 @@ bool EUIViewport::OnRender()
         case ViewType::DEPTH: textureId = fFrameBuffer->GetDepthAttachment(); break;
     }
 
+    // Show the render result
     ImGui::Image((ImTextureID)(unsigned long long)(unsigned long)textureId, {contentRegion.x, contentRegion.y}, {0, 1}, {1, 0});
 
-    if (fActiveTool && fActiveTool->IsVisible())
-    {
-        if (fActiveTool->Render())
-        {
-            fEventDispatcher.Enqueue<events::EViewportToolFinishEvent>({fActiveTool->GetToolName()});
-        }
-    }
-
+    // Prepare Imguizmo
     ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
     ImRect itemRect = g.LastItemData.Rect;
     
@@ -149,7 +140,16 @@ bool EUIViewport::OnRender()
     ImGuizmo::SetID(1);
     ImGuizmo::SetDrawlist();
     ImGuizmo::SetRect(itemRect.GetTL().x, itemRect.GetTL().y, itemRect.GetWidth(), itemRect.GetHeight());
-    fTransformControls.OnRender();
+
+
+
+    if (fActiveTool && fActiveTool->IsVisible())
+    {
+        if (fActiveTool->Render())
+        {
+            fEventDispatcher.Enqueue<events::EViewportToolFinishEvent>({fActiveTool->GetToolName()});
+        }
+    }
 
 
     return true;
@@ -175,16 +175,6 @@ float EUIViewport::GetWidth() const
 float EUIViewport::GetHeight() const
 {
     return fFrameBuffer->GetHeight();
-}
-
-EUIViewportTransformControls& EUIViewport::GetTransformControls()
-{
-    return fTransformControls;
-}
-
-const EUIViewportTransformControls& EUIViewport::GetTransformControls() const
-{
-    return fTransformControls;
 }
 
 EUIViewportToolbar::EUIViewportToolbar(EWeakRef<EUIViewport> viewport) 
@@ -221,65 +211,4 @@ void EUIViewportToolbar::Regenerate()
             fViewport.lock()->SetActiveTool(toolName);
         });
     }
-}
-
-
-EUIViewportTransformControls::EUIViewportTransformControls(EUIViewport* viewport)
-    : fViewport(viewport), fAttachedObject(nullptr), fVisible(false), fWasUsing(false)
-{
-
-}
-
-void EUIViewportTransformControls::OnRender()
-{
-    if (!fVisible) { return; }
-    if (!fAttachedObject) { return; }
-
-    EMat4 viewMatrix = fViewport->GetCamera().GetViewMatrix();
-    EMat4 projectionMatrix = fViewport->GetCamera().GetProjectionMatrix(fViewport->GetWidth(), fViewport->GetHeight());
-    EMat4 transformMatrix = fAttachedObject->GetModelMatrix();
-    ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformMatrix));
-    
-    if (fWasUsing && !ImGuizmo::IsUsing())
-    {
-        fWasUsing = false;
-        if (fOnChange)
-        {
-            fOnChange(Editor::ETransform(fLastPosition, fLastRotation, fLastScale));
-        }
-    }
-
-    if (ImGuizmo::IsUsing())
-    {
-        ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transformMatrix), glm::value_ptr(fLastPosition), glm::value_ptr(fLastRotation), glm::value_ptr(fLastScale));
-        fLastRotation = EVec3(glm::radians(fLastRotation.x), glm::radians(fLastRotation.y), glm::radians(fLastRotation.z));
-
-
-        fAttachedObject->SetPosition(fLastPosition);
-        fAttachedObject->SetRotation(fLastRotation);
-        
-        fAttachedObject->SetScale(fLastScale);
-        fWasUsing = true;
-    }
-}
-
-void EUIViewportTransformControls::SetAttachedObject(Renderer::RObject* object)
-{
-    fAttachedObject = object;
-}
-
-void EUIViewportTransformControls::SetVisible(bool visible)
-{
-    fVisible = visible;
-}
-
-bool EUIViewportTransformControls::IsVisible() const
-{
-    return fVisible;
-}
-
-
-void EUIViewportTransformControls::SetOnChange(TransformUpdateFunction func)
-{
-    fOnChange = func;
 }

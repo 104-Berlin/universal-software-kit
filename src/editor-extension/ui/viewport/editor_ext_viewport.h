@@ -3,32 +3,6 @@
 namespace Engine {
 
     class EUIViewport;
-
-    class E_EDEXAPI EUIViewportTransformControls
-    {
-        using TransformUpdateFunction = std::function<void(Editor::ETransform)>;
-    private:
-        EUIViewport*          fViewport;
-        Renderer::RObject*    fAttachedObject;
-        bool                  fVisible;
-        bool                  fWasUsing;
-        TransformUpdateFunction fOnChange;
-        
-        EVec3 fLastPosition;
-        EVec3 fLastRotation; 
-        EVec3 fLastScale;
-    public:
-        EUIViewportTransformControls(EUIViewport* viewport);
-
-        void OnRender();
-
-        void SetAttachedObject(Renderer::RObject* object);
-
-        void SetVisible(bool visible);
-        bool IsVisible() const;
-        void SetOnChange(TransformUpdateFunction func);
-    };
-
     
     class E_EDEXAPI EUIViewport : public EUIField
     {
@@ -40,7 +14,6 @@ namespace Engine {
             DEPTH
         };
     private:
-        EUIViewportTransformControls fTransformControls;
         EVector<EViewportTool*> fRegisteredTools;
         EViewportTool*          fActiveTool;
         ViewType                fViewType;
@@ -73,9 +46,6 @@ namespace Engine {
 
         float GetWidth() const;
         float GetHeight() const;
-
-        EUIViewportTransformControls& GetTransformControls();
-        const EUIViewportTransformControls& GetTransformControls() const;
 
         EVector<EViewportTool*> GetRegisteredTools();
         EViewportTool* GetActiveTool();
