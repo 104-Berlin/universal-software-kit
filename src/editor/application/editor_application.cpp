@@ -366,7 +366,7 @@ void EApplication::RegisterDefaultResources()
         return result;
     };
 
-    EResourceDescription meshDsc("Mesh",{"obj", "fbx", "dae", "3ds", "glb", "gltf"});
+    EResourceDescription meshDsc("Mesh",{"obj", "fbx", "dae", "3ds", "glb", "gltf", "blend"});
     meshDsc.ImportFunction = [](ESharedBuffer buffer) -> EResource*{
         EResource* result = new EResource("Mesh");
         result->SetBuffer(buffer);
