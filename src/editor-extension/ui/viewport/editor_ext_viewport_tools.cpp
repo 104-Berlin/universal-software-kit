@@ -5,7 +5,7 @@
 using namespace Engine;
 
 EViewportTool::EViewportTool(const EString& toolName) 
-    : fToolName(toolName)
+    : fToolName(toolName), fVisible(true), fViewport(nullptr)
 {
     
 }
