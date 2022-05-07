@@ -258,7 +258,9 @@ void EStructProperty::OnCopy(const EProperty* from)
         }
         else
         {
-            fProperties.push_back(prop->Clone());
+            ERef<EProperty> newValue = prop->Clone();
+            ConnectChangeFunc(newValue.get());
+            fProperties.push_back(newValue);
         }
     }
 }
@@ -374,7 +376,9 @@ void EArrayProperty::OnCopy(const EProperty* from)
         }
         else
         {
-            fElements.push_back(fromAsArray->fElements[i]->Clone());
+            ERef<EProperty> newValue = fromAsArray->fElements[i]->Clone();
+            ConnectChangeFunc(newValue.get());
+            fElements.push_back(newValue);
         }
     }
 }
