@@ -71,15 +71,7 @@ void ViewportMouseMove(events::EMouseMoveEvent e)
 
 void ViewportClicked(events::EMouseDownEvent e)
 {
-    /*ERegister::Entity newEntity = activeScene->CreateEntity();
-    activeScene->AddComponent(newEntity, TechnicalMeshDsc);
 
-    EStructProperty* technicalMesh = activeScene->GetComponent(newEntity, TechnicalMeshDsc);
-    EArrayProperty* arrayProp = static_cast<EArrayProperty*>(technicalMesh->GetProperty("Positions"));
-    EStructProperty* vector = static_cast<EStructProperty*>(arrayProp->AddElement());
-    vector->SetValue(EVec3(e.Position.x, e.Position.y, 0.0f));
-    data.CurrentEditPoint = static_cast<EStructProperty*>(arrayProp->AddElement());
-    data.CurrentEditPoint->SetValue(EVec3(e.Position.x, e.Position.y, 0.0f));*/
 }
 
 void ViewportDrag(events::EMouseDragEvent e)
@@ -265,6 +257,8 @@ APP_ENTRY
     }, drawingViewport.lock().get());
 
     
+    
+
     info.PanelRegister->RegisterItem(extensionName, someDrawingPanel);
 }
 

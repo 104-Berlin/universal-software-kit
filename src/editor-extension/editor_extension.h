@@ -51,4 +51,5 @@ typedef glm::quat EQuat;
 #include "ui/viewport/editor_ext_camera_cotrols.h"
 #include "ui/viewport/editor_ext_viewport_tools.h"
 #include "ui/viewport/editor_ext_viewport.h"
+#include "ui/viewport/editor_ext_viewport_manager.h"
 #include "ui/editor_ui_register.h"
