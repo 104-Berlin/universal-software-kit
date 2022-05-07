@@ -3,11 +3,13 @@
 using namespace Editor;
 using namespace Engine;
 
+#define E_CLEAN_NAME_IDENTIFIER(name) name.substr(name.find_first_of(".") + 1)
+
 EObjectView::EObjectView(Engine::EUIValueRegister* valueFieldRegister)
     : EUIField("OBJECTVIEW"), fSelectedEntity(0), fUIValueRegister(valueFieldRegister)
 {
     shared::Events().Connect<EntityChangeEvent>([this](EntityChangeEvent e){
-        if (e.Type == EntityChangeType::COMPONENT_ADDED && e.Entity.Handle == fSelectedEntity)
+        if ((e.Type == EntityChangeType::COMPONENT_ADDED || e.Type == EntityChangeType::COMPONENT_REMOVED) && e.Entity.Handle == fSelectedEntity)
         {
             fComponentsView.lock()->SetDirty();
         }
@@ -170,7 +172,7 @@ ERef<EUIField> EObjectView::RenderEnum(Engine::EEnumProperty* storage, EString n
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(E_CLEAN_NAME_IDENTIFIER(nameIdent));
                     if (valueProp)
                     {
                         weakResult.lock()->SetSelectedIndex(std::dynamic_pointer_cast<EEnumProperty>(valueProp)->GetCurrentValue());
@@ -253,7 +255,7 @@ ERef<EUIField> EObjectView::RenderBool(Engine::EValueProperty<bool>* storage, ES
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(E_CLEAN_NAME_IDENTIFIER(nameIdent));
                     if (valueProp)
                     {
                         weakResult.lock()->SetValue(std::dynamic_pointer_cast<EValueProperty<bool>>(valueProp)->GetValue());
@@ -286,7 +288,7 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<i32>* storage, 
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(E_CLEAN_NAME_IDENTIFIER(nameIdent));
                     if (valueProp)
                     {
                         weakResult.lock()->SetValue(std::static_pointer_cast<EValueProperty<i32>>(valueProp)->GetValue());
@@ -319,7 +321,7 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u32>* storage, 
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(E_CLEAN_NAME_IDENTIFIER(nameIdent));
                     if (valueProp)
                     {
                         weakResult.lock()->SetValue(std::dynamic_pointer_cast<EValueProperty<u32>>(valueProp)->GetValue());
@@ -351,7 +353,7 @@ ERef<EUIField> EObjectView::RenderInteger(Engine::EValueProperty<u64>* storage, 
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(E_CLEAN_NAME_IDENTIFIER(nameIdent));
                     if (valueProp)
                     {
                         weakResult.lock()->SetValue(std::dynamic_pointer_cast<EValueProperty<u64>>(valueProp)->GetValue());
@@ -384,7 +386,7 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<double>* storage
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(E_CLEAN_NAME_IDENTIFIER(nameIdent));
                     if (valueProp)
                     {
                         weakResult.lock()->SetValue(std::dynamic_pointer_cast<EValueProperty<double>>(valueProp)->GetValue());
@@ -417,7 +419,7 @@ ERef<EUIField> EObjectView::RenderDouble(Engine::EValueProperty<float>* storage,
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(E_CLEAN_NAME_IDENTIFIER(nameIdent));
                     if (valueProp)
                     {
                         weakResult.lock()->SetValue(std::dynamic_pointer_cast<EValueProperty<float>>(valueProp)->GetValue());
@@ -449,7 +451,7 @@ ERef<EUIField> EObjectView::RenderString(Engine::EValueProperty<EString>* storag
             {
                 if (componentChangeData.NewValue.Value())
                 {
-                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(nameIdent);
+                    ERef<EProperty> valueProp = static_cast<EStructProperty*>(componentChangeData.NewValue.Value().get())->GetPropertyByIdentifier(E_CLEAN_NAME_IDENTIFIER(nameIdent));
                     if (valueProp)
                     {
                         weakResult.lock()->SetValue(std::dynamic_pointer_cast<EValueProperty<EString>>(valueProp)->GetValue());

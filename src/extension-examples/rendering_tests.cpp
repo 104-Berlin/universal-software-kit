@@ -9,7 +9,21 @@ E_STORAGE_STRUCT(MeshComponent,
 )
 
 EUnorderedMap<EDataBase::Entity, RMesh*> fMeshes;
+static ETransformTool* transformControls = nullptr;
 
+EDataBase::Entity currentTransformObject = 0;
+
+void ViewportToolFinish(events::EViewportToolFinishEvent event, EWeakRef<EUIViewport> viewport)
+{
+    if (event.ToolName == ETransformTool::sGetName())
+    {
+        ETransformTool* transformControls = (ETransformTool*)viewport.lock()->GetActiveTool();
+        if (transformControls)
+        {
+            shared::SetValue(currentTransformObject, "ETransform", transformControls->GetTransform());
+        }
+    }
+}
 
 APP_ENTRY
 {
@@ -19,6 +33,19 @@ APP_ENTRY
 
     ERef<EUIPanel> showPanel = EMakeRef<EUIPanel>("Show Panel");
     ERef<EUIViewport> viewport = EMakeRef<EUIViewport>(camera);
+
+    /*viewport->GetTransformControls().SetOnChange([](Editor::ETransform transform) {
+        shared::SetValue(currentTransformObject, "ETransform", transform);
+    });*/
+    transformControls = (ETransformTool*) viewport->AddTool(new ETransformTool());
+    viewport->AddEventListener<events::EViewportToolFinishEvent>([viewport](events::EViewportToolFinishEvent event) {ViewportToolFinish(event, viewport);});
+    showPanel->SetMenuBar(EMakeRef<EUIViewportToolbar>(viewport));
+
+    Renderer::RGid* grid = new Renderer::RGid(100, 100, 1.0f, 1.0f);
+    grid->SetRotation(EVec3(glm::radians(90.0), 0, 0));
+    grid->SetPosition(EVec3(-50, 0, -50));
+    viewport->GetScene().Add(grid);
+
     EWeakRef<EUIViewport> weakViewport = viewport;
 
     ERef<EUIDropdown> viewTypeDropdown = EMakeRef<EUIDropdown>("View Type");
@@ -69,6 +96,8 @@ APP_ENTRY
                 {
                     RMesh* mesh = new RMesh();
                     fMeshes[event.Entity.Handle] = mesh;
+                    currentTransformObject = event.Entity.Handle;
+                    transformControls->SetAttachedObject(mesh);
                     weakViewport.lock()->GetScene().Add(mesh);
                     auto meshResource = shared::GetResource(meshComponent.Mesh.ResourceId);
                     

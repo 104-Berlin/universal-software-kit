@@ -2,6 +2,7 @@
 
 namespace Engine {
 
+    class EUIViewport;
     
     class E_EDEXAPI EUIViewport : public EUIField
     {
@@ -43,6 +44,9 @@ namespace Engine {
         EVec2 Project(const EVec3& point) const;
         EVec3 Unproject(const EVec3& point) const;
 
+        float GetWidth() const;
+        float GetHeight() const;
+
         EVector<EViewportTool*> GetRegisteredTools();
         EViewportTool* GetActiveTool();
         void SetActiveTool(const EString& toolName);
@@ -78,6 +82,8 @@ namespace Engine {
     private:
         void Regenerate();
     };
+
+    
 
 
 }

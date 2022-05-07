@@ -14,25 +14,25 @@ EUIViewport::EUIViewport(const Renderer::RCamera& camera)
         fCameraControls(new EUIBasic3DCameraControls(&fCamera))
 {
     AddEventListener<events::EMouseDragEvent>([this](events::EMouseDragEvent event){
-        if (this->fCameraControls)
+        if (this->fCameraControls && !ImGuizmo::IsUsing())
         {
             this->fCameraControls->OnMouseDrag(event);
         }
     });
     AddEventListener<events::EMouseScrollEvent>([this](events::EMouseScrollEvent event){
-        if (this->fCameraControls)
+        if (this->fCameraControls && !ImGuizmo::IsUsing())
         {
             this->fCameraControls->OnMouseScroll(event);
         }
     });
     AddEventListener<events::EKeyDownEvent>([this](events::EKeyDownEvent event){
-        if (this->fCameraControls)
+        if (this->fCameraControls && !ImGuizmo::IsUsing())
         {
             this->fCameraControls->OnKeyDown(event);
         }
     });
     AddEventListener<events::EKeyUpEvent>([this](events::EKeyUpEvent event){
-        if (this->fCameraControls)
+        if (this->fCameraControls && !ImGuizmo::IsUsing())
         {
             this->fCameraControls->OnKeyUp(event);
         }
@@ -128,7 +128,20 @@ bool EUIViewport::OnRender()
         case ViewType::DEPTH: textureId = fFrameBuffer->GetDepthAttachment(); break;
     }
 
+    // Show the render result
     ImGui::Image((ImTextureID)(unsigned long long)(unsigned long)textureId, {contentRegion.x, contentRegion.y}, {0, 1}, {1, 0});
+
+    // Prepare Imguizmo
+    ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
+    ImRect itemRect = g.LastItemData.Rect;
+    
+
+    ImGuizmo::SetOrthographic(false);
+    ImGuizmo::SetID(1);
+    ImGuizmo::SetDrawlist();
+    ImGuizmo::SetRect(itemRect.GetTL().x, itemRect.GetTL().y, itemRect.GetWidth(), itemRect.GetHeight());
+
+
 
     if (fActiveTool && fActiveTool->IsVisible())
     {
@@ -137,6 +150,7 @@ bool EUIViewport::OnRender()
             fEventDispatcher.Enqueue<events::EViewportToolFinishEvent>({fActiveTool->GetToolName()});
         }
     }
+
 
     return true;
 }
@@ -151,6 +165,16 @@ EVec3 EUIViewport::Unproject(const EVec3& point) const
 {
     EVec4 result = glm::inverse(fCamera.GetProjectionMatrix(fFrameBuffer->GetWidth(), fFrameBuffer->GetHeight()) * fCamera.GetViewMatrix()) * EVec4(point.x / fFrameBuffer->GetWidth() * 2.0f - 1.0f, -(point.y / fFrameBuffer->GetHeight() * 2.0f - 1.0f), point.z, 1.0f);
     return {result.x, result.y, result.z};
+}
+
+float EUIViewport::GetWidth() const
+{
+    return fFrameBuffer->GetWidth();
+}
+
+float EUIViewport::GetHeight() const
+{
+    return fFrameBuffer->GetHeight();
 }
 
 EUIViewportToolbar::EUIViewportToolbar(EWeakRef<EUIViewport> viewport) 
@@ -188,4 +212,3 @@ void EUIViewportToolbar::Regenerate()
         });
     }
 }
-
