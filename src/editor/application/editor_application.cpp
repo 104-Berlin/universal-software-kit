@@ -32,7 +32,7 @@ E_STORAGE_STRUCT(EnumTest,
 static EApplication* runningInstance = nullptr;
 
 EApplication::EApplication() 
-    : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
+    : fGraphicsContext(nullptr), fUIRegister(), fUIValueRegister(), fViewportManager(&fUIRegister), fCommandLine(), fLoadOnStartRegister()
 {
     EFolder folder(EFile::GetAppDataPath());
     if (!folder.Exist())
@@ -48,6 +48,7 @@ EApplication::EApplication()
             EAppInit init;
             init.PanelRegister = &fUIRegister;
             init.ValueFieldRegister = &fUIValueRegister;
+            init.ViewportManager = &fViewportManager;
             E_INFO("Running APP_INIT for plugtin \"" + extension->GetName() + "\"");
             entry(extension->GetName().c_str(), init);
         }

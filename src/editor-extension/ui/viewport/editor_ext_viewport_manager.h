@@ -15,22 +15,27 @@ namespace Engine {
     )
 
     using TRenderFunction = std::function<void(Renderer::RObject*)>;
+
     struct EUIViewportRenderFunction
     {
         EViewportDescription    Description;
         TRenderFunction         RenderFunction;
     };
 
-    using TViewportRenderMap = EUnorderedMap<EString, EUIViewportRenderFunction>;
+    using TViewportTypeMap = EUnorderedMap<EViewportType::opts, EPair<EWeakRef<EUIViewport>, EUnorederedMap<EValueDescription::t_ID, TRenderFunction>>>;
 
     class E_EDEXAPI EUIViewportManager
     {
     private:
-        TViewportRenderMap fViewportRenderMap;
+        TViewportTypeMap    fViewports;
+        EUIRegister*        fUIRegister;
     public:
         public:
-        EUIViewportManager();
-        void AddViewport(const EViewportDescription& description, TRenderFunction renderFunction);
+        EUIViewportManager(EUIRegister* uiRegister);
+        void AddViewportDescription(const EViewportDescription& description, TRenderFunction renderFunction);
+
+    private:
+        ERef<EUIViewport> CreateViewport(const EViewportType& type);
     };
 
 }

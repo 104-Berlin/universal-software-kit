@@ -26,5 +26,6 @@ namespace Engine {
     {
         EUIRegister* PanelRegister;
         EUIValueRegister* ValueFieldRegister;
+        EUIViewportManager* ViewportManager;
     };
 }
