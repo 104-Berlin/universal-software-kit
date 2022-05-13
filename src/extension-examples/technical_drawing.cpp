@@ -259,13 +259,8 @@ APP_ENTRY
     
     
 
-    info.PanelRegister->RegisterItem(extensionName, someDrawingPanel);
-
-    EViewportDescription dsc;
-    dsc.ExtensionName = extensionName;
-    dsc.Type = EViewportType::FRONT_RIGHT_TOP_3D;
-
-    info.ViewportManager->AddViewportDescription(dsc, );
+    //info.PanelRegister->RegisterItem(extensionName, someDrawingPanel);
+    
 }
 
 EXT_ENTRY

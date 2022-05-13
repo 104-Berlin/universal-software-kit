@@ -29,6 +29,10 @@ namespace Engine {
         Renderer::RCamera fCamera;
         Renderer::RScene fScene;
 
+        // Entity object maps
+        EUnorderedMap<EDataBase::Entity, Renderer::RObject*> fEntityObjectMap;
+        EUnorderedMap<Renderer::RObject*, EDataBase::Entity> fObjectEntityMap;
+
         EUICameraControls* fCameraControls;
     public:
         Renderer::RScene& GetScene();
@@ -46,6 +50,12 @@ namespace Engine {
 
         float GetWidth() const;
         float GetHeight() const;
+
+        void PushToEntityObjectMap(EDataBase::Entity entity, Renderer::RObject* object);
+        void RemoveFromEntityObjectMap(EDataBase::Entity entity);
+        void RemoveFromEntityObjectMap(Renderer::RObject* object);
+        EDataBase::Entity GetEntityFromObject(Renderer::RObject* object) const;
+        Renderer::RObject* GetObjectFromEntity(EDataBase::Entity entity) const;
 
         EVector<EViewportTool*> GetRegisteredTools();
         EViewportTool* GetActiveTool();

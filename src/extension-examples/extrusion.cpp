@@ -180,7 +180,7 @@ APP_ENTRY
                                 weakViewport.lock()->GetScene().Add(meshContainer);
                             }
                         }
-                        CreateMeshFromExtrusion(extrusionBody, meshContainer);
+                        
                     }
                 }
             }
@@ -190,10 +190,26 @@ APP_ENTRY
 
     extrusionViewport->AddChild(viewport);
 
-    info.PanelRegister->RegisterItem(extensionName, extrusionViewport);
+    //info.PanelRegister->RegisterItem(extensionName, extrusionViewport);
+    EViewportDescription dsc;
+    dsc.ExtensionName = extensionName;
+    dsc.Type = EViewportType::FRONT_RIGHT_TOP_3D;
+
+    EUIViewportRenderFunction func;
+    func.Description = dsc;
+    func.ValueDescription = ExtrusionBody::_dsc;
+    func.RenderFunction = [](Renderer::RObject* object, ERef<EProperty> property){
+        ExtrusionBody extrusionBody;
+        if (property->GetValue<ExtrusionBody>(&extrusionBody))
+        {
+            CreateMeshFromExtrusion(extrusionBody, object);
+        }
+    };
+    info.ViewportRenderFunctions->RegisterItem(extensionName, func);
 }
 
 EXT_ENTRY
 {
+    ExtrusionBody::_dsc.AddDependsOn(Editor::ETransform::_dsc);
     info.GetComponentRegister().RegisterStruct<ExtrusionBody>(extensionName);
 }

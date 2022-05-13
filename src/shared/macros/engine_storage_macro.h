@@ -179,6 +179,7 @@
 
 #define E_CREATE_ENUM_DSC(s_name) EXPAND(E_STRINGIFY(s_name)),
 
+#define E_CREATE_ENUM_STRING(s_name) case s_name: return EXPAND(E_STRINGIFY(s_name));
 
 
 #define E_STORAGE_ENUM(name, ...) struct name {\
@@ -206,6 +207,15 @@
                                         const EEnumProperty* enumProp = static_cast<const EEnumProperty*>(prop);\
                                         value.Value = static_cast<opts>(enumProp->GetCurrentValue());\
                                         return true;\
+                                    }\
+                                    const char* ToString() const\
+                                    {\
+                                        switch (Value)\
+                                        {\
+                                            EXPAND (E_LOOP_ARGS(E_CREATE_ENUM_STRING, __VA_ARGS__))\
+                                            default:\
+                                                return "";\
+                                        }\
                                     }\
                                     bool operator==(const name& other) const {\
                                         return Value == other.Value; \

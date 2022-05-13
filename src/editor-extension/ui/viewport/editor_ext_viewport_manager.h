@@ -14,28 +14,39 @@ namespace Engine {
         (EViewportType, Type)
     )
 
-    using TRenderFunction = std::function<void(Renderer::RObject*)>;
+    using TRenderFunction = std::function<void(Renderer::RObject*, ERef<EProperty>)>;
 
     struct EUIViewportRenderFunction
     {
-        EViewportDescription    Description;
-        TRenderFunction         RenderFunction;
+        EViewportDescription                            Description;
+        EValueDescription                               ValueDescription;
+        TRenderFunction                                 RenderFunction;
+
+        bool                                            NeedsOwnObject = true;
+        EUnorderedMap<EValueDescription::t_ID, size_t>  ComponentObjectIndex; // Dont change this!!
     };
 
-    using TViewportTypeMap = EUnorderedMap<EViewportType::opts, EPair<EWeakRef<EUIViewport>, EUnorederedMap<EValueDescription::t_ID, TRenderFunction>>>;
+    using EViewportRenderFunctionRegister = EExtensionRegister<EUIViewportRenderFunction>;
 
+    using TViewportTypeMap = EUnorderedMap<EViewportType::opts, EWeakRef<EUIViewport>>;
+    using TRenderFunctionMap = EUnorderedMap<EViewportType::opts, EUnorderedMap<EValueDescription::t_ID, EUIViewportRenderFunction>>;
     class E_EDEXAPI EUIViewportManager
     {
     private:
-        TViewportTypeMap    fViewports;
-        EUIRegister*        fUIRegister;
+        TViewportTypeMap                    fViewports;
+        TRenderFunctionMap                  fRenderFunctions;
+        EUIRegister*                        fUIRegister;
+        EViewportRenderFunctionRegister*    fViewportRenderFunctionRegister;
     public:
         public:
-        EUIViewportManager(EUIRegister* uiRegister);
-        void AddViewportDescription(const EViewportDescription& description, TRenderFunction renderFunction);
-
+        EUIViewportManager(EUIRegister* uiRegister, EViewportRenderFunctionRegister* renderFunctionRegister);
+        
+        
+        void ReloadViewports();
     private:
-        ERef<EUIViewport> CreateViewport(const EViewportType& type);
+        ERef<EUIViewport> CreateViewport(const EViewportType& type) const;
+
+        void HandleEntityChange(EntityChangeEvent event);
     };
 
 }

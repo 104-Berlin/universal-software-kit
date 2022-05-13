@@ -20,6 +20,7 @@ bool EExtensionView::OnRender()
         EVector<EExtension*> loadedExtensions = shared::ExtensionManager().GetLoadedExtensions();
         for (EExtension* ext : loadedExtensions)
         {
+            ImGui::PushID(ext);
             EString name = ext->GetName();
             EString fullPath = ext->GetFilePath();
             ImGui::Text("%s", name.c_str());
@@ -28,6 +29,7 @@ bool EExtensionView::OnRender()
             {
                 shared::ExtensionManager().ReloadExtension(ext);
                 // The ext ptr is invald after here. 
+                ImGui::PopID();
                 break; // For now we just break. Cases other extensions to disappear for one frame 
             }
             ImGui::SameLine();
@@ -49,6 +51,7 @@ bool EExtensionView::OnRender()
             {
                 shared::ExtensionManager().SetExtensionAutoLoad(name, isAutoLoad);
             }
+            ImGui::PopID();
         }
         // Refetch the loaded extensions. If the reload was clicked one of the pointers is invalid. Refetching them solves the problem!
     }

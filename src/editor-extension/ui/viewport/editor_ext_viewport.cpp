@@ -177,6 +177,62 @@ float EUIViewport::GetHeight() const
     return fFrameBuffer->GetHeight();
 }
 
+void EUIViewport::PushToEntityObjectMap(EDataBase::Entity entity, Renderer::RObject* object)
+{
+    if (fEntityObjectMap.find(entity) != fEntityObjectMap.end())
+    {
+        E_WARN("Try pushing... Entity " + std::to_string(entity) + " already exists in the map");
+        return;
+    }
+    fEntityObjectMap[entity] = object;
+    fObjectEntityMap[object] = entity;
+}
+
+void EUIViewport::RemoveFromEntityObjectMap(EDataBase::Entity entity)
+{
+    if (fEntityObjectMap.find(entity) == fEntityObjectMap.end())
+    {
+        E_WARN("Try removing... Entity " + std::to_string(entity) + " does not exist in the map");
+        return;
+    }
+    fObjectEntityMap.erase(fEntityObjectMap[entity]);
+    fEntityObjectMap.erase(entity);
+}
+
+void EUIViewport::RemoveFromEntityObjectMap(Renderer::RObject* object)
+{
+    if (fObjectEntityMap.find(object) == fObjectEntityMap.end())
+    {
+        E_WARN("Try removing... Object does not exist in the map");
+        return;
+    }
+    fEntityObjectMap.erase(fObjectEntityMap[object]);
+    fObjectEntityMap.erase(object);
+}
+
+EDataBase::Entity EUIViewport::GetEntityFromObject(Renderer::RObject* object) const
+{
+    auto it = fObjectEntityMap.find(object);
+    if (it == fObjectEntityMap.end())
+    {
+        E_WARN("Try getting... Object does not exist in the map");
+        return 0;
+    }
+    return it->second;
+}
+
+Renderer::RObject* EUIViewport::GetObjectFromEntity(EDataBase::Entity entity) const
+{
+    auto it = fEntityObjectMap.find(entity);
+    if (it == fEntityObjectMap.end())
+    {
+        E_WARN("Try getting... Entity " + std::to_string(entity) + " does not exist in the map");
+        return nullptr;
+    }
+    return it->second;
+}
+
+
 EUIViewportToolbar::EUIViewportToolbar(EWeakRef<EUIViewport> viewport) 
     : EUIField("Viewport " + viewport.lock()->GetLabel()), fViewport(viewport)
 {
