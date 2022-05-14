@@ -57,6 +57,7 @@ void EUIViewportManager::ReloadViewports()
         }
         else if (fViewports[type].expired())
         {
+            // remove if viewport is expired
             fViewports.erase(type);
         }
     }
