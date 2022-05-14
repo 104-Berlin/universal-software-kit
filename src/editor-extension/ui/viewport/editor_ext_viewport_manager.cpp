@@ -45,6 +45,12 @@ void EUIViewportManager::ReloadViewports()
         {
             ERef<EUIPanel> viewportPanel = EMakeRef<EUIPanel>(EString("Viewport") + EViewportType(type).ToString());
             ERef<EUIViewport> viewport = CreateViewport(type);
+            // Add Grid to viewport
+            Renderer::RGid* grid = new Renderer::RGid(100, 100, 1.0f, 1.0f);
+            grid->SetRotation(EVec3(glm::radians(90.0), 0, 0));
+            grid->SetPosition(EVec3(-50, 0, -50));
+            viewport->GetScene().Add(grid);
+
             viewportPanel->AddChild(viewport);
             fUIRegister->RegisterItem("CORE-VIEWPORTS", viewportPanel);
             fViewports[type] = viewport;
