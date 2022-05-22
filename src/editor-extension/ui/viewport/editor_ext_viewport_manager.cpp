@@ -12,13 +12,17 @@ EUIViewportManager::EUIViewportManager(EUIRegister* uiRegister, EViewportRenderF
 
 void EUIViewportManager::ReloadViewports()
 {
+    TRenderFunctionMap newRenderFunctions;
     fRenderFunctions.clear();
+
     ESet<EViewportType::opts> viewportTypes;
     for (const EUIViewportRenderFunction& func : fViewportRenderFunctionRegister->GetAllItems())
     {
         fRenderFunctions[func.Description.Type.Value][func.ValueDescription.GetId()] = func;
         viewportTypes.insert(func.Description.Type.Value);
     }
+
+
 
     for (const EViewportType::opts& type : viewportTypes)
     {
@@ -176,16 +180,16 @@ void EUIViewportManager::HandleEntityChange(EntityChangeEvent event)
         {
             if (func.NeedsOwnObject)
             {
-                if (func.ComponentObjectIndex.find(componentDescription.GetId()) == func.ComponentObjectIndex.end())
+                if (func.ComponentObjectIndex.find(event.Entity.Handle) == func.ComponentObjectIndex.end())
                 {
                     Renderer::RObject* newObject = new Renderer::RObject();
                     entityObject->Add(newObject);
                     entityObject = newObject;
-                    func.ComponentObjectIndex[componentDescription.GetId()] = entityObject->GetChildren().size() - 1;
+                    func.ComponentObjectIndex[event.Entity.Handle] = entityObject->GetChildren().size() - 1;
                 }
                 else
                 {
-                    entityObject = entityObject->GetChildAt(func.ComponentObjectIndex[componentDescription.GetId()]);
+                    entityObject = entityObject->GetChildAt(func.ComponentObjectIndex[event.Entity.Handle]);
                 }
             }
             

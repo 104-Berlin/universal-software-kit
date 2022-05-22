@@ -27,7 +27,7 @@ namespace Engine {
         TViewportToolFinishFunction                     ToolFinished;
 
         bool                                            NeedsOwnObject = true;
-        EUnorderedMap<EValueDescription::t_ID, size_t>  ComponentObjectIndex; // Dont change this!!
+        EUnorderedMap<EDataBase::Entity, size_t>        ComponentObjectIndex; // Dont change this!!
     };
 
     using EViewportRenderFunctionRegister = EExtensionRegister<EUIViewportRenderFunction>;
