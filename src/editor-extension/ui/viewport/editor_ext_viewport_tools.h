@@ -7,7 +7,7 @@ namespace Engine {
     
     class E_EDEXAPI EViewportTool 
     {
-    private:
+    protected:
         bool fVisible;
         EString fToolName;
         EUIViewport* fViewport;
@@ -113,8 +113,7 @@ namespace Engine {
     {
         using TransformUpdateFunction = std::function<void(Editor::ETransform)>;
     private:
-        Renderer::RObject*    fAttachedObject;
-        bool                  fWasUsing;
+        bool                    fWasUsing;
         TransformUpdateFunction fOnChange;
         
         EVec3 fLastPosition;
@@ -124,8 +123,6 @@ namespace Engine {
         ETransformTool();
 
         virtual bool OnRender() override;
-
-        void SetAttachedObject(Renderer::RObject* object);
 
         Editor::ETransform GetTransform() const;
 

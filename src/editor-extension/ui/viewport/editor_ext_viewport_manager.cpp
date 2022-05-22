@@ -38,27 +38,74 @@ void EUIViewportManager::ReloadViewports()
                 object->SetScale(transform.Scale);
             }
         };
+        transformRenderFunction.InitViewportTools = [](){
+            EVector<EViewportTool*> result;
+            result.push_back(new ETransformTool());
+            return result;
+        };
+        transformRenderFunction.ToolFinished = [](events::EViewportToolFinishEvent event, EWeakRef<EUIViewport> viewport){
+            if (viewport.expired()) { return; }
+            if (event.ToolName == ETransformTool::sGetName())
+            {
+                for (EViewportTool* tool : viewport.lock()->GetRegisteredTools())
+                {
+                    if (tool->GetToolName() == event.ToolName)
+                    {
+                        Editor::ETransform newTransform = ((ETransformTool*)tool)->GetTransform();
+                        Renderer::RObject* selectedObject = viewport.lock()->GetSelectionContext().GetSelectedObject();
+                        EDataBase::Entity selectedEntity = 0; 
+                        if (selectedObject && (selectedEntity = viewport.lock()->GetEntityFromObject(selectedObject)))
+                        {
+                            shared::SetValue(selectedEntity, "ETransform", newTransform);
+                        }
+                        break;
+                    }
+                }
+            }
+        };
         fRenderFunctions[type][Editor::ETransform::_dsc.GetId()] = transformRenderFunction;
+
+        
+        if (fViewports[type].expired())
+        {
+            fViewports.erase(type);
+        }
 
         // Create the viewport
         if (fViewports.find(type) == fViewports.end())
         {
             ERef<EUIPanel> viewportPanel = EMakeRef<EUIPanel>(EString("Viewport") + EViewportType(type).ToString());
             ERef<EUIViewport> viewport = CreateViewport(type);
+            viewportPanel->SetMenuBar(EMakeRef<EUIViewportToolbar>(viewport));
             // Add Grid to viewport
             Renderer::RGid* grid = new Renderer::RGid(100, 100, 1.0f, 1.0f);
             grid->SetRotation(EVec3(glm::radians(90.0), 0, 0));
             grid->SetPosition(EVec3(-50, 0, -50));
             viewport->GetScene().Add(grid);
 
+            viewport->AddEventListener<events::EViewportToolFinishEvent>([this, type](events::EViewportToolFinishEvent event){
+                ViewportToolFinished(event, type);
+            });
+
             viewportPanel->AddChild(viewport);
             fUIRegister->RegisterItem("CORE-VIEWPORTS", viewportPanel);
             fViewports[type] = viewport;
         }
-        else if (fViewports[type].expired())
+
+        ERef<EUIViewport> viewport = fViewports[type].lock();
+
+        // Reload the tools
+        viewport->ClearRegisteredTools();
+        for (const auto& func : fRenderFunctions[type])
         {
-            // remove if viewport is expired
-            fViewports.erase(type);
+            if (func.second.InitViewportTools)
+            {
+                EVector<EViewportTool*> tools = func.second.InitViewportTools();
+                for (EViewportTool* t : tools)
+                {
+                    viewport->AddTool(t);
+                }
+            }
         }
     }
 }
@@ -121,6 +168,7 @@ void EUIViewportManager::HandleEntityChange(EntityChangeEvent event)
         {
             entityObject = new Renderer::RObject();
             scene.Add(entityObject);
+            viewport->GetSelectionContext().SetSelectedObject(entityObject);
             viewport->PushToEntityObjectMap(event.Entity.Handle, entityObject);
         }
 
@@ -146,6 +194,17 @@ void EUIViewportManager::HandleEntityChange(EntityChangeEvent event)
         else if (event.Type == EntityChangeType::COMPONENT_REMOVED)
         {
             scene.DeleteObject(entityObject);
+        }
+    }
+}
+
+void EUIViewportManager::ViewportToolFinished(events::EViewportToolFinishEvent event, EViewportType::opts viewportType)
+{
+    for (const auto& entry : fRenderFunctions[viewportType])
+    {
+        if (entry.second.ToolFinished)
+        {
+            entry.second.ToolFinished(event, fViewports[viewportType]);
         }
     }
 }

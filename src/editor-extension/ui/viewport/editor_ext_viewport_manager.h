@@ -15,12 +15,16 @@ namespace Engine {
     )
 
     using TRenderFunction = std::function<void(Renderer::RObject*, ERef<EProperty>)>;
+    using TInitViewportToolsFunction = std::function<EVector<EViewportTool*>()>;
+    using TViewportToolFinishFunction = std::function<void(events::EViewportToolFinishEvent, EWeakRef<EUIViewport>)>;
 
     struct EUIViewportRenderFunction
     {
         EViewportDescription                            Description;
         EValueDescription                               ValueDescription;
         TRenderFunction                                 RenderFunction;
+        TInitViewportToolsFunction                      InitViewportTools;
+        TViewportToolFinishFunction                     ToolFinished;
 
         bool                                            NeedsOwnObject = true;
         EUnorderedMap<EValueDescription::t_ID, size_t>  ComponentObjectIndex; // Dont change this!!
@@ -47,6 +51,7 @@ namespace Engine {
         ERef<EUIViewport> CreateViewport(const EViewportType& type) const;
 
         void HandleEntityChange(EntityChangeEvent event);
+        void ViewportToolFinished(events::EViewportToolFinishEvent event, EViewportType::opts viewportType);
     };
 
 }

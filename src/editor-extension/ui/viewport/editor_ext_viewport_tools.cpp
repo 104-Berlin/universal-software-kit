@@ -287,18 +287,19 @@ EString EBezierEditTool::GetIcon() const
 // Transform tool
 
 ETransformTool::ETransformTool()
-    : EViewportTool(sGetName()), fAttachedObject(nullptr), fWasUsing(false)
+    : EViewportTool(sGetName()), fWasUsing(false)
 {
 
 }
 
 bool ETransformTool::OnRender()
 {
-    if (!fAttachedObject) { return false; }
+    Renderer::RObject* attachedObject = fViewport->GetSelectionContext().GetSelectedObject();
+    if (!attachedObject) { return false; }
 
     EMat4 viewMatrix = GetViewport()->GetCamera().GetViewMatrix();
     EMat4 projectionMatrix = GetViewport()->GetCamera().GetProjectionMatrix(GetViewport()->GetWidth(), GetViewport()->GetHeight());
-    EMat4 transformMatrix = fAttachedObject->GetModelMatrix();
+    EMat4 transformMatrix = attachedObject->GetModelMatrix();
     ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformMatrix));
     
     bool finished = false;
@@ -319,19 +320,14 @@ bool ETransformTool::OnRender()
         fLastRotation = EVec3(glm::radians(fLastRotation.x), glm::radians(fLastRotation.y), glm::radians(fLastRotation.z));
 
 
-        fAttachedObject->SetPosition(fLastPosition);
-        fAttachedObject->SetRotation(fLastRotation);
+        attachedObject->SetPosition(fLastPosition);
+        attachedObject->SetRotation(fLastRotation);
         
-        fAttachedObject->SetScale(fLastScale);
+        attachedObject->SetScale(fLastScale);
         fWasUsing = true;
     }
 
     return finished;
-}
-
-void ETransformTool::SetAttachedObject(Renderer::RObject* object)
-{
-    fAttachedObject = object;
 }
 
 

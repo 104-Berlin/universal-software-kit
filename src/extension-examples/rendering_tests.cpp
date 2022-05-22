@@ -97,7 +97,7 @@ APP_ENTRY
                     RMesh* mesh = new RMesh();
                     fMeshes[event.Entity.Handle] = mesh;
                     currentTransformObject = event.Entity.Handle;
-                    transformControls->SetAttachedObject(mesh);
+                    //transformControls->SetAttachedObject(mesh);
                     weakViewport.lock()->GetScene().Add(mesh);
                     auto meshResource = shared::GetResource(meshComponent.Mesh.ResourceId);
                     

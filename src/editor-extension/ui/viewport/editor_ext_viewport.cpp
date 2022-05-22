@@ -41,11 +41,7 @@ EUIViewport::EUIViewport(const Renderer::RCamera& camera)
 
 EUIViewport::~EUIViewport() 
 {
-    for (EViewportTool* tool : fRegisteredTools)
-    {
-        delete tool;
-    }
-    fRegisteredTools.clear();
+    ClearRegisteredTools();
 
     if (fFrameBuffer)
     {
@@ -93,6 +89,16 @@ void EUIViewport::SetViewType(ViewType type)
 EVector<EViewportTool*> EUIViewport::GetRegisteredTools()
 {
     return fRegisteredTools;
+}
+
+void EUIViewport::ClearRegisteredTools()
+{
+    for (EViewportTool* tool : fRegisteredTools)
+    {
+        delete tool;
+    }
+    fRegisteredTools.clear();
+    fActiveTool = nullptr;
 }
 
 EViewportTool* EUIViewport::GetActiveTool()
@@ -175,6 +181,16 @@ float EUIViewport::GetWidth() const
 float EUIViewport::GetHeight() const
 {
     return fFrameBuffer->GetHeight();
+}
+
+const ESelectionContext& EUIViewport::GetSelectionContext() const
+{
+    return fSelectionCtx;
+}
+
+ESelectionContext& EUIViewport::GetSelectionContext()
+{
+    return fSelectionCtx;
 }
 
 void EUIViewport::PushToEntityObjectMap(EDataBase::Entity entity, Renderer::RObject* object)
