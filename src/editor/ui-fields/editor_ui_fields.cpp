@@ -2,7 +2,7 @@
 
 using namespace Editor;
 using namespace Engine;
-
+/*
 EExtensionView::EExtensionView() 
  : EUIField("ExtensionView")
 {
@@ -61,7 +61,7 @@ bool EExtensionView::OnRender()
         }
     }
     return true;
-}
+}*/
 
 ECommandLine::ECommandLine() 
     : EUIField("CommandLine")
