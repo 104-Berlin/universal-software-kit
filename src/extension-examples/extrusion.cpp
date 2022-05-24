@@ -146,7 +146,7 @@ APP_ENTRY
     ERef<EUIViewport> viewport = EMakeRef<EUIViewport>(RCamera(Renderer::ECameraMode::PERSPECTIVE));
     EWeakRef<EUIViewport> weakViewport = viewport;
 
-    Renderer::RGid* grid = new Renderer::RGid(100, 100, 1.0f, 1.0f);
+    Renderer::RGrid* grid = new Renderer::RGrid(100, 100, 1.0f, 1.0f);
     grid->SetRotation(EVec3(glm::radians(90.0), 0, 0));
     grid->SetPosition(EVec3(-50, 0, -50));
     viewport->GetScene().Add(grid);
