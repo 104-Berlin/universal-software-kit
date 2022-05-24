@@ -7,16 +7,6 @@
 
 namespace Editor {
 
-    /*class EExtensionView : public Engine::EUIField
-    {
-    public:
-        EExtensionView();
-        virtual ~EExtensionView();
-
-        virtual bool OnRender() override;
-    };*/
-
-
     class ECommandLine : public Engine::EUIField
     {
     public:

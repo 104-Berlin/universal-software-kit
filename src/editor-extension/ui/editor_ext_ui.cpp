@@ -408,6 +408,30 @@ void EUIField::ClosePopup()
     fCurrentPopup = nullptr;
 }
 
+void EUIField::SetLabelVisible(bool value)
+{
+    fLabelVisible = value;
+    if (fLabelVisible)
+    {
+        if (fLabel.find_first_of("##") == 0)
+        {
+            fLabel.erase(0, 2);
+        }
+    }
+    else
+    {
+        if (fLabel.find_first_of("##") != 0)
+        {
+            fLabel = "##" + fLabel;
+        }
+    }
+}
+
+bool EUIField::GetLabelVisible() const
+{
+    return fLabelVisible;
+}
+
 
 
 

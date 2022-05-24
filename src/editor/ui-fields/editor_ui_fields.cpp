@@ -2,66 +2,7 @@
 
 using namespace Editor;
 using namespace Engine;
-/*
-EExtensionView::EExtensionView() 
- : EUIField("ExtensionView")
-{
-    
-}
 
-EExtensionView::~EExtensionView() 
-{
-    
-}
-
-bool EExtensionView::OnRender() 
-{
-    {
-        EVector<EExtension*> loadedExtensions = shared::ExtensionManager().GetLoadedExtensions();
-        for (EExtension* ext : loadedExtensions)
-        {
-            EString name = ext->GetName();
-            EString fullPath = ext->GetFilePath();
-            ImGui::Text("%s", name.c_str());
-            ImGui::SameLine();
-            if (ImGui::Button("Reload"))
-            {
-                shared::ExtensionManager().ReloadExtension(ext);
-                // The ext ptr is invald after here. 
-                break; // For now we just break. Cases other extensions to disappear for one frame 
-            }
-            ImGui::SameLine();
-            bool isLoaded = shared::ExtensionManager().IsLoaded(name);
-            if (ImGui::Checkbox("Loaded", &isLoaded))
-            {
-                if (isLoaded)
-                {
-                    shared::ExtensionManager().LoadExtension(fullPath, false);
-                }
-                else
-                {
-                    shared::ExtensionManager().UnloadExtension(ext);
-                }
-            }
-            ImGui::SameLine();
-            bool isAutoLoad = shared::ExtensionManager().IsAutoLoad(name);
-            if (ImGui::Checkbox("Auto Load", &isAutoLoad))
-            {
-                shared::ExtensionManager().SetExtensionAutoLoad(name, isAutoLoad);
-            }
-        }
-        // Refetch the loaded extensions. If the reload was clicked one of the pointers is invalid. Refetching them solves the problem!
-    }
-    if (ImGui::Button("Load Extension"))
-    {
-        EVector<EString> loadingPaths = Graphics::Wrapper::OpenFileDialog("Load Extension", {"uex"});
-        for (const EString& extPath : loadingPaths)
-        {
-            shared::ExtensionManager().LoadExtension(extPath, false);
-        }
-    }
-    return true;
-}*/
 
 ECommandLine::ECommandLine() 
     : EUIField("CommandLine")
