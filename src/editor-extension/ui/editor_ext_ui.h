@@ -181,6 +181,13 @@ namespace events {
          * The Drag type you can drop on this field
          */
         EString fAcceptDragType;
+
+
+        /**
+         * @brief Most inputs have a label in front. You can disable them with this bool
+         * 
+         */
+        bool fLabelVisible;
     public:
         EUIField(const EString& label);
 
@@ -395,6 +402,16 @@ namespace events {
          * @brief Closes the popup
          */
         void ClosePopup();
+
+        /**
+         * @brief Set the visibility of the label
+         */
+        void SetLabelVisible(bool value);
+
+        /**
+         * @brief Get the visibility of the label
+         */
+        bool GetLabelVisible() const;
 
         /**
          * Adds a listener to specified EventType
