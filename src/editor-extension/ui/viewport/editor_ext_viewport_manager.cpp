@@ -159,7 +159,7 @@ void EUIViewportManager::HandleEntityChange(EntityChangeEvent event)
         if (fRenderFunctions[vp.first].find(componentDescription.GetId()) == fRenderFunctions[vp.first].end())
             continue;
 
-        EUIViewportRenderFunction func = fRenderFunctions[vp.first][componentDescription.GetId()];
+        EUIViewportRenderFunction& func = fRenderFunctions[vp.first][componentDescription.GetId()];
 
         ERef<EUIViewport> viewport = vp.second.lock();
 
@@ -184,8 +184,11 @@ void EUIViewportManager::HandleEntityChange(EntityChangeEvent event)
                 {
                     Renderer::RObject* newObject = new Renderer::RObject();
                     entityObject->Add(newObject);
+                    
+                    func.ComponentObjectIndex[event.Entity.Handle] = entityObject->GetChildCount() - 1;
+
+                    
                     entityObject = newObject;
-                    func.ComponentObjectIndex[event.Entity.Handle] = entityObject->GetChildren().size() - 1;
                 }
                 else
                 {

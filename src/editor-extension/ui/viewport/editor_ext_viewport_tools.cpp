@@ -4,8 +4,8 @@
 
 using namespace Engine;
 
-EViewportTool::EViewportTool(const EString& toolName) 
-    : fToolName(toolName), fVisible(true), fViewport(nullptr)
+EViewportTool::EViewportTool(const EString& toolName, const EString& componentIdentifier) 
+    : fVisible(true), fToolName(toolName), fComponentIdentifier(componentIdentifier), fViewport(nullptr)
 {
     
 }
@@ -23,6 +23,16 @@ bool EViewportTool::IsVisible() const
 void EViewportTool::SetVisible(bool visible) 
 {
     fVisible = visible;
+}
+
+void EViewportTool::SetComponentIdentifier(const EString& ident)
+{
+    fComponentIdentifier = ident;
+}
+
+const EString& EViewportTool::GetComponentIdentifer() const
+{
+    return fComponentIdentifier;
 }
 
 const EString& EViewportTool::GetToolName() const
@@ -50,25 +60,24 @@ void EViewportTool::ViewportClicked(const EVec2& screenPos, const EVec3& worldPo
     OnViewportClicked(screenPos, worldPos);
 }
 
-EPointMoveTool::EPointMoveTool() 
-    : EViewportTool("POINT_MOVE"), fCenterPosition(100.0f, 100.0f)
+void EViewportTool::ActivateTool()
 {
-    
+    OnActivateTool();
 }
 
-bool EPointMoveTool::OnRender() 
+void EViewportTool::Finish()
 {
-    ImGuiContext* g = ImGui::GetCurrentContext();
-    ImRect itemRect = g->LastItemData.Rect;
-
-    EVec2 currentCenter = fCenterPosition + EVec2(itemRect.Min.x, itemRect.Min.y );
-    float halfSize = 4.0f;
-
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    draw_list->AddRect({currentCenter.x - halfSize, currentCenter.y - halfSize}, {currentCenter.x + halfSize, currentCenter.y + halfSize}, 0xffffffff);
-    //draw_list->AddCircleFilled({fCenterPosition.x + itemRect.Min.x, fCenterPosition.y + itemRect.Min.y}, 10.0f, 0xffffffff);
-    return false;
+    if (!GetActiveObject()) { return; }
+    OnFinished(fViewport->GetEntityFromObject(GetActiveObject()));
 }
+
+Renderer::RObject* EViewportTool::GetActiveObject() const
+{
+    if (!fViewport) { return nullptr; }
+    return fViewport->GetSelectionContext().GetSelectedObject();
+}
+
+
 
 ELineEditTool::ELineEditTool()
     : EViewportTool(sGetName()), fLine(nullptr), fEditState(EditState::CREATING)
@@ -165,6 +174,16 @@ EString ELineEditTool::GetIcon() const
     return ICON_MD_CALL_MADE;
 }
 
+void ELineEditTool::OnFinished(EDataBase::Entity entity)
+{
+    if (entity)
+    {
+        Editor::ELine line;
+        line.Start = fLine->GetStart();
+        line.End = fLine->GetEnd();
+        shared::SetValue(entity, GetComponentIdentifer(), line);
+    }
+}
 
 
 EBezierEditTool::EBezierEditTool() 
@@ -284,12 +303,25 @@ EString EBezierEditTool::GetIcon() const
     return ICON_MD_ROUNDED_CORNER;
 }
 
+
+void EBezierEditTool::OnFinished(EDataBase::Entity entity)
+{
+    if (entity)
+    {
+        Editor::ECurveSegment segment;
+        segment.Start = fCurve->GetStartPos();
+        segment.End = fCurve->GetEndPos();
+        segment.Controll1 = fCurve->GetControll1();
+        segment.Controll2 = fCurve->GetControll2();
+        shared::SetValue(entity, GetComponentIdentifer(), segment);
+    }
+}
+
 // Transform tool
 
 ETransformTool::ETransformTool()
-    : EViewportTool(sGetName()), fWasUsing(false)
+    : EViewportTool(sGetName(), "ETransform"), fWasUsing(false)
 {
-
 }
 
 bool ETransformTool::OnRender()
@@ -350,4 +382,13 @@ EString ETransformTool::sGetName()
 EString ETransformTool::GetIcon() const
 {
     return ICON_MD_3D_ROTATION;
+}
+
+void ETransformTool::OnFinished(EDataBase::Entity entity)
+{
+    if (entity)
+    {
+        Editor::ETransform transform = GetTransform();
+        shared::SetValue(entity, GetComponentIdentifer(), transform);
+    }
 }

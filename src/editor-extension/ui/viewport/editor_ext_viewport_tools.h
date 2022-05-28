@@ -10,15 +10,19 @@ namespace Engine {
     protected:
         bool fVisible;
         EString fToolName;
+        EString fComponentIdentifier;
         EUIViewport* fViewport;
     public:
-        EViewportTool(const EString& toolName);
+        EViewportTool(const EString& toolName, const EString& componentIdentifier = "");
         virtual ~EViewportTool() = default;
 
         bool Render();
 
         bool IsVisible() const;
         void SetVisible(bool visible);
+
+        void SetComponentIdentifier(const EString& ident);
+        const EString& GetComponentIdentifer() const;
 
         const EString& GetToolName() const;
 
@@ -29,24 +33,19 @@ namespace Engine {
 
         void ViewportClicked(const EVec2& screenPos, const EVec3& worldPos);
         void ActivateTool();
+
+        void Finish();
+
+        Renderer::RObject* GetActiveObject() const;
     protected:
         // Return true if edit was completed
         virtual bool OnRender() = 0;
         virtual void OnViewportClicked(const EVec2& screenPos, const EVec3& worldPos) {};
         virtual void OnActivateTool() {}
+
+        virtual void OnFinished(EDataBase::Entity entity) = 0;
     };
 
-
-
-    class E_EDEXAPI EPointMoveTool : public EViewportTool
-    {
-    private:
-        EVec2 fCenterPosition;
-    public:
-        EPointMoveTool();
-
-        virtual bool OnRender() override;
-    };
 
     class E_EDEXAPI ELineEditTool : public EViewportTool
     {
@@ -80,6 +79,8 @@ namespace Engine {
         static EString sGetName();
 
         virtual EString GetIcon() const override;
+
+        virtual void OnFinished(EDataBase::Entity entity) override;
     };
 
     class E_EDEXAPI EBezierEditTool : public EViewportTool
@@ -107,6 +108,9 @@ namespace Engine {
         static EString sGetName();
 
         virtual EString GetIcon() const override;
+
+        
+        virtual void OnFinished(EDataBase::Entity entity) override;
     };
 
     class E_EDEXAPI ETransformTool : public EViewportTool
@@ -131,6 +135,8 @@ namespace Engine {
         static EString sGetName();
 
         virtual EString GetIcon() const override;
+
+        virtual void OnFinished(EDataBase::Entity entity) override;
     };
 
 

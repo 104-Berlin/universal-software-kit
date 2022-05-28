@@ -44,6 +44,7 @@ typedef glm::quat EQuat;
 #include "default-types/editor_def_res_image.h"
 #include "default-types/editor_def_res_mesh.h"
 #include "default-types/editor_def_transform.h"
+#include "default-types/editor_def_basic_shapes.h"
 
 
 

@@ -153,7 +153,8 @@ bool EUIViewport::OnRender()
     {
         if (fActiveTool->Render())
         {
-            fEventDispatcher.Enqueue<events::EViewportToolFinishEvent>({fActiveTool->GetToolName()});
+            fActiveTool->Finish();
+            //fEventDispatcher.Enqueue<events::EViewportToolFinishEvent>({fActiveTool->GetToolName()});
         }
     }
 

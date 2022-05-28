@@ -25,9 +25,7 @@ static EDataBase::Entity currentEditCurveEntity = 0;
 static EDataBase::Entity currentEditLineEntity = 0;
 
 E_STORAGE_STRUCT(Plane,
-    (EVec3, Position),
-    (EVec3, Rotation),
-    (EVec3, Scale)
+    (EVec2, Size)
 )
 
 E_STORAGE_STRUCT(LinePositions,
@@ -40,16 +38,9 @@ E_STORAGE_STRUCT(Line,
     (LinePositions, Positions)
 )
 
-E_STORAGE_STRUCT(CurvePositions,
-    (EVec3, Start, 200.0f, 200.0f, 0.0f),
-    (EVec3, End, 400.0f, 200.0f, 0.0f),
-    (EVec3, Controll1, 200.0f, 100.0f, 0.0f),
-    (EVec3, Controll2, 400.0f, 100.0f, 0.0f)
-)
-
 E_STORAGE_STRUCT(Curve,
     (float, Thickness, 5.0f),
-    (CurvePositions, Positions),
+    (Editor::ECurveSegment, Positions),
     (int, Steps, 10)
 )
 
@@ -89,12 +80,12 @@ void ViewportToolFinish(events::EViewportToolFinishEvent event)
         EBezierEditTool* editTool = static_cast<EBezierEditTool*>(drawingViewport.lock()->GetActiveTool());
         if (editTool)
         {
-            CurvePositions newPositions;
-            newPositions.Start = editTool->GetCurve()->GetStartPos();
-            newPositions.End = editTool->GetCurve()->GetEndPos();
-            newPositions.Controll1 = editTool->GetCurve()->GetControll1();
-            newPositions.Controll2 = editTool->GetCurve()->GetControll2();
-            shared::SetValue<CurvePositions>(currentEditCurveEntity, "Curve.Positions", newPositions);
+            Editor::ECurveSegment segment;
+            segment.Start = editTool->GetCurve()->GetStartPos();
+            segment.End = editTool->GetCurve()->GetEndPos();
+            segment.Controll1 = editTool->GetCurve()->GetControll1();
+            segment.Controll2 = editTool->GetCurve()->GetControll2();
+            shared::SetValue<Editor::ECurveSegment>(currentEditCurveEntity, "Curve.Position", segment);
         }
     }
     else if (event.ToolName == ELineEditTool::sGetName()) 
@@ -125,146 +116,73 @@ APP_ENTRY
     drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
 
     drawingViewport.lock()->AddEventListener<events::EViewportToolFinishEvent>(&ViewportToolFinish);
-    
-    shared::Events().Connect<EntityChangeEvent>([](EntityChangeEvent e){
-        if (e.Type == EntityChangeType::COMPONENT_CHANGED)
+
+
+    EUIViewportRenderFunction curveRenderFunc;
+    curveRenderFunc.Description.Type = EViewportType::FRONT_RIGHT_TOP_3D;
+    curveRenderFunc.NeedsOwnObject = true;
+    curveRenderFunc.ValueDescription = Curve::_dsc;
+    curveRenderFunc.RenderFunction = [](RObject* object, ERef<EProperty> value){
+        RBezierCurve* bezierCurve = (RBezierCurve*)object->GetChildAt(0);
+        if (!bezierCurve)
         {
-            ComponentChangeData data;
-            if (convert::getter(e.Data.Value().get(), &data))
-            {
-                if (data.Identifier.rfind("Plane", 0) == 0)
-                {
-                    Plane plane;
-                    if (convert::getter(data.NewValue.Value().get(), &plane))
-                    {
-                        RMesh* graphicsMesh = meshes[e.Entity.Handle][Plane::_dsc.GetId()];
-
-                        graphicsMesh->SetPosition(plane.Position);
-                        graphicsMesh->SetRotation(plane.Rotation);
-                        graphicsMesh->SetScale(plane.Scale);
-                    }
-                }
-                else if (data.Identifier.rfind("Line", 0) == 0)
-                {
-                    Line line;
-                    if (convert::getter(data.NewValue.Value().get(), &line))
-                    {
-                        RLine* entityLine = (RLine*) meshes[e.Entity.Handle][Line::_dsc.GetId()];
-
-                        entityLine->SetThickness(line.Thickness);
-                        entityLine->SetStart(line.Positions.Start);
-                        entityLine->SetEnd(line.Positions.End);
-                    }
-                }
-                else if (data.Identifier.rfind("Curve", 0) == 0)
-                {
-                    Curve curve;
-                    if (convert::getter(data.NewValue.Value().get(), &curve))
-                    {
-                        RBezierCurve* entityCurve = (RBezierCurve*) meshes[e.Entity.Handle][Curve::_dsc.GetId()];
-
-                        entityCurve->SetThickness(curve.Thickness);
-                        entityCurve->SetStartPos(curve.Positions.Start);
-                        entityCurve->SetEndPos(curve.Positions.End);
-                        entityCurve->SetControll1(curve.Positions.Controll1);
-                        entityCurve->SetControll2(curve.Positions.Controll2);
-                        entityCurve->SetSteps(curve.Steps);
-                    }
-                }
-            }
+            bezierCurve = new RBezierCurve();
+            object->Add(bezierCurve);
         }
-        else if (e.Type == EntityChangeType::COMPONENT_ADDED)
+        Curve curveData;
+        if (value->GetValue(&curveData))
         {
-            Line l;
-            Curve c;
-            Plane p;
-            if (convert::getter(e.Data.Value().get(), &l))
-            {
-                if (meshes[e.Entity.Handle][Line::_dsc.GetId()])
-                {
-                    delete meshes[e.Entity.Handle][Line::_dsc.GetId()];
-                }
-                RLine* newLine = new RLine();
-                meshes[e.Entity.Handle][Line::_dsc.GetId()] = newLine;
-                newLine->SetStart(l.Positions.Start);
-                newLine->SetEnd(l.Positions.End);
-                newLine->SetThickness(l.Thickness);
-                drawingViewport.lock()->GetScene().Add(newLine);
-                currentEditLineEntity = e.Entity.Handle;
-                lineEdit->SetLine(newLine);
-            }
-            else if (convert::getter(e.Data.Value().get(), &c))
-            {
-                if (meshes[e.Entity.Handle][Curve::_dsc.GetId()])
-                {
-                    delete meshes[e.Entity.Handle][Curve::_dsc.GetId()];
-                }
-                RBezierCurve* newCurve = new RBezierCurve();
-                meshes[e.Entity.Handle][Curve::_dsc.GetId()] = newCurve;
-                newCurve->SetStartPos(c.Positions.Start);
-                newCurve->SetEndPos(c.Positions.End);
-                newCurve->SetControll1(c.Positions.Controll1);
-                newCurve->SetControll2(c.Positions.Controll2);
-                newCurve->SetThickness(c.Thickness);
-                newCurve->SetSteps(c.Steps);
-                drawingViewport.lock()->GetScene().Add(newCurve);
-                currentEditCurveEntity = e.Entity.Handle;
-                bezierEdit->SetBezierCurve(newCurve);
-            }
-            else if (convert::getter(e.Data.Value().get(), &p))
-            {
-                if (meshes[e.Entity.Handle][Plane::_dsc.GetId()])
-                {
-                    delete meshes[e.Entity.Handle][Plane::_dsc.GetId()];
-                }
-                RMesh* newPlane = new RMesh();
-                meshes[e.Entity.Handle][Plane::_dsc.GetId()] = newPlane;
-                newPlane->SetPosition(p.Position);
-                newPlane->SetRotation(p.Rotation);
-                newPlane->SetScale(p.Scale);
-                drawingViewport.lock()->GetScene().Add(newPlane);
-            }
+            bezierCurve->SetStartPos(curveData.Positions.Start);
+            bezierCurve->SetEndPos(curveData.Positions.End);
+            bezierCurve->SetControll1(curveData.Positions.Controll1);
+            bezierCurve->SetControll2(curveData.Positions.Controll2);
+            bezierCurve->SetThickness(curveData.Thickness);
+            bezierCurve->SetSteps(curveData.Steps);
         }
-        else if (e.Type == EntityChangeType::ENTITY_DESTROYED)
+    };
+    curveRenderFunc.InitViewportTools = []() -> EVector<EViewportTool*> {
+        EBezierEditTool* bezierTool = new EBezierEditTool();
+        bezierTool->SetComponentIdentifier("Curve.Position");
+        return {bezierTool};
+    };
+    
+    EUIViewportRenderFunction planeRenderFunc;
+    planeRenderFunc.Description.Type = EViewportType::FRONT_RIGHT_TOP_3D;
+    planeRenderFunc.NeedsOwnObject = true;
+    planeRenderFunc.ValueDescription = Plane::_dsc;
+    planeRenderFunc.RenderFunction = [](RObject* object, ERef<EProperty> value){
+        RMesh* planeMesh = (RMesh*) object->GetChildAt(0);
+        if (!planeMesh)
         {
-            if (meshes[e.Entity.Handle][Line::_dsc.GetId()])
-            {
-                delete meshes[e.Entity.Handle][Line::_dsc.GetId()];
-            }
-            if (meshes[e.Entity.Handle][Curve::_dsc.GetId()])
-            {
-                delete meshes[e.Entity.Handle][Curve::_dsc.GetId()];
-            }
-            if (meshes[e.Entity.Handle][Plane::_dsc.GetId()])
-            {
-                delete meshes[e.Entity.Handle][Plane::_dsc.GetId()];
-            }
-            meshes.erase(e.Entity.Handle);
+            planeMesh = new RMesh();
+            object->Add(planeMesh);
         }
-        else if (e.Type == EntityChangeType::COMPONENT_REMOVED)
+        Plane plane;
+        if (value->GetValue(&plane))
         {
-            ComponentChangeData data;
-            if (e.Data.Value() && convert::getter(e.Data.Value().get(), &data))
-            {
-                EString changeType = data.Identifier;
-                if (meshes[e.Entity.Handle][changeType])
-                {
-                    delete meshes[e.Entity.Handle][changeType];
-                    meshes[e.Entity.Handle][changeType] = nullptr;
-                }
-            }
+            float halfWidth = plane.Size.x / 2.0f;
+            float halfHeight = plane.Size.y / 2.0f;
+            EVector<RMesh::Vertex> vertices = {
+                {{-halfWidth, -halfHeight, 0.0f}, {0.0f, 0.0f, 1.0f}},
+                {{halfWidth, -halfHeight, 0.0f}, {0.0f, 0.0f, 1.0f}},
+                {{halfWidth,  halfHeight, 0.0f}, {0.0f, 0.0f, 1.0f}},
+                {{-halfWidth,  halfHeight, 0.0f}, {0.0f, 0.0f, 1.0f}}};
+            EVector<u32> indices = {
+                0, 1, 2,
+                2, 3, 0
+            };
+            planeMesh->SetData(vertices, indices);
         }
-    }, drawingViewport.lock().get());
+    };
 
-    
-    
-
-    //info.PanelRegister->RegisterItem(extensionName, someDrawingPanel);
-    
+    info.ViewportRenderFunctions->RegisterItem(extensionName, planeRenderFunc);
+    info.ViewportRenderFunctions->RegisterItem(extensionName, curveRenderFunc);
 }
 
 EXT_ENTRY
 {
+    Plane::_dsc.AddDependsOn(Editor::ETransform::_dsc);
+
     info.GetComponentRegister().RegisterStruct<TechnicalMesh>(extensionName);
     info.GetComponentRegister().RegisterStruct<Plane>(extensionName);
     info.GetComponentRegister().RegisterStruct<Line>(extensionName);
