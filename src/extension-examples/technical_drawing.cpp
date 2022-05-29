@@ -34,13 +34,13 @@ E_STORAGE_STRUCT(LinePositions,
 )
 
 E_STORAGE_STRUCT(Line, 
-    (float, Thickness, 8.0f),
+    (float, Thickness, 0.1f),
     (LinePositions, Positions)
 )
 
 E_STORAGE_STRUCT(Curve,
-    (float, Thickness, 5.0f),
-    (Editor::ECurveSegment, Positions),
+    (float, Thickness, 0.1f),
+    (Editor::ECurveSegment, Position),
     (int, Steps, 10)
 )
 
@@ -73,35 +73,6 @@ void ViewportDrag(events::EMouseDragEvent e)
     }
 }
 
-void ViewportToolFinish(events::EViewportToolFinishEvent event)
-{
-    if (event.ToolName == EBezierEditTool::sGetName()) 
-    { 
-        EBezierEditTool* editTool = static_cast<EBezierEditTool*>(drawingViewport.lock()->GetActiveTool());
-        if (editTool)
-        {
-            Editor::ECurveSegment segment;
-            segment.Start = editTool->GetCurve()->GetStartPos();
-            segment.End = editTool->GetCurve()->GetEndPos();
-            segment.Controll1 = editTool->GetCurve()->GetControll1();
-            segment.Controll2 = editTool->GetCurve()->GetControll2();
-            shared::SetValue<Editor::ECurveSegment>(currentEditCurveEntity, "Curve.Position", segment);
-        }
-    }
-    else if (event.ToolName == ELineEditTool::sGetName()) 
-    { 
-        ELineEditTool* editTool = static_cast<ELineEditTool*>(drawingViewport.lock()->GetActiveTool());
-        if (editTool)
-        {
-            LinePositions newPosition;
-            newPosition.Start = editTool->GetLine()->GetStart();
-            newPosition.End = editTool->GetLine()->GetEnd();
-            shared::SetValue<LinePositions>(currentEditLineEntity, "Line.Positions", newPosition);
-        }
-    }
-}
-
-
 APP_ENTRY
 {
     ERef<EUIPanel> someDrawingPanel = EMakeRef<EUIPanel>("Drawing Canvas");
@@ -115,7 +86,7 @@ APP_ENTRY
     drawingViewport.lock()->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
     drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
 
-    drawingViewport.lock()->AddEventListener<events::EViewportToolFinishEvent>(&ViewportToolFinish);
+
 
 
     EUIViewportRenderFunction curveRenderFunc;
@@ -132,10 +103,10 @@ APP_ENTRY
         Curve curveData;
         if (value->GetValue(&curveData))
         {
-            bezierCurve->SetStartPos(curveData.Positions.Start);
-            bezierCurve->SetEndPos(curveData.Positions.End);
-            bezierCurve->SetControll1(curveData.Positions.Controll1);
-            bezierCurve->SetControll2(curveData.Positions.Controll2);
+            bezierCurve->SetStartPos(curveData.Position.Start);
+            bezierCurve->SetEndPos(curveData.Position.End);
+            bezierCurve->SetControll1(curveData.Position.Controll1);
+            bezierCurve->SetControll2(curveData.Position.Controll2);
             bezierCurve->SetThickness(curveData.Thickness);
             bezierCurve->SetSteps(curveData.Steps);
         }

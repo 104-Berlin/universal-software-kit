@@ -62,15 +62,12 @@ namespace Engine {
             EDITING
         };
     private:
-        Renderer::RLine* fLine;
         Selection fCurrentSelection;
-
         EditState fEditState;
+
+        Editor::ELine fCurrentLine;
     public:
         ELineEditTool();
-
-        void SetLine(Renderer::RLine* line);
-        Renderer::RLine* GetLine() const;
 
         virtual bool OnRender() override;
         virtual void OnViewportClicked(const EVec2& screenPos, const EVec3& worldPos) override;
@@ -94,16 +91,13 @@ namespace Engine {
             CTRL2
         };
     private:
-        Selection fCurrentSelection;
+        Selection fLastSelection;
 
-        Renderer::RBezierCurve* fCurve;
+        Editor::ECurveSegment fCurrentSegment;
     public:
         EBezierEditTool();
 
         virtual bool OnRender() override;
-
-        void SetBezierCurve(Renderer::RBezierCurve* curve);
-        Renderer::RBezierCurve* GetCurve() const;
 
         static EString sGetName();
 
@@ -111,6 +105,9 @@ namespace Engine {
 
         
         virtual void OnFinished(EDataBase::Entity entity) override;
+    private:
+        Selection HandleManipulate(EMat4& startMatrix, EMat4& endMatrix, EMat4& controll1Matrix, EMat4& controll2Matrix);
+        void UpdateCurrentSegment(Renderer::RBezierCurve* curve);
     };
 
     class E_EDEXAPI ETransformTool : public EViewportTool
