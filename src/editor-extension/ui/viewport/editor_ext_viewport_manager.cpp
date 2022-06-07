@@ -70,7 +70,7 @@ void EUIViewportManager::ReloadViewports()
         fRenderFunctions[type][Editor::ETransform::_dsc.GetId()] = transformRenderFunction;
 
         
-        if (fViewports[type].expired())
+        if (fViewports.find(type) == fViewports.end() || fViewports[type].expired())
         {
             fViewports.erase(type);
         }

@@ -5,18 +5,6 @@ using namespace Graphics;
 using namespace Renderer;
 
 
-
-EVector<RMesh::Vertex> planeVertices = {
-    {{-50.0f,-50.0f, -1.0f}},
-    {{ 50.0f,-50.0f, -1.0f}},
-    {{ 50.0f, 50.0f, -1.0f}},
-    {{-50.0f, 50.0f, -1.0f}},
-};
-
-EVector<u32> planeIndices = {
-    0, 1, 2, 2, 3, 0
-};
-
 static EUnorderedMap<EDataBase::Entity, EUnorderedMap<EValueDescription::t_ID, RMesh*>> meshes;
 static EWeakRef<EUIViewport> drawingViewport;
 static EBezierEditTool* bezierEdit = nullptr;
@@ -44,50 +32,32 @@ E_STORAGE_STRUCT(Curve,
     (int, Steps, 10)
 )
 
+E_STORAGE_STRUCT(TechnicalBox,
+    (EVec3, Size)
+)
+
 E_STORAGE_STRUCT(TechnicalMesh,
     (EVector<EVec3>, Positions)
 )
 
-struct ExtensionData
-{
-    RCamera Camera = RCamera(ECameraMode::ORTHOGRAPHIC);
-    EStructProperty* CurrentEditPoint = nullptr;
-};
 
-static ExtensionData data{};
 
-void ViewportMouseMove(events::EMouseMoveEvent e)
-{
-}
 
-void ViewportClicked(events::EMouseDownEvent e)
-{
-
-}
-
-void ViewportDrag(events::EMouseDragEvent e)
-{
-    if (data.CurrentEditPoint)
-    {
-        data.CurrentEditPoint->SetValue(EVec3(e.Position.x, e.Position.y, 0.0f));    
-    }
-}
 
 APP_ENTRY
 {
-    ERef<EUIPanel> someDrawingPanel = EMakeRef<EUIPanel>("Drawing Canvas");
-    drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()).lock());
-    drawingViewport.lock()->SetCameraControls<EUIBasic2DCameraControls>();
-    someDrawingPanel->SetMenuBar(EMakeRef<EUIViewportToolbar>(drawingViewport));
-    bezierEdit = static_cast<EBezierEditTool*>(drawingViewport.lock()->AddTool(new EBezierEditTool()));
-    lineEdit = static_cast<ELineEditTool*>(drawingViewport.lock()->AddTool(new ELineEditTool()));
-    
-    drawingViewport.lock()->AddEventListener<events::EMouseDownEvent>(&ViewportClicked);
-    drawingViewport.lock()->AddEventListener<events::EMouseMoveEvent>(&ViewportMouseMove);
-    drawingViewport.lock()->AddEventListener<events::EMouseDragEvent>(&ViewportDrag);
+    EUIViewportRenderFunction technicalBoxRenderFunc;
+    technicalBoxRenderFunc.Description.Type = EViewportType::FRONT_RIGHT_TOP_3D;
+    technicalBoxRenderFunc.NeedsOwnObject = true;
+    technicalBoxRenderFunc.RenderFunction = [](RObject* object, ERef<EProperty> value){
+        RMesh* mesh = (RMesh*)object->GetChildAt(0);
+        if (!mesh)
+        {
+            mesh = new RMesh();
+            object->Add(mesh);
+        }
 
-
-
+    };
 
     EUIViewportRenderFunction curveRenderFunc;
     curveRenderFunc.Description.Type = EViewportType::FRONT_RIGHT_TOP_3D;
@@ -153,6 +123,7 @@ APP_ENTRY
 EXT_ENTRY
 {
     Plane::_dsc.AddDependsOn(Editor::ETransform::_dsc);
+    TechnicalBox::_dsc.AddDependsOn(Editor::ETransform::_dsc);
 
     info.GetComponentRegister().RegisterStruct<TechnicalMesh>(extensionName);
     info.GetComponentRegister().RegisterStruct<Plane>(extensionName);
