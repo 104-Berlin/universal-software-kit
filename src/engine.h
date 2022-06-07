@@ -23,6 +23,7 @@
 #include <atomic>
 #include <future>
 #include <limits>
+#include <exception>
 
 #ifdef M_PI
 #undef M_PI
