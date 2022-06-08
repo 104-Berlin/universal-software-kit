@@ -1,5 +1,7 @@
 #pragma once
 
+struct sockaddr_in;
+
 namespace Engine {
     class E_INTER_API ERegisterSocket
     {

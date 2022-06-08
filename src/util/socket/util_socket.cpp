@@ -1,9 +1,35 @@
 #include "prefix_util.h"
 
+#define LISTEN_BACKLOG 50
+
+int Engine::GetSocketDomain(Engine::ESocketDomain domain)
+{
+    switch (domain) {
+        case ESocketDomain::IPv4:
+        case ESocketDomain::IPv6:
+            return AF_INET;
+        case ESocketDomain::Unix:
+            return AF_UNIX;
+    }
+    throw ESocketException(ESocketException::EType::Socket, "Invalid socket domain");
+    return 0;
+}
+
+int Engine::GetSocketType(Engine::ESocketType type)
+{
+    switch (type) {
+        case ESocketType::TCP:
+            return SOCK_STREAM;
+        case ESocketType::UDP:
+            return SOCK_DGRAM;
+    }
+    throw ESocketException(ESocketException::EType::Socket, "Invalid socket type");
+    return 0;
+}
+
 using namespace Engine;
 
 struct sockaddr_in;
-struct sockaddr_in6;
 struct sockaddr_un;
 
 EBasicSocket::EBasicSocket(ESocketDomain domain, ESocketType type)
@@ -45,7 +71,29 @@ void EBasicSocket::Bind(int port)
     {
         throw ESocketException(ESocketException::EType::Bind, "Bind failed!");
     }
+
+    listen(fSocketId, LISTEN_BACKLOG);
 }
+
+int EBasicSocket::Accept()
+{
+    if (fSocketId <= 0) {
+        throw ESocketException(ESocketException::EType::Accept, "SocketID invalid!");
+    }
+    if (!IsBound()) {
+        throw ESocketException(ESocketException::EType::Accept, "Not bound!");
+    }
+    sockaddr* client_add = CreateAddress(fDomain);
+    int client_len = GetAddressSize(fDomain);
+
+    int newSocketId = accept(fSocketId, client_add, &client_len);
+    if (newSocketId == -1)
+    {
+        throw ESocketException(ESocketException::EType::Accept, "Accept failed!" + Socket::GetLastSocketError());
+    }
+    return newSocketId;
+}
+
 
 int EBasicSocket::CreateSocket(ESocketDomain domain, ESocketType type)
 {
@@ -56,43 +104,110 @@ int EBasicSocket::CreateSocket(ESocketDomain domain, ESocketType type)
     return result;
 }
 
+sockaddr* EBasicSocket::CreateAddress(ESocketDomain domain)
+{
+    sockaddr* result = nullptr;
+    switch (domain) {
+        case ESocketDomain::IPv4:
+        case ESocketDomain::IPv6:
+            result = (sockaddr*) new sockaddr_in();
+            break;
+        case ESocketDomain::Unix:
+            break;
+    }
+    if (!result)
+    {
+        throw ESocketException(ESocketException::EType::Socket, "Invalid socket domain");
+    }
+    return result;
+}
+
 sockaddr* EBasicSocket::CreateAddress(ESocketDomain domain, int port)
 {
     sockaddr* result = nullptr;
     switch (domain) {
         case ESocketDomain::IPv4:
+        case ESocketDomain::IPv6:
             result = (sockaddr*) new sockaddr_in();
             ((sockaddr_in*)result)->sin_family = GetSocketDomain(domain);
             ((sockaddr_in*)result)->sin_port = htons(port);
             ((sockaddr_in*)result)->sin_addr.s_addr = INADDR_ANY;
             break;
-        case ESocketDomain::IPv6:
-            result = (sockaddr*) new sockaddr_in6();
-            ((sockaddr_in6*)result)->sin6_family = GetSocketDomain(domain);
-            ((sockaddr_in6*)result)->sin6_port = htons(port);
-            ((sockaddr_in6*)result)->sin6_addr  = in6addr_any;
-            break;
         case ESocketDomain::Unix:
-            result = (sockaddr*) new sockaddr_un();
+            throw ESocketException(ESocketException::EType::Socket, "Cant create socket for unix domain!");
+            /*result = (sockaddr*) new sockaddr_un();
             ((sockaddr_un*)result)->sun_family = GetSocketDomain(domain);
             ((sockaddr_un*)result)->sun_path[0] = '\0';
-            ((sockaddr_un*)result)->sun_len = 0;
+            ((sockaddr_un*)result)->sun_len = 0;*/
             break;
     };
     return result;
 }
 
-size_t EBasicSocket::GetAddressSize(ESocketDomain domain)
+int EBasicSocket::GetAddressSize(ESocketDomain domain)
 {
     switch (domain)
     {
     case ESocketDomain::IPv4:
-        return sizeof(sockaddr_in);
     case ESocketDomain::IPv6:
-        return sizeof(sockaddr_in6);
+        return sizeof(sockaddr_in);
     case ESocketDomain::Unix:
-        return sizeof(sockaddr_un);
+        throw ESocketException(ESocketException::EType::Socket, "Cant get address size for unix domain! Unsupported!");
     }
+    return 0;
+}
+
+char* EBasicSocket::GetAddressString(sockaddr* address, ESocketDomain domain)
+{
+    char* result = nullptr;
+    switch (domain)
+    {
+    case ESocketDomain::IPv4:
+    case ESocketDomain::IPv6:
+        result = inet_ntoa(((sockaddr_in*)address)->sin_addr);
+        break;
+    case ESocketDomain::Unix:
+        throw ESocketException(ESocketException::EType::Socket, "Cant get address string for unix domain! Unsupported!");
+    }
+    return result;
+}
+
+u16 EBasicSocket::GetAddressPort(sockaddr* address, ESocketDomain domain)
+{
+    u16 result = 0;
+    switch (domain)
+    {
+    case ESocketDomain::IPv4:
+    case ESocketDomain::IPv6:
+        result = ntohs(((sockaddr_in*)address)->sin_port);
+        break;
+    case ESocketDomain::Unix:
+        throw ESocketException(ESocketException::EType::Socket, "Cant get address port for unix domain! Unsupported!");
+    }
+    return result;
+}
+
+EVector<EString> EBasicSocket::GetHTTPRequest(int socketId)
+{
+    EVector<EString> result;
+    result.push_back(GetHTTPSplitString(socketId));
+    result.push_back(GetHTTPSplitString(socketId));
+    return result;
+}
+
+EString EBasicSocket::GetHTTPSplitString(int socketId)
+{
+    bool foundEnd = false;
+    EVector<char> request;
+    char currentChar = 0;
+    while (Socket::Read(socketId, (u8*)&currentChar, sizeof(char)) >= 0)
+    {
+        if (currentChar == '\r') { foundEnd = true; continue;}
+        if (currentChar == '\n' && foundEnd) { break; }
+        request.push_back(currentChar);
+    }
+    request.push_back('\0');
+    return request.data();
 }
 
 void Socket::Close(int socketId) 

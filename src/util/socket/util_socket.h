@@ -7,7 +7,7 @@ namespace Engine {
 
     enum class ESocketDomain {
         IPv4,
-        IPv6,
+        IPv6, // For now IPv6 is not supported. It will use IPv4 instead.
         Unix
     };
 
@@ -16,25 +16,8 @@ namespace Engine {
         UDP
     };
 
-    static constexpr int GetSocketDomain(ESocketDomain domain) {
-        switch (domain) {
-            case ESocketDomain::IPv4:
-                return AF_INET;
-            case ESocketDomain::IPv6:
-                return AF_INET6;
-            case ESocketDomain::Unix:
-                return AF_UNIX;
-        }
-    };
-
-    static constexpr int GetSocketType(ESocketType type) {
-        switch (type) {
-            case ESocketType::TCP:
-                return SOCK_STREAM;
-            case ESocketType::UDP:
-                return SOCK_DGRAM;
-        }
-    };
+    static int GetSocketDomain(ESocketDomain domain);
+    static int GetSocketType(ESocketType type);
 
     class EBasicSocket {
     private:
@@ -73,16 +56,30 @@ namespace Engine {
         void Bind(int port = 1024);
 
         /**
+         * @brief Waits for new connection and accepts it
+         * 
+         * @return SocketId
+         */
+        int Accept();
+
+        /**
          * @brief Connect the socket to a server
          * 
          * @param address The address to connect to. <ip-address>:<port>
          */
         void Connect(const EString& address);
 
+
     private:
         int CreateSocket(ESocketDomain domain, ESocketType type);
+        sockaddr* CreateAddress(ESocketDomain domain);
         sockaddr* CreateAddress(ESocketDomain domain, int port);
-        size_t GetAddressSize(ESocketDomain domain);
+        int GetAddressSize(ESocketDomain domain);
+        char* GetAddressString(sockaddr* address, ESocketDomain domain);
+        u16 GetAddressPort(sockaddr* address, ESocketDomain domain);
+
+        EVector<EString> GetHTTPRequest(int socketId);
+        EString GetHTTPSplitString(int socketId);
     };
 
     namespace Socket {
