@@ -12,7 +12,7 @@ EUIViewportManager::EUIViewportManager(EUIRegister* uiRegister, EViewportRenderF
 
 void EUIViewportManager::ReloadViewports()
 {
-    TRenderFunctionMap newRenderFunctions;
+    TRenderFunctionMap oldRenderFunctions = fRenderFunctions;
     fRenderFunctions.clear();
 
     ESet<EViewportType::opts> viewportTypes;
@@ -22,7 +22,49 @@ void EUIViewportManager::ReloadViewports()
         viewportTypes.insert(func.Description.Type.Value);
     }
 
+    // Find which we unloaded
+    for (const auto& entry : oldRenderFunctions)
+    {
+        if (fRenderFunctions.find(entry.first) == fRenderFunctions.end())
+        {
+            // All renderfunctions unloaded in this viewport type
+            for (const auto& renderFunc : entry.second)
+            {
+                for (auto [entity, index] : renderFunc.second.ComponentObjectIndex)
+                {
+                    EWeakRef<EUIViewport> vp = fViewports[entry.first];
+                    if (!vp.expired() && vp.lock())
+                    {
+                        Renderer::RObject* entityObject = vp.lock()->GetObjectFromEntity(entity);
+                        if (entityObject)
+                        {
+                            entityObject->Clear();
+                        }
+                    }
+                }
+            }
+            continue;
+        }
 
+        for (const auto& renderFunc : entry.second)
+        {
+            if (fRenderFunctions[entry.first].find(renderFunc.first) == fRenderFunctions[entry.first].end())
+            {
+                for (auto [entity, index] : renderFunc.second.ComponentObjectIndex)
+                {
+                    EWeakRef<EUIViewport> vp = fViewports[entry.first];
+                    if (!vp.expired() && vp.lock())
+                    {
+                        Renderer::RObject* entityObject = vp.lock()->GetObjectFromEntity(entity);
+                        if (entityObject)
+                        {
+                            entityObject->Clear();
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     for (const EViewportType::opts& type : viewportTypes)
     {
@@ -111,6 +153,16 @@ void EUIViewportManager::ReloadViewports()
                 }
             }
         }
+
+        EVector<EDataBase::Entity> allEntities = shared::GetAllEntites();
+        for (EDataBase::Entity entity : allEntities)
+        {
+            EVector<ERef<EProperty>> properties = shared::GetAllComponents(entity);
+            for (ERef<EProperty> property : properties)
+            {
+                CallRenderFunctionForComponent(entity, property, type);
+            }
+        }
     }
 }
 
@@ -141,6 +193,7 @@ void EUIViewportManager::HandleEntityChange(EntityChangeEvent event)
     ERef<EProperty> property = event.Data.Value();
     EValueDescription componentDescription = property->GetDescription();
 
+
     if (event.Type == EntityChangeType::COMPONENT_CHANGED)
     {
         ComponentChangeData changeData;
@@ -159,46 +212,16 @@ void EUIViewportManager::HandleEntityChange(EntityChangeEvent event)
         if (fRenderFunctions[vp.first].find(componentDescription.GetId()) == fRenderFunctions[vp.first].end())
             continue;
 
-        EUIViewportRenderFunction& func = fRenderFunctions[vp.first][componentDescription.GetId()];
-
         ERef<EUIViewport> viewport = vp.second.lock();
-
-
         Renderer::RScene& scene = viewport->GetScene();
         Renderer::RObject* entityObject = viewport->GetObjectFromEntity(event.Entity.Handle);
 
 
-        if (!entityObject)
-        {
-            entityObject = new Renderer::RObject();
-            scene.Add(entityObject);
-            viewport->GetSelectionContext().SetSelectedObject(entityObject);
-            viewport->PushToEntityObjectMap(event.Entity.Handle, entityObject);
-        }
-
         if (event.Type == EntityChangeType::COMPONENT_ADDED || event.Type == EntityChangeType::COMPONENT_CHANGED)
         {
-            if (func.NeedsOwnObject)
-            {
-                if (func.ComponentObjectIndex.find(event.Entity.Handle) == func.ComponentObjectIndex.end())
-                {
-                    Renderer::RObject* newObject = new Renderer::RObject();
-                    entityObject->Add(newObject);
-                    
-                    func.ComponentObjectIndex[event.Entity.Handle] = entityObject->GetChildCount() - 1;
-
-                    
-                    entityObject = newObject;
-                }
-                else
-                {
-                    entityObject = entityObject->GetChildAt(func.ComponentObjectIndex[event.Entity.Handle]);
-                }
-            }
-            
-            func.RenderFunction(entityObject, property);
+            CallRenderFunctionForComponent(event.Entity.Handle, property, vp.first);
         }
-        else if (event.Type == EntityChangeType::COMPONENT_REMOVED)
+        else if (entityObject && event.Type == EntityChangeType::COMPONENT_REMOVED)
         {
             scene.DeleteObject(entityObject);
         }
@@ -214,4 +237,58 @@ void EUIViewportManager::ViewportToolFinished(events::EViewportToolFinishEvent e
             entry.second.ToolFinished(event, fViewports[viewportType]);
         }
     }
+}
+
+void EUIViewportManager::CallRenderFunctionForComponent(EDataBase::Entity entity, EWeakRef<EProperty> component, EViewportType::opts type)
+{
+    if (component.expired())
+    {
+        return;
+    }
+    if (fViewports.find(type) == fViewports.end() || fViewports.at(type).expired())
+    {
+        return;
+    }
+
+    EValueDescription componentDescription = component.lock()->GetDescription();
+    
+    if (fRenderFunctions[type].find(componentDescription.GetId()) == fRenderFunctions[type].end())
+        return;
+
+    EUIViewportRenderFunction& func = fRenderFunctions[type][componentDescription.GetId()];
+
+    ERef<EUIViewport> viewport = fViewports.at(type).lock();
+
+
+    Renderer::RScene& scene = viewport->GetScene();
+    Renderer::RObject* entityObject = viewport->GetObjectFromEntity(entity);
+
+
+    if (!entityObject)
+    {
+        entityObject = new Renderer::RObject();
+        scene.Add(entityObject);
+        viewport->GetSelectionContext().SetSelectedObject(entityObject);
+        viewport->PushToEntityObjectMap(entity, entityObject);
+    }
+
+    if (func.NeedsOwnObject)
+    {
+        if (func.ComponentObjectIndex.find(entity) == func.ComponentObjectIndex.end())
+        {
+            Renderer::RObject* newObject = new Renderer::RObject();
+            entityObject->Add(newObject);
+            
+            func.ComponentObjectIndex[entity] = entityObject->GetChildCount() - 1;
+
+            
+            entityObject = newObject;
+        }
+        else
+        {
+            entityObject = entityObject->GetChildAt(func.ComponentObjectIndex[entity]);
+        }
+    }
+    
+    func.RenderFunction(entityObject, component.lock());
 }

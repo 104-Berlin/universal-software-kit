@@ -33,7 +33,7 @@ E_STORAGE_STRUCT(Curve,
 )
 
 E_STORAGE_STRUCT(TechnicalBox,
-    (EVec3, Size)
+    (EVec3, Size, 1.0f, 1.0f, 1.0f)
 )
 
 E_STORAGE_STRUCT(TechnicalMesh,
@@ -48,6 +48,7 @@ APP_ENTRY
 {
     EUIViewportRenderFunction technicalBoxRenderFunc;
     technicalBoxRenderFunc.Description.Type = EViewportType::FRONT_RIGHT_TOP_3D;
+    technicalBoxRenderFunc.ValueDescription = TechnicalBox::_dsc;
     technicalBoxRenderFunc.NeedsOwnObject = true;
     technicalBoxRenderFunc.RenderFunction = [](RObject* object, ERef<EProperty> value){
         RMesh* mesh = (RMesh*)object->GetChildAt(0);
@@ -56,7 +57,47 @@ APP_ENTRY
             mesh = new RMesh();
             object->Add(mesh);
         }
+        TechnicalBox box;
+        if (value->GetValue<TechnicalBox>(&box))
+        {
+            // Create box mesh data
+            float halfWidth = box.Size.x / 2.0f;
+            float halfHeight = box.Size.y / 2.0f;
+            float halfDepth = box.Size.z / 2.0f;
 
+            EVector<RMesh::Vertex> vertices = {
+                RMesh::Vertex(glm::vec3(-halfWidth, -halfHeight, -halfDepth)), // 0
+                RMesh::Vertex(glm::vec3(-halfWidth,  halfHeight, -halfDepth)), // 1
+                RMesh::Vertex(glm::vec3( halfWidth,  halfHeight, -halfDepth)), // 2
+                RMesh::Vertex(glm::vec3( halfWidth, -halfHeight, -halfDepth)), // 3 
+                RMesh::Vertex(glm::vec3(-halfWidth, -halfHeight,  halfDepth)), // 4 
+                RMesh::Vertex(glm::vec3(-halfWidth,  halfHeight,  halfDepth)), // 5
+                RMesh::Vertex(glm::vec3( halfWidth,  halfHeight,  halfDepth)), // 6
+                RMesh::Vertex(glm::vec3( halfWidth, -halfHeight,  halfDepth))  // 7
+            };
+
+            EVector<u32> indices = {
+                0, 1, 2, 
+                2, 3, 0,
+
+                4, 5, 6,
+                6, 7, 4,
+
+                1, 2, 6,
+                6, 5, 1,
+
+                0, 3, 4,
+                4, 7, 3,
+
+                0, 1, 4,
+                4, 5, 1,
+
+                2, 3, 6,
+                6, 7, 2
+            };
+
+            mesh->SetData(vertices, indices);
+        }
     };
 
     EUIViewportRenderFunction curveRenderFunc;
@@ -118,6 +159,7 @@ APP_ENTRY
 
     info.ViewportRenderFunctions->RegisterItem(extensionName, planeRenderFunc);
     info.ViewportRenderFunctions->RegisterItem(extensionName, curveRenderFunc);
+    info.ViewportRenderFunctions->RegisterItem(extensionName, technicalBoxRenderFunc);
 }
 
 EXT_ENTRY
@@ -129,4 +171,5 @@ EXT_ENTRY
     info.GetComponentRegister().RegisterStruct<Plane>(extensionName);
     info.GetComponentRegister().RegisterStruct<Line>(extensionName);
     info.GetComponentRegister().RegisterStruct<Curve>(extensionName);
+    info.GetComponentRegister().RegisterStruct<TechnicalBox>(extensionName);
 }

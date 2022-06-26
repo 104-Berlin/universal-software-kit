@@ -255,7 +255,6 @@ void EUIField::HandleRenderEnd()
             }
             if (ImGui::IsKeyReleased(i))
             {
-                E_INFO("Key released: " + std::to_string(i));
                 fEventDispatcher.Enqueue<events::EKeyUpEvent>(events::EKeyUpEvent{i, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyAlt});
             }
         }

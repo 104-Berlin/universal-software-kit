@@ -467,7 +467,9 @@ void EApplication::LoadApplicationState()
 
     for (const EString& autoLoadExtension : state.AutoLoadExtensions)
     {
-        shared::ExtensionManager().LoadExtension(autoLoadExtension, true);
+        EFile file(autoLoadExtension);
+        shared::ExtensionManager().SetExtensionAutoLoad(file.GetFileName(), true);
+        shared::ExtensionManager().LoadExtension(autoLoadExtension);
     }
 }
 

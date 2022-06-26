@@ -52,6 +52,8 @@ namespace Engine {
 
         void HandleEntityChange(EntityChangeEvent event);
         void ViewportToolFinished(events::EViewportToolFinishEvent event, EViewportType::opts viewportType);
+
+        void CallRenderFunctionForComponent(EDataBase::Entity entity, EWeakRef<EProperty> component, EViewportType::opts type);
     };
 
 }
