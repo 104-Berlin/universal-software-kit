@@ -2,6 +2,8 @@
 
 #include "imgui_internal.h"
 
+static int TRANSFORM_TOOL_ID = 1;
+
 using namespace Engine;
 
 EViewportTool::EViewportTool(const EString& toolName, const EString& componentIdentifier) 
@@ -326,7 +328,7 @@ void EBezierEditTool::UpdateCurrentSegment(Renderer::RBezierCurve* curve)
 // Transform tool
 
 ETransformTool::ETransformTool()
-    : EViewportTool(sGetName(), "ETransform"), fWasUsing(false)
+    : EViewportTool(sGetName(), "ETransform"), fWasUsing(false), fGizmoID(TRANSFORM_TOOL_ID++)
 {
 }
 
@@ -340,6 +342,7 @@ bool ETransformTool::OnRender()
     EMat4 viewMatrix = GetViewport()->GetCamera().GetViewMatrix();
     EMat4 projectionMatrix = GetViewport()->GetCamera().GetProjectionMatrix(GetViewport()->GetWidth(), GetViewport()->GetHeight());
     EMat4 transformMatrix = attachedObject->GetModelMatrix();
+    ImGuizmo::SetID(fGizmoID);
     ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformMatrix), NULL, NULL, bounds, NULL);
     
     bool finished = false;

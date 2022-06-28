@@ -32,15 +32,13 @@ void EUIViewportManager::ReloadViewports()
             {
                 for (auto [entity, index] : renderFunc.second.ComponentObjectIndex)
                 {
-                    EWeakRef<EUIViewport> vp = fViewports[entry.first];
-                    if (!vp.expired() && vp.lock())
-                    {
-                        Renderer::RObject* entityObject = vp.lock()->GetObjectFromEntity(entity);
+                    EachViewport(entry.first, [entity](ERef<EUIViewport> viewport){
+                        Renderer::RObject* entityObject = viewport->GetObjectFromEntity(entity);
                         if (entityObject)
                         {
                             entityObject->Clear();
                         }
-                    }
+                    });
                 }
             }
             continue;
@@ -52,15 +50,13 @@ void EUIViewportManager::ReloadViewports()
             {
                 for (auto [entity, index] : renderFunc.second.ComponentObjectIndex)
                 {
-                    EWeakRef<EUIViewport> vp = fViewports[entry.first];
-                    if (!vp.expired() && vp.lock())
-                    {
-                        Renderer::RObject* entityObject = vp.lock()->GetObjectFromEntity(entity);
+                    EachViewport(entry.first, [entity](ERef<EUIViewport> viewport){
+                        Renderer::RObject* entityObject = viewport->GetObjectFromEntity(entity);
                         if (entityObject)
                         {
                             entityObject->Clear();
                         }
-                    }
+                    });
                 }
             }
         }
@@ -121,38 +117,38 @@ void EUIViewportManager::ReloadViewports()
         if (fViewports.find(type) == fViewports.end())
         {
             ERef<EUIPanel> viewportPanel = EMakeRef<EUIPanel>(EString("Viewport") + EViewportType(type).ToString());
-            ERef<EUIViewport> viewport = CreateViewport(type);
-            viewportPanel->SetMenuBar(EMakeRef<EUIViewportToolbar>(viewport));
-            // Add Grid to viewport
-            Renderer::RGrid* grid = new Renderer::RGrid(100, 100, 1.0f, 1.0f);
-            grid->SetRotation(EVec3(glm::radians(90.0), 0, 0));
-            grid->SetPosition(EVec3(-50, 0, -50));
-            viewport->GetScene().Add(grid);
+            ERef<EUIField> vp = CreateViewport(type);
+            fViewports[type] = vp;
+            EachViewport(type, [viewportPanel](ERef<EUIViewport> viewport){
+                viewportPanel->SetMenuBar(EMakeRef<EUIViewportToolbar>(viewport));
 
-            viewport->AddEventListener<events::EViewportToolFinishEvent>([this, type](events::EViewportToolFinishEvent event){
-                ViewportToolFinished(event, type);
+                // Add Grid to viewport
+                Renderer::RGrid* grid = new Renderer::RGrid(100, 100, 1.0f, 1.0f);
+                grid->SetRotation(EVec3(glm::radians(90.0), 0, 0));
+                grid->SetPosition(EVec3(-50, 0, -50));
+                viewport->GetScene().Add(grid);
             });
 
-            viewportPanel->AddChild(viewport);
+
+            viewportPanel->AddChild(vp);
             fUIRegister->RegisterItem("CORE-VIEWPORTS", viewportPanel);
-            fViewports[type] = viewport;
         }
 
-        ERef<EUIViewport> viewport = fViewports[type].lock();
-
-        // Reload the tools
-        viewport->ClearRegisteredTools();
-        for (const auto& func : fRenderFunctions[type])
-        {
-            if (func.second.InitViewportTools)
+        EachViewport(type, [this, type](ERef<EUIViewport> viewport){
+            // Reload the tools
+            viewport->ClearRegisteredTools();
+            for (const auto& func : fRenderFunctions[type])
             {
-                EVector<EViewportTool*> tools = func.second.InitViewportTools();
-                for (EViewportTool* t : tools)
+                if (func.second.InitViewportTools)
                 {
-                    viewport->AddTool(t);
+                    EVector<EViewportTool*> tools = func.second.InitViewportTools();
+                    for (EViewportTool* t : tools)
+                    {
+                        viewport->AddTool(t);
+                    }
                 }
             }
-        }
+        });
 
         EVector<EDataBase::Entity> allEntities = shared::GetAllEntites();
         for (EDataBase::Entity entity : allEntities)
@@ -167,17 +163,22 @@ void EUIViewportManager::ReloadViewports()
 }
 
 
-ERef<EUIViewport> EUIViewportManager::CreateViewport(const EViewportType& type) const
+ERef<EUIField> EUIViewportManager::CreateViewport(const EViewportType& type) const
 {
     switch (type.Value)
     {
     case EViewportType::DEFAULT_3D:
-        return EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::PERSPECTIVE));
+        return std::static_pointer_cast<EUIField>(EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::PERSPECTIVE)));
     case EViewportType::DEFAULT_2D:
-        return EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::ORTHOGRAPHIC));
+        return std::static_pointer_cast<EUIField>(EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::ORTHOGRAPHIC)));
     case EViewportType::FRONT_RIGHT_TOP_3D:
     {
-        return EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::PERSPECTIVE));
+        ERef<EUISplitView> splitView = EMakeRef<EUISplitView>(2, 2);
+        splitView->AddChild(EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::PERSPECTIVE)));
+        splitView->AddChild(EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::PERSPECTIVE)));
+        splitView->AddChild(EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::PERSPECTIVE)));
+        splitView->AddChild(EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::PERSPECTIVE)));
+        return splitView;
     }
     }
     return nullptr;
@@ -206,89 +207,118 @@ void EUIViewportManager::HandleEntityChange(EntityChangeEvent event)
 
     for (const auto& vp : fViewports)
     {
+        EViewportType type = vp.first;
+
         if (vp.second.expired())
             continue;
 
-        if (fRenderFunctions[vp.first].find(componentDescription.GetId()) == fRenderFunctions[vp.first].end())
+        if (fRenderFunctions[type.Value].find(componentDescription.GetId()) == fRenderFunctions[type.Value].end())
             continue;
-
-        ERef<EUIViewport> viewport = vp.second.lock();
-        Renderer::RScene& scene = viewport->GetScene();
-        Renderer::RObject* entityObject = viewport->GetObjectFromEntity(event.Entity.Handle);
-
 
         if (event.Type == EntityChangeType::COMPONENT_ADDED || event.Type == EntityChangeType::COMPONENT_CHANGED)
         {
-            CallRenderFunctionForComponent(event.Entity.Handle, property, vp.first);
+            CallRenderFunctionForComponent(event.Entity.Handle, property, type);
         }
-        else if (entityObject && event.Type == EntityChangeType::COMPONENT_REMOVED)
+        else if (event.Type == EntityChangeType::COMPONENT_REMOVED)
         {
-            scene.DeleteObject(entityObject);
+            EachViewport(type, [this, event, property, type](ERef<EUIViewport> viewport){
+                Renderer::RScene& scene = viewport->GetScene();
+                Renderer::RObject* entityObject = viewport->GetObjectFromEntity(event.Entity.Handle);
+                if (entityObject)
+                {
+                    scene.DeleteObject(entityObject);
+                }
+            });
         }
     }
 }
 
-void EUIViewportManager::ViewportToolFinished(events::EViewportToolFinishEvent event, EViewportType::opts viewportType)
+void EUIViewportManager::ViewportToolFinished(events::EViewportToolFinishEvent event, EViewportType viewportType)
 {
-    for (const auto& entry : fRenderFunctions[viewportType])
+    for (const auto& entry : fRenderFunctions[viewportType.Value])
     {
         if (entry.second.ToolFinished)
         {
-            entry.second.ToolFinished(event, fViewports[viewportType]);
+            EachViewport(viewportType, [&entry, event](ERef<EUIViewport> viewport){
+                entry.second.ToolFinished(event, viewport);
+            });
         }
     }
 }
 
-void EUIViewportManager::CallRenderFunctionForComponent(EDataBase::Entity entity, EWeakRef<EProperty> component, EViewportType::opts type)
+void EUIViewportManager::CallRenderFunctionForComponent(EDataBase::Entity entity, EWeakRef<EProperty> component, EViewportType type)
 {
     if (component.expired())
     {
         return;
     }
-    if (fViewports.find(type) == fViewports.end() || fViewports.at(type).expired())
+    if (fViewports.find(type.Value) == fViewports.end() || fViewports.at(type.Value).expired())
     {
         return;
     }
 
     EValueDescription componentDescription = component.lock()->GetDescription();
     
-    if (fRenderFunctions[type].find(componentDescription.GetId()) == fRenderFunctions[type].end())
+    if (fRenderFunctions[type.Value].find(componentDescription.GetId()) == fRenderFunctions[type.Value].end())
         return;
 
-    EUIViewportRenderFunction& func = fRenderFunctions[type][componentDescription.GetId()];
+    EUIViewportRenderFunction& func = fRenderFunctions[type.Value][componentDescription.GetId()];
 
-    ERef<EUIViewport> viewport = fViewports.at(type).lock();
-
-
-    Renderer::RScene& scene = viewport->GetScene();
-    Renderer::RObject* entityObject = viewport->GetObjectFromEntity(entity);
+    EachViewport(type, [entity, &func, component](ERef<EUIViewport> viewport){
+        Renderer::RScene& scene = viewport->GetScene();
+        Renderer::RObject* entityObject = viewport->GetObjectFromEntity(entity);
 
 
-    if (!entityObject)
+        if (!entityObject)
+        {
+            entityObject = new Renderer::RObject();
+            scene.Add(entityObject);
+            viewport->GetSelectionContext().SetSelectedObject(entityObject);
+            viewport->PushToEntityObjectMap(entity, entityObject);
+        }
+
+        if (func.NeedsOwnObject)
+        {
+            if (func.ComponentObjectIndex.find(entity) == func.ComponentObjectIndex.end() || !entityObject->GetChildAt(func.ComponentObjectIndex.at(entity)))
+            {
+                Renderer::RObject* newObject = new Renderer::RObject();
+                entityObject->Add(newObject);
+                
+                func.ComponentObjectIndex[entity] = entityObject->GetChildCount() - 1;
+
+                
+                entityObject = newObject;
+            }
+            else
+            {
+                entityObject = entityObject->GetChildAt(func.ComponentObjectIndex.at(entity));
+            }
+        }
+        
+        func.RenderFunction(entityObject, component.lock());
+    });
+
+}
+
+void EUIViewportManager::EachViewport(EViewportType type, const TViewportFunction& func)
+{
+    if (fViewports.find(type.Value) == fViewports.end())
     {
-        entityObject = new Renderer::RObject();
-        scene.Add(entityObject);
-        viewport->GetSelectionContext().SetSelectedObject(entityObject);
-        viewport->PushToEntityObjectMap(entity, entityObject);
+        return;
     }
 
-    if (func.NeedsOwnObject)
+    switch (type.Value)
     {
-        if (func.ComponentObjectIndex.find(entity) == func.ComponentObjectIndex.end())
+    case EViewportType::DEFAULT_3D:
+    case EViewportType::DEFAULT_2D:
+        func(std::static_pointer_cast<EUIViewport>(fViewports[type.Value].lock()));
+        break;
+    case EViewportType::FRONT_RIGHT_TOP_3D:
+        EVector<EWeakRef<EUIField>> viewports = fViewports.at(type.Value).lock()->GetChildren();
+        for (EWeakRef<EUIField> viewport : viewports)
         {
-            Renderer::RObject* newObject = new Renderer::RObject();
-            entityObject->Add(newObject);
-            
-            func.ComponentObjectIndex[entity] = entityObject->GetChildCount() - 1;
-
-            
-            entityObject = newObject;
+            func(std::static_pointer_cast<EUIViewport>(viewport.lock()));
         }
-        else
-        {
-            entityObject = entityObject->GetChildAt(func.ComponentObjectIndex[entity]);
-        }
+        break;
     }
-    
-    func.RenderFunction(entityObject, component.lock());
 }

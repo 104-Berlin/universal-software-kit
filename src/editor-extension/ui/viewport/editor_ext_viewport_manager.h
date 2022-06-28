@@ -32,10 +32,11 @@ namespace Engine {
 
     using EViewportRenderFunctionRegister = EExtensionRegister<EUIViewportRenderFunction>;
 
-    using TViewportTypeMap = EUnorderedMap<EViewportType::opts, EWeakRef<EUIViewport>>;
+    using TViewportTypeMap = EUnorderedMap<EViewportType::opts, EWeakRef<EUIField>>;
     using TRenderFunctionMap = EUnorderedMap<EViewportType::opts, EUnorderedMap<EValueDescription::t_ID, EUIViewportRenderFunction>>;
     class E_EDEXAPI EUIViewportManager
     {
+        using TViewportFunction = std::function<void(ERef<EUIViewport>)>;
     private:
         TViewportTypeMap                    fViewports;
         TRenderFunctionMap                  fRenderFunctions;
@@ -48,12 +49,14 @@ namespace Engine {
         
         void ReloadViewports();
     private:
-        ERef<EUIViewport> CreateViewport(const EViewportType& type) const;
+        ERef<EUIField> CreateViewport(const EViewportType& type) const;
 
         void HandleEntityChange(EntityChangeEvent event);
-        void ViewportToolFinished(events::EViewportToolFinishEvent event, EViewportType::opts viewportType);
+        void ViewportToolFinished(events::EViewportToolFinishEvent event, EViewportType viewportType);
 
-        void CallRenderFunctionForComponent(EDataBase::Entity entity, EWeakRef<EProperty> component, EViewportType::opts type);
+        void CallRenderFunctionForComponent(EDataBase::Entity entity, EWeakRef<EProperty> component, EViewportType type);
+
+        void EachViewport(EViewportType type, const TViewportFunction& func);
     };
 
 }

@@ -120,6 +120,8 @@ namespace Engine {
         EVec3 fLastPosition;
         EVec3 fLastRotation; 
         EVec3 fLastScale;
+
+        int   fGizmoID;
     public:
         ETransformTool();
 
