@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(USKEditor)
 
-add_executable(USKEditor    editor_entry.cpp
+add_executable(USKEditor MACOSX_BUNDLE   editor_entry.cpp
                             ui-fields/editor_ui_fields.cpp
                             ui-fields/editor_basic_object_view.cpp
                             ui-fields/editor_resource_view.cpp

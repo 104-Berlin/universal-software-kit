@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
-project(USK)
+project(USK
+        VERSION 0.0.1
+        LANGUAGES CXX)
 
 # GLOBAL SETTINGS
 set(CMAKE_CXX_STANDARD 17)
@@ -112,3 +114,23 @@ set(BUILD_SHARED_LIBS FALSE)
 
   add_subdirectory(src/editor)
 endif()
+
+
+### INSTALLING THE EDITOR
+
+install(TARGETS USKEditor
+        EXPORT UniversalSoftwareKit
+        BUNDLE DESTINATION . COMPONENT Runtime
+        RUNTIME DESTINATION bin COMPONENT Runtime)
+
+
+
+set(APPS \${CMAKE_INSTALL_PREFIX}/USKEditor.app)
+
+
+install(CODE "include(BundleUtilities)
+              message(${RUNTIME_OUTPUT_DIRECTORY})
+              fixup_bundle(\"${APPS}\" \"\" \"${RUNTIME_OUTPUT_DIRECTORY}\")
+              ")
+include(CPack)
+set(CPACK_PACKAGE_NAME UniversalSoftwareKit)
