@@ -118,6 +118,8 @@ endif()
 
 ### INSTALLING THE EDITOR
 
+if ((WIN32 OR APPLE) AND ${BUILD_EDITOR})
+
 install(TARGETS USKEditor
         EXPORT UniversalSoftwareKit
         BUNDLE DESTINATION . COMPONENT Runtime
@@ -134,3 +136,5 @@ install(CODE "include(BundleUtilities)
               ")
 include(CPack)
 set(CPACK_PACKAGE_NAME UniversalSoftwareKit)
+
+endif()
