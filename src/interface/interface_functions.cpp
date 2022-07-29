@@ -231,6 +231,8 @@ namespace Engine {
             createNewComponentTask->SetInputDescription(CreateComponentInput::_dsc);
             fExtensionManager.GetTaskRegister().RegisterItem("Core", createNewComponentTask);
 
+            fScriptingManager.InitDefaultContexts(fExtensionManager.GetTaskRegister().GetAllItems());
+
             // For now we create local socket
             fRegisterSocket = new ERegisterSocket(1420);
             fRegisterConnection.Init();
@@ -257,6 +259,11 @@ namespace Engine {
             return fRegisterConnection;
         }
         
+        EScriptingManager& StaticSharedContext::GetScriptingManager()
+        {
+            return fScriptingManager;
+        }
+
         EEventDispatcher& StaticSharedContext::Events() 
         {
             return fRegisterEventDispatcher;

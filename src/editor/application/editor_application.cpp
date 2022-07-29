@@ -32,7 +32,7 @@ E_STORAGE_STRUCT(EnumTest,
 static EApplication* runningInstance = nullptr;
 
 EApplication::EApplication() 
-    : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
+    : fGraphicsContext(nullptr), fCommandLine(shared::StaticSharedContext::instance().GetScriptingManager().GetScriptContext<ELuaContext>()), fLoadOnStartRegister()
 {
     EFolder folder(EFile::GetAppDataPath());
     if (!folder.Exist())
