@@ -120,21 +120,24 @@ endif()
 
 if ((WIN32 OR APPLE) AND ${BUILD_EDITOR})
 
-install(TARGETS USKEditor
-        EXPORT UniversalSoftwareKit
-        BUNDLE DESTINATION . COMPONENT Runtime
-        RUNTIME DESTINATION bin COMPONENT Runtime)
+  install(TARGETS USKEditor
+          EXPORT UniversalSoftwareKit
+          BUNDLE DESTINATION . COMPONENT Runtime
+          RUNTIME DESTINATION bin COMPONENT Runtime)
 
 
 
-set(APPS \${CMAKE_INSTALL_PREFIX}/USKEditor.app)
+  if (APPLE)
+    set(APPS \${CMAKE_INSTALL_PREFIX}/USKEditor.app)
 
 
-install(CODE "include(BundleUtilities)
-              message(${RUNTIME_OUTPUT_DIRECTORY})
-              fixup_bundle(\"${APPS}\" \"\" \"${RUNTIME_OUTPUT_DIRECTORY}\")
-              ")
-include(CPack)
-set(CPACK_PACKAGE_NAME UniversalSoftwareKit)
+    install(CODE "include(BundleUtilities)
+                  message(${RUNTIME_OUTPUT_DIRECTORY})
+                  fixup_bundle(\"${APPS}\" \"\" \"${RUNTIME_OUTPUT_DIRECTORY}\")
+                  ")
+  endif()
+  
+  include(CPack)
+  set(CPACK_PACKAGE_NAME UniversalSoftwareKit)
 
 endif()
