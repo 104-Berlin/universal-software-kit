@@ -143,8 +143,7 @@ void EApplication::RegenerateMainMenuBar()
 
                 EString type = resourceFile.GetFileExtension();
                 EResourceDescription foundDescription;
-                if (shared::ExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
-                    foundDescription.ImportFunction)
+                if (shared::ExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription))
                 {
                     EResource* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
                     if (data)
@@ -313,7 +312,7 @@ void EApplication::RenderImGui()
     fCommandLine.UpdateEventDispatcher();
     fCommandLine.Render();
 
-    //ImGui::ShowDemoWindow();
+    ImGui::ShowDemoWindow();
 
     shared::StaticSharedContext::instance().GetRegisterConnection().GetEventDispatcher().Update();
 }

@@ -549,8 +549,24 @@ namespace events
     {
     private:
         EString fContent;
+        bool    fMultiline;
     public:
         EUITextField(const EString& label, const EString& content = "");
+
+        virtual bool OnRender() override;
+
+        void SetMultiline(bool value);
+
+        void SetValue(const EString& value);
+        EString GetContent() const;
+    };
+
+    class E_EDEXAPI EUIMultiLineTextField : public EUIField
+    {
+    private:
+        EString fContent;
+    public:
+        EUIMultiLineTextField(const EString& label, const EString& content = "");
 
         virtual bool OnRender() override;
 
