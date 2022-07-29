@@ -375,16 +375,7 @@ void EApplication::RegisterDefaultResources()
     };
 
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", imageDsc);
-    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", meshDsc);
-
-
-    // FOR TESTING PURPOSES
-    EResourceDescription pdfDescription("PDF", {"pdf"});
-    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", pdfDescription);
-
-    EResourceDescription textDescription("Text", {"txt", "cpp"});
-    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", textDescription);
-    
+    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", meshDsc);    
 }
 
 void EApplication::RegisterDefaultComponentRender() 

@@ -208,9 +208,13 @@ namespace Engine {
                 fRegisterEventDispatcher.Post_P(property->GetDescription(), property);
             });
 
+            EResourceDescription txtDsc("Text",{"txt"});
+
+            fExtensionManager.GetResourceRegister().RegisterItem("Core", txtDsc);
             fExtensionManager.GetTaskRegister().RegisterItem("Core", new ECFuncTask("CreateObject", [](){
                 CreateEntity();
             }));
+
             
 
             ECFuncTask* createNewComponentTask = new ECFuncTask("CreateComponent", [this](EWeakRef<EProperty> property){
