@@ -4,7 +4,7 @@
 
 namespace Engine {
 
-    class ELuaContext : public EScriptContext
+    class E_SAPI ELuaContext : public EScriptContext
     {
     private:
         lua_State* fLuaState;
