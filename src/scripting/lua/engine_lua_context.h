@@ -4,6 +4,7 @@
 
 namespace Engine {
 
+
     class E_SAPI ELuaContext : public EScriptContext
     {
     private:

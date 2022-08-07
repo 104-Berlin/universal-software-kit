@@ -2,6 +2,121 @@
 
 using namespace Engine;
 
+namespace LuaHelper
+{
+    template <typename T>
+    T GetLuaValue(lua_State* L, int index)
+    {
+        E_ERROR("Get field not implemented for given type");
+        return T();
+    }
+
+    template <>
+    i32 GetLuaValue(lua_State* L, int index)
+    {
+        if (!lua_isnumber(L, index))
+        {
+            E_ERROR("Error: field is not a number");
+            return 0;
+        }
+        return (i32)lua_tonumber(L, index);
+    }
+
+    template <>
+    u32 GetLuaValue(lua_State* L, int index)
+    {
+        if (!lua_isnumber(L, index))
+        {
+            E_ERROR("Error: field is not a number");
+            return 0;
+        }
+        return (u32)lua_tonumber(L, index);
+    }
+
+    template <>
+    u64 GetLuaValue(lua_State* L, int index)
+    {
+        if (!lua_isnumber(L, index))
+        {
+            E_ERROR("Error: field is not a number");
+            return 0;
+        }
+        return (u64)lua_tonumber(L, index);
+    }
+
+    template <>
+    float GetLuaValue(lua_State* L, int index)
+    {
+        if (!lua_isnumber(L, index))
+        {
+            E_ERROR("Error: field is not a number");
+            return 0;
+        }
+        return (float)lua_tonumber(L, index);
+    }
+
+    template <>
+    double GetLuaValue(lua_State* L, int index)
+    {
+        if (!lua_isnumber(L, index))
+        {
+            E_ERROR("Error: field is not a number");
+            return 0;
+        }
+        return (double)lua_tonumber(L, index);
+    }
+
+    template <>
+    EString GetLuaValue(lua_State* L, int index)
+    {
+        if (!lua_isstring(L, index))
+        {
+            E_ERROR("Error: field is not a string");
+            return EString();
+        }
+        return EString(lua_tostring(L, index));
+    }
+
+    template <>
+    bool GetLuaValue(lua_State* L, int index)
+    {
+        if (!lua_isboolean(L, index))
+        {
+            E_ERROR("Error: field is not a boolean");
+            return false;
+        }
+        return lua_toboolean(L, index);
+    }
+
+
+    
+    void PushTableFieldToStack(lua_State* L, const char* key, int tableIndex)
+    {
+        lua_pushstring(L, key);
+        lua_gettable(L, tableIndex < 0 ? tableIndex - 1 : tableIndex);
+    }
+
+    /**
+     * @brief Get the Table Field. 
+     * 
+     * @tparam T 
+     * @param key - Name of the field
+     * @return T 
+     */
+    template <typename T>
+    T GetTableField(lua_State* L, const char* key, int tableIndex)
+    {
+        PushTableFieldToStack(L, key, tableIndex);
+        T result = GetLuaValue<T>(-1);
+        lua_pop(L, 1);
+        return result;
+    }
+
+}
+
+
+
+
 static const char* REGISTRY_CONTEXT_KEY = "__current_contenxt";
 
 static ELuaContext* instance = nullptr;
@@ -81,7 +196,7 @@ void ELuaContext::Run_Task(const EString& taskName, lua_State* state)
             
         }
     }
-    ERef<EProperty> inputValue = CreatePropertyFromLua(inputDescription, "", state, 1);
+    ERef<EProperty> inputValue = CreatePropertyFromLua(inputDescription, "", state, -1);
     RunTask(taskName, inputValue);
 }
 
@@ -111,7 +226,22 @@ ERef<EProperty> ELuaContext::CreatePropertyFromLua(const EValueDescription& desc
 
 ERef<EProperty> ELuaContext::CreatePropertyFromLua_Struct(const EValueDescription& description, const EString& name, lua_State* state, int index)
 {
-    return nullptr;
+    E_ASSERT(description.GetType() == EValueType::STRUCT);
+    E_ASSERT(lua_istable(state, index));
+
+    ERef<EStructProperty> result = std::dynamic_pointer_cast<EStructProperty>(EProperty::CreateFromDescription(name, description));
+    for (const EValueDescription::StructField& field : description.GetStructFields())
+    {
+        LuaHelper::PushTableFieldToStack(state, field.first.c_str(), index);
+        ERef<EProperty> fieldProperty = CreatePropertyFromLua(field.second, field.first, state, -1);
+        if (fieldProperty && result->HasProperty(field.first))
+        {
+            result->GetProperty(field.first)->Copy(fieldProperty.get());
+        }
+        lua_pop(state, 1);
+    }
+
+    return result;
 }
 
 ERef<EProperty> ELuaContext::CreatePropertyFromLua_Primitive(const EValueDescription& description, const EString& name, lua_State* state, int index)
@@ -123,11 +253,11 @@ ERef<EProperty> ELuaContext::CreatePropertyFromLua_Primitive(const EValueDescrip
 
     if (primitiveId == E_TYPEID_STRING) { CREATE_PRIMITIVE(EString, lua_tostring(state, index)) } 
     else if (primitiveId == E_TYPEID_INTEGER) { CREATE_PRIMITIVE(i32, lua_tonumber(state, index)) }
-    else if (primitiveId == E_TYPEID_UNSIGNED_INTEGER) {  }
-    else if (primitiveId == E_TYPEID_UNSIGNED_BIG_INTEGER) {  }
-    else if (primitiveId == E_TYPEID_DOUBLE) {  }
-    else if (primitiveId == E_TYPEID_FLOAT) {  }
-    else if (primitiveId == E_TYPEID_BOOL) {  }
+    else if (primitiveId == E_TYPEID_UNSIGNED_INTEGER) { CREATE_PRIMITIVE(u32, lua_tonumber(state, index)) }
+    else if (primitiveId == E_TYPEID_UNSIGNED_BIG_INTEGER) { CREATE_PRIMITIVE(u64, lua_tonumber(state, index)) }
+    else if (primitiveId == E_TYPEID_DOUBLE) { CREATE_PRIMITIVE(double, lua_tonumber(state, index)) }
+    else if (primitiveId == E_TYPEID_FLOAT) { CREATE_PRIMITIVE(float, lua_tonumber(state, index)) }
+    else if (primitiveId == E_TYPEID_BOOL) { CREATE_PRIMITIVE(i32, lua_toboolean(state, index)) }
 
     return nullptr;
 }
