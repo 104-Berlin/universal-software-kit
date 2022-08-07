@@ -17,5 +17,10 @@ if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 target_compile_options(EScripting PRIVATE /bigobj)
 endif()
 
+if (UNIX)
+target_compile_options(EScripting PRIVATE -fPIC)
+endif()
+
+
 target_link_libraries(EScripting Shared)
 target_link_libraries(EScripting Lua)
