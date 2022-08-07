@@ -66,3 +66,8 @@ set(LUA_HEADER  lapi.h
 
 add_library(Lua ${LUA_SOURCE} ${LUA_HEADER})
 target_include_directories(Lua PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+
+if (UNIX)
+target_compile_options(Lua PRIVATE -fPIC)
+endif()

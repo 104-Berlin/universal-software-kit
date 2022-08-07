@@ -2,7 +2,7 @@
 
 namespace Engine {
 
-    class EScriptingManager 
+    class E_SAPI EScriptingManager 
     {
     private:
         EVector<EScriptContext*> fLoadedContexts;
