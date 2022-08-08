@@ -196,7 +196,18 @@ void ELuaContext::Run_Task(const EString& taskName, lua_State* state)
             
         }
     }
-    ERef<EProperty> inputValue = CreatePropertyFromLua(inputDescription, "", state, -1);
+
+    if (lua_istable(state, 1))
+    {
+        lua_pushnil(state);
+        while (lua_next(state, 1) != 0)
+        {
+            E_INFO(EString("Key: ") + lua_tostring(state, -2));
+            lua_pop(state, 1);
+        }
+    }
+
+    ERef<EProperty> inputValue = CreatePropertyFromLua(inputDescription, "", state, 1);
     RunTask(taskName, inputValue);
 }
 
