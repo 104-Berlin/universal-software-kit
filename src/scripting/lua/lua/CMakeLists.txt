@@ -64,7 +64,7 @@ set(LUA_HEADER  lapi.h
                 lvm.h
                 lzio.h)
 
-add_library(Lua ${LUA_SOURCE} ${LUA_HEADER})
+add_library(Lua STATIC ${LUA_SOURCE} ${LUA_HEADER})
 target_include_directories(Lua PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 

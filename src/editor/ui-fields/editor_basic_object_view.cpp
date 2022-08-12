@@ -517,6 +517,7 @@ void EObjectView::RegenAddComponentMenu()
  * 
  ****/
 
+
 EComponentEdit::EComponentEdit(const ERef<EProperty>& property)
     : EUIField("Component Edit"), fEditedProperty(property)
 {

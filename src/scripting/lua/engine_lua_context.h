@@ -23,6 +23,7 @@ namespace Engine {
         ERef<EProperty> CreatePropertyFromLua_Primitive(const EValueDescription& description, const EString& name, lua_State* state, int index);
         ERef<EProperty> CreatePropertyFromLua_Enum(const EValueDescription& description, const EString& name, lua_State* state, int index);
         ERef<EProperty> CreatePropertyFromLua_Array(const EValueDescription& description, const EString& name, lua_State* state, int index);
+        ERef<EProperty> CreatePropertyFromLua_Any(const EValueDescription& description, const EString& name, lua_State* state, int index);
     };
 
 }

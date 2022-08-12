@@ -270,7 +270,7 @@ bool EDeserializer::ReadPropertyFromJson_WithDescription(const EJson& json, ERef
     if (json["ValueDescription"].is_object() && ReadStorageDescriptionFromJson(json["ValueDescription"], &dsc))
     {
         *property = EProperty::CreateFromDescription(dsc.GetId(), dsc);
-        if (json["Value"].is_object() && ReadPropertyFromJson(json["Value"], (*property).get()))
+        if (json.contains("Value") && ReadPropertyFromJson(json["Value"], (*property).get()))
         {
             return true;
         }

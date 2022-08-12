@@ -142,6 +142,59 @@ namespace LuaHelper
         }
         printf("------------\n");
     }
+
+    EVector<EString> GetLuaTableFields(lua_State* L, int index)
+    {
+        if (index < 0)
+        {
+            index = lua_gettop(L) + index + 1;
+        }
+        E_ASSERT(lua_istable(L, index));
+        EVector<EString> fields;
+        lua_pushnil(L);
+        while (lua_next(L, index) != 0)
+        {
+            StackDump(L);
+            fields.push_back(GetLuaValue<EString>(L, -2));
+            lua_pop(L, 1);
+        }
+        return fields;
+    }
+
+    EValueDescription GetLuaTypeToValueDescription(int luaType)
+    {
+        switch (luaType)
+        {
+        case LUA_TNUMBER:
+            return DoubleDescription;
+        case LUA_TBOOLEAN:
+            return BoolDescription;
+        case LUA_TSTRING:
+            return StringDescription;
+        case LUA_TTABLE:
+            return EValueDescription(EValueType::STRUCT, "LuaTable");
+        }
+        return EValueType::UNKNOWN;
+    }
+
+
+    EValueDescription CreateDescriptionFromLuaValue(lua_State* L, int index)
+    {
+        int type = lua_type(L, index);
+        EValueDescription result = GetLuaTypeToValueDescription(type);
+        if (lua_istable(L, index))
+        {
+            EVector<EString> fields = GetLuaTableFields(L, index);
+
+            for (const EString& field : fields)
+            {
+                PushTableFieldToStack(L, field.c_str(), index);
+                result.AddStructField(field, CreateDescriptionFromLuaValue(L, -1));
+                lua_pop(L, 1);
+            }
+        }
+        return result;
+    }
 }
 
 
@@ -183,14 +236,11 @@ void ELuaContext::RegisterTask(EBaseTask* task)
     const EValueDescription& outputDescription = task->GetOutputDescription();
 
     lua_CFunction fn = [](lua_State* L)->int{
-        E_INFO(EString("Lua function called: ") + std::to_string(lua_gettop(L)));
         lua_Debug lua_info;
-        if (lua_getinfo(L, "name", &lua_info) == 0)
-        {
-            E_INFO(EString("Calling ") + lua_info.name);
-            instance->Run_Task(lua_info.name, L);
-        }
-
+        lua_getstack(L, 0, &lua_info);
+        lua_getinfo(L, "n", &lua_info);
+        E_INFO(EString("Calling ") + lua_info.name);
+        instance->Run_Task(lua_info.name, L);
         return 0;
     };
     lua_pushcfunction(fLuaState, fn);
@@ -218,26 +268,16 @@ void ELuaContext::Run_Task(const EString& taskName, lua_State* state)
     }
     // Get to input description
     const EValueDescription& inputDescription = taskToRun->GetInputDescription();
-    if (inputDescription.GetType() == EValueType::STRUCT)
+    /*if (inputDescription.GetType() == EValueType::STRUCT)
     {
         // Each struct element is one input of function call
         for (auto& field : inputDescription.GetStructFields())
         {
             
         }
-    }
+    }*/
 
-    if (lua_istable(state, 1))
-    {
-        lua_pushnil(state);
-        while (lua_next(state, 1) != 0)
-        {
-            E_INFO(EString("Key: ") + lua_tostring(state, -2));
-            lua_pop(state, 1);
-        }
-    }
-
-    LuaHelper::StackDump(state);
+    //LuaHelper::StackDump(state);
 
     ERef<EProperty> inputValue = CreatePropertyFromLua(inputDescription, "", state, 1);
     RunTask(taskName, inputValue);
@@ -259,6 +299,9 @@ ERef<EProperty> ELuaContext::CreatePropertyFromLua(const EValueDescription& desc
         break;
     case EValueType::ARRAY:
         result = CreatePropertyFromLua_Array(description, name, state, index);
+        break;
+    case EValueType::ANY:
+        result = CreatePropertyFromLua_Any(description, name, state, index);
         break;
     default:
         E_ERROR("ELuaContext::CreatePropertyFromLua: unknown type!");
@@ -295,12 +338,12 @@ ERef<EProperty> ELuaContext::CreatePropertyFromLua_Primitive(const EValueDescrip
                                             return result;
 
     if (primitiveId == E_TYPEID_STRING) { CREATE_PRIMITIVE(EString, lua_tostring(state, index)) } 
-    else if (primitiveId == E_TYPEID_INTEGER) { CREATE_PRIMITIVE(i32, lua_tonumber(state, index)) }
-    else if (primitiveId == E_TYPEID_UNSIGNED_INTEGER) { CREATE_PRIMITIVE(u32, lua_tonumber(state, index)) }
-    else if (primitiveId == E_TYPEID_UNSIGNED_BIG_INTEGER) { CREATE_PRIMITIVE(u64, lua_tonumber(state, index)) }
-    else if (primitiveId == E_TYPEID_DOUBLE) { CREATE_PRIMITIVE(double, lua_tonumber(state, index)) }
-    else if (primitiveId == E_TYPEID_FLOAT) { CREATE_PRIMITIVE(float, lua_tonumber(state, index)) }
-    else if (primitiveId == E_TYPEID_BOOL) { CREATE_PRIMITIVE(i32, lua_toboolean(state, index)) }
+    else if (primitiveId == E_TYPEID_INTEGER) { CREATE_PRIMITIVE(i32, (i32)lua_tonumber(state, index)) }
+    else if (primitiveId == E_TYPEID_UNSIGNED_INTEGER) { CREATE_PRIMITIVE(u32, (u32) lua_tonumber(state, index)) }
+    else if (primitiveId == E_TYPEID_UNSIGNED_BIG_INTEGER) { CREATE_PRIMITIVE(u64, (u64) lua_tonumber(state, index)) }
+    else if (primitiveId == E_TYPEID_DOUBLE) { CREATE_PRIMITIVE(double, (double) lua_tonumber(state, index)) }
+    else if (primitiveId == E_TYPEID_FLOAT) { CREATE_PRIMITIVE(float, (float) lua_tonumber(state, index)) }
+    else if (primitiveId == E_TYPEID_BOOL) { CREATE_PRIMITIVE(bool, (bool) lua_toboolean(state, index)) }
 
     return nullptr;
 }
@@ -313,5 +356,19 @@ ERef<EProperty> ELuaContext::CreatePropertyFromLua_Enum(const EValueDescription&
 ERef<EProperty> ELuaContext::CreatePropertyFromLua_Array(const EValueDescription& description, const EString& name, lua_State* state, int index)
 {
     return nullptr;
+}
+
+ERef<EProperty> ELuaContext::CreatePropertyFromLua_Any(const EValueDescription& description, const EString& name, lua_State* state, int index)
+{
+    EValueDescription typeDsc = LuaHelper::CreateDescriptionFromLuaValue(state, index);
+    if (!typeDsc.Valid()) { return nullptr; }
+
+    ERef<EProperty> property = CreatePropertyFromLua(typeDsc, name, state, index);
+    EAny resultAny;
+    resultAny.SetValue(property);
+    
+    ERef<EProperty> result = EProperty::CreateFromTemplate<EAny>(name);
+    result->SetValue(resultAny);
+    return result;
 }
 
