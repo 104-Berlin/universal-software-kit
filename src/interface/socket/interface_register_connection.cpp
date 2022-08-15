@@ -284,7 +284,7 @@ void ERegisterConnection::CleanUp()
 
     if (fSocketId > -1)
     {
-        _sock::close(fSocketId);
+        Socket::Close(fSocketId);
 
         fSocketId = -1;
     }
@@ -342,7 +342,7 @@ void ERegisterConnection::Run_ListenLoop()
                 fConnectionStatus = Status::Disconnected;
                 break;
             }
-            _sock::print_last_socket_error();
+            Socket::PrintLastSocketError();
             continue;
         }
             
@@ -426,7 +426,7 @@ void ERegisterConnection::Connect(const EString& connectTo, int connectToPort)
         {
             E_ERROR("Could not connect to server!");
             fConnectionStatus = Status::Disconnected;
-            _sock::print_last_socket_error();
+            Socket::PrintLastSocketError();
             return;
         }
         fConnectToAddress = connectTo;

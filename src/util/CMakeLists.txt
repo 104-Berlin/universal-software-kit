@@ -8,6 +8,8 @@ add_library(Util STATIC     file/engine_file_collection.cpp
                             file/engine_shared_buffer.cpp
                             file/engine_base64.cpp
                             string/util_string.cpp
+                            socket/util_socket.cpp
+                            exception/engine_exception.cpp
                             logging/engine_logging.cpp)
 
 target_include_directories(Util PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

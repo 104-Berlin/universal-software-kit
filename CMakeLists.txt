@@ -22,6 +22,7 @@ option(BUILD_CLT "Toggle the Command-Line-Tool" TRUE)
 option(BUILD_TOOLS "Toogle the build of the tools" TRUE)
 option(BUILD_MIDI_TOOL "Toggle the midi extension" TRUE)
 option(BUILD_ASSIMP "Toggle the assimp build" TRUE)
+option(BUILD_CONTENT_SERVER "Toggle the content server" TRUE)
 
 
 # Editor only for windows and mac supported
@@ -83,6 +84,12 @@ endif()
 
 if (${BUILD_CLT})
   add_subdirectory(src/command-line)
+endif()
+
+#########################
+##### HTTP SERVER #######
+if (${BUILD_CONTENT_SERVER})
+  add_subdirectory(src/content-server)
 endif()
 
 #########################

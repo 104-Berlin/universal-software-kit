@@ -54,14 +54,9 @@ namespace Engine {
 
 
     namespace _sock {
-        void close(int socketId);
-        int read(int socketId, u8* data, size_t data_size);
-        int send(int socketId, const u8* data, size_t data_size);
-
         void send_packet(int socketId, const ERegisterPacket& packet);
         int read_packet(int socketId, ERegisterPacket* outPacket);
 
-        void print_last_socket_error();
         void print_packet(const EString& name, const ERegisterPacket& packet);
     }
 }

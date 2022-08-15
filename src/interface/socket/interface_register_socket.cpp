@@ -85,7 +85,7 @@ void ERegisterSocket::Init()
     if (bind(fSocketId, (const sockaddr*)fAddressInfo, sizeof(sockaddr_in)) == -1)
     {
         E_ERROR("Could not bind the socket " + std::to_string(fSocketId));
-        _sock::print_last_socket_error();
+        Socket::PrintLastSocketError();
         return;
     }
 
@@ -111,7 +111,7 @@ void ERegisterSocket::CleanUp()
 
     if (fSocketId > -1)
     {
-        _sock::close(fSocketId);
+        Socket::Close(fSocketId);
         fSocketId = -1;
     }
     
@@ -166,7 +166,7 @@ void ERegisterSocket::Run_AcceptConnections()
         }
         else
         {
-            _sock::print_last_socket_error();
+            Socket::PrintLastSocketError();
         }
     }
 }
@@ -185,7 +185,7 @@ void ERegisterSocket::Run_Connection(Connection* connection)
         }
         else if (n < 0)
         {
-            _sock::print_last_socket_error();
+            Socket::PrintLastSocketError();
             continue;
         }
         
