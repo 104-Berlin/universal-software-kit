@@ -143,8 +143,7 @@ void EApplication::RegenerateMainMenuBar()
 
                 EString type = resourceFile.GetFileExtension();
                 EResourceDescription foundDescription;
-                if (shared::ExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
-                    foundDescription.ImportFunction)
+                if (shared::ExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription))
                 {
                     EResource* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
                     if (data)
@@ -313,7 +312,7 @@ void EApplication::RenderImGui()
     fCommandLine.UpdateEventDispatcher();
     fCommandLine.Render();
 
-    //ImGui::ShowDemoWindow();
+    ImGui::ShowDemoWindow();
 
     shared::StaticSharedContext::instance().GetRegisterConnection().GetEventDispatcher().Update();
 }
@@ -375,16 +374,7 @@ void EApplication::RegisterDefaultResources()
     };
 
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", imageDsc);
-    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", meshDsc);
-
-
-    // FOR TESTING PURPOSES
-    EResourceDescription pdfDescription("PDF", {"pdf"});
-    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", pdfDescription);
-
-    EResourceDescription textDescription("Text", {"txt", "cpp"});
-    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", textDescription);
-    
+    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", meshDsc);    
 }
 
 void EApplication::RegisterDefaultComponentRender() 

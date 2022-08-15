@@ -52,4 +52,7 @@
 
 #include "interface_functions.h"
 
+
+#include "resource_types/interface_rt_txt.h"
+
 #endif

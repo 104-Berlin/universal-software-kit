@@ -552,7 +552,7 @@ bool EUILabel::OnRender()
 }
 
 EUITextField::EUITextField(const EString& label, const EString& content)
-    : EUIField(label), fContent(content)
+    : EUIField(label), fContent(content), fMultiline(false)
 {
     
 }
@@ -562,16 +562,43 @@ bool EUITextField::OnRender()
     char text[255];
     memcpy(text, fContent.c_str(), 255);
 
-    if (ImGui::InputText(GetLabel().c_str(), text, 255))
+    if (fMultiline)
     {
-        fEventDispatcher.Enqueue<events::ETextChangeEvent>({fContent});
+        float width = fWidthOverride;
+        float height = fHeightOverride;
+        if (width == 0.0f) { width = ImGui::GetContentRegionAvail().x; }
+        if (height == 0.0f) { height = ImGui::GetContentRegionAvail().y; }
+        
+        /*static float wrap_width = 200.0f;
+        ImGui::SliderFloat("Wrap width", &wrap_width, -20, 600, "%.0f");
+
+
+        ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + wrap_width);
+        ImGui::InputTextMultiline(GetLabel().c_str(), (char*)fContent.data(), fContent.size(), {width, height}, ImGuiInputTextFlags_ReadOnly);
+        ImGui::PopTextWrapPos();*/
+        ExUI::RenderText(fContent.c_str(), {width, height});
+        
     }
-    if (ImGui::IsItemDeactivatedAfterEdit())
+    else
     {
-        fEventDispatcher.Enqueue<events::ETextCompleteEvent>({fContent});
+        if (ImGui::InputText(GetLabel().c_str(), text, 255))
+        {
+            fEventDispatcher.Enqueue<events::ETextChangeEvent>({fContent});
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            fEventDispatcher.Enqueue<events::ETextCompleteEvent>({fContent});
+        }
+
     }
+
     fContent = text;
     return true;
+}
+
+void EUITextField::SetMultiline(bool value)
+{
+    fMultiline = value;
 }
 
 void EUITextField::SetValue(const EString& value)

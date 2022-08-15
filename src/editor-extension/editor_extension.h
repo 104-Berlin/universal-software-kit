@@ -46,9 +46,10 @@ typedef glm::quat EQuat;
 #include "default-types/editor_def_transform.h"
 
 
+#include "ui/imgui/editor_ext_imgui_text_copy.h"
 
 #include "ui/editor_ext_ui.h"
-#include "ui/viewport/editor_ext_camera_cotrols.h"
+#include "ui/viewport/editor_ext_camera_controls.h"
 #include "ui/viewport/editor_ext_viewport_tools.h"
 #include "ui/viewport/editor_ext_viewport.h"
 #include "ui/editor_ui_register.h"

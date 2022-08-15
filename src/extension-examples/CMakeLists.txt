@@ -27,6 +27,10 @@ add_library(EXTRUSION MODULE extrusion.cpp)
 set_target_properties(EXTRUSION PROPERTIES SUFFIX ".uex")
 set_target_properties(EXTRUSION PROPERTIES PREFIX "")
 
+add_library(FELISTUFF MODULE feli_stuff.cpp)
+set_target_properties(FELISTUFF PROPERTIES SUFFIX ".uex")
+set_target_properties(FELISTUFF PROPERTIES PREFIX "")
+
 
 if (${BUILD_MIDI_TOOL})
 add_library(MIDI_CONTROLL MODULE midi_controll.cpp)
@@ -43,6 +47,7 @@ target_link_libraries(UISHOW EEditorExtension)
 target_link_libraries(SHOW_IMAGE EEditorExtension)
 target_link_libraries(RENDERING_TESTS EEditorExtension)
 target_link_libraries(EXTRUSION EEditorExtension)
+target_link_libraries(FELISTUFF EEditorExtension)
 
 
 

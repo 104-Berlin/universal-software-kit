@@ -5,7 +5,8 @@ add_library(EInterface SHARED   interface_functions.cpp
                                 socket/interface_register_socket.cpp
                                 socket/interface_register_connection.cpp
                                 socket/interface_socket.cpp
-                                util/interface_util.cpp)
+                                util/interface_util.cpp
+                                resource_types/interface_rt_txt.cpp)
 
 target_include_directories(EInterface PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(EInterface PRIVATE SH_INTERFACE_EXPORT)

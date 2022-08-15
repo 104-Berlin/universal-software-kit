@@ -2,13 +2,11 @@ cmake_minimum_required(VERSION 3.15)
 
 project(USKEditorExtension)
 
-add_library(EEditorExtension SHARED editor_vector_functions.cpp        
-                                    default-types/editor_def_res_image.cpp
-                                    default-types/editor_def_res_mesh.cpp
-                                    ui/viewport/editor_ext_camera_controls.cpp
-                                    ui/viewport/editor_ext_viewport.cpp
-                                    ui/viewport/editor_ext_viewport_tools.cpp
-                                    ui/editor_ext_ui.cpp)
+file(GLOB_RECURSE ${CMAKE_PROJECT_NAME}_SRC *.cpp)
+file(GLOB_RECURSE ${CMAKE_PROJECT_NAME}_HDR *.h)
+
+add_library(EEditorExtension SHARED ${${CMAKE_PROJECT_NAME}_SRC}
+                                    ${${CMAKE_PROJECT_NAME}_HDR})
 
 target_compile_definitions(EEditorExtension PRIVATE EXPORT_EDITOR_EXTENSION)
 target_include_directories(EEditorExtension PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
