@@ -564,18 +564,20 @@ bool EUITextField::OnRender()
 
     if (fMultiline)
     {
-        static float wrap_width = 200.0f;
-        ImGui::SliderFloat("Wrap width", &wrap_width, -20, 600, "%.0f");
-
-        
         float width = fWidthOverride;
         float height = fHeightOverride;
         if (width == 0.0f) { width = ImGui::GetContentRegionAvail().x; }
         if (height == 0.0f) { height = ImGui::GetContentRegionAvail().y; }
+        
+        /*static float wrap_width = 200.0f;
+        ImGui::SliderFloat("Wrap width", &wrap_width, -20, 600, "%.0f");
+
 
         ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + wrap_width);
         ImGui::InputTextMultiline(GetLabel().c_str(), (char*)fContent.data(), fContent.size(), {width, height}, ImGuiInputTextFlags_ReadOnly);
-        ImGui::PopTextWrapPos();
+        ImGui::PopTextWrapPos();*/
+        ExUI::RenderText(fContent.c_str(), {width, height});
+        
     }
     else
     {

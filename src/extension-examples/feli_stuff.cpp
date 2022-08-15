@@ -23,6 +23,10 @@ APP_ENTRY
                 weakTextLabel.lock()->SetValue(rs->String);
             }
         }
+        else
+        {
+            weakTextLabel.lock()->SetValue("");
+        }
     });
 }
 
