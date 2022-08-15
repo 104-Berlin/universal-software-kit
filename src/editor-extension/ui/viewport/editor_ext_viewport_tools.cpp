@@ -334,8 +334,6 @@ ETransformTool::ETransformTool()
 
 bool ETransformTool::OnRender()
 {
-    float bounds[] = { -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f };
-
     Renderer::RObject* attachedObject = fViewport->GetSelectionContext().GetSelectedObject();
     if (!attachedObject) { return false; }
 
@@ -343,7 +341,7 @@ bool ETransformTool::OnRender()
     EMat4 projectionMatrix = GetViewport()->GetCamera().GetProjectionMatrix(GetViewport()->GetWidth(), GetViewport()->GetHeight());
     EMat4 transformMatrix = attachedObject->GetModelMatrix();
     ImGuizmo::SetID(fGizmoID);
-    ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformMatrix), NULL, NULL, bounds, NULL);
+    ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformMatrix));
     
     bool finished = false;
 

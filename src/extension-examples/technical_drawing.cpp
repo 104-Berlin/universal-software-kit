@@ -165,6 +165,7 @@ APP_ENTRY
 EXT_ENTRY
 {
     Plane::_dsc.AddDependsOn(Editor::ETransform::_dsc);
+    Curve::_dsc.AddDependsOn(Editor::ETransform::_dsc);
     TechnicalBox::_dsc.AddDependsOn(Editor::ETransform::_dsc);
 
     info.GetComponentRegister().RegisterStruct<TechnicalMesh>(extensionName);
