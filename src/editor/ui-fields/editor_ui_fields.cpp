@@ -4,8 +4,8 @@ using namespace Editor;
 using namespace Engine;
 
 
-ECommandLine::ECommandLine() 
-    : EUIField("CommandLine")
+ECommandLine::ECommandLine(Engine::EScriptContext* scriptContext) 
+    : EUIField("CommandLine"), fScriptContext(scriptContext)
 {
     
 }
@@ -35,13 +35,11 @@ bool ECommandLine::OnRender()
     memset(buffer, 0, 255);
     if (ImGui::InputText("##COMMAND_LINE_INPUT", buffer, 255, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        EString command = EStringUtil::ToLower(buffer);
+        EString command = buffer;
         
-        //fChaiContext->Execute(buffer);
-        if (command == "add")
+        if (fScriptContext)
         {
-            E_INFO("NEW ENTITY");
-            shared::CreateEntity();
+            fScriptContext->Execute(command);
         }
     }
     ImGui::PopItemWidth();

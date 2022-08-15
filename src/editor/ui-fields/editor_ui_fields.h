@@ -9,8 +9,10 @@ namespace Editor {
 
     class ECommandLine : public Engine::EUIField
     {
+    private:
+        Engine::EScriptContext* fScriptContext;
     public:
-        ECommandLine();
+        ECommandLine(Engine::EScriptContext* scriptContext);
 
         virtual bool OnRender() override;
     };

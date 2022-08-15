@@ -16,12 +16,14 @@ namespace Engine {
             ERegisterConnection             fRegisterConnection; // Client communication with Register
             ERegisterSocket*                fRegisterSocket;     // Register Provider / Server (Entities and Data)
             EEventDispatcher                fRegisterEventDispatcher; // Event Dispatcher for Register. All events the register provides are dispatched here.
+            EScriptingManager               fScriptingManager; // Loaded Scripts contexts
         public:
             StaticSharedContext();
             ~StaticSharedContext();
 
             EExtensionManager&  GetExtensionManager();
             ERegisterConnection&  GetRegisterConnection();
+            EScriptingManager& GetScriptingManager();
 
             EEventDispatcher& Events();
 

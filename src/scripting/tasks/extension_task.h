@@ -8,7 +8,7 @@ namespace Engine {
     static constexpr u16 ETaskType_EVENT_DRIVEN = BIT(3);
 
 
-    class E_EXTAPI EBaseTask
+    class E_SAPI EBaseTask
     {
     private:
         EString fName;
@@ -38,7 +38,7 @@ namespace Engine {
         const EValueDescription& GetOutputDescription() const;
     };
 
-    class E_EXTAPI ECFuncTask : public EBaseTask
+    class E_SAPI ECFuncTask : public EBaseTask
     {
     private:
         using CFunc_NoParam_NoReturn = std::function<void()>;
