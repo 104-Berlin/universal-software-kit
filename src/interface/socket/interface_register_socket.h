@@ -27,7 +27,7 @@ namespace Engine {
             std::mutex      SendMutex;
         };
     private:
-        ERegister*          fLoadedRegister; // The register to get and set data
+        EDataBase*          fLoadedRegister; // The register to get and set data
 
 
         int                 fSocketId; // The running socket
@@ -61,7 +61,7 @@ namespace Engine {
         void ConnectionGotPacket(Connection* connection, const ERegisterPacket& packet);
 
 
-        void HandleRegisterEvent(EStructProperty* data);
+        void HandleRegisterEvent(ERef<EProperty> data);
 
         // All packet type functions
         EJson Pk_HandleCreateEntity(const ERegisterPacket& packet);

@@ -114,6 +114,20 @@ namespace Engine {
          * @param sharedBuffer The buffer to override to current loaded
          */
         void SetFileBuffer(ESharedBuffer sharedBuffer);
+
+
+
+        /**
+         * 
+         * @brief Get the App Data Path object
+         * 
+         * - MAC: ~/Library/Application Support/Universal-Software-Kit 
+         * - WINDOWS: C:\Users\{username}\AppData\Roaming\Universal-Software-Kit \
+         * - LINUX: ~/.config/Universal-Software-Kit
+         * 
+         * @return EString 
+         */
+        static EString GetAppDataPath();
     private:
         void CreatePathStrings();
     };

@@ -31,8 +31,8 @@ bool convert::setter<EVec2>(Engine::EProperty* prop, const EVec2& vec)
 	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
 	EStructProperty* property = static_cast<EStructProperty*>(prop);
 
-	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
-	EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
+	auto xProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("X"));
+	auto yProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Y"));
 	if (xProp && yProp)
 	{
 		xProp->SetValue(vec.x);
@@ -49,8 +49,8 @@ bool convert::getter<EVec2>(const Engine::EProperty* prop, EVec2* outVec)
 	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
 	const EStructProperty* property = static_cast<const EStructProperty*>(prop);
 
-	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
-	const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
+	const auto xProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("X"));
+	const auto yProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Y"));
 	if (xProp && yProp)
 	{
 		outVec->x = (float)xProp->GetValue();
@@ -67,9 +67,9 @@ bool convert::setter<EVec3>(Engine::EProperty* prop, const EVec3& vec)
 	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
 	EStructProperty* property = static_cast<EStructProperty*>(prop);
 
-	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
-	EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
-	EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
+	auto xProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("X"));
+	auto yProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Y"));
+	auto zProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Z"));
 	if (xProp && yProp && zProp)
 	{
 		xProp->SetValue(vec.x);
@@ -87,9 +87,9 @@ bool convert::getter<EVec3>(const Engine::EProperty* prop, EVec3* outVec)
 	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
 	const EStructProperty* property = static_cast<const EStructProperty*>(prop);
 
-	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
-	const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
-	const EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
+	auto xProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("X"));
+	auto yProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Y"));
+	auto zProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Z"));
 	if (xProp && yProp && zProp)
 	{
 		outVec->x = (float)xProp->GetValue();
@@ -108,9 +108,9 @@ bool convert::setter<EVec4>(Engine::EProperty* prop, const EVec4& vec)
 	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
 	EStructProperty* property = static_cast<EStructProperty*>(prop);
 
-	EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
-	EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
-	EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
+	auto xProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("X"));
+	auto yProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Y"));
+	auto zProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Z"));
 	if (xProp && yProp && zProp)
 	{
 		xProp->SetValue(vec.x);
@@ -128,10 +128,10 @@ bool convert::getter<EVec4>(const Engine::EProperty* prop, EVec4* outVec)
 	if (prop->GetDescription().GetType() != EValueType::STRUCT) { return false; }
 	const EStructProperty* property = static_cast<const EStructProperty*>(prop);
 
-	const EValueProperty<double>* xProp = (EValueProperty<double>*)property->GetProperty("X");
-	const EValueProperty<double>* yProp = (EValueProperty<double>*)property->GetProperty("Y");
-	const EValueProperty<double>* zProp = (EValueProperty<double>*)property->GetProperty("Z");
-	const EValueProperty<double>* wProp = (EValueProperty<double>*)property->GetProperty("W");
+	auto xProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("X"));
+	auto yProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Y"));
+	auto zProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("Z"));
+	auto wProp = std::dynamic_pointer_cast<EValueProperty<double>>(property->GetProperty("W"));
 	if (xProp && yProp && zProp && wProp)
 	{
 		outVec->x = (float)xProp->GetValue();

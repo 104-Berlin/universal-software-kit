@@ -18,6 +18,7 @@ E_STORAGE_STRUCT(MyType,
     (float, Other),
     (EString, SomeString),
     (EResourceLink, ImageLink, "Image"),
+    (EResourceLink, MeshLink, "Mesh"),
     (EVector<MySubType>, Working)
 )
 
@@ -35,9 +36,17 @@ E_STORAGE_STRUCT(EnumTest,
     (MyEnum, SomeEnum)
 )
 
+static EApplication* runningInstance = nullptr;
+
 EApplication::EApplication() 
     : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
 {
+    EFolder folder(EFile::GetAppDataPath());
+    if (!folder.Exist())
+    {
+        folder.Create();
+    }
+
     shared::ExtensionManager().AddEventListener<events::EExtensionLoadedEvent>([this](events::EExtensionLoadedEvent event) {
         EExtension* extension = shared::ExtensionManager().GetExtension(event.Extension);
         auto entry = (void(*)(const char*, Engine::EAppInit))extension->GetFunction("app_entry");
@@ -56,7 +65,8 @@ EApplication::EApplication()
         }
     });
 
-    shared::ExtensionManager().AddEventListener<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
+
+    shared::Events().Connect<events::EExtensionUnloadEvent>([this](events::EExtensionUnloadEvent event){
         for (ERef<EUIPanel> panel : fUIRegister.GetItems(event.ExtensionName))
         {
             panel->DisconnectAllEvents();
@@ -74,13 +84,28 @@ EApplication::EApplication()
     fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
         this->RegenerateMainMenuBar();
     });
+
+    // Temp
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<MyType>("Core");
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<BasicSvg>("Core");
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<EnumTest>("Core");
 }
 
+EApplication::~EApplication() 
+{
+    SaveApplicationState();
+    runningInstance = nullptr;
+}
+
 void EApplication::Start(const EString& defaultRegisterPath) 
 {
+    if (runningInstance)
+    {
+        E_ERROR("Application already started");
+        return;
+    }
+    E_INFO(EFile::GetAppDataPath());
+    runningInstance = this;
     fLoadOnStartRegister = defaultRegisterPath;
     Wrapper::RunApplicationLoop(std::bind(&EApplication::Init, this, std::placeholders::_1), std::bind(&EApplication::Render, this), std::bind(&EApplication::RenderImGui, this), std::bind(&EApplication::CleanUp, this), &Wrapper::SetImGuiContext);
 }
@@ -129,7 +154,7 @@ void EApplication::RegenerateMainMenuBar()
                 if (shared::ExtensionManager().GetResourceRegister().FindItem(EFindResourceByType(type), &foundDescription) &&
                     foundDescription.ImportFunction)
                 {
-                    EResourceData* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
+                    EResource* data = EResourceManager::CreateResourceFromFile(resourceFile, foundDescription);
                     if (data)
                     {
                         shared::CreateResource(data);
@@ -197,6 +222,7 @@ void EApplication::RegenerateMainMenuBar()
 void EApplication::Init(Graphics::GContext* context) 
 {
     fGraphicsContext = context;
+
     fMainMenu = EMakeRef<EUIMainMenuBar>();
     RegisterDefaultPanels();
     RegisterDefaultResources();
@@ -224,6 +250,7 @@ void EApplication::Init(Graphics::GContext* context)
 
 
 
+    LoadApplicationState();
 
     if (!fLoadOnStartRegister.empty())
     {
@@ -242,7 +269,36 @@ void EApplication::CleanUp()
 }
 
 void EApplication::Render() 
-{
+{        
+    return;
+    EVec2 mousePos(ImGui::GetMousePos().x, ImGui::GetMousePos().y);
+    
+
+    ImVec2 md0 = ImGui::GetMouseDragDelta(0, 0.0f);
+    EVec2 mouseDrag0(md0.x, md0.y);
+    ImGui::ResetMouseDragDelta(0);
+    if (glm::length(mouseDrag0) > 0.0f)
+    {
+        events::EMouseDragEvent dragEvent;
+        dragEvent.MouseButton = 0;
+        dragEvent.MouseDelta = mouseDrag0;
+        dragEvent.Position = mousePos;
+        //fCameraControls->OnMouseDrag(dragEvent);
+    }
+
+    float scrollX = ImGui::GetIO().MouseWheel;
+    float scrollY = ImGui::GetIO().MouseWheelH;
+
+    if (scrollX != 0.0f || scrollY != 0.0f)
+    {
+        events::EMouseScrollEvent scrollEvent;
+        scrollEvent.ScrollX = scrollX;
+        scrollEvent.ScrollY = scrollY;
+        //fCameraControls->OnMouseScroll(scrollEvent);
+    }
+
+    fGraphicsContext->EnableDepthTest(true);
+    fGraphicsContext->SetFaceCullingMode(Graphics::GCullMode::NONE);
     
 }
 
@@ -265,7 +321,7 @@ void EApplication::RenderImGui()
     fCommandLine.UpdateEventDispatcher();
     fCommandLine.Render();
 
-    ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
 
     shared::StaticSharedContext::instance().GetRegisterConnection().GetEventDispatcher().Update();
 }
@@ -294,10 +350,14 @@ void EApplication::RegisterDefaultPanels()
     ERef<EUIPanel> universalSceneView4 = EMakeRef<EUIPanel>("Basic Scene View 4");
     universalSceneView4->AddChild(EMakeRef<EObjectView>(&fUIValueRegister));
 
+
+    ERef<EUIPanel> registerPanel = EMakeRef<EUIPanel>("Register Panel");
+    registerPanel->AddChild(EMakeRef<EBasicRegisterView>());
+
     fUIRegister.RegisterItem("Core", universalSceneView1);
-    fUIRegister.RegisterItem("Core", universalSceneView2);
-    fUIRegister.RegisterItem("Core", universalSceneView3);
-    fUIRegister.RegisterItem("Core", universalSceneView4);
+    //fUIRegister.RegisterItem("Core", universalSceneView2);
+    //fUIRegister.RegisterItem("Core", universalSceneView3);
+    //fUIRegister.RegisterItem("Core", universalSceneView4);
     fUIRegister.RegisterItem("Core", resourcePanel);
     fUIRegister.RegisterItem("Core", extensionPanel);
     fUIRegister.RegisterItem("Core", connectionStatePanel);
@@ -356,13 +416,29 @@ void EApplication::RegisterDefaultPanels()
         }
     });
     fUIRegister.RegisterItem("Core", basicViewport);
+    fUIRegister.RegisterItem("Core", registerPanel);
 }
 
 void EApplication::RegisterDefaultResources() 
 {
     EResourceDescription imageDsc("Image",{"png", "jpeg", "bmp"});
-    imageDsc.ImportFunction = &ResImage::ImportImage;
+    imageDsc.ImportFunction = [](ESharedBuffer buffer) -> EResource*{
+        EResource* result = new EResource("Image");
+        result->SetBuffer(buffer);
+        result->Load<EImageResource>();
+        return result;
+    };
+
+    EResourceDescription meshDsc("Mesh",{"obj", "fbx", "dae", "3ds", "glb", "gltf", "blend"});
+    meshDsc.ImportFunction = [](ESharedBuffer buffer) -> EResource*{
+        EResource* result = new EResource("Mesh");
+        result->SetBuffer(buffer);
+        result->Load<EMeshResource>();
+        return result;
+    };
+
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", imageDsc);
+    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", meshDsc);
 
     EResourceDescription svgDsc("SVG",{"svg"});
     svgDsc.ImportFunction = &ResSvg::ImportSvg;
@@ -379,16 +455,83 @@ void EApplication::RegisterDefaultResources()
 
 void EApplication::RegisterDefaultComponentRender() 
 {
-    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, ERegister::Entity entity, const EString& nameIdent)->ERef<EUIField>{
+    fUIValueRegister.RegisterItem("Core", {EResourceLink::_dsc.GetId(), [](EProperty* prop, const EString& nameIdent, std::function<void(EProperty*)> callbackFn)->ERef<EUIField>{
         EResourceLink link;
         if (convert::getter(prop, &link))
         {
             ERef<EUIResourceSelect> resourceSelect = EMakeRef<EUIResourceSelect>(link.Type);
-            resourceSelect->AddEventListener<events::EResourceSelectChangeEvent>([nameIdent, entity, link](events::EResourceSelectChangeEvent event){
-                shared::SetValue<EResourceLink>(entity, nameIdent, EResourceLink(link.Type, event.ResourceID));
+            resourceSelect->AddEventListener<events::EResourceSelectChangeEvent>([nameIdent, callbackFn, link](events::EResourceSelectChangeEvent event){
+                EResourceLink newLink;
+                newLink.Type = event.ResourceType;
+                newLink.ResourceId = event.ResourceID;
+
+                ERef<EStructProperty> structProp = std::dynamic_pointer_cast<EStructProperty>(EProperty::CreateFromDescription(EResourceLink::_dsc.GetId(), EResourceLink::_dsc));
+                if (convert::setter(structProp.get(), newLink))
+                {
+                    callbackFn(structProp.get());
+                }
             });
+            resourceSelect->SetResourceLink(link);
             return resourceSelect;
         }
         return EMakeRef<EUIField>("ResourceLink");
     }});
+}
+
+ApplicationState EApplication::CreateApplicationState() const
+{
+    ApplicationState result;
+
+    for (EExtension* ext : shared::ExtensionManager().GetLoadedExtensions())
+    {
+        if (ext->GetAutoLoad())
+        {
+            result.AutoLoadExtensions.push_back(ext->GetFilePath());
+        }
+    }
+
+    return result;
+}
+
+void EApplication::SaveApplicationState() const
+{
+    ERef<EProperty> appStateProp = EProperty::CreateFromDescription(ApplicationState::_dsc.GetId(), ApplicationState::_dsc);
+    convert::setter(appStateProp.get(), CreateApplicationState());
+
+    EString appStateJsonString = ESerializer::WritePropertyToJs(appStateProp.get(), false).dump();
+
+    EFile stateFile(Path::Join(EFile::GetAppDataPath(), "application_state.uas"));
+    stateFile.SetFileAsString(appStateJsonString);
+    E_INFO("Saving application state to: " + stateFile.GetFullPath());
+}
+
+void EApplication::LoadApplicationState()
+{
+    EFile stateFile(Path::Join(EFile::GetAppDataPath(), "application_state.uas"));
+    if (!stateFile.Exist())
+    {
+        E_WARN("Application state file not found");
+        return;
+    }
+
+    EString stateString = stateFile.GetFileAsString();
+    EJson appStateJson = EJson::parse(stateString);
+
+    ERef<EProperty> appStateProp = EProperty::CreateFromDescription(ApplicationState::_dsc.GetId(), ApplicationState::_dsc);
+    EDeserializer::ReadPropertyFromJson(appStateJson, appStateProp.get());
+
+
+    ApplicationState state;
+    convert::getter(appStateProp.get(), &state);
+
+    for (const EString& autoLoadExtension : state.AutoLoadExtensions)
+    {
+        shared::ExtensionManager().LoadExtension(autoLoadExtension, true);
+    }
+}
+
+EApplication* EApplication::gApp() 
+{
+    E_ASSERT_M(runningInstance != nullptr, "Application not initialized");
+    return runningInstance;
 }

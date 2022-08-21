@@ -35,11 +35,11 @@ void PrintProperty_Struct(EStructProperty* prop)
     std::cout << std::endl;
     for (auto& entry : dsc.GetStructFields())
     {
-        EProperty* childProp = prop->GetProperty(entry.first);
+        ERef<EProperty> childProp = prop->GetProperty(entry.first);
         if (childProp)
         {
             std::cout << "\t";
-            inter::PrintProperty(childProp);
+            inter::PrintProperty(childProp.get());
         }
     }
 }
@@ -49,7 +49,7 @@ void PrintProperty_Array(EArrayProperty* prop)
     std::cout << "[";
     for (auto& entry : prop->GetElements())
     {
-        inter::PrintProperty(entry);
+        inter::PrintProperty(entry.get());
         std::cout << ",";
     }
     std::cout << "]";
@@ -57,19 +57,8 @@ void PrintProperty_Array(EArrayProperty* prop)
 
 void inter::PrintProperty(EProperty* prop) 
 {
-    EValueDescription dsc = prop->GetDescription();
-    std::cout << "\"" << prop->GetPropertyName() << "\": ";
-    
-    switch (dsc.GetType())
-    {
-    case EValueType::PRIMITIVE: PrintProperty_Prim(prop); break;
-    case EValueType::ARRAY: PrintProperty_Array(static_cast<EArrayProperty*>(prop)); break;
-    case EValueType::STRUCT: PrintProperty_Struct(static_cast<EStructProperty*>(prop)); break;
-    case EValueType::ENUM: break;
-    case EValueType::UNKNOWN: break;
-    }
-    
-    std::cout << std::endl;
+    EJson propertyJson = ESerializer::WritePropertyToJs(prop);
+    std::cout << "\"" << prop->GetPropertyName() << "\": " << propertyJson.dump(1) << std::endl;
 }
 
 

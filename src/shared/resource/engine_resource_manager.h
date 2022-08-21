@@ -2,6 +2,66 @@
 
 namespace Engine {
 
+    class E_API EResource 
+    {
+    public:
+        using t_ID = u64;
+    private:
+        t_ID fID;
+        ESharedBuffer fFileBuffer;
+
+        EString         fType;
+        EString         fName;
+
+        void*           fCPtr;
+        size_t          fPtrTypeHash;
+    public:
+        EResource(const EString& type);
+
+        void SetID(const t_ID& id);
+        const t_ID& GetID() const;
+        void SetBuffer(ESharedBuffer buffer);
+        const ESharedBuffer& GetBuffer() const;
+        void SetName(const EString& name);
+        const EString& GetName() const;
+
+        const EString& GetResourceType() const;
+
+        EString GetTempFilePath() const;
+
+
+        template <typename T>
+        auto Load()
+        -> decltype(std::declval<T>().FromBuffer(std::declval<ESharedBuffer>()))
+        {
+            if (fFileBuffer.IsNull())
+            {
+                E_ERROR("EResource::Load: No buffer set");
+                return;
+            }
+            fPtrTypeHash = typeid(T).hash_code();
+            fCPtr = new T();
+            ((T*)fCPtr)->FromBuffer(fFileBuffer);
+        }
+
+        template <typename T>
+        T* GetCPtr()
+        {
+            if (!fCPtr)
+            {
+                Load<T>();
+            }
+            if (typeid(T).hash_code() != fPtrTypeHash)
+            {
+                E_ERROR("EResource::GetCPtr: Wrong type");
+                return nullptr;
+            }
+            return (T*)fCPtr;
+        }
+
+        
+    };
+
 
     struct EResourceDescription
     {   
@@ -18,8 +78,8 @@ namespace Engine {
             u8* Data = nullptr;
             size_t Size = 0;
         };
-        using ImpFunction = std::function<ResBuffer(const RawBuffer)>;
-        using ExpFunction = std::function<RawBuffer(const ResBuffer)>;
+        using ImpFunction = std::function<EResource*(ESharedBuffer)>;
+        using ExpFunction = std::function<ESharedBuffer(EResource*)>;
 
         EString             ResourceName;
         EVector<EString>    AcceptedFileEndings;
@@ -33,83 +93,10 @@ namespace Engine {
         {}
     };
 
-
-    struct EResourceData
-    {
-        using t_ID = u64;
-
-        t_ID    ID;
-        EString Type;
-        EString Name;
-        EString PathToFile;
-        u8*   Data;
-        u64     DataSize;
-        u8*   UserData;
-        u64     UserDataSize;
-    public:
-
-        EResourceData(t_ID id = 0)
-            : ID(id), Type(), Name(), PathToFile(), Data(nullptr), DataSize(0), UserData(nullptr), UserDataSize(0)
-        {
-            
-        }
-
-        EResourceData(t_ID id, const EString& type, const EString& name, u8* data, size_t dataSize)
-            : ID(id), Type(type), Name(name), PathToFile(), UserData(nullptr), UserDataSize(0)
-        {
-            Data = data;
-            DataSize = dataSize;
-        }
-
-        EResourceData(const EResourceData&) = default;
-
-        ~EResourceData()
-        {
-            if (Data)
-            {
-                delete Data;
-                Data = nullptr;
-            }
-        }
-
-        template <typename T>
-        void SetUserData(const T& data)
-        {
-            if (UserData)
-            {
-                delete[] UserData;
-            }
-            UserData = new u8[sizeof(T)];
-            UserDataSize = sizeof(T);
-        }
-
-        void SetUserData(u8* data, size_t data_size)
-        {
-            if (UserData)
-            {
-                delete[] UserData;
-            }
-            UserData = data;
-            UserDataSize = data_size;
-        }
-
-        template <typename T>
-        const T* GetUserData() const
-        {
-            E_ASSERT(UserDataSize == sizeof(T));
-            return static_cast<T*>(UserData);
-        }
-
-        const u8* GetUserData() const
-        {
-            return UserData;
-        }
-    };
-
     namespace events {
 
         E_STORAGE_STRUCT(EResourceAddedEvent,
-            (EResourceData::t_ID, ResourceID),
+            (EResource::t_ID, ResourceID),
             (EString, Name),
             (EString, PathToFile),
             (EString, ResourceType)
@@ -120,14 +107,14 @@ namespace Engine {
     class E_API EResourceManager
     {
     private:
-        EUnorderedMap<EResourceData::t_ID, EResourceData*> fLoadedResources;
+        EUnorderedMap<EResource::t_ID, EResource*> fLoadedResources;
         EEventDispatcher                                   fEventDispacher;
     public:
         EResourceManager();
         ~EResourceManager();
         
-        bool HasResource(const EResourceData::t_ID& id) const;
-        bool AddResource(EResourceData* data); // Delete the Resource data if function returns false!!
+        bool HasResource(const EResource::t_ID& id) const;
+        bool AddResource(EResource* data); // Delete the Resource data if function returns false!!
         bool ImportResource(const EString& name, const EResourceDescription& description, u8* rawData, size_t data_size);
         bool ImportResourceFromFile(const EString& filePath, const EResourceDescription& description);
         bool ImportResourceFromFile(EFile& file, const EResourceDescription& description);
@@ -135,17 +122,17 @@ namespace Engine {
         void Clear();
         
 
-        EResourceData* GetResource(const EResourceData::t_ID& id) const;
-        EVector<EResourceData*> GetAllResource() const;
-        EVector<EResourceData*> GetAllResource(const EString& type) const;
+        EResource* GetResource(const EResource::t_ID& id) const;
+        EVector<EResource*> GetAllResource() const;
+        EVector<EResource*> GetAllResource(const EString& type) const;
 
-        EResourceData::t_ID CreateNewId();
+        EResource::t_ID CreateNewId();
 
         EEventDispatcher& GetEventDispatcher();
         const EEventDispatcher& GetEventDispatcher() const;
 
-        static EResourceData* CreateResourceFromFile(EFile& file, const EResourceDescription& description);
-        static EResourceData* CreateResourceFromFile(const EString& filePath, const EResourceDescription& description);
+        static EResource* CreateResourceFromFile(EFile& file, const EResourceDescription& description);
+        static EResource* CreateResourceFromFile(const EString& filePath, const EResourceDescription& description);
 
     };
 

@@ -1,0 +1,22 @@
+### USK - Tasks
+
+- Some code to execute
+- Types:
+    - Allways running
+    - Single execution
+    - Event driven execution
+- Need to hook with scripts
+
+Defining Tasks
+    Name / Identifier with extension
+    Task Type
+    Script Description if task type is defined by script
+
+Execution params:
+    Single Execution
+        in args: EStruct
+        out: EStruct
+    Allways running
+        in args: EStruct
+    Event driven
+        in event: EStruct

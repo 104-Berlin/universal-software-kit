@@ -17,12 +17,12 @@ EVector<u32> planeIndices = {
     0, 1, 2, 2, 3, 0
 };
 
-static EUnorderedMap<ERegister::Entity, EUnorderedMap<EValueDescription::t_ID, RMesh*>> meshes;
+static EUnorderedMap<EDataBase::Entity, EUnorderedMap<EValueDescription::t_ID, RMesh*>> meshes;
 static EWeakRef<EUIViewport> drawingViewport;
 static EBezierEditTool* bezierEdit = nullptr;
 static ELineEditTool* lineEdit = nullptr;
-static ERegister::Entity currentEditCurveEntity = 0;
-static ERegister::Entity currentEditLineEntity = 0;
+static EDataBase::Entity currentEditCurveEntity = 0;
+static EDataBase::Entity currentEditLineEntity = 0;
 
 E_STORAGE_STRUCT(Plane,
     (EVec3, Position),
@@ -123,6 +123,7 @@ APP_ENTRY
 {
     ERef<EUIPanel> someDrawingPanel = EMakeRef<EUIPanel>("Drawing Canvas");
     drawingViewport = std::dynamic_pointer_cast<EUIViewport>(someDrawingPanel->AddChild(EMakeRef<EUIViewport>()).lock());
+    drawingViewport.lock()->SetCameraControls<EUIBasic2DCameraControls>();
     someDrawingPanel->SetMenuBar(EMakeRef<EUIViewportToolbar>(drawingViewport));
     bezierEdit = static_cast<EBezierEditTool*>(drawingViewport.lock()->AddTool(new EBezierEditTool()));
     lineEdit = static_cast<ELineEditTool*>(drawingViewport.lock()->AddTool(new ELineEditTool()));
@@ -133,120 +134,137 @@ APP_ENTRY
 
     drawingViewport.lock()->AddEventListener<events::EViewportToolFinishEvent>(&ViewportToolFinish);
     
-    shared::Events().AddEntityChangeEventListener(Line::_dsc.GetId(), [](ERegister::Entity entity, const EString& nameIdent){
-        Line l;
-        if (shared::GetValue<Line>(entity, &l))
+    shared::Events().Connect<EntityChangeEvent>([](EntityChangeEvent e){
+        if (e.Type == EntityChangeType::COMPONENT_CHANGED)
         {
-            RLine* entityLine = (RLine*) meshes[entity][Line::_dsc.GetId()];
-            if (entityLine)
+            ComponentChangeData data;
+            if (convert::getter(e.Data.Value().get(), &data))
             {
-                entityLine->SetStart(l.Positions.Start);
-                entityLine->SetEnd(l.Positions.End);
-                entityLine->SetThickness(l.Thickness);
+                if (data.Identifier.rfind("Plane", 0) == 0)
+                {
+                    Plane plane;
+                    if (convert::getter(data.NewValue.Value().get(), &plane))
+                    {
+                        RMesh* graphicsMesh = meshes[e.Entity.Handle][Plane::_dsc.GetId()];
+
+                        graphicsMesh->SetPosition(plane.Position);
+                        graphicsMesh->SetRotation(plane.Rotation);
+                        graphicsMesh->SetScale(plane.Scale);
+                    }
+                }
+                else if (data.Identifier.rfind("Line", 0) == 0)
+                {
+                    Line line;
+                    if (convert::getter(data.NewValue.Value().get(), &line))
+                    {
+                        RLine* entityLine = (RLine*) meshes[e.Entity.Handle][Line::_dsc.GetId()];
+
+                        entityLine->SetThickness(line.Thickness);
+                        entityLine->SetStart(line.Positions.Start);
+                        entityLine->SetEnd(line.Positions.End);
+                    }
+                }
+                else if (data.Identifier.rfind("Curve", 0) == 0)
+                {
+                    Curve curve;
+                    if (convert::getter(data.NewValue.Value().get(), &curve))
+                    {
+                        RBezierCurve* entityCurve = (RBezierCurve*) meshes[e.Entity.Handle][Curve::_dsc.GetId()];
+
+                        entityCurve->SetThickness(curve.Thickness);
+                        entityCurve->SetStartPos(curve.Positions.Start);
+                        entityCurve->SetEndPos(curve.Positions.End);
+                        entityCurve->SetControll1(curve.Positions.Controll1);
+                        entityCurve->SetControll2(curve.Positions.Controll2);
+                        entityCurve->SetSteps(curve.Steps);
+                    }
+                }
             }
         }
-    }, drawingViewport.lock().get());
-
-    shared::Events().AddComponentCreateEventListener(Line::_dsc, [](ERegister::Entity entity){
-        Line line;
-        if (shared::GetValue<Line>(entity, &line))
+        else if (e.Type == EntityChangeType::COMPONENT_ADDED)
         {
-            RLine* newLine = new RLine();
-            meshes[entity][Line::_dsc.GetId()] = newLine;
-            newLine->SetStart(line.Positions.Start);
-            newLine->SetEnd(line.Positions.End);
-
-            lineEdit->SetLine(newLine);
-            currentEditLineEntity = entity;
-            drawingViewport.lock()->GetScene().Add(newLine);
-        }
-    }, drawingViewport.lock().get());
-
-
-    shared::Events().AddEntityChangeEventListener(Curve::_dsc.GetId(), [](ERegister::Entity entity, const EString& nameIdent){
-        Curve l;
-        if (shared::GetValue<Curve>(entity, &l))
-        {
-            RBezierCurve* entityLine = (RBezierCurve*) meshes[entity][Curve::_dsc.GetId()];
-            if (entityLine)
+            Line l;
+            Curve c;
+            Plane p;
+            if (convert::getter(e.Data.Value().get(), &l))
             {
-                entityLine->SetStartPos(l.Positions.Start);
-                entityLine->SetEndPos(l.Positions.End);
-                entityLine->SetThickness(l.Thickness);
-                entityLine->SetControll1(l.Positions.Controll1);
-                entityLine->SetControll2(l.Positions.Controll2);
-                entityLine->SetSteps(l.Steps);
+                if (meshes[e.Entity.Handle][Line::_dsc.GetId()])
+                {
+                    delete meshes[e.Entity.Handle][Line::_dsc.GetId()];
+                }
+                RLine* newLine = new RLine();
+                meshes[e.Entity.Handle][Line::_dsc.GetId()] = newLine;
+                newLine->SetStart(l.Positions.Start);
+                newLine->SetEnd(l.Positions.End);
+                newLine->SetThickness(l.Thickness);
+                drawingViewport.lock()->GetScene().Add(newLine);
+                currentEditLineEntity = e.Entity.Handle;
+                lineEdit->SetLine(newLine);
+            }
+            else if (convert::getter(e.Data.Value().get(), &c))
+            {
+                if (meshes[e.Entity.Handle][Curve::_dsc.GetId()])
+                {
+                    delete meshes[e.Entity.Handle][Curve::_dsc.GetId()];
+                }
+                RBezierCurve* newCurve = new RBezierCurve();
+                meshes[e.Entity.Handle][Curve::_dsc.GetId()] = newCurve;
+                newCurve->SetStartPos(c.Positions.Start);
+                newCurve->SetEndPos(c.Positions.End);
+                newCurve->SetControll1(c.Positions.Controll1);
+                newCurve->SetControll2(c.Positions.Controll2);
+                newCurve->SetThickness(c.Thickness);
+                newCurve->SetSteps(c.Steps);
+                drawingViewport.lock()->GetScene().Add(newCurve);
+                currentEditCurveEntity = e.Entity.Handle;
+                bezierEdit->SetBezierCurve(newCurve);
+            }
+            else if (convert::getter(e.Data.Value().get(), &p))
+            {
+                if (meshes[e.Entity.Handle][Plane::_dsc.GetId()])
+                {
+                    delete meshes[e.Entity.Handle][Plane::_dsc.GetId()];
+                }
+                RMesh* newPlane = new RMesh();
+                meshes[e.Entity.Handle][Plane::_dsc.GetId()] = newPlane;
+                newPlane->SetPosition(p.Position);
+                newPlane->SetRotation(p.Rotation);
+                newPlane->SetScale(p.Scale);
+                drawingViewport.lock()->GetScene().Add(newPlane);
             }
         }
-    }, drawingViewport.lock().get());
-
-    shared::Events().AddComponentCreateEventListener(Curve::_dsc, [](ERegister::Entity entity){
-        Curve line;
-        if (shared::GetValue<Curve>(entity, &line))
+        else if (e.Type == EntityChangeType::ENTITY_DESTROYED)
         {
-            RBezierCurve* newLine = new RBezierCurve();
-            meshes[entity][Curve::_dsc.GetId()] = newLine;
-            newLine->SetStartPos(line.Positions.Start);
-            newLine->SetEndPos(line.Positions.End);
-            newLine->SetControll1(line.Positions.Controll1);
-            newLine->SetControll2(line.Positions.Controll2);
-            newLine->SetSteps(line.Steps);
-            
-            bezierEdit->SetBezierCurve(newLine);
-            currentEditCurveEntity = entity;
-            drawingViewport.lock()->GetScene().Add(newLine);
+            if (meshes[e.Entity.Handle][Line::_dsc.GetId()])
+            {
+                delete meshes[e.Entity.Handle][Line::_dsc.GetId()];
+            }
+            if (meshes[e.Entity.Handle][Curve::_dsc.GetId()])
+            {
+                delete meshes[e.Entity.Handle][Curve::_dsc.GetId()];
+            }
+            if (meshes[e.Entity.Handle][Plane::_dsc.GetId()])
+            {
+                delete meshes[e.Entity.Handle][Plane::_dsc.GetId()];
+            }
+            meshes.erase(e.Entity.Handle);
+        }
+        else if (e.Type == EntityChangeType::COMPONENT_REMOVED)
+        {
+            ComponentChangeData data;
+            if (e.Data.Value() && convert::getter(e.Data.Value().get(), &data))
+            {
+                EString changeType = data.Identifier;
+                if (meshes[e.Entity.Handle][changeType])
+                {
+                    delete meshes[e.Entity.Handle][changeType];
+                    meshes[e.Entity.Handle][changeType] = nullptr;
+                }
+            }
         }
     }, drawingViewport.lock().get());
 
     
-    shared::Events().AddEntityChangeEventListener("Plane.Position", [](ERegister::Entity entity, const EString& ident){
-        RMesh* graphicsMesh = meshes[entity][Plane::_dsc.GetId()];
-        if (!graphicsMesh) { return; }
-        ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValueFromIdent(entity, "Plane.Position"));
-        EVec3 posVector;
-        if (pos->GetValue<EVec3>(posVector))
-        {
-            graphicsMesh->SetPosition(posVector);
-        }
-    }, drawingViewport.lock().get());
-    shared::Events().AddEntityChangeEventListener("Plane.Rotation", [](ERegister::Entity entity, const EString& ident){
-        RMesh* graphicsMesh = meshes[entity][Plane::_dsc.GetId()];
-        if (!graphicsMesh) { return; }
-        ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValueFromIdent(entity, "Plane.Rotation"));
-        EVec3 posVector;
-        if (pos->GetValue<EVec3>(posVector))
-        {
-            graphicsMesh->SetRotation(glm::vec3{glm::radians(posVector.x), glm::radians(posVector.y), glm::radians(posVector.z)});
-        }
-    }, drawingViewport.lock().get());
-    shared::Events().AddEntityChangeEventListener("Plane.Scale", [](ERegister::Entity entity, const EString& ident){
-        RMesh* graphicsMesh = meshes[entity][Plane::_dsc.GetId()];
-        if (!graphicsMesh) { return; }
-        ERef<EStructProperty> pos = std::dynamic_pointer_cast<EStructProperty>(shared::GetValueFromIdent(entity, "Plane.Scale"));
-        EVec3 posVector;
-        if (pos->GetValue<EVec3>(posVector))
-        {
-            graphicsMesh->SetScale(posVector);
-        }
-    }, drawingViewport.lock().get());
-
-    shared::Events().AddComponentCreateEventListener(Plane::_dsc, [](ERegister::Entity entity){
-        // Create mesh in 3D Scene
-        if (drawingViewport.expired()) { return; }
-        Plane mesh;
-        if (shared::GetValue<Plane>(entity, &mesh)){
-            RMesh* gMesh = new RMesh();
-            meshes[entity][Plane::_dsc.GetId()] = gMesh;
-            gMesh->SetData(planeVertices, planeIndices);
-            drawingViewport.lock()->GetScene().Add(gMesh);
-
-            if (mesh.Scale.length() == 0)
-            {
-                shared::SetValue<EVec3>(entity, "Plane.Scale", {1.0f, 1.0f, 1.0f});
-            }
-        }
-    }, drawingViewport.lock().get());
-
     info.PanelRegister->RegisterItem(extensionName, someDrawingPanel);
 }
 

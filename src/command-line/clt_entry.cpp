@@ -13,6 +13,7 @@ int main(int argc, char** argv)
     
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<CommandType>("CommandLine");
 
+    E_INFO(std::filesystem::temp_directory_path().string());
     EString input;
     do
     {
@@ -33,7 +34,7 @@ int main(int argc, char** argv)
             {
                 if (args.size() == 3)
                 {
-                    ERegister::Entity entity = std::stoi(args[1]);
+                    EDataBase::Entity entity = std::stoi(args[1]);
                     shared::CreateComponent(args[2], entity);
                 }
                 else
@@ -45,7 +46,7 @@ int main(int argc, char** argv)
             {
                 if (args.size() == 3)
                 {
-                    ERegister::Entity entity = std::stoi(args[1]);
+                    EDataBase::Entity entity = std::stoi(args[1]);
                     ERef<EProperty> component = shared::GetValueFromIdent(entity, args[2]);
                     if (component)
                     {
@@ -61,7 +62,7 @@ int main(int argc, char** argv)
             {
                 if (args.size() == 4)
                 {
-                    ERegister::Entity entity = std::stoi(args[1]);
+                    EDataBase::Entity entity = std::stoi(args[1]);
                     
                     shared::SetValue(entity, args[2], args[3]);
                 }

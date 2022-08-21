@@ -7,13 +7,13 @@ namespace Engine {
     public:
         static EJson WriteStorageDescriptionToJson(const EValueDescription& description);
 
-        static EJson WriteSceneToJson(ERegister* scene);
+        static EJson WriteSceneToJson(EDataBase* scene);
 
         static EJson WritePropertyToJs(EProperty* property, bool writeDescription = false);
         
-        static ESharedBuffer WriteFullSceneBuffer(ERegister* reg);
+        static ESharedBuffer WriteFullSceneBuffer(EDataBase* reg);
 
-        static EJson WriteResourceDataToJson(const EResourceData& data, bool writeData);
+        static EJson WritEResourceBaseToJson(EResource* data, bool writeData);
     };
 
 }

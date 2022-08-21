@@ -86,18 +86,23 @@ void EUIField::Render()
     }
     ImGui::PushID(fID);
 
-    if (OnRender())
+    bool renderResult = true;
+
+    if ((renderResult = OnRender()))
     {
         for (ERef<EUIField> uiField : fChildren)
         {
-            OnBeforeChildRender(uiField);
-            uiField->Render();
-            OnAfterChildRender();
+            bool beforeChildResult = OnBeforeChildRender(uiField);
+            if (beforeChildResult)
+            {
+                uiField->Render();
+            }
+            OnAfterChildRender(beforeChildResult);
         }
     }
     
     HandleRenderEndBefore();
-    OnRenderEnd();
+    OnRenderEnd(renderResult);
     HandleRenderEnd();
     ImGui::PopID();
 }
@@ -149,6 +154,24 @@ void EUIField::HandleRenderEndBefore()
 void EUIField::HandleRenderEnd()
 {
     ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
+    EString popupName = GetLabel() + "_Popup";
+
+    if (fPopupOpen)
+    {
+        ImGui::OpenPopup(popupName.c_str());
+        fPopupOpen = false;
+    }
+
+    if (fCurrentPopup)
+    {
+        if (ImGui::BeginPopup(popupName.c_str()))
+        {
+            fCurrentPopup->Render();
+            ImGui::EndPopup();
+        }
+
+    }
+
 
     fIsContextMenuOpen = false;
     if (fContextMenu)
@@ -160,7 +183,6 @@ void EUIField::HandleRenderEnd()
             ImGui::EndPopup();
         }
     }
-
 
     ImRect itemRect = g.LastItemData.Rect;
     
@@ -223,10 +245,24 @@ void EUIField::HandleRenderEnd()
         {
             fEventDispatcher.Enqueue<events::EMouseDragEvent>({mousePos, mouseDrag2, 2});
         }
+
+        // Keyboard
+        for (i32 i = ImGuiKey_NamedKey_BEGIN; i < ImGuiKey_COUNT; i++)
+        {
+            if (ImGui::IsKeyPressed(i, false))
+            {
+                fEventDispatcher.Enqueue<events::EKeyDownEvent>(events::EKeyDownEvent{i, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyAlt});
+            }
+            if (ImGui::IsKeyReleased(i))
+            {
+                E_INFO("Key released: " + std::to_string(i));
+                fEventDispatcher.Enqueue<events::EKeyUpEvent>(events::EKeyUpEvent{i, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyAlt});
+            }
+        }
     }    
 }
 
-void EUIField::OnRenderEnd() 
+void EUIField::OnRenderEnd(bool renderResult) 
 {
     
 }
@@ -248,6 +284,10 @@ void EUIField::UpdateEventDispatcher()
     if (fIsTooltipOpen)
     {
         fToolTip->UpdateEventDispatcher();
+    }
+    if (fCurrentPopup)
+    {
+        fCurrentPopup->UpdateEventDispatcher();
     }
 }
 
@@ -356,6 +396,45 @@ void EUIField::AcceptDrag(const EString& type)
     fAcceptDragType = type;
 }
 
+void EUIField::OpenPopup(const ERef<EUIField>& popup)
+{
+    fCurrentPopup = popup;
+    fPopupOpen = true;
+}
+
+void EUIField::ClosePopup()
+{
+    fPopupOpen = false;
+    fCurrentPopup = nullptr;
+}
+
+void EUIField::SetLabelVisible(bool value)
+{
+    fLabelVisible = value;
+    if (fLabelVisible)
+    {
+        if (fLabel.find_first_of("##") == 0)
+        {
+            fLabel.erase(0, 2);
+        }
+    }
+    else
+    {
+        if (fLabel.find_first_of("##") != 0)
+        {
+            fLabel = "##" + fLabel;
+        }
+    }
+}
+
+bool EUIField::GetLabelVisible() const
+{
+    return fLabelVisible;
+}
+
+
+
+
 EUIPanel::EUIPanel(const EString& title) 
     : EUIField(title), fOpen(true)
 {
@@ -394,7 +473,7 @@ bool EUIPanel::OnRender()
     return fOpen;
 }
 
-void EUIPanel::OnRenderEnd() 
+void EUIPanel::OnRenderEnd(bool renderResult) 
 {
     if (fOpen || fWasJustClosed)
     {
@@ -602,12 +681,12 @@ EUIMainMenuBar::EUIMainMenuBar()
 
 bool EUIMainMenuBar::OnRender() 
 {
-    return fOpen = ImGui::BeginMainMenuBar();
+    return ImGui::BeginMainMenuBar();
 }
 
-void EUIMainMenuBar::OnRenderEnd() 
+void EUIMainMenuBar::OnRenderEnd(bool renderResult) 
 {
-    if (fOpen)
+    if (renderResult)
     {
         ImGui::EndMainMenuBar();
     }
@@ -617,19 +696,19 @@ void EUIMainMenuBar::OnRenderEnd()
 // ----------------------------------------
 // Menu
 EUIMenu::EUIMenu(const EString& displayName) 
-    : EUIField(displayName), fOpen(false)
+    : EUIField(displayName)
 {
     
 }
 
 bool EUIMenu::OnRender() 
 {
-    return fOpen = ImGui::BeginMenu(GetLabel().c_str());
+    return ImGui::BeginMenu(GetLabel().c_str());
 }
 
-void EUIMenu::OnRenderEnd() 
+void EUIMenu::OnRenderEnd(bool renderResult) 
 {
-    if (fOpen)
+    if (renderResult)
     {
         ImGui::EndMenu();
     }
@@ -640,19 +719,19 @@ void EUIMenu::OnRenderEnd()
 // ----------------------------------------
 // Context Menu
 EUIContextMenu::EUIContextMenu(const EString& displayName) 
-    : EUIField(displayName), fOpen(false)
+    : EUIField(displayName)
 {
     
 }
 
 bool EUIContextMenu::OnRender() 
 {
-    return fOpen = ImGui::BeginPopupContextWindow();
+    return ImGui::BeginPopupContextWindow();
 }
 
-void EUIContextMenu::OnRenderEnd() 
+void EUIContextMenu::OnRenderEnd(bool renderResult) 
 {
-    if (fOpen)
+    if (renderResult)
     {
         ImGui::EndPopup();
     }
@@ -712,7 +791,6 @@ EUIModal::EUIModal(const EString& title)
     : EUIField(title)
 {
     fOpen = false;
-    fEndPopup = false;
     fPopupShouldOpen = false;
     SetWidth(300);
 }
@@ -727,13 +805,12 @@ bool EUIModal::OnRender()
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
-    fEndPopup = ImGui::BeginPopupModal(GetLabel().c_str(), &fOpen, ImGuiWindowFlags_AlwaysAutoResize);
-    return fEndPopup;
+    return ImGui::BeginPopupModal(GetLabel().c_str(), &fOpen, ImGuiWindowFlags_AlwaysAutoResize);
 }
 
-void EUIModal::OnRenderEnd() 
+void EUIModal::OnRenderEnd(bool renderResult) 
 {
-    if (fEndPopup)
+    if (renderResult)
     {
         ImGui::EndPopup();
     }
@@ -762,7 +839,7 @@ bool EUIContainer::OnRender()
     return true;
 }
 
-void EUIContainer::OnRenderEnd() 
+void EUIContainer::OnRenderEnd(bool renderResult) 
 {
     ImGui::EndChild();
 }
@@ -847,6 +924,7 @@ bool EUIDropdown::OnRender()
         for (size_t i = 0; i < fOptions.size(); i++)
         {
             const EString& opt = fOptions[i];
+            if (opt.length() == 0) { continue; }
             bool selected = i == fSelected;
             if (ImGui::Selectable(opt.c_str(), &selected))
             {
@@ -889,15 +967,15 @@ EUITable::EUITable(const EString& name)
 
 bool EUITable::OnRender() 
 {
-    if (fHeaderCells.size() == 0) { return fEndTable = false; }
+    if (fHeaderCells.size() == 0) { return false; }
     static ImGuiTableFlags flags = ImGuiTableFlags_Resizable;
     //ImGui::CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
     //ImGui::CheckboxFlags("ImGuiTableFlags_Reorderable", &flags, ImGuiTableFlags_Reorderable);
     //ImGui::CheckboxFlags("ImGuiTableFlags_Hideable", &flags, ImGuiTableFlags_Hideable);
     //ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &flags, ImGuiTableFlags_NoBordersInBody);
     //ImGui::CheckboxFlags("ImGuiTableFlags_NoBordersInBodyUntilResize", &flags, ImGuiTableFlags_NoBordersInBodyUntilResize);
-
-    if ((fEndTable = ImGui::BeginTable(GetLabel().c_str(), fHeaderCells.size(), flags)))
+    bool endTable = ImGui::BeginTable(GetLabel().c_str(), fHeaderCells.size(), flags);
+    if (endTable)
     {
         for (const EString& header : fHeaderCells)
         {
@@ -905,12 +983,12 @@ bool EUITable::OnRender()
         }
         ImGui::TableHeadersRow();
     }
-    return fEndTable;
+    return endTable;
 }
 
-void EUITable::OnRenderEnd() 
+void EUITable::OnRenderEnd(bool renderResult) 
 {
-    if (fEndTable)
+    if (renderResult)
     {
         ImGui::EndTable();
     }
@@ -927,9 +1005,10 @@ EUITableRow::EUITableRow()
     
 }
 
-void EUITableRow::OnBeforeChildRender(EWeakRef<EUIField> child) 
+bool EUITableRow::OnBeforeChildRender(EWeakRef<EUIField> child) 
 {
     ImGui::TableSetColumnIndex(fCurrentTableIndex++);
+    return true;
 }
 
 bool EUITableRow::OnRender() 
@@ -977,7 +1056,7 @@ bool EUIGrid::OnRender()
     return true;
 }
 
-void EUIGrid::OnBeforeChildRender(EWeakRef<EUIField> child)
+bool EUIGrid::OnBeforeChildRender(EWeakRef<EUIField> child)
 {
     if (!child.expired())
     {
@@ -995,13 +1074,10 @@ void EUIGrid::OnBeforeChildRender(EWeakRef<EUIField> child)
     }
     fCurrentChildCount++;
     ImGui::SetNextItemWidth(fCellWidth);
+    return true;
 }
 
-void EUIGrid::OnAfterChildRender()
-{
-}
-
-void EUIGrid::OnRenderEnd()
+void EUIGrid::OnRenderEnd(bool renderResult)
 {
     ImGui::PopStyleVar();
 }
@@ -1013,7 +1089,7 @@ EUIResourceSelect::EUIResourceSelect(const EString& resourceType)
 
     for(auto& entry : shared::GetLoadedResource(resourceType))
     {
-        fOptions.push_back({entry->ID, entry->Name});
+        fOptions.push_back({entry->GetID(), entry->GetName()});
     }
     EVector<EString> stringOptions;
     for (const auto& opt : fOptions)
@@ -1021,17 +1097,17 @@ EUIResourceSelect::EUIResourceSelect(const EString& resourceType)
         stringOptions.push_back(opt.Name);
     }
 
-    EWeakRef<EUIDropdown> dropDown = std::static_pointer_cast<EUIDropdown>(AddChild(EMakeRef<EUIDropdown>()).lock());
-    dropDown.lock()->AcceptDrag("Resource" + resourceType);
-    dropDown.lock()->SetOptions(stringOptions);
-    dropDown.lock()->AddEventListener<events::ESelectChangeEvent>([this](events::ESelectChangeEvent event){
+    fDropdown = std::static_pointer_cast<EUIDropdown>(AddChild(EMakeRef<EUIDropdown>()).lock());
+    fDropdown.lock()->AcceptDrag("Resource" + resourceType);
+    fDropdown.lock()->SetOptions(stringOptions);
+    fDropdown.lock()->AddEventListener<events::ESelectChangeEvent>([this](events::ESelectChangeEvent event){
         fResourceLink.ResourceId = fOptions[event.Index].ResourceID;
         
         fEventDispatcher.Enqueue<events::EResourceSelectChangeEvent>({fResourceLink.Type, fOptions[event.Index].Name, fOptions[event.Index].ResourceID});
     });
 
-    dropDown.lock()->AddEventListener<events::EDropEvent>([this, dropDown](events::EDropEvent e){
-        EResourceData::t_ID resourceID = e.DragDataAsID;
+    fDropdown.lock()->AddEventListener<events::EDropEvent>([this](events::EDropEvent e){
+        EResource::t_ID resourceID = e.DragDataAsID;
         EString resourceName = e.DragDataAsString;
 
         // Find index for dropdown
@@ -1039,28 +1115,44 @@ EUIResourceSelect::EUIResourceSelect(const EString& resourceType)
         if (it != fOptions.end())
         {
             size_t index = std::distance(fOptions.begin(), it);
-            dropDown.lock()->SetSelectedIndex(index);
+            fDropdown.lock()->SetSelectedIndex(index);
             fResourceLink.ResourceId = resourceID;
             fEventDispatcher.Enqueue<events::EResourceSelectChangeEvent>({fResourceLink.Type, resourceName, resourceID});
         }
    });
-    shared::Events().Connect<events::EResourceAddedEvent>([this, dropDown](events::EResourceAddedEvent event){
+    shared::Events().Connect<events::EResourceAddedEvent>([this](events::EResourceAddedEvent event){
         fOptions.push_back({event.ResourceID, event.Name});
-        dropDown.lock()->AddOption(event.Name);
+        fDropdown.lock()->AddOption(event.Name);
     }, this);
 }
 
-EUICollapsable::EUICollapsable(const EString& label)
+void EUIResourceSelect::SetResourceLink(const EResourceLink& link)
+{
+    fResourceLink = link;
+    if (fDropdown.expired())
+    {
+        return;
+    }
+    for (size_t i = 0; i < fOptions.size(); i++)
+    {
+        if (fOptions[i].ResourceID == link.ResourceId)
+        {
+            fDropdown.lock()->SetSelectedIndex(i);
+            break;
+        }
+    }
+}
+
+EUICollapsable::EUICollapsable(const EString& label, bool defaultOpen)
     : EUIField(label)
 {
-    
+    fFlags = ImGuiTreeNodeFlags_None;
+    if (defaultOpen) { fFlags |= ImGuiTreeNodeFlags_DefaultOpen; }
 }
 
 bool EUICollapsable::OnRender()
 {
-    fOpen = ImGui::CollapsingHeader(GetLabel().c_str());
-
-    return fOpen;
+    return fOpen = ImGui::CollapsingHeader(GetLabel().c_str(), fFlags);
 }
 
 EUIDivider::EUIDivider()
@@ -1095,7 +1187,7 @@ bool EUIGroupPanel::OnRender()
 
     ImVec2 effectiveSize = {fWidthOverride, fHeightOverride};
     if (fWidthOverride <= 0.0f)
-        effectiveSize.x = ImGui::GetContentRegionAvailWidth();
+        effectiveSize.x = ImGui::GetContentRegionAvail().x;
     else
         effectiveSize.x = fWidthOverride;
     ImGui::Dummy(ImVec2(effectiveSize.x, 0.0f));
@@ -1119,7 +1211,7 @@ bool EUIGroupPanel::OnRender()
     return true;
 }
 
-void EUIGroupPanel::OnRenderEnd()
+void EUIGroupPanel::OnRenderEnd(bool renderResult)
 {
 
     auto itemSpacing = ImGui::GetStyle().ItemSpacing;
@@ -1195,4 +1287,72 @@ void EUIGroupPanel::OnRenderEnd()
     ImGui::Dummy(ImVec2(0.0f, 0.0f));
 
     ImGui::EndGroup();
+}
+
+
+EUITabView::EUITabView(const EString& label)
+    : EUIField(label)
+{
+    fCurrentTab = 0;
+    fCurrentRenderedTab = 0;
+}
+
+void EUITabView::AddTab(const EString& label, const ERef<EUIField>& tab)
+{
+    fTabs.push_back(label);
+    AddChild(tab);
+}
+
+void EUITabView::SetCurrentTab(size_t index)
+{
+    if (index < fTabs.size())
+    {
+        fCurrentTab = index;
+    }
+    else
+    {
+        fCurrentTab = 0;
+    }
+}
+
+void EUITabView::SetCurrentTab(const EString& tabLabel)
+{
+    for (size_t i = 0; i < fTabs.size(); i++)
+    {
+        if (fTabs[i] == tabLabel)
+        {
+            fCurrentTab = i;
+            return;
+        }
+    }
+
+    fCurrentTab = 0;
+}
+
+bool EUITabView::OnRender()
+{
+    fCurrentRenderedTab = 0;
+    return fEndTabView = ImGui::BeginTabBar(GetLabel().c_str(), ImGuiTabBarFlags_None);
+}
+
+void EUITabView::OnRenderEnd(bool renderResult)
+{
+    if (fEndTabView)
+    {
+        ImGui::EndTabBar();
+    }
+}
+
+bool EUITabView::OnBeforeChildRender(EWeakRef<EUIField> child)
+{
+    const EString& tabLabel = fTabs[fCurrentRenderedTab++];
+    return ImGui::BeginTabItem(tabLabel.c_str());
+}
+
+void EUITabView::OnAfterChildRender(bool beforeResult)
+{
+    if (beforeResult)
+    {
+        ImGui::EndTabItem();
+    }
 }

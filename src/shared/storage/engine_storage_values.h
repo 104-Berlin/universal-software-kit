@@ -44,7 +44,8 @@ namespace Engine {
 
     class E_API EProperty
     {
-        friend class ERegister;
+        friend class EDataBase;
+        friend class EAny;
         // Function when value changes
         // Contains string to the current property identifier
         using ChangeFunc = std::function<void(EString)>;
@@ -55,14 +56,14 @@ namespace Engine {
         ChangeFunc fChangeFunc;
     public:
         EProperty(const EString& name, EValueDescription description);
-        EProperty(EProperty&) = default;
+        EProperty(const EProperty&) = default;
         virtual ~EProperty() = default;
 
         const EString& GetPropertyName() const;
 
         EValueDescription GetDescription() const;
 
-        EProperty* Clone();
+        ERef<EProperty> Clone() const;
         void Copy(const EProperty* from);
 
         
@@ -70,7 +71,7 @@ namespace Engine {
         bool operator()() const;
     protected:
         virtual void OnCopy(const EProperty* from) = 0;
-        virtual EProperty* OnClone() = 0;
+        virtual ERef<EProperty> OnClone() const = 0;
         // Only used by register. Should stay this way
         // Register sends the events then
         void SetChangeFunc(ChangeFunc func);
@@ -78,12 +79,25 @@ namespace Engine {
     public:
         static void Copy(const EProperty* copyFrom, EProperty* copyTo);
 
-        static EProperty* CreateFromDescription(const EString& name, EValueDescription description);
+        static ERef<EProperty> CreateFromDescription(const EString& name, EValueDescription description);
+
+        template <typename T>
+        static ERef<EProperty> CreateFromTemplate(const EString& name)
+        {
+            ERef<EProperty> result = CreateFromDescription(name, getdsc::GetDescription<T>());
+            if (result)
+            {
+                T initValue;
+                convert::setter<T>(result.get(), initValue);
+            }
+            return result;
+        }
+
     private:
-        static EProperty* CreatePropertyStruct(const EString& name, EValueDescription description);
-        static EProperty* CreatePropertyPrimitive(const EString& name, EValueDescription descrption);
-        static EProperty* CreatePropertyEnum(const EString& name, EValueDescription descrption);
-        static EProperty* CreatePropertyArray(const EString& name, EValueDescription description);
+        static ERef<EProperty> CreatePropertyStruct(const EString& name, EValueDescription description);
+        static ERef<EProperty> CreatePropertyPrimitive(const EString& name, EValueDescription descrption);
+        static ERef<EProperty> CreatePropertyEnum(const EString& name, EValueDescription descrption);
+        static ERef<EProperty> CreatePropertyArray(const EString& name, EValueDescription description);
     };
 
     template <typename ValueType>
@@ -98,7 +112,7 @@ namespace Engine {
             fValue = initValue;
         }
 
-        EValueProperty(EValueProperty&) = default;
+        EValueProperty(const EValueProperty&) = default;
 
         void SetValue(const ValueType& value)
         {
@@ -112,10 +126,21 @@ namespace Engine {
             return fValue;
         }
 
-    protected:
-        virtual EProperty* OnClone() override
+        template <typename T>
+        bool GetValue(T& outValue) const
         {
-            return new EValueProperty(*this);
+            if (typeid(T) != typeid(ValueType))
+            {
+                return false;
+            }
+            outValue = (T)fValue;
+            return true;
+        }
+
+    protected:
+        virtual ERef<EProperty> OnClone() const override
+        {
+            return EMakeRef<EValueProperty>(*this);
         }
 
         virtual void OnCopy(const EProperty* from) override
@@ -126,10 +151,11 @@ namespace Engine {
 
     class E_API EStructProperty : public EProperty
     {
+        friend class EAny;
     private:
-        EVector<EProperty*> fProperties;
+        EVector<ERef<EProperty>> fProperties;
     public:
-        EStructProperty(const EString& name, EValueDescription description, const EVector<EProperty*>& properties = {});
+        EStructProperty(const EString& name, EValueDescription description, const EVector<ERef<EProperty>>& properties = {});
         EStructProperty(const EStructProperty& other);
         ~EStructProperty();
 
@@ -159,16 +185,23 @@ namespace Engine {
 
         bool HasProperty(const EString& propertyName) const;
 
-        EProperty* GetProperty(const EString& propertyName);
-        const EProperty* GetProperty(const EString& propertyName) const;
+        ERef<EProperty> GetProperty(const EString& propertyName);
+        const ERef<EProperty> GetProperty(const EString& propertyName) const;
 
-        EProperty* GetPropertyByIdentifier(const EString& ident) const;
+        ERef<EProperty> GetPropertyByIdentifier(const EString& ident) const;
+    private:
+        /**
+         * @brief Clears the fields and deletes them
+         */
+        void ResetFields();
     protected:
-        virtual EProperty* OnClone() override;
+        virtual ERef<EProperty> OnClone() const override;
         virtual void OnCopy(const EProperty* from) override;
     };
 
     
+    // Enum property member
+    HAS_MEMBER(Value)
 
 
     class E_API EEnumProperty : public EProperty
@@ -177,94 +210,166 @@ namespace Engine {
         u32 fValue;
     public:
         EEnumProperty(const EString& name, EValueDescription description, const EString& initValue = "");
-        EEnumProperty(EEnumProperty&) = default;
+        EEnumProperty(const EEnumProperty&) = default;
         ~EEnumProperty();
 
-        void SetCurrentValue(const EString& value);
-        void SetCurrentValue(u32 value);
         u32 GetCurrentValue() const;
         
+        /**
+         * @brief This is used for the STORAGE Macro to work
+         * 
+         * @tparam T - The type of the enum. Created with E_STORAGE_ENUM (...) see engine_storage_macro.h
+         */
+        template <typename T>
+        bool GetCurrentValue(T& outValue) const
+        {
+            if constexpr (has_member_Value <T>::value)
+            {
+                outValue.Value = (typename T::opts)fValue;
+                return true;
+            }
+            return false;
+        }
+
+        template <typename T>
+        bool SetCurrentValue(const T& Value)
+        {
+            if constexpr (has_member_Value <T>::value)
+            {
+                SetCurrentValueIndex(static_cast<u32>(Value.Value));
+                return true;
+            }
+            return false;
+        }
+        
+
+        bool SetCurrentValueOption(const EString& value) 
+        {
+            if (value.empty())
+            {
+                fValue = 0;
+                return false;
+            }
+            EValueDescription dsc = GetDescription();
+            E_ASSERT(dsc.GetType() == EValueType::ENUM);
+            const EVector<EString>& options = dsc.GetEnumOptions();
+            EVector<EString>::const_iterator foundOption = std::find(options.begin(), options.end(), value);
+            if (foundOption == options.end())
+            {
+                fValue = 0;
+            }
+            else
+            {
+                fValue = std::distance(options.begin(), foundOption);
+            }
+
+            if (fChangeFunc) { fChangeFunc(GetPropertyName()); }
+            return true;
+        }
+
+        bool SetCurrentValueIndex(const u32& value)
+        {
+            EValueDescription dsc = GetDescription();
+            E_ASSERT(dsc.GetType() == EValueType::ENUM);
+            const EVector<EString>& options = dsc.GetEnumOptions();
+            if (value >= options.size())
+            {
+                fValue = 0;
+            }
+            else
+            {
+                fValue = value;
+            }
+
+            if (fChangeFunc) { fChangeFunc(GetPropertyName()); }
+            return true;
+        }
 
     protected:
-        virtual EProperty* OnClone() override;
+        virtual ERef<EProperty> OnClone() const override;
         virtual void OnCopy(const EProperty* from) override;
     };
 
     class E_API EArrayProperty : public EProperty
     {
     private:
-        EVector<EProperty*> fElements;
+        EVector<ERef<EProperty>> fElements;
     public:
         EArrayProperty(const EString& name, EValueDescription description);
-        EArrayProperty(EArrayProperty& other);
+        EArrayProperty(const EArrayProperty& other);
         ~EArrayProperty();
 
-        EProperty* AddElement();
-        EProperty* GetElement(size_t index);
+        ERef<EProperty> AddElement();
+        ERef<EProperty> GetElement(size_t index);
         void RemoveElement(size_t index);
-        const EVector<EProperty*>& GetElements() const;
+        const EVector<ERef<EProperty>>& GetElements() const;
         void Clear();
-
-        template <typename T>
-        auto GetValue(EVector<T>& outVector) const
-        -> std::enable_if_t<is_vector<T>::value, bool>
-        {
-            auto& insert_element = [&outVector, this](auto property){
-                T value;
-                if (property->template GetValue<T>(value))
-                {
-                    outVector.push_back(value);
-                    return true;
-                }                        
-                E_ERROR("Getting array property as vector has some type conflicts!");
-                E_ERROR("Trying to get array of " + fDescription.GetId() + " as Vector<" + typeid(T).name() + ">");
-
-                return false;
-            };
-
-            for (EProperty* prop : fElements)
-            {
-                switch (fDescription.GetType())
-                {
-                    case EValueType::STRUCT: 
-                    {
-                        if (!insert_element(static_cast<EStructProperty*>(prop)))
-                        {
-                            return false;
-                        }
-                        break;
-                    }
-                    case EValueType::ARRAY:
-                    {
-                        if (!insert_element(static_cast<EArrayProperty*>(prop)))
-                        {
-                            return false;
-                        }
-                        break;
-                    }
-                    case EValueType::PRIMITIVE:
-                    {
-                        if (!insert_element(static_cast<EValueProperty<T>*>(prop)))
-                        {
-                            return false;
-                        }
-                        break;
-                    } 
-                    case EValueType::ENUM:
-                    {
-                        E_WARN("Array of enums is not supported. Use the enum inside an struct please!");
-                        return false;
-                        break;
-                    }
-                    case EValueType::UNKNOWN: return false;
-                }
-            }
-        }
 
         template <typename T>
         bool GetValue(T& outVector) const
         {
-            return false;
+            if constexpr (!is_vector<T>::value)
+            {
+                return false;
+            }
+            else
+            {
+                using ArrayType = typename T::value_type;
+
+                auto insert_element = [&outVector, this](auto property)mutable{
+                    typename T::value_type value;
+                    if (property->template GetValue<typename T::value_type>(value))
+                    {
+                        outVector.push_back(value);
+                        return true;
+                    }                  
+                    E_ERROR("Getting array property as vector has some type conflicts!");
+                    E_ERROR("Trying to get array of " + fDescription.GetId() + " as Vector<" + typeid(typename T::value_type).name() + ">");
+
+                    return false;
+                };
+
+                EValueDescription dsc = fDescription.GetAsPrimitive();
+                for (ERef<EProperty> prop : fElements)
+                {
+                    switch (dsc.GetType())
+                    {
+                        case EValueType::ANY:
+                        case EValueType::STRUCT: 
+                        {
+                            if (!insert_element(std::static_pointer_cast<EStructProperty>(prop)))
+                            {
+                                return false;
+                            }
+                            break;
+                        }
+                        case EValueType::ARRAY:
+                        {
+                            if (!insert_element(std::static_pointer_cast<EArrayProperty>(prop)))
+                            {
+                                return false;
+                            }
+                            break;
+                        }
+                        case EValueType::PRIMITIVE:
+                        {
+                            if (!insert_element(std::static_pointer_cast<EValueProperty<typename T::value_type>>(prop)))
+                            {
+                                return false;
+                            } 
+                            break;
+                        } 
+                        case EValueType::ENUM:
+                        {
+                            E_WARN("Array of enums is not supported. Use the enum inside an struct please!");
+                            return false;
+                            break;
+                        }
+                        case EValueType::UNKNOWN: return false;
+                    }
+                }
+            }
+            return true;
         }
 
         template <typename T>
@@ -280,18 +385,19 @@ namespace Engine {
             for (const ArrayType& entry : vector)
             {
                 size_t currentIndex = fElements.size();
-                EProperty* newEntry = EProperty::CreateFromDescription(std::to_string(currentIndex), dsc);
-                ConnectChangeFunc(newEntry);
+                ERef<EProperty> newEntry = EProperty::CreateFromDescription(std::to_string(currentIndex), dsc);
+                ConnectChangeFunc(newEntry.get());
                 switch (dsc.GetType())
                 {
                 case EValueType::PRIMITIVE:
                 {
-                    static_cast<EValueProperty<typename T::value_type>*>(newEntry)->SetValue(entry);
+                    std::static_pointer_cast<EValueProperty<typename T::value_type>>(newEntry)->SetValue(entry);
                     break;
                 }
+                case EValueType::ANY:
                 case EValueType::STRUCT:
                 {
-                    if (!static_cast<EStructProperty*>(newEntry)->SetValue<typename T::value_type>(entry))
+                    if (!std::static_pointer_cast<EStructProperty>(newEntry)->SetValue<typename T::value_type>(entry))
                     {
                         return false;
                     }
@@ -301,7 +407,7 @@ namespace Engine {
                 {
                     if constexpr (is_vector<ArrayType>::value)
                     {
-                        if (!static_cast<EArrayProperty*>(newEntry)->SetValue<typename T::value_type>(entry))
+                        if (!std::static_pointer_cast<EArrayProperty>(newEntry)->SetValue<typename T::value_type>(entry))
                         {
                             return false;
                         }
@@ -328,8 +434,83 @@ namespace Engine {
             return true;
         }
     protected:
-        virtual EProperty* OnClone() override;
+        virtual ERef<EProperty> OnClone() const override;
         virtual void OnCopy(const EProperty* from) override;
+    };
+
+
+    // The any type. Can be used as basic example for own types
+
+    class E_API EAny
+    {
+    private:
+        ERef<EProperty> fProperty;
+    public:
+        EAny() : fProperty(nullptr) {}
+        EAny(const EAny& other) = default;
+        ~EAny() = default;
+
+        EAny& operator=(const EAny& other) = default;
+
+        bool operator==(const EAny& other) const
+        {
+            if (!fProperty || !other.fProperty) { return fProperty == other.fProperty; }
+            return fProperty->GetDescription() == other.fProperty->GetDescription();
+        }
+
+        bool operator!=(const EAny& other) const
+        {
+            return !(*this == other);
+        }
+
+        static bool ToProperty(const EAny& value, ::Engine::EProperty* property)
+        {
+            E_ASSERT_M(property->GetDescription().GetType() == EValueType::ANY, "Trying to set a value to a property that is not of type ANY!");
+            if (property->GetDescription().GetType() != EValueType::ANY) { return false; }
+            ::Engine::EStructProperty* structProperty = static_cast<::Engine::EStructProperty*>(property);
+            structProperty->ResetFields();
+
+            if (value.fProperty)
+            {
+                ERef<EProperty> newValueProperty = EProperty::CreateFromDescription("value", value.fProperty->GetDescription());
+                newValueProperty->Copy(value.fProperty.get());
+                structProperty->fProperties.push_back(newValueProperty);
+            }
+            return true;
+        }
+
+        static bool FromProperty(EAny& value, const ::Engine::EProperty* property)
+        {
+            EValueDescription dsc = property->GetDescription();
+            if (dsc.GetType() != EValueType::ANY) { return false; }
+            const ::Engine::EStructProperty* structProperty = static_cast<const ::Engine::EStructProperty*>(property);
+            
+            const ERef<EProperty> valueProperty = structProperty->GetProperty("value");
+
+            if (valueProperty)
+            {
+                value.fProperty = ERef<EProperty>(EProperty::CreateFromDescription("value", valueProperty->GetDescription()));
+                value.fProperty->Copy(valueProperty.get());
+            }
+            else
+            {
+                value.fProperty = nullptr;
+            }
+            return true;
+        }
+
+        void SetValue(const ERef<EProperty>& property)
+        {
+            fProperty = property;
+        }
+
+        ERef<EProperty> Value() const
+        {
+            return fProperty;
+        }
+
+    public:
+        static inline EValueDescription _dsc = EValueDescription(EValueType::ANY/*In case of own struct use EValueType::STRUCT*/, "Any");
     };
 
 }

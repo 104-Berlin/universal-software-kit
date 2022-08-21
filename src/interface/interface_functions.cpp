@@ -9,7 +9,7 @@ using namespace Engine;
 shared::StaticSharedContext* shared::StaticSharedContext::fInstance = nullptr;
 
 
-shared::ERegisterEventDispatcher& shared::Events()
+EEventDispatcher& shared::Events()
 {
     return shared::StaticSharedContext::instance().Events();
 }
@@ -58,7 +58,7 @@ shared::ESharedError shared::LoadRegisterFromBuffer(ESharedBuffer buffer)
 }
 
 
-shared::ESharedError shared::CreateComponent(const EString& componentId, ERegister::Entity entity) 
+shared::ESharedError shared::CreateComponent(const EString& componentId, EDataBase::Entity entity) 
 {
     EComponentRegisterEntry desc;
     if (!EXTENSION_MANAGER.GetComponentRegister().FindItem(EFindTypeDescByName(componentId), &desc))
@@ -68,7 +68,7 @@ shared::ESharedError shared::CreateComponent(const EString& componentId, ERegist
     }
     if (desc.DefaultValue)
     {
-        CreateComponent(desc.DefaultValue.get(), entity);
+        CreateComponent(desc.DefaultValue, entity);
     }
     else
     {
@@ -78,18 +78,18 @@ shared::ESharedError shared::CreateComponent(const EString& componentId, ERegist
     return false;
 }
 
-shared::ESharedError shared::CreateComponent(const EValueDescription& componentId, ERegister::Entity entity) 
+shared::ESharedError shared::CreateComponent(const EValueDescription& componentId, EDataBase::Entity entity) 
 {
     if (componentId.GetType() != EValueType::STRUCT)
     {
         E_ERROR("You have to add struct as component");
         return true;
     }
-    StaticSharedContext::instance().GetRegisterConnection().Send_CreateNewComponent(entity, static_cast<EStructProperty*>(EProperty::CreateFromDescription(componentId.GetId(), componentId)));
+    StaticSharedContext::instance().GetRegisterConnection().Send_CreateNewComponent(entity, EProperty::CreateFromDescription(componentId.GetId(), componentId));
     return false;
 }
 
-shared::ESharedError shared::CreateComponent(EStructProperty* componentValue, ERegister::Entity entity)
+shared::ESharedError shared::CreateComponent(ERef<EProperty> componentValue, EDataBase::Entity entity)
 {
     if (!componentValue)
     {
@@ -101,26 +101,38 @@ shared::ESharedError shared::CreateComponent(EStructProperty* componentValue, ER
 }
 
 
-shared::ESharedError shared::CreateResource(EResourceData* data) 
+shared::ESharedError shared::CreateResource(EResource* data) 
 {
     StaticSharedContext::instance().GetRegisterConnection().Send_AddResource(data);
     return false;
 }
 
-shared::ESharedError  shared::SetValue(ERegister::Entity entity, const EString& valueIdent, const EString& valueString)
+shared::ESharedError  shared::SetValue(EDataBase::Entity entity, const EString& valueIdent, const EString& valueString)
 {
     StaticSharedContext::instance().GetRegisterConnection().Send_SetValue(entity, valueIdent, valueString);
 
     return false;
 }
 
-EVector<ERegister::Entity> shared::GetAllEntites()
+shared::ESharedError shared::SetValue(EDataBase::Entity entity, const EString& valueIdent, EProperty* value)
+{
+    if (!value)
+    {
+        E_ERROR("Invalid value to set!");
+        return true;
+    }
+    EString propertyValue = ESerializer::WritePropertyToJs(value).dump();
+    StaticSharedContext::instance().GetRegisterConnection().Send_SetValue(entity, valueIdent, propertyValue);
+    return false;
+}
+
+EVector<EDataBase::Entity> shared::GetAllEntites()
 {
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllEntites();
 }
 
 
-ERef<EProperty> shared::GetValueFromIdent(ERegister::Entity entity, const EString& valueIdent) 
+ERef<EProperty> shared::GetValueFromIdent(EDataBase::Entity entity, const EString& valueIdent) 
 {
     ERef<EProperty> result = StaticSharedContext::instance().GetRegisterConnection().Send_GetValue(entity, valueIdent);
     if (!result)
@@ -131,7 +143,7 @@ ERef<EProperty> shared::GetValueFromIdent(ERegister::Entity entity, const EStrin
     return result;
 }
 
-shared::ESharedError shared::SetEnumValue(ERegister::Entity entity, const EString& valueIdent, u32 value)
+shared::ESharedError shared::SetEnumValue(EDataBase::Entity entity, const EString& valueIdent, u32 value)
 {
     EJson valueJson = EJson::object();
     valueJson["CurrentValue"] = value;
@@ -142,23 +154,23 @@ shared::ESharedError shared::SetEnumValue(ERegister::Entity entity, const EStrin
 }
 
 
-shared::ESharedError shared::AddArrayEntry(ERegister::Entity entity, const EString& ident) 
+shared::ESharedError shared::AddArrayEntry(EDataBase::Entity entity, const EString& ident) 
 {
     StaticSharedContext::instance().GetRegisterConnection().Send_AddArrayEntry(entity, ident);
     return false;
 }
 
-EVector<ERef<EProperty>> shared::GetAllComponents(ERegister::Entity entity) 
+EVector<ERef<EProperty>> shared::GetAllComponents(EDataBase::Entity entity) 
 {
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllValues(entity);
 }
 
-ERef<EResourceData> shared::GetResource(EResourceData::t_ID id) 
+ERef<EResource> shared::GetResource(EResource::t_ID id) 
 {
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetResourceData(id);
 }
 
-EVector<ERef<EResourceData>> shared::GetLoadedResource(const EString& resourceType) 
+EVector<ERef<EResource>> shared::GetLoadedResource(const EString& resourceType) 
 {
     return StaticSharedContext::instance().GetRegisterConnection().Send_GetAllResources(resourceType);
 }
@@ -189,13 +201,35 @@ namespace Engine {
             }
         #endif
 
-            fRegisterConnection.GetEventDispatcher().ConnectAll([this](EStructProperty* property){
+            fRegisterConnection.GetEventDispatcher().ConnectAll([this](ERef<EProperty> property){
                 fRegisterEventDispatcher.Post_P(property->GetDescription(), property);
             });
-            fExtensionManager.GetEventDispatcher().ConnectAll([this](EStructProperty* property){
+            fExtensionManager.GetEventDispatcher().ConnectAll([this](ERef<EProperty> property){
                 fRegisterEventDispatcher.Post_P(property->GetDescription(), property);
             });
 
+            fExtensionManager.GetTaskRegister().RegisterItem("Core", new ECFuncTask("CreateObject", [](){
+                CreateEntity();
+            }));
+            
+
+            ECFuncTask* createNewComponentTask = new ECFuncTask("CreateComponent", [this](EWeakRef<EProperty> property){
+                if (property.expired()) return;
+                CreateComponentInput input;
+                if (!convert::getter(property.lock().get(), &input))
+                {
+                    E_ERROR("Could not get value from property when creating component!");
+                    return;
+                }
+                if (!input.Value.Value())
+                {
+                    E_ERROR("No init value for creating component!");
+                    return;
+                }
+                shared::CreateComponent(input.Value.Value(), input.Entity);
+            });
+            createNewComponentTask->SetInputDescription(CreateComponentInput::_dsc);
+            fExtensionManager.GetTaskRegister().RegisterItem("Core", createNewComponentTask);
 
             // For now we create local socket
             fRegisterSocket = new ERegisterSocket(1420);
@@ -223,7 +257,7 @@ namespace Engine {
             return fRegisterConnection;
         }
         
-        ERegisterEventDispatcher& StaticSharedContext::Events() 
+        EEventDispatcher& StaticSharedContext::Events() 
         {
             return fRegisterEventDispatcher;
         }
@@ -250,6 +284,18 @@ namespace Engine {
         {
             // Restart the connection
             fRegisterConnection.CleanUp();
+
+            if (address.length() == 0)
+            {
+                E_ERROR("No address to connect to!");
+                if (fRegisterSocket)
+                {
+                    delete fRegisterSocket;
+                    fRegisterSocket = nullptr;
+                }
+                fRegisterConnection.Init();
+                return;
+            }
 
             EVector<EString> addressStrings = EStringUtil::SplitString(address, ":");
             EString connectToAddress = addressStrings[0];

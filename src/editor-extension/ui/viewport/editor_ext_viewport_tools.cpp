@@ -5,7 +5,7 @@
 using namespace Engine;
 
 EViewportTool::EViewportTool(const EString& toolName) 
-    : fToolName(toolName)
+    : fToolName(toolName), fVisible(true), fViewport(nullptr)
 {
     
 }
@@ -282,4 +282,76 @@ EString EBezierEditTool::sGetName()
 EString EBezierEditTool::GetIcon() const
 {
     return ICON_MD_ROUNDED_CORNER;
+}
+
+// Transform tool
+
+ETransformTool::ETransformTool()
+    : EViewportTool(sGetName()), fAttachedObject(nullptr), fWasUsing(false)
+{
+
+}
+
+bool ETransformTool::OnRender()
+{
+    if (!fAttachedObject) { return false; }
+
+    EMat4 viewMatrix = GetViewport()->GetCamera().GetViewMatrix();
+    EMat4 projectionMatrix = GetViewport()->GetCamera().GetProjectionMatrix(GetViewport()->GetWidth(), GetViewport()->GetHeight());
+    EMat4 transformMatrix = fAttachedObject->GetModelMatrix();
+    ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformMatrix));
+    
+    bool finished = false;
+
+    if (fWasUsing && !ImGuizmo::IsUsing())
+    {
+        fWasUsing = false;
+        finished = true;
+        if (fOnChange)
+        {
+            fOnChange(Editor::ETransform(fLastPosition, fLastRotation, fLastScale));
+        }
+    }
+
+    if (ImGuizmo::IsUsing())
+    {
+        ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transformMatrix), glm::value_ptr(fLastPosition), glm::value_ptr(fLastRotation), glm::value_ptr(fLastScale));
+        fLastRotation = EVec3(glm::radians(fLastRotation.x), glm::radians(fLastRotation.y), glm::radians(fLastRotation.z));
+
+
+        fAttachedObject->SetPosition(fLastPosition);
+        fAttachedObject->SetRotation(fLastRotation);
+        
+        fAttachedObject->SetScale(fLastScale);
+        fWasUsing = true;
+    }
+
+    return finished;
+}
+
+void ETransformTool::SetAttachedObject(Renderer::RObject* object)
+{
+    fAttachedObject = object;
+}
+
+
+Editor::ETransform ETransformTool::GetTransform() const
+{
+    return Editor::ETransform(fLastPosition, fLastRotation, fLastScale);
+}
+
+
+void ETransformTool::SetOnChange(TransformUpdateFunction func)
+{
+    fOnChange = func;
+}
+
+EString ETransformTool::sGetName()
+{
+    return "TRANSFORM_TOOL";
+}
+
+EString ETransformTool::GetIcon() const
+{
+    return ICON_MD_3D_ROTATION;
 }

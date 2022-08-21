@@ -14,9 +14,23 @@ bool EDeserializer::ReadStorageDescriptionFromJson(const EJson& json, EValueDesc
         EString id = json["ID"].get<EString>();
         EValueType type = (EValueType) json["Type"].get<int>();
 
+
         EValueDescription newValueType = EValueDescription(type, id);
+
+        if (json.contains("DependsOn") && json["DependsOn"].is_array())
+        {
+            for (const EJson& depends : json["DependsOn"])
+            {
+                EValueDescription dependsOnDescription;
+                if (!ReadStorageDescriptionFromJson(depends, &dependsOnDescription)) { return false; }
+                newValueType.AddDependsOn(dependsOnDescription);
+            }
+        }
+
+
         switch (type)
         {
+        case EValueType::ANY:
         case EValueType::PRIMITIVE:
         case EValueType::UNKNOWN: break;
         case EValueType::ARRAY:
@@ -56,12 +70,24 @@ bool EDeserializer::ReadStorageDescriptionFromJson(const EJson& json, EValueDesc
             break;
         }
         }
+
+        if (json.contains("DefaultValue") && json["DefaultValue"].is_object())
+        {
+            const EJson& defaultValueJson = json["DefaultValue"];
+            ERef<EProperty> defaultValue = EProperty::CreateFromDescription(newValueType.GetId(), newValueType);
+            ReadPropertyFromJson(defaultValueJson, defaultValue.get());
+            if (defaultValue)
+            {
+                newValueType.SetDefaultValue(defaultValue.get());
+            }
+        }
+
         *description = newValueType;
     }
     return true;
 }
 
-bool EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene) 
+bool EDeserializer::ReadSceneFromJson(const EJson& json, EDataBase* saveToScene) 
 {
     saveToScene->Clear();
     if (!json["ValueTypes"].is_array()) { E_ERROR("Reading Register from json. No found storage types!"); return false; }
@@ -83,7 +109,7 @@ bool EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene)
     {
         for (const EJson& entityObject : json["Objects"])
         {
-            ERegister::Entity entity = saveToScene->CreateEntity();
+            EDataBase::Entity entity = saveToScene->CreateEntity();
             for (const auto& it : entityObject.items())
             {
                 EString id = it.key();
@@ -91,8 +117,8 @@ bool EDeserializer::ReadSceneFromJson(const EJson& json, ERegister* saveToScene)
                 if (description.Valid())
                 {
                     saveToScene->AddComponent(entity, description);
-                    EStructProperty* component = saveToScene->GetComponent(entity, description);
-                    ReadPropertyFromJson(entityObject[component->GetPropertyName()], component);
+                    EWeakRef<EProperty> component = saveToScene->GetComponent(entity, description);
+                    ReadPropertyFromJson(entityObject[component.lock()->GetPropertyName()], component.lock().get());
                 }
             }
         }
@@ -168,12 +194,12 @@ bool ReadEnumFromJson(const EJson& json, EEnumProperty* property)
 {
     if (json["CurrentValue"].is_string())
     {
-        property->SetCurrentValue(json["CurrentValue"].get<EString>());
+        property->SetCurrentValueOption(json["CurrentValue"].get<EString>());
         return true;
     }
     else if (json["CurrentValue"].is_number_integer())
     {
-        property->SetCurrentValue(json["CurrentValue"].get<u32>());
+        property->SetCurrentValueIndex(json["CurrentValue"].get<u32>());
         return true;
     }
     return false;
@@ -184,8 +210,8 @@ bool ReadArrayFromJson(const EJson& json, EArrayProperty* property)
     property->Clear();
     for (const EJson& entry : json)
     {
-        EProperty* newElement = property->AddElement();
-        EDeserializer::ReadPropertyFromJson(entry, newElement);
+        ERef<EProperty> newElement = property->AddElement();
+        EDeserializer::ReadPropertyFromJson(entry, newElement.get());
     }
     return true;
 }
@@ -197,10 +223,28 @@ bool ReadStructFromJson(const EJson& json, EStructProperty* property)
     for (auto& entry : description.GetStructFields())
     {
         EValueType fieldType = entry.second.GetType();
-
-        EDeserializer::ReadPropertyFromJson(json[entry.first], property->GetProperty(entry.first));
+        if (json.contains(entry.first))
+        {
+            EDeserializer::ReadPropertyFromJson(json[entry.first], property->GetProperty(entry.first).get());
+        }
     }
     return true;
+}
+
+bool ReadAnyFromJson(const EJson& json, EStructProperty* property)
+{
+    if (json.find("Value") != json.end())
+    {
+        ERef<EProperty> newValueProp;
+        EDeserializer::ReadPropertyFromJson_WithDescription(json, &newValueProp);
+        EAny newAny;
+        newAny.SetValue(ERef<EProperty>(newValueProp));
+        if (property->SetValue(newAny))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property) 
@@ -210,6 +254,7 @@ bool EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
 
     switch (currentType)
     {
+    case EValueType::ANY: ReadAnyFromJson(json, static_cast<EStructProperty*>(property)); break;
     case EValueType::PRIMITIVE: ReadPrimitiveFromJson(json, property); break;
     case EValueType::ARRAY: ReadArrayFromJson(json, static_cast<EArrayProperty*>(property)); break;
     case EValueType::STRUCT: ReadStructFromJson(json, static_cast<EStructProperty*>(property)); break;
@@ -219,70 +264,57 @@ bool EDeserializer::ReadPropertyFromJson(const EJson& json, EProperty* property)
     return true;
 }
 
-bool EDeserializer::ReadPropertyFromJson_WithDescription(const EJson& json, EProperty** property) 
+bool EDeserializer::ReadPropertyFromJson_WithDescription(const EJson& json, ERef<EProperty>* property) 
 {
     EValueDescription dsc;
     if (json["ValueDescription"].is_object() && ReadStorageDescriptionFromJson(json["ValueDescription"], &dsc))
     {
         *property = EProperty::CreateFromDescription(dsc.GetId(), dsc);
-        if (json["Value"].is_object() && ReadPropertyFromJson(json["Value"], *property))
+        if (json["Value"].is_object() && ReadPropertyFromJson(json["Value"], (*property).get()))
         {
             return true;
         }
-        delete *property;
+        *property = nullptr;
         return false;
     }
     return false;
 }
 
-bool EDeserializer::ReadResourceFromJson(const EJson& json, EResourceData* resData, bool withData) 
+bool EDeserializer::ReadResourceFromJson(const EJson& json, EResource** resData, bool withData) 
 {
     if (!json.is_object()) { return false; }
     if (json.size() == 0)  { return false;}
-    if (json["ID"].is_number_integer() && json["Type"].is_string() && json["Name"].is_string() && json["PathToFile"].is_string())
+    if (json["ID"].is_number_integer() && json["Type"].is_string())
     {
-        resData->ID = json["ID"].get<EResourceData::t_ID>();
-        resData->Type = json["Type"].get<EString>();
-        resData->Name = json["Name"].get<EString>();
-        resData->PathToFile = json["PathToFile"].get<EString>();
-        if (withData && json["Data"].is_string() && json["UserData"].is_string())
+        *resData = new EResource(json["Type"].get<EString>());
+        EResource* result = *resData;
+
+        if (json.contains("Name") && json["Name"].is_string())
+        {
+            result->SetName(json["Name"].get<EString>());
+        }
+        
+        result->SetID(json["ID"].get<EResource::t_ID>());
+        
+        if (withData && json.find("Data") != json.end() && json["Data"].is_string())
         {
             u8* data;
             size_t dataLen;
-            u8* userData = nullptr;
-            size_t userDataLen = 0;
             if (Base64::Decode(json["Data"].get<EString>(), &data, &dataLen))
             {
-                EString userDataString = json["UserData"].get<EString>();
-
-                if (userDataString.length() > 0)
-                {
-                    Base64::Decode(userDataString, &userData, &userDataLen);
-                }
-
-                if (resData->Data)
-                {
-                    delete resData->Data;
-                    resData->Data = nullptr;
-                }
-                if (resData->UserData)
-                {
-                    delete resData->UserData;
-                    resData->UserData = nullptr;
-                }
-                resData->Data = data;
-                resData->DataSize = dataLen;
-                resData->UserData = userData;
-                resData->UserDataSize = userDataLen;
+                ESharedBuffer buffer;
+                buffer.InitWith<u8>(data, dataLen);
+                result->SetBuffer(buffer);
                 return true;
             }
+            E_WARN("Failed to decode resource data");
         }
-        return !withData;
+        return true;
     }
     return false;
 }
 
-bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* saveToScene) 
+bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, EDataBase* saveToScene) 
 {
     EFileCollection fileCollection;
     fileCollection.SetFromCompleteBuffer(buffer);
@@ -307,29 +339,26 @@ bool EDeserializer::ReadSceneFromFileBuffer(ESharedBuffer buffer, ERegister* sav
         EString type = EString((char*)pointer);
         pointer += type.length() + 1;
 
-        EResourceData::t_ID id = *(EResourceData::t_ID*)pointer;
-        pointer += sizeof(EResourceData::t_ID);
-        
-        u64 dataSize = *(u64*)pointer;
-        pointer += sizeof(u64);
+        EString name = EString((char*)pointer);
+        pointer += name.length() + 1;
 
+        EResource::t_ID id = *(EResource::t_ID*)pointer;
+        pointer += sizeof(EResource::t_ID);
+
+        size_t dataSize = entry.second.GetSizeInByte() - (pointer - entry.second.Data<u8>());
         u8* resourceData = new u8[dataSize];
         memcpy(resourceData, pointer, dataSize);
         pointer += dataSize;
 
-        u64 userDataSize = *(u64*)pointer;
-        u8* userData = nullptr;
-        if (userDataSize > 0)
-        {
-            pointer += sizeof(u64);
 
-            userData = new u8[userDataSize];
-            memcpy(userData, pointer, userDataSize);
-        }
+        ESharedBuffer dataBuffer;
+        dataBuffer.InitWith<u8>(resourceData, dataSize);
 
-        EFile file(entry.first);
-        EResourceData* finalResourceData = new EResourceData(id, type, file.GetFileName(), resourceData, dataSize);
-        finalResourceData->SetUserData(userData, userDataSize);
+        EResource* finalResourceData = new EResource(type);
+        finalResourceData->SetBuffer(dataBuffer);
+        finalResourceData->SetName(name);
+        finalResourceData->SetID(id);
+
         if (!saveToScene->GetResourceManager().AddResource(finalResourceData))
         {
             E_ERROR("Could not add resource. Resource with same ids allready exist!");
