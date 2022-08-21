@@ -110,7 +110,7 @@ namespace Engine {
             EValueDescription dsc = getdsc::GetDescription<T>();
             if (dsc.Valid())
             {
-                ERef<EProperty> foundProp = GetValueFromIdent(entity, nameIdent);
+                ERef<EProperty> foundProp = GetValueFromIdent(entity, dsc.GetId());
                 if (foundProp)
                 {
                     if (convert::getter(foundProp.get(), value))
