@@ -2,10 +2,12 @@
 
 #include "imgui_internal.h"
 
+static int TRANSFORM_TOOL_ID = 1;
+
 using namespace Engine;
 
-EViewportTool::EViewportTool(const EString& toolName) 
-    : fToolName(toolName), fVisible(true), fViewport(nullptr)
+EViewportTool::EViewportTool(const EString& toolName, const EString& componentIdentifier) 
+    : fVisible(true), fToolName(toolName), fComponentIdentifier(componentIdentifier), fViewport(nullptr)
 {
     
 }
@@ -23,6 +25,16 @@ bool EViewportTool::IsVisible() const
 void EViewportTool::SetVisible(bool visible) 
 {
     fVisible = visible;
+}
+
+void EViewportTool::SetComponentIdentifier(const EString& ident)
+{
+    fComponentIdentifier = ident;
+}
+
+const EString& EViewportTool::GetComponentIdentifer() const
+{
+    return fComponentIdentifier;
 }
 
 const EString& EViewportTool::GetToolName() const
@@ -50,46 +62,35 @@ void EViewportTool::ViewportClicked(const EVec2& screenPos, const EVec3& worldPo
     OnViewportClicked(screenPos, worldPos);
 }
 
-EPointMoveTool::EPointMoveTool() 
-    : EViewportTool("POINT_MOVE"), fCenterPosition(100.0f, 100.0f)
+void EViewportTool::ActivateTool()
 {
-    
+    OnActivateTool();
 }
 
-bool EPointMoveTool::OnRender() 
+void EViewportTool::Finish()
 {
-    ImGuiContext* g = ImGui::GetCurrentContext();
-    ImRect itemRect = g->LastItemData.Rect;
-
-    EVec2 currentCenter = fCenterPosition + EVec2(itemRect.Min.x, itemRect.Min.y );
-    float halfSize = 4.0f;
-
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    draw_list->AddRect({currentCenter.x - halfSize, currentCenter.y - halfSize}, {currentCenter.x + halfSize, currentCenter.y + halfSize}, 0xffffffff);
-    //draw_list->AddCircleFilled({fCenterPosition.x + itemRect.Min.x, fCenterPosition.y + itemRect.Min.y}, 10.0f, 0xffffffff);
-    return false;
+    if (!GetActiveObject()) { return; }
+    OnFinished(fViewport->GetEntityFromObject(GetActiveObject()));
 }
+
+Renderer::RObject* EViewportTool::GetActiveObject() const
+{
+    if (!fViewport) { return nullptr; }
+    return fViewport->GetSelectionContext().GetSelectedObject();
+}
+
+
 
 ELineEditTool::ELineEditTool()
-    : EViewportTool(sGetName()), fLine(nullptr), fEditState(EditState::CREATING)
+    : EViewportTool(sGetName()), fEditState(EditState::CREATING)
 {
-    SetVisible(false);
-}
-
-void ELineEditTool::SetLine(Renderer::RLine* line) 
-{
-    fLine = line;
-    SetVisible(fLine != nullptr);   
-}
-
-Renderer::RLine* ELineEditTool::GetLine() const
-{
-    return fLine;
 }
 
 bool ELineEditTool::OnRender() 
 {
-    if (!fLine) { return false; }
+    Renderer::RLine* line = dynamic_cast<Renderer::RLine*>(GetActiveObject());
+
+    if (!line) { return false; }
     ImGuiIO& io = ImGui::GetIO();
     ImGuiContext* g = ImGui::GetCurrentContext();
 
@@ -97,8 +98,8 @@ bool ELineEditTool::OnRender()
 
     float halfSize = 4.0f;
 
-    EVec2 startPoint = GetViewport()->Project(fLine->GetStart()) + ImConvert::ImToGlmVec2(itemRect.Min);
-    EVec2 endPoint = GetViewport()->Project(fLine->GetEnd()) + ImConvert::ImToGlmVec2(itemRect.Min);
+    EVec2 startPoint = GetViewport()->Project(line->GetStart()) + ImConvert::ImToGlmVec2(itemRect.Min);
+    EVec2 endPoint = GetViewport()->Project(line->GetEnd()) + ImConvert::ImToGlmVec2(itemRect.Min);
 
     const ImRect startAnchor(ImConvert::GlmToImVec2(startPoint - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(startPoint + EVec2(halfSize, halfSize)));
     const ImRect endAnchor(ImConvert::GlmToImVec2(endPoint - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(endPoint + EVec2(halfSize, halfSize)));
@@ -133,10 +134,10 @@ bool ELineEditTool::OnRender()
     switch (fCurrentSelection)
     {
     case Selection::START:
-        fLine->SetStart(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
+        line->SetStart(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
         break;
     case Selection::END:
-        fLine->SetEnd(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
+        line->SetEnd(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
         break;
     case Selection::NONE:
         break;
@@ -165,113 +166,77 @@ EString ELineEditTool::GetIcon() const
     return ICON_MD_CALL_MADE;
 }
 
+void ELineEditTool::OnFinished(EDataBase::Entity entity)
+{
+    if (entity)
+    {
+        shared::SetValue(entity, GetComponentIdentifer(), fCurrentLine);
+    }
+}
 
 
 EBezierEditTool::EBezierEditTool() 
-    : EViewportTool(sGetName()), fCurve(nullptr)
+    : EViewportTool(sGetName()), fLastSelection(Selection::NONE)
 {
-    fCurrentSelection = Selection::NONE;
-    SetVisible(false);
 }
 
 bool EBezierEditTool::OnRender() 
 {
-    if (!fCurve) { return false; }
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiContext* g = ImGui::GetCurrentContext();
-
-    ImRect itemRect = g->LastItemData.Rect;
-
-    float halfSize = 4.0f;
-
-    EVec2 startPoint = GetViewport()->Project(fCurve->GetStartPos()) + ImConvert::ImToGlmVec2(itemRect.Min);
-    EVec2 endPoint = GetViewport()->Project(fCurve->GetEndPos()) + ImConvert::ImToGlmVec2(itemRect.Min);
-    EVec2 controllPoint1 = GetViewport()->Project(fCurve->GetControll1()) + ImConvert::ImToGlmVec2(itemRect.Min);
-    EVec2 controllPoint2 = GetViewport()->Project(fCurve->GetControll2()) + ImConvert::ImToGlmVec2(itemRect.Min);
-
-    const ImRect startAnchor(ImConvert::GlmToImVec2(startPoint - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(startPoint + EVec2(halfSize, halfSize)));
-    const ImRect endAnchor(ImConvert::GlmToImVec2(endPoint - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(endPoint + EVec2(halfSize, halfSize)));
-    const ImRect ctrl1Anchor(ImConvert::GlmToImVec2(controllPoint1 - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(controllPoint1 + EVec2(halfSize, halfSize)));
-    const ImRect ctrl2Anchor(ImConvert::GlmToImVec2(controllPoint2 - EVec2(halfSize, halfSize)),ImConvert::GlmToImVec2(controllPoint2 + EVec2(halfSize, halfSize)));
-
-
-
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    draw_list->AddRect(startAnchor.Min, startAnchor.Max, 0xffffffff);
-    draw_list->AddRect(endAnchor.Min, endAnchor.Max, 0xffffffff);
-    draw_list->AddRect(ctrl1Anchor.Min, ctrl1Anchor.Max, 0xffffffff);
-    draw_list->AddRect(ctrl2Anchor.Min, ctrl2Anchor.Max, 0xffffffff);
-
-    bool wasChanged = fCurrentSelection != Selection::NONE && !io.MouseDown[0];
-    Selection newSelection = io.MouseDown[0] ? fCurrentSelection : Selection::NONE;
-
-
-    if (startAnchor.Contains(io.MousePos))
+    if (!GetActiveObject())
     {
-        if (io.MouseDown[0])
-        {
-            newSelection = Selection::START;
-        }
+        return false;
     }
-    if (endAnchor.Contains(io.MousePos))
-    {
-        if (io.MouseDown[0])
-        {
-            newSelection = Selection::END;
-        }
-    }
-    if (ctrl1Anchor.Contains(io.MousePos))
-    {
-        if (io.MouseDown[0])
-        {
-            newSelection = Selection::CTRL1;
-        }
-    }
-    if (ctrl2Anchor.Contains(io.MousePos))
-    {
-        if (io.MouseDown[0])
-        {
-            newSelection = Selection::CTRL2;
-        }
-    }
+    Renderer::RBezierCurveEdit* curve = GetActiveObject()->FindTypeOf<Renderer::RBezierCurveEdit>(true);
 
-    fCurrentSelection = newSelection;
+    if (!curve) { return false; }
+    
+    EMat4 startMatrix = curve->GetStartPositionObject()->GetModelMatrix();
+    EMat4 endMatrix = curve->GetEndPositionObject()->GetModelMatrix();
+    EMat4 controll1Matrix = curve->GetControllPoint1Object()->GetModelMatrix();
+    EMat4 controll2Matrix = curve->GetControllPoint2Object()->GetModelMatrix();
 
 
-    switch (fCurrentSelection)
+    Selection changedPoint = HandleManipulate(startMatrix, endMatrix, controll1Matrix, controll2Matrix);
+
+    switch (changedPoint)
     {
     case Selection::START:
-        fCurve->SetStartPos(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
-        break;
-    case Selection::END:
-        fCurve->SetEndPos(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
-        break;
-    case Selection::CTRL1:
-        fCurve->SetControll1(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
-        break;
-    case Selection::CTRL2:
-        fCurve->SetControll2(GetViewport()->Unproject(EVec3(io.MousePos.x - itemRect.Min.x, io.MousePos.y - itemRect.Min.y, 0.0f)));
-        break;
-    case Selection::NONE:
+    {
+        curve->GetStartPositionObject()->SetPosition(
+            Editor::ETransformHelper::GetTransformFromMatrix(startMatrix * glm::inverse(curve->GetModelMatrix())).Position
+        );
         break;
     }
+    case Selection::END:
+    {
+        curve->GetEndPositionObject()->SetPosition(
+            Editor::ETransformHelper::GetTransformFromMatrix(endMatrix * glm::inverse(curve->GetModelMatrix())).Position
+        );
+        break;
+    }
+    case Selection::CTRL1:
+    {
+        curve->GetControllPoint1Object()->SetPosition(
+            Editor::ETransformHelper::GetTransformFromMatrix(controll1Matrix * glm::inverse(curve->GetModelMatrix())).Position
+        );
+        break;
+    }
+    case Selection::CTRL2:
+    {
+        curve->GetControllPoint2Object()->SetPosition(
+            Editor::ETransformHelper::GetTransformFromMatrix(controll2Matrix * glm::inverse(curve->GetModelMatrix())).Position
+        );
+        break;
+    }
+    case Selection::NONE: break;
+    };
 
+    curve->RegenMesh();
+    UpdateCurrentSegment(curve);
 
-    draw_list->AddLine(ImConvert::GlmToImVec2(startPoint), ImConvert::GlmToImVec2(controllPoint1), 0xffffffff);
-    draw_list->AddLine(ImConvert::GlmToImVec2(endPoint), ImConvert::GlmToImVec2(controllPoint2), 0xffffffff);
-    return wasChanged;
-}
-
-void EBezierEditTool::SetBezierCurve(Renderer::RBezierCurve* curve) 
-{
-    fCurve = curve;
-    SetVisible(fCurve != nullptr);
-}
-
-
-Renderer::RBezierCurve* EBezierEditTool::GetCurve() const
-{
-    return fCurve;
+    bool result = fLastSelection != Selection::NONE && changedPoint == Selection::NONE;
+    fLastSelection = changedPoint;
+    return result;
 }
 
 EString EBezierEditTool::sGetName()
@@ -284,21 +249,98 @@ EString EBezierEditTool::GetIcon() const
     return ICON_MD_ROUNDED_CORNER;
 }
 
+
+void EBezierEditTool::OnFinished(EDataBase::Entity entity)
+{
+    if (entity)
+    {
+        shared::SetValue(entity, GetComponentIdentifer(), fCurrentSegment);
+    }
+}
+
+EBezierEditTool::Selection EBezierEditTool::HandleManipulate(EMat4& startMatrix, EMat4& endMatrix, EMat4& controll1Matrix, EMat4& controll2Matrix)
+{
+    EMat4 viewMatrix = GetViewport()->GetCamera().GetViewMatrix();
+    EMat4 projectionMatrix = GetViewport()->GetCamera().GetProjectionMatrix(GetViewport()->GetWidth(), GetViewport()->GetHeight());
+
+    if (fLastSelection == Selection::NONE || fLastSelection == Selection::START)
+    {
+        ImGui::PushID(420001);
+        ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(startMatrix));
+        ImGui::PopID();
+
+        if (ImGuizmo::IsUsing())
+        {
+            return Selection::START;
+        }
+    }
+
+
+    if (fLastSelection == Selection::NONE || fLastSelection == Selection::END)
+    {
+        ImGui::PushID(420002);
+        ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(endMatrix));
+        ImGui::PopID();
+
+        if (ImGuizmo::IsUsing())
+        {
+            return Selection::END;
+        }
+    }
+
+
+    if (fLastSelection == Selection::NONE || fLastSelection == Selection::CTRL1)
+    {
+        ImGui::PushID(420003);
+        ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(controll1Matrix));
+        ImGui::PopID();
+
+        if (ImGuizmo::IsUsing())
+        {
+            return Selection::CTRL1;
+        }
+    }
+
+
+    if (fLastSelection == Selection::NONE || fLastSelection == Selection::CTRL2)
+    {
+        ImGui::PushID(420004);
+        ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(controll2Matrix));
+        ImGui::PopID();
+
+        if (ImGuizmo::IsUsing())
+        {
+            return Selection::CTRL2;
+        }
+    }
+
+    return Selection::NONE;
+}
+
+void EBezierEditTool::UpdateCurrentSegment(Renderer::RBezierCurveEdit* curve)
+{
+    fCurrentSegment.Start = curve->GetStartPos();
+    fCurrentSegment.End = curve->GetEndPos();
+    fCurrentSegment.Controll1 = curve->GetControll1();
+    fCurrentSegment.Controll2 = curve->GetControll2();
+}
+
 // Transform tool
 
 ETransformTool::ETransformTool()
-    : EViewportTool(sGetName()), fAttachedObject(nullptr), fWasUsing(false)
+    : EViewportTool(sGetName(), "ETransform"), fWasUsing(false), fGizmoID(TRANSFORM_TOOL_ID++)
 {
-
 }
 
 bool ETransformTool::OnRender()
 {
-    if (!fAttachedObject) { return false; }
+    Renderer::RObject* attachedObject = fViewport->GetSelectionContext().GetSelectedObject();
+    if (!attachedObject) { return false; }
 
     EMat4 viewMatrix = GetViewport()->GetCamera().GetViewMatrix();
     EMat4 projectionMatrix = GetViewport()->GetCamera().GetProjectionMatrix(GetViewport()->GetWidth(), GetViewport()->GetHeight());
-    EMat4 transformMatrix = fAttachedObject->GetModelMatrix();
+    EMat4 transformMatrix = attachedObject->GetModelMatrix();
+    ImGuizmo::SetID(fGizmoID);
     ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformMatrix));
     
     bool finished = false;
@@ -319,19 +361,14 @@ bool ETransformTool::OnRender()
         fLastRotation = EVec3(glm::radians(fLastRotation.x), glm::radians(fLastRotation.y), glm::radians(fLastRotation.z));
 
 
-        fAttachedObject->SetPosition(fLastPosition);
-        fAttachedObject->SetRotation(fLastRotation);
+        attachedObject->SetPosition(fLastPosition);
+        attachedObject->SetRotation(fLastRotation);
         
-        fAttachedObject->SetScale(fLastScale);
+        attachedObject->SetScale(fLastScale);
         fWasUsing = true;
     }
 
     return finished;
-}
-
-void ETransformTool::SetAttachedObject(Renderer::RObject* object)
-{
-    fAttachedObject = object;
 }
 
 
@@ -354,4 +391,13 @@ EString ETransformTool::sGetName()
 EString ETransformTool::GetIcon() const
 {
     return ICON_MD_3D_ROTATION;
+}
+
+void ETransformTool::OnFinished(EDataBase::Entity entity)
+{
+    if (entity)
+    {
+        Editor::ETransform transform = GetTransform();
+        shared::SetValue(entity, GetComponentIdentifer(), transform);
+    }
 }

@@ -84,7 +84,7 @@ APP_ENTRY
     showPanel->AddChild(EMakeRef<EUISameLine>());
     showPanel->AddChild(cameraMode);
     showPanel->AddChild(viewport);
-    info.PanelRegister->RegisterItem(extensionName, showPanel);
+    //info.PanelRegister->RegisterItem(extensionName, showPanel);
 
     shared::Events().Connect<EntityChangeEvent>([weakViewport](EntityChangeEvent event){
         if (event.Type == EntityChangeType::COMPONENT_ADDED)
@@ -97,7 +97,7 @@ APP_ENTRY
                     RMesh* mesh = new RMesh();
                     fMeshes[event.Entity.Handle] = mesh;
                     currentTransformObject = event.Entity.Handle;
-                    transformControls->SetAttachedObject(mesh);
+                    //transformControls->SetAttachedObject(mesh);
                     weakViewport.lock()->GetScene().Add(mesh);
                     auto meshResource = shared::GetResource(meshComponent.Mesh.ResourceId);
                     
@@ -149,6 +149,41 @@ APP_ENTRY
             weakViewport.lock()->GetScene().DeleteObject(fMeshes[event.Entity.Handle]);
         }
     }, viewport.get());
+
+
+    
+    EViewportDescription dsc;
+    dsc.ExtensionName = extensionName;
+    dsc.Type = EViewportType::FRONT_RIGHT_TOP_3D;
+
+    EUIViewportRenderFunction func;
+    func.Description = dsc;
+    func.ValueDescription = MeshComponent::_dsc;
+    func.RenderFunction = [](Renderer::RObject* object, ERef<EProperty> property){
+        MeshComponent meshComponent;
+        if (property->GetValue<MeshComponent>(&meshComponent))
+        {
+            RMesh* meshObject = (RMesh*)object->GetChildAt(0);
+            if (!meshObject)
+            {
+                meshObject = new RMesh();
+                object->Add(meshObject);
+            }
+
+            auto meshResource = shared::GetResource(meshComponent.Mesh.ResourceId);
+                        
+            if (meshResource)
+            {
+                Editor::EMeshResource* meshData = meshResource->GetCPtr<Editor::EMeshResource>();
+                meshObject->SetData(meshData->Vertices, meshData->Indices);
+            }
+            else
+            {
+                meshObject->SetData({}, {});
+            }
+        }
+    };
+    info.ViewportRenderFunctions->RegisterItem(extensionName, func);
 }
 
 EXT_ENTRY

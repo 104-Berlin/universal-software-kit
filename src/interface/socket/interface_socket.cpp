@@ -1,5 +1,7 @@
 #include "prefix_interface.h"
 
+#define E_DEBUG_SOCKETS 0
+
 using namespace Engine;
 
 void _sock::close(int socketId) 
@@ -72,8 +74,9 @@ void _sock::send_packet(int socketId, const ERegisterPacket& packet)
     EString bodyString = packet.Body.dump();
     const char* data = bodyString.c_str();
     size_t dataLen = strlen(data) + 1;
+
     send(socketId, (u8*)&dataLen, sizeof(size_t));
-    send(socketId, (u8*)data, dataLen);
+    send(socketId, (u8*) data, dataLen);
 }
 
 int _sock::read_packet(int socketId, ERegisterPacket* outPacket) 
@@ -132,6 +135,7 @@ void _sock::print_last_socket_error()
 
 void _sock::print_packet(const EString& name, const ERegisterPacket& packet) 
 {
+#if E_DEBUG_SOCKETS
     E_INFO("------" + name + " PACKET -------");           
     E_INFO("| ID   =  " + std::to_string(packet.ID) + "  |");
     E_INFO(EString("| TYPE = | ") + GetPacketTypeString(packet.PacketType) + " |");
@@ -139,4 +143,5 @@ void _sock::print_packet(const EString& name, const ERegisterPacket& packet)
     E_INFO("|       Body        |");
     E_INFO(packet.Body.dump());
     E_INFO("---------------------");
+#endif
 }

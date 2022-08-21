@@ -3,7 +3,6 @@
 using namespace Editor;
 using namespace Engine;
 
-
 ECommandLine::ECommandLine() 
     : EUIField("CommandLine")
 {

@@ -44,11 +44,17 @@ typedef glm::quat EQuat;
 #include "default-types/editor_def_res_image.h"
 #include "default-types/editor_def_res_mesh.h"
 #include "default-types/editor_def_transform.h"
+#include "default-types/editor_def_basic_shapes.h"
+#include "default-types/editor_def_res_svg.h"
 
 
 
 #include "ui/editor_ext_ui.h"
 #include "ui/viewport/editor_ext_camera_cotrols.h"
 #include "ui/viewport/editor_ext_viewport_tools.h"
+#include "ui/viewport/editor_ext_selection_context.h"
 #include "ui/viewport/editor_ext_viewport.h"
 #include "ui/editor_ui_register.h"
+#include "ui/viewport/editor_ext_viewport_manager.h"
+
+#include "editor_app_init.h"

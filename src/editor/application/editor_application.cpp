@@ -1,6 +1,5 @@
 #include "editor.h"
 
-
 using namespace Editor;
 using namespace Graphics;
 using namespace Engine;
@@ -19,6 +18,10 @@ E_STORAGE_STRUCT(MyType,
     (EVector<MySubType>, Working)
 )
 
+E_STORAGE_STRUCT(BasicSvg,
+    (EResourceLink, SvgLink, "SVG")
+)
+
 E_STORAGE_ENUM(MyEnum,
     One,
     Two,
@@ -32,7 +35,7 @@ E_STORAGE_STRUCT(EnumTest,
 static EApplication* runningInstance = nullptr;
 
 EApplication::EApplication() 
-    : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
+    : fGraphicsContext(nullptr), fUIRegister(), fUIValueRegister(), fViewportRenderFunctionRegister(), fViewportManager(&fUIRegister, &fViewportRenderFunctionRegister), fCommandLine(), fLoadOnStartRegister()
 {
     EFolder folder(EFile::GetAppDataPath());
     if (!folder.Exist())
@@ -48,6 +51,7 @@ EApplication::EApplication()
             EAppInit init;
             init.PanelRegister = &fUIRegister;
             init.ValueFieldRegister = &fUIValueRegister;
+            init.ViewportRenderFunctions = &fViewportRenderFunctionRegister;
             E_INFO("Running APP_INIT for plugtin \"" + extension->GetName() + "\"");
             entry(extension->GetName().c_str(), init);
         }
@@ -56,6 +60,8 @@ EApplication::EApplication()
         {
             initImGui();
         }
+
+        fViewportManager.ReloadViewports();
     });
 
 
@@ -72,6 +78,10 @@ EApplication::EApplication()
         }
 
         fUIRegister.ClearRegisteredItems(event.ExtensionName);
+        fUIValueRegister.ClearRegisteredItems(event.ExtensionName);
+        fViewportRenderFunctionRegister.ClearRegisteredItems(event.ExtensionName);
+
+        fViewportManager.ReloadViewports();
     });
 
     fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
@@ -79,7 +89,10 @@ EApplication::EApplication()
     });
 
     // Temp
+    BasicSvg::_dsc.AddDependsOn(Editor::ETransform::_dsc);
+
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<MyType>("Core");
+    shared::ExtensionManager().GetComponentRegister().RegisterStruct<BasicSvg>("Core");
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<EnumTest>("Core");
 }
 
@@ -242,6 +255,8 @@ void EApplication::Init(Graphics::GContext* context)
 
 
 
+    fViewportManager.ReloadViewports();
+
     LoadApplicationState();
 
     if (!fLoadOnStartRegister.empty())
@@ -253,6 +268,7 @@ void EApplication::Init(Graphics::GContext* context)
             shared::LoadRegisterFromBuffer(registerFile.GetBuffer());
         }
     }
+
 }
 
 void EApplication::CleanUp() 
@@ -313,7 +329,7 @@ void EApplication::RenderImGui()
     fCommandLine.UpdateEventDispatcher();
     fCommandLine.Render();
 
-    //ImGui::ShowDemoWindow();
+    ImGui::ShowDemoWindow();
 
     shared::StaticSharedContext::instance().GetRegisterConnection().GetEventDispatcher().Update();
 }
@@ -353,6 +369,26 @@ void EApplication::RegisterDefaultPanels()
     fUIRegister.RegisterItem("Core", resourcePanel);
     fUIRegister.RegisterItem("Core", extensionPanel);
     fUIRegister.RegisterItem("Core", connectionStatePanel);
+
+    EUIViewportRenderFunction svgRenderFunction;
+    svgRenderFunction.Description.Type = EViewportType::DEFAULT_2D;
+    svgRenderFunction.NeedsOwnObject = true;
+    svgRenderFunction.ValueDescription = BasicSvg::_dsc;
+    svgRenderFunction.RenderFunction = [](Renderer::RObject* object, ERef<EProperty> value){
+        object->Clear();
+        BasicSvg curveData;
+        if (value->GetValue(&curveData))
+        {
+            ERef<EResource> svgResource = shared::GetResource(curveData.SvgLink.ResourceId);
+            if (svgResource)
+            {
+                Editor::ESvgResource* res = svgResource->GetCPtr<Editor::ESvgResource>();
+                object->Add(Editor::CreateRenderObject(res->CurveSegments));
+            }
+        }
+    };
+    fViewportRenderFunctionRegister.RegisterItem("Core", svgRenderFunction);
+
     fUIRegister.RegisterItem("Core", registerPanel);
 }
 
@@ -377,6 +413,14 @@ void EApplication::RegisterDefaultResources()
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", imageDsc);
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", meshDsc);
 
+    EResourceDescription svgDsc("SVG",{"svg"});
+    svgDsc.ImportFunction = [](ESharedBuffer buffer) -> EResource*{
+        EResource* result = new EResource("SVG");
+        result->SetBuffer(buffer);
+        result->Load<ESvgResource>();
+        return result;
+    };
+    shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", svgDsc);
 
     // FOR TESTING PURPOSES
     EResourceDescription pdfDescription("PDF", {"pdf"});
@@ -460,7 +504,9 @@ void EApplication::LoadApplicationState()
 
     for (const EString& autoLoadExtension : state.AutoLoadExtensions)
     {
-        shared::ExtensionManager().LoadExtension(autoLoadExtension, true);
+        EFile file(autoLoadExtension);
+        shared::ExtensionManager().SetExtensionAutoLoad(file.GetFileName(), true);
+        shared::ExtensionManager().LoadExtension(autoLoadExtension);
     }
 }
 
@@ -468,4 +514,4 @@ EApplication* EApplication::gApp()
 {
     E_ASSERT_M(runningInstance != nullptr, "Application not initialized");
     return runningInstance;
-}
+} 

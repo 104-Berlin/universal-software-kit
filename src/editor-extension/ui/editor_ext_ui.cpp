@@ -255,7 +255,6 @@ void EUIField::HandleRenderEnd()
             }
             if (ImGui::IsKeyReleased(i))
             {
-                E_INFO("Key released: " + std::to_string(i));
                 fEventDispatcher.Enqueue<events::EKeyUpEvent>(events::EKeyUpEvent{i, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyAlt});
             }
         }
@@ -1080,6 +1079,42 @@ bool EUIGrid::OnBeforeChildRender(EWeakRef<EUIField> child)
 void EUIGrid::OnRenderEnd(bool renderResult)
 {
     ImGui::PopStyleVar();
+}
+
+EUISplitView::EUISplitView(u32 splitCountX, u32 splitCountY)
+    : EUIField("SPLIT"), fSplitCountX(splitCountX), fSplitCountY(splitCountY), fCurrentSplitIndex(0), fCellSize()
+{
+
+}
+
+bool EUISplitView::OnRender()
+{
+    fCurrentSplitIndex = 0;
+    //ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, {0.0f, 0.0f});
+
+    const ImGuiStyle& style = ImGui::GetStyle();
+    fCellSize = EVec2(  ((ImGui::GetWindowContentRegionMax().x - ImGui::GetCursorPosX()) / fSplitCountX) - style.ItemSpacing.x * fSplitCountX, 
+                        ((ImGui::GetWindowContentRegionMax().y - ImGui::GetCursorPosY()) / fSplitCountY) - style.ItemSpacing.y * fSplitCountY);
+    return fChildren.size() <= fSplitCountX * fSplitCountY;
+}
+
+bool EUISplitView::OnBeforeChildRender(EWeakRef<EUIField> child)
+{
+    if (!child.expired())
+    {
+        child.lock()->SetSize({fCellSize.x, fCellSize.y});
+    }
+    if (fCurrentSplitIndex % fSplitCountX != 0)
+    {
+        ImGui::SameLine();
+    }
+    fCurrentSplitIndex++;
+    return true;
+}
+
+void EUISplitView::OnRenderEnd(bool renderResult)
+{
+    //ImGui::PopStyleVar();
 }
 
 EUIResourceSelect::EUIResourceSelect(const EString& resourceType)
