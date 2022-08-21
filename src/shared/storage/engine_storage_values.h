@@ -63,6 +63,7 @@ namespace Engine {
 
         EValueDescription GetDescription() const;
 
+
         ERef<EProperty> Clone() const;
         void Copy(const EProperty* from);
 
@@ -93,6 +94,19 @@ namespace Engine {
             return result;
         }
 
+    public:
+        template <typename T>
+        bool GetValue(T* outValue) const
+        {
+            return convert::getter<T>(this, outValue);
+        }
+
+        template <typename T>
+        bool SetValue(const T& value)
+        {
+            return convert::setter<T>(this, value);
+        }
+        
     private:
         static ERef<EProperty> CreatePropertyStruct(const EString& name, EValueDescription description);
         static ERef<EProperty> CreatePropertyPrimitive(const EString& name, EValueDescription descrption);

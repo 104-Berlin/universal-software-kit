@@ -7,18 +7,22 @@ namespace Engine {
     
     class E_EDEXAPI EViewportTool 
     {
-    private:
+    protected:
         bool fVisible;
         EString fToolName;
+        EString fComponentIdentifier;
         EUIViewport* fViewport;
     public:
-        EViewportTool(const EString& toolName);
+        EViewportTool(const EString& toolName, const EString& componentIdentifier = "");
         virtual ~EViewportTool() = default;
 
         bool Render();
 
         bool IsVisible() const;
         void SetVisible(bool visible);
+
+        void SetComponentIdentifier(const EString& ident);
+        const EString& GetComponentIdentifer() const;
 
         const EString& GetToolName() const;
 
@@ -29,24 +33,19 @@ namespace Engine {
 
         void ViewportClicked(const EVec2& screenPos, const EVec3& worldPos);
         void ActivateTool();
+
+        void Finish();
+
+        Renderer::RObject* GetActiveObject() const;
     protected:
         // Return true if edit was completed
         virtual bool OnRender() = 0;
         virtual void OnViewportClicked(const EVec2& screenPos, const EVec3& worldPos) {};
         virtual void OnActivateTool() {}
+
+        virtual void OnFinished(EDataBase::Entity entity) = 0;
     };
 
-
-
-    class E_EDEXAPI EPointMoveTool : public EViewportTool
-    {
-    private:
-        EVec2 fCenterPosition;
-    public:
-        EPointMoveTool();
-
-        virtual bool OnRender() override;
-    };
 
     class E_EDEXAPI ELineEditTool : public EViewportTool
     {
@@ -63,15 +62,12 @@ namespace Engine {
             EDITING
         };
     private:
-        Renderer::RLine* fLine;
         Selection fCurrentSelection;
-
         EditState fEditState;
+
+        Editor::ELine fCurrentLine;
     public:
         ELineEditTool();
-
-        void SetLine(Renderer::RLine* line);
-        Renderer::RLine* GetLine() const;
 
         virtual bool OnRender() override;
         virtual void OnViewportClicked(const EVec2& screenPos, const EVec3& worldPos) override;
@@ -80,6 +76,8 @@ namespace Engine {
         static EString sGetName();
 
         virtual EString GetIcon() const override;
+
+        virtual void OnFinished(EDataBase::Entity entity) override;
     };
 
     class E_EDEXAPI EBezierEditTool : public EViewportTool
@@ -93,39 +91,41 @@ namespace Engine {
             CTRL2
         };
     private:
-        Selection fCurrentSelection;
+        Selection fLastSelection;
 
-        Renderer::RBezierCurve* fCurve;
+        Editor::ECurveSegment fCurrentSegment;
     public:
         EBezierEditTool();
 
         virtual bool OnRender() override;
 
-        void SetBezierCurve(Renderer::RBezierCurve* curve);
-        Renderer::RBezierCurve* GetCurve() const;
-
         static EString sGetName();
 
         virtual EString GetIcon() const override;
+
+        
+        virtual void OnFinished(EDataBase::Entity entity) override;
+    private:
+        Selection HandleManipulate(EMat4& startMatrix, EMat4& endMatrix, EMat4& controll1Matrix, EMat4& controll2Matrix);
+        void UpdateCurrentSegment(Renderer::RBezierCurve* curve);
     };
 
     class E_EDEXAPI ETransformTool : public EViewportTool
     {
         using TransformUpdateFunction = std::function<void(Editor::ETransform)>;
     private:
-        Renderer::RObject*    fAttachedObject;
-        bool                  fWasUsing;
+        bool                    fWasUsing;
         TransformUpdateFunction fOnChange;
         
         EVec3 fLastPosition;
         EVec3 fLastRotation; 
         EVec3 fLastScale;
+
+        int   fGizmoID;
     public:
         ETransformTool();
 
         virtual bool OnRender() override;
-
-        void SetAttachedObject(Renderer::RObject* object);
 
         Editor::ETransform GetTransform() const;
 
@@ -134,6 +134,8 @@ namespace Engine {
         static EString sGetName();
 
         virtual EString GetIcon() const override;
+
+        virtual void OnFinished(EDataBase::Entity entity) override;
     };
 
 

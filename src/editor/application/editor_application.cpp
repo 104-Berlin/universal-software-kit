@@ -39,7 +39,7 @@ E_STORAGE_STRUCT(EnumTest,
 static EApplication* runningInstance = nullptr;
 
 EApplication::EApplication() 
-    : fGraphicsContext(nullptr), fCommandLine(), fLoadOnStartRegister()
+    : fGraphicsContext(nullptr), fUIRegister(), fUIValueRegister(), fViewportRenderFunctionRegister(), fViewportManager(&fUIRegister, &fViewportRenderFunctionRegister), fCommandLine(), fLoadOnStartRegister()
 {
     EFolder folder(EFile::GetAppDataPath());
     if (!folder.Exist())
@@ -55,6 +55,7 @@ EApplication::EApplication()
             EAppInit init;
             init.PanelRegister = &fUIRegister;
             init.ValueFieldRegister = &fUIValueRegister;
+            init.ViewportRenderFunctions = &fViewportRenderFunctionRegister;
             E_INFO("Running APP_INIT for plugtin \"" + extension->GetName() + "\"");
             entry(extension->GetName().c_str(), init);
         }
@@ -63,6 +64,8 @@ EApplication::EApplication()
         {
             initImGui();
         }
+
+        fViewportManager.ReloadViewports();
     });
 
 
@@ -79,6 +82,10 @@ EApplication::EApplication()
         }
 
         fUIRegister.ClearRegisteredItems(event.ExtensionName);
+        fUIValueRegister.ClearRegisteredItems(event.ExtensionName);
+        fViewportRenderFunctionRegister.ClearRegisteredItems(event.ExtensionName);
+
+        fViewportManager.ReloadViewports();
     });
 
     fUIRegister.AddEventListener<ERegisterChangedEvent>([this]() {
@@ -321,7 +328,7 @@ void EApplication::RenderImGui()
     fCommandLine.UpdateEventDispatcher();
     fCommandLine.Render();
 
-    //ImGui::ShowDemoWindow();
+    ImGui::ShowDemoWindow();
 
     shared::StaticSharedContext::instance().GetRegisterConnection().GetEventDispatcher().Update();
 }
@@ -526,7 +533,9 @@ void EApplication::LoadApplicationState()
 
     for (const EString& autoLoadExtension : state.AutoLoadExtensions)
     {
-        shared::ExtensionManager().LoadExtension(autoLoadExtension, true);
+        EFile file(autoLoadExtension);
+        shared::ExtensionManager().SetExtensionAutoLoad(file.GetFileName(), true);
+        shared::ExtensionManager().LoadExtension(autoLoadExtension);
     }
 }
 

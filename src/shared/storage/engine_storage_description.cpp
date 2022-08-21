@@ -142,10 +142,6 @@ EVector<EValueDescription> EValueDescription::GetDependsOn() const
 EValueDescription EValueDescription::CreateStruct(const t_ID& id,  EVector<StructField> childs, EProperty* defaultValue) 
 {
     EValueDescription result(EValueType::STRUCT, id);
-    if (id == "ETransform")
-    {
-        E_INFO("ETransform");
-    }
     for (const StructField& entry : childs)
     {
         result.AddStructField(entry.first, entry.second);

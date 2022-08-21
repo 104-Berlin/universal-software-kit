@@ -15,6 +15,8 @@ namespace Editor {
 
         Engine::EUIRegister         fUIRegister;
         Engine::EUIValueRegister    fUIValueRegister;
+        Engine::EViewportRenderFunctionRegister fViewportRenderFunctionRegister;
+        Engine::EUIViewportManager  fViewportManager;
 
         ECommandLine                fCommandLine;
         EString                     fLoadOnStartRegister;

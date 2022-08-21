@@ -9,6 +9,8 @@ add_library(EEditorExtension SHARED editor_vector_functions.cpp
                                     ui/viewport/editor_ext_camera_controls.cpp
                                     ui/viewport/editor_ext_viewport.cpp
                                     ui/viewport/editor_ext_viewport_tools.cpp
+                                    ui/viewport/editor_ext_viewport_manager.cpp
+                                    ui/viewport/editor_ext_selection_context.cpp
                                     ui/editor_ext_ui.cpp)
 
 target_compile_definitions(EEditorExtension PRIVATE EXPORT_EDITOR_EXTENSION)
