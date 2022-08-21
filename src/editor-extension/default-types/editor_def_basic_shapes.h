@@ -15,4 +15,13 @@ namespace Editor {
         (EVec3, Controll2, 1, 1, 0)
     )
 
+    E_STORAGE_STRUCT(EBezierCurve, 
+        (EVector<ECurveSegment>, Segments)
+    )
+
+    E_EDEXAPI Renderer::RLine* CreateRenderObject(const ELine& line);
+    E_EDEXAPI Renderer::RBezierCurveEdit* CreateRenderObject(const ECurveSegment& curveSegment);
+    E_EDEXAPI Renderer::RBezierCurve* CreateRenderObject(const EBezierCurve& curveSegment);
+
+
 }

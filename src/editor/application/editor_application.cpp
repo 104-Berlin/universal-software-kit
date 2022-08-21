@@ -1,9 +1,5 @@
 #include "editor.h"
 
-#define NANOSVG_IMPLEMENTATION	// Expands implementation
-#include "../../deps/usk-graphics/deps/nanosvg/src/nanosvg.h"
-
-
 using namespace Editor;
 using namespace Graphics;
 using namespace Engine;
@@ -93,6 +89,8 @@ EApplication::EApplication()
     });
 
     // Temp
+    BasicSvg::_dsc.AddDependsOn(Editor::ETransform::_dsc);
+
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<MyType>("Core");
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<BasicSvg>("Core");
     shared::ExtensionManager().GetComponentRegister().RegisterStruct<EnumTest>("Core");
@@ -257,6 +255,8 @@ void EApplication::Init(Graphics::GContext* context)
 
 
 
+    fViewportManager.ReloadViewports();
+
     LoadApplicationState();
 
     if (!fLoadOnStartRegister.empty())
@@ -268,6 +268,7 @@ void EApplication::Init(Graphics::GContext* context)
             shared::LoadRegisterFromBuffer(registerFile.GetBuffer());
         }
     }
+
 }
 
 void EApplication::CleanUp() 
@@ -369,60 +370,25 @@ void EApplication::RegisterDefaultPanels()
     fUIRegister.RegisterItem("Core", extensionPanel);
     fUIRegister.RegisterItem("Core", connectionStatePanel);
 
-
-
-    ERef<EUIPanel> basicViewport = EMakeRef<EUIPanel>("Basic Viewport");
-    EWeakRef<EUIViewport> weakViewport = std::dynamic_pointer_cast<EUIViewport>(basicViewport->AddChild(EMakeRef<EUIViewport>()).lock());
-    
-
-    shared::Events().AddEntityChangeEventListener("BasicSvg.SvgLink", [this, weakViewport](ERegister::Entity entity, const EString& nameIdent){
-        EResourceLink value;
-        if (shared::GetValue<EResourceLink>(nameIdent, entity, &value))
+    EUIViewportRenderFunction svgRenderFunction;
+    svgRenderFunction.Description.Type = EViewportType::DEFAULT_2D;
+    svgRenderFunction.NeedsOwnObject = true;
+    svgRenderFunction.ValueDescription = BasicSvg::_dsc;
+    svgRenderFunction.RenderFunction = [](Renderer::RObject* object, ERef<EProperty> value){
+        object->Clear();
+        BasicSvg curveData;
+        if (value->GetValue(&curveData))
         {
-            // Get Resource data
-            ERef<Engine::EResourceData> resourceData = shared::GetResource(value.ResourceId);
-            // If fEntityObjectMap does not contain entity insert new Renderer::RObject into the map
-            Renderer::RObject* svgObject = nullptr;
-            if (fEntityObjectMap.find(entity) == fEntityObjectMap.end())
+            ERef<EResource> svgResource = shared::GetResource(curveData.SvgLink.ResourceId);
+            if (svgResource)
             {
-                svgObject = new Renderer::RObject();
-                fEntityObjectMap[entity] = svgObject;
-                weakViewport.lock()->GetScene().Add(svgObject);
+                Editor::ESvgResource* res = svgResource->GetCPtr<Editor::ESvgResource>();
+                object->Add(Editor::CreateRenderObject(res->CurveSegments));
             }
-            else
-            {
-                // If fEntityObjectMap contains entity update Renderer::RObject
-                svgObject = fEntityObjectMap[entity];
-            }
-            svgObject->Clear();
-            if (!resourceData || !resourceData->Data)
-            {
-                return;
-            }
-            char* buffer = new char[resourceData->DataSize + 1];
-            strcpy(buffer, (const char*) resourceData->Data);
-            NSVGimage* image;
-            image = nsvgParse(buffer, "px", 96.0f);
-            if (image)
-            {
-                for (auto shape = image->shapes; shape != NULL; shape = shape->next) {
-                    for (auto path = shape->paths; path != NULL; path = path->next) {
-                        for (int i = 0; i < path->npts-1; i += 3) {
-                            float* p = &path->pts[i*2];
-                            Renderer::RBezierCurve* curve = new Renderer::RBezierCurve();
-                            curve->SetStartPos({ p[0], p[1], 0.0f });
-                            curve->SetControll1({ p[2], p[3], 0.0f });
-                            curve->SetControll2({ p[4], p[5], 0.0f });
-                            curve->SetEndPos({ p[6], p[7], 0.0f });
-                            svgObject->Add(curve);
-                        }
-                    }
-                }
-            }
-            nsvgDelete(image);
         }
-    });
-    fUIRegister.RegisterItem("Core", basicViewport);
+    };
+    fViewportRenderFunctionRegister.RegisterItem("Core", svgRenderFunction);
+
     fUIRegister.RegisterItem("Core", registerPanel);
 }
 
@@ -448,7 +414,12 @@ void EApplication::RegisterDefaultResources()
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", meshDsc);
 
     EResourceDescription svgDsc("SVG",{"svg"});
-    svgDsc.ImportFunction = &ResSvg::ImportSvg;
+    svgDsc.ImportFunction = [](ESharedBuffer buffer) -> EResource*{
+        EResource* result = new EResource("SVG");
+        result->SetBuffer(buffer);
+        result->Load<ESvgResource>();
+        return result;
+    };
     shared::StaticSharedContext::instance().GetExtensionManager().GetResourceRegister().RegisterItem("Core", svgDsc);
 
     // FOR TESTING PURPOSES
@@ -543,4 +514,4 @@ EApplication* EApplication::gApp()
 {
     E_ASSERT_M(runningInstance != nullptr, "Application not initialized");
     return runningInstance;
-}
+} 

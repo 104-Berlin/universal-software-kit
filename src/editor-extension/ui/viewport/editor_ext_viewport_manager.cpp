@@ -30,8 +30,10 @@ void EUIViewportManager::ReloadViewports()
             // All renderfunctions unloaded in this viewport type
             for (const auto& renderFunc : entry.second)
             {
-                for (auto [entity, index] : renderFunc.second.ComponentObjectIndex)
+                for (auto entry : renderFunc.second.ComponentObjectIndex)
                 {
+                    EDataBase::Entity entity = entry.first;
+
                     EachViewport(entry.first, [entity](ERef<EUIViewport> viewport){
                         Renderer::RObject* entityObject = viewport->GetObjectFromEntity(entity);
                         if (entityObject)
@@ -48,8 +50,10 @@ void EUIViewportManager::ReloadViewports()
         {
             if (fRenderFunctions[entry.first].find(renderFunc.first) == fRenderFunctions[entry.first].end())
             {
-                for (auto [entity, index] : renderFunc.second.ComponentObjectIndex)
+                for (auto entry : renderFunc.second.ComponentObjectIndex)
                 {
+                    EDataBase::Entity entity = entry.first;
+
                     EachViewport(entry.first, [entity](ERef<EUIViewport> viewport){
                         Renderer::RObject* entityObject = viewport->GetObjectFromEntity(entity);
                         if (entityObject)
@@ -170,7 +174,11 @@ ERef<EUIField> EUIViewportManager::CreateViewport(const EViewportType& type) con
     case EViewportType::DEFAULT_3D:
         return std::static_pointer_cast<EUIField>(EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::PERSPECTIVE)));
     case EViewportType::DEFAULT_2D:
-        return std::static_pointer_cast<EUIField>(EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::ORTHOGRAPHIC)));
+        {
+            ERef<EUIViewport> result = EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::ORTHOGRAPHIC));
+            result->SetCameraControls<EUIBasic2DCameraControls>();
+            return result;
+        }
     case EViewportType::FRONT_RIGHT_TOP_3D:
     {
         ERef<EUISplitView> splitView = EMakeRef<EUISplitView>(2, 2);

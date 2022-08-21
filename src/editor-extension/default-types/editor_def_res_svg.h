@@ -4,7 +4,11 @@ namespace Editor {
 
     struct E_EDEXAPI ESvgResource
     {
-        
+        EVector<ECurveSegment> CurveSegments;
+        float                   Width;
+        float                   Height;
+
+        void FromBuffer(Engine::ESharedBuffer buffer);
     };
 
     namespace ResSvg {

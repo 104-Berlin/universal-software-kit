@@ -13,9 +13,6 @@ EUIViewport::EUIViewport(const Renderer::RCamera& camera)
         fCamera(camera),
         fCameraControls(new EUIBasic3DCameraControls(&fCamera))
 {
-    SetWidth(100);
-    SetHeight(100);
-
     AddEventListener<events::EMouseDragEvent>([this](events::EMouseDragEvent event){
         if (this->fCameraControls && !ImGuizmo::IsUsing())
         {
@@ -125,7 +122,10 @@ void EUIViewport::SetActiveTool(const EString& toolName)
 
 bool EUIViewport::OnRender() 
 {
-    ImVec2 contentRegion = ImVec2(fWidthOverride, fHeightOverride);
+    ImVec2 contentRegion = ImVec2(  fWidthOverride == 0.0f ? 
+                                           ImGui::GetContentRegionAvail().x : fWidthOverride, 
+                                    fHeightOverride == 0.0f ? 
+                                            ImGui::GetContentRegionAvail().y : fHeightOverride);
     
     fFrameBuffer->Resize(contentRegion.x, contentRegion.y, Graphics::GFrameBufferFormat::RGBA8);
     fRenderer.Render(&fScene, &fCamera);

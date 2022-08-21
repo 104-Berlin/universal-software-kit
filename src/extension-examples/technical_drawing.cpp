@@ -105,10 +105,10 @@ APP_ENTRY
     curveRenderFunc.NeedsOwnObject = true;
     curveRenderFunc.ValueDescription = Curve::_dsc;
     curveRenderFunc.RenderFunction = [](RObject* object, ERef<EProperty> value){
-        RBezierCurve* bezierCurve = (RBezierCurve*)object->GetChildAt(0);
+        RBezierCurveEdit* bezierCurve = (RBezierCurveEdit*)object->GetChildAt(0);
         if (!bezierCurve)
         {
-            bezierCurve = new RBezierCurve();
+            bezierCurve = new RBezierCurveEdit();
             object->Add(bezierCurve);
         }
         Curve curveData;

@@ -41,11 +41,11 @@ typedef glm::quat EQuat;
 
 #include "editor_vector_dsc.h"
 
-#include "default-types/editor_def_res_svg.h"
 #include "default-types/editor_def_res_image.h"
 #include "default-types/editor_def_res_mesh.h"
 #include "default-types/editor_def_transform.h"
 #include "default-types/editor_def_basic_shapes.h"
+#include "default-types/editor_def_res_svg.h"
 
 
 

@@ -107,7 +107,7 @@ namespace Engine {
         virtual void OnFinished(EDataBase::Entity entity) override;
     private:
         Selection HandleManipulate(EMat4& startMatrix, EMat4& endMatrix, EMat4& controll1Matrix, EMat4& controll2Matrix);
-        void UpdateCurrentSegment(Renderer::RBezierCurve* curve);
+        void UpdateCurrentSegment(Renderer::RBezierCurveEdit* curve);
     };
 
     class E_EDEXAPI ETransformTool : public EViewportTool

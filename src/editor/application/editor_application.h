@@ -20,7 +20,7 @@ namespace Editor {
 
         ECommandLine                fCommandLine;
         EString                     fLoadOnStartRegister;
-        EUnorderedMap<Engine::ERegister::Entity, Renderer::RObject*> fEntityObjectMap;
+        EUnorderedMap<Engine::EDataBase::Entity, Renderer::RObject*> fEntityObjectMap;
     public:
         EApplication();
         ~EApplication();
