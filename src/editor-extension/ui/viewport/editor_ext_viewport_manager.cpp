@@ -175,9 +175,20 @@ ERef<EUIField> EUIViewportManager::CreateViewport(const EViewportType& type) con
     {
         ERef<EUISplitView> splitView = EMakeRef<EUISplitView>(2, 2);
         splitView->AddChild(EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::PERSPECTIVE)));
-        splitView->AddChild(EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::PERSPECTIVE)));
-        splitView->AddChild(EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::PERSPECTIVE)));
-        splitView->AddChild(EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::PERSPECTIVE)));
+
+        ERef<EUIViewport> front_2d = EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::ORTHOGRAPHIC));
+        front_2d->SetCameraControls<EUIBasic2DCameraControls>();
+        splitView->AddChild(front_2d);
+
+        ERef<EUIViewport> left_2d = EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::ORTHOGRAPHIC));
+        left_2d->GetCamera().TurnRight(M_PI / 2.0f);
+        left_2d->SetCameraControls<EUIBasic2DCameraControls>();
+        splitView->AddChild(left_2d);
+
+        ERef<EUIViewport> top_2d = EMakeRef<EUIViewport>(Renderer::RCamera(Renderer::ECameraMode::ORTHOGRAPHIC));
+        top_2d->GetCamera().TurnUp(-M_PI / 2.0f);
+        top_2d->SetCameraControls<EUIBasic2DCameraControls>();
+        splitView->AddChild(top_2d);
         return splitView;
     }
     }
