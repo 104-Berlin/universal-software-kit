@@ -30,8 +30,9 @@ void EUIViewportManager::ReloadViewports()
             // All renderfunctions unloaded in this viewport type
             for (const auto& renderFunc : entry.second)
             {
-                for (auto [entity, index] : renderFunc.second.ComponentObjectIndex)
+                for (auto entry : renderFunc.second.ComponentObjectIndex)
                 {
+                    auto entity = entry.first;
                     EachViewport(entry.first, [entity](ERef<EUIViewport> viewport){
                         Renderer::RObject* entityObject = viewport->GetObjectFromEntity(entity);
                         if (entityObject)
@@ -48,8 +49,9 @@ void EUIViewportManager::ReloadViewports()
         {
             if (fRenderFunctions[entry.first].find(renderFunc.first) == fRenderFunctions[entry.first].end())
             {
-                for (auto [entity, index] : renderFunc.second.ComponentObjectIndex)
+                for (auto entry : renderFunc.second.ComponentObjectIndex)
                 {
+                    auto entity = entry.first;
                     EachViewport(entry.first, [entity](ERef<EUIViewport> viewport){
                         Renderer::RObject* entityObject = viewport->GetObjectFromEntity(entity);
                         if (entityObject)

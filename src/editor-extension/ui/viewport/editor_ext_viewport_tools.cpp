@@ -186,7 +186,7 @@ bool EBezierEditTool::OnRender()
     {
         return false;
     }
-    Renderer::RBezierCurve* curve = GetActiveObject()->FindTypeOf<Renderer::RBezierCurve>(true);
+    Renderer::RBezierCurveEdit* curve = GetActiveObject()->FindTypeOf<Renderer::RBezierCurveEdit>(true);
 
     if (!curve) { return false; }
     
@@ -317,7 +317,7 @@ EBezierEditTool::Selection EBezierEditTool::HandleManipulate(EMat4& startMatrix,
     return Selection::NONE;
 }
 
-void EBezierEditTool::UpdateCurrentSegment(Renderer::RBezierCurve* curve)
+void EBezierEditTool::UpdateCurrentSegment(Renderer::RBezierCurveEdit* curve)
 {
     fCurrentSegment.Start = curve->GetStartPos();
     fCurrentSegment.End = curve->GetEndPos();
