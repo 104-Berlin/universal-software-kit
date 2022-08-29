@@ -247,8 +247,6 @@ void EApplication::Init(Graphics::GContext* context)
     ImFontConfig icons_config; icons_config.FontDataOwnedByAtlas = false; icons_config.MergeMode = true; icons_config.PixelSnapH = false; icons_config.GlyphOffset = {0.0f, 4.0f};
     io.Fonts->AddFontFromMemoryTTF((void*)MaterialIcons_Regular_buffer, MaterialIcons_Regular_size, 16.0f, &icons_config, icons_ranges);
 
-
-
     LoadApplicationState();
 
     if (!fLoadOnStartRegister.empty())
@@ -303,6 +301,7 @@ void EApplication::Render()
 
 void EApplication::RenderImGui() 
 {
+    //E_INFO("Active ID: " + std::to_string(ImGui::GetActiveID()));
     for (ERef<EUIPanel> panel : fUIRegister.GetAllItems())
     {
         panel->UpdateEventDispatcher();

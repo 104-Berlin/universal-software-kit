@@ -95,7 +95,11 @@ EExtensionManager::~EExtensionManager()
 bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
 {
     EFile file(pathToExtensio);
-    if (!file.Exist()) { E_ERROR("Could not find Plugin File \"" + file.GetFullPath() + "\""); return false; }
+    if (!file.Exist()) 
+    { 
+        E_ERROR("Could not find Plugin File \"" + file.GetFullPath() + "\""); 
+        return false; 
+    }
 
     if (fLoadedExtensions.find(file.GetFileName()) != fLoadedExtensions.end())
     {
@@ -230,7 +234,7 @@ void EExtensionManager::Reload()
     EVector<EString> extensionToLoad;
     for (EExtension* ext : allExtensions)
     {
-        extensionToLoad.push_back({ext->GetFilePath(), ext->GetAutoLoad()});
+        extensionToLoad.push_back(ext->GetFilePath());
         UnloadExtension(ext);
     }
 

@@ -125,6 +125,15 @@ void EUIViewport::SetActiveTool(const EString& toolName)
 
 bool EUIViewport::OnRender() 
 {
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    if (window->SkipItems)
+    {
+        return false;
+    }
+
+    ImGuiContext& g = *ImGui::GetCurrentContext();
+    ImGuiIO& io = ImGui::GetIO();
+
     ImVec2 contentRegion = ImVec2(fWidthOverride, fHeightOverride);
     
     fFrameBuffer->Resize(contentRegion.x, contentRegion.y, Graphics::GFrameBufferFormat::RGBA8);
@@ -136,20 +145,50 @@ bool EUIViewport::OnRender()
         case ViewType::NORMAL: textureId = fFrameBuffer->GetNormalAttachment(); break;
         case ViewType::DEPTH: textureId = fFrameBuffer->GetDepthAttachment(); break;
     }
-
+    //ImGui::BeginChild(fID, contentRegion, false, ImGuiWindowFlags_NoScrollbar);
     // Show the render result
     ImGui::Image((ImTextureID)(unsigned long long)(unsigned long)textureId, {contentRegion.x, contentRegion.y}, {0, 1}, {1, 0});
+    
+    const ImRect frame_bb(window->DC.CursorPos, {window->DC.CursorPos.x + contentRegion.x, window->DC.CursorPos.y + contentRegion.y});
+
+    const bool input_requested_by_tabbing = (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
+    const bool input_requested_by_nav = (g.ActiveId != fID) && ((g.NavActivateInputId == fID) || (g.NavActivateId == fID && g.NavInputSource == ImGuiInputSource_Keyboard));
+
+    E_INFO("Hovered id: " + std::to_string(g.HoveredId));
+    const bool hovered = ImGui::ItemHoverable(frame_bb, fID);
+    const bool clicked = hovered && io.MouseClicked[0];
+
+    const bool init_make_active = clicked || input_requested_by_nav || input_requested_by_tabbing;
+    if (clicked)
+    {
+        E_INFO("Viewport clicked " + std::to_string(fID));
+    }
+
+    if (g.ActiveId != fID && init_make_active)
+    {
+        ImGui::SetActiveID(fID, window);
+        ImGui::SetFocusID(fID, window);
+        ImGui::FocusWindow(window);
+
+        //g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right);
+        //g.ActiveIdUsingNavInputMask |= (1 << ImGuiNavInput_Cancel);
+        //ImGui::SetActiveIdUsingKey(ImGuiKey_Home);
+        //ImGui::SetActiveIdUsingKey(ImGuiKey_End);
+    }
+
+    ImGuiWindow* draw_window = g.CurrentWindow; // Child window
+    draw_window->DC.NavLayersActiveMaskNext |= (1 << draw_window->DC.NavLayerCurrent); // This is to ensure that EndChild() will display a navigation highlight so we can "enter" into it.
+
 
     // Prepare Imguizmo
-    ImGuiContext& g = *Graphics::Wrapper::GetCurrentImGuiContext();
     ImRect itemRect = g.LastItemData.Rect;
     
 
     ImGuizmo::SetOrthographic(false);
-    ImGuizmo::SetID(1);
     ImGuizmo::SetDrawlist();
     ImGuizmo::SetRect(itemRect.GetTL().x, itemRect.GetTL().y, itemRect.GetWidth(), itemRect.GetHeight());
 
+    //ImGui::EndChild();
 
 
     if (fActiveTool && fActiveTool->IsVisible())
@@ -160,6 +199,7 @@ bool EUIViewport::OnRender()
             //fEventDispatcher.Enqueue<events::EViewportToolFinishEvent>({fActiveTool->GetToolName()});
         }
     }
+
 
 
     return true;
