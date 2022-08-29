@@ -60,7 +60,7 @@ namespace events {
          * @param pathToExtension
          * @return Success or Fail
          */
-        bool LoadExtension(const EString& pathToExtension, bool autoLoad);
+        bool LoadExtension(const EString& pathToExtension);
 
         /**
          * Get an extension by name

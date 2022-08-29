@@ -15,7 +15,7 @@ TEST(ExtensionTest, LoadExtension)
     EDataBase* activeScene = new EDataBase();
 
     EExtensionManager extensionManager;
-    extensionManager.LoadExtension("Example2.uex", false);
+    extensionManager.LoadExtension("Example2.uex");
 
     EValueDescription electricalDsc = extensionManager.GetValueDescriptionById("Example2", "Electrical");
 

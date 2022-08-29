@@ -75,7 +75,7 @@ EExtensionView::EExtensionView()
         EVector<EString> loadingPaths = Graphics::Wrapper::OpenFileDialog("Load Extension", {"uex"});
         for (const EString& extPath : loadingPaths)
         {
-            shared::ExtensionManager().LoadExtension(extPath, false);
+            shared::ExtensionManager().LoadExtension(extPath);
         }
     });
 
@@ -100,7 +100,7 @@ ERef<EUITableRow> EExtensionView::CreateExtensionViewRow(size_t index)
     loaded->AddEventListener<events::ECheckboxEvent>([this, item, index](events::ECheckboxEvent event){
         if (event.Checked)
         {
-            shared::ExtensionManager().LoadExtension(item.FullPath, false);
+            shared::ExtensionManager().LoadExtension(item.FullPath);
         }
         else
         {

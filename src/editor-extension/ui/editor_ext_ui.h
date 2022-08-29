@@ -773,6 +773,24 @@ namespace events
         virtual void OnRenderEnd(bool renderResult) override;
     };
 
+    class E_EDEXAPI EUISplitView : public EUIField 
+    {
+    private:
+        u32 fSplitCountX;
+        u32 fSplitCountY;
+
+        u32 fCurrentSplitIndex;
+
+        EVec2 fCellSize;
+    public:
+        EUISplitView(u32 splitCountX = 2, u32 splitCountY = 2);
+
+        virtual bool OnRender() override;
+        virtual bool OnBeforeChildRender(EWeakRef<EUIField> child) override;
+        virtual void OnRenderEnd(bool renderResult) override;
+
+    };
+
     namespace events {
         E_STORAGE_STRUCT(EResourceSelectChangeEvent,
             (EString, ResourceType),

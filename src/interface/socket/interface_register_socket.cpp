@@ -373,7 +373,7 @@ EJson ERegisterSocket::Pk_HandleSetValue(const ERegisterPacket& packet)
         }
         if (EDeserializer::ReadPropertyFromJson(EJson::parse(value), foundProperty.lock().get()))
         {
-            E_INFO("Value " + valueIdent + " setted on entity " + std::to_string(entity) + "!");
+            E_INFO("Value " + valueIdent + " setted on entity " + std::to_string(entity) + " to " + ESerializer::WritePropertyToJs(foundProperty.lock().get(), false).dump());
         }
     }
     return EJson::object();

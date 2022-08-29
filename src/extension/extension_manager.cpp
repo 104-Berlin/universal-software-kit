@@ -92,10 +92,14 @@ EExtensionManager::~EExtensionManager()
 {
 }
 
-bool EExtensionManager::LoadExtension(const EString& pathToExtensio, bool autoLoad)
+bool EExtensionManager::LoadExtension(const EString& pathToExtensio)
 {
     EFile file(pathToExtensio);
-    if (!file.Exist()) { E_ERROR("Could not find Plugin File \"" + file.GetFullPath() + "\""); return false; }
+    if (!file.Exist()) 
+    { 
+        E_ERROR("Could not find Plugin File \"" + file.GetFullPath() + "\""); 
+        return false; 
+    }
 
     if (fLoadedExtensions.find(file.GetFileName()) != fLoadedExtensions.end())
     {
@@ -104,7 +108,7 @@ bool EExtensionManager::LoadExtension(const EString& pathToExtensio, bool autoLo
     }
 
     EExtension* newExtension = new EExtension(file.GetFullPath());
-    newExtension->SetAutoLoad(autoLoad);
+    newExtension->SetAutoLoad(IsAutoLoad(newExtension->GetName()));
     newExtension->InitImGui();
     // Run load function
     
@@ -143,13 +147,29 @@ bool EExtensionManager::IsLoaded(const EString& extensionName)
 
 void EExtensionManager::SetExtensionAutoLoad(const EString& extensionName, bool autoLoad)
 {
+    if (autoLoad)
+    {
+        fAutoLoadExtensions.insert(extensionName);
+    }
+    else
+    {
+        fAutoLoadExtensions.erase(extensionName);
+    }
     if (!IsLoaded(extensionName)) { E_WARN("Could not find extension \"" + extensionName + "\""); return; }
+
     fLoadedExtensions[extensionName]->SetAutoLoad(autoLoad);
 }
 
 bool EExtensionManager::IsAutoLoad(const EString& extensionName)
 {
-    if (!IsLoaded(extensionName)) { E_WARN("Could not find extension \"" + extensionName + "\""); return false; }
+    if (fAutoLoadExtensions.find(extensionName) != fAutoLoadExtensions.end())
+    {
+        return true;
+    }
+    if (!IsLoaded(extensionName))
+    { 
+        return false; 
+    }
     return fLoadedExtensions[extensionName]->GetAutoLoad();
 }
 
@@ -211,16 +231,16 @@ void EExtensionManager::Reload()
 {
     // Cache pointers to extension, because map will change with reload
     EVector<EExtension*> allExtensions = GetLoadedExtensions();
-    EVector<EPair<EString, bool>> extensionToLoad;
+    EVector<EString> extensionToLoad;
     for (EExtension* ext : allExtensions)
     {
-        extensionToLoad.push_back({ext->GetFilePath(), ext->GetAutoLoad()});
+        extensionToLoad.push_back(ext->GetFilePath());
         UnloadExtension(ext);
     }
 
     for (const auto& exInfo : extensionToLoad)
     {
-        LoadExtension(exInfo.first, exInfo.second);
+        LoadExtension(exInfo);
     }
 }
 
@@ -240,11 +260,10 @@ void EExtensionManager::ReloadExtension(const EString& extensionName)
 void EExtensionManager::ReloadExtension(EExtension* extension) 
 {
     EString extensionPath = extension->GetFilePath();
-    bool autoLoad = extension->GetAutoLoad();
     UnloadExtension(extension);
     // TODO: We have to find all events that got queued be the extension.
     // If we call these functions they will be deleted i guess
-    LoadExtension(extensionPath, autoLoad);
+    LoadExtension(extensionPath);
 }
 
 void EExtensionManager::UnloadExtension(EExtension* extension) 
@@ -255,6 +274,7 @@ void EExtensionManager::UnloadExtension(EExtension* extension)
 
     fTypeRegister.ClearRegisteredItems(extensionName);
     fResourceRegister.ClearRegisteredItems(extensionName);
+    fTaskRegister.ClearRegisteredItems(extensionName);
     
     fEventDispatcher.Post<events::EExtensionUnloadEvent>({extensionName, extensionPath});
 

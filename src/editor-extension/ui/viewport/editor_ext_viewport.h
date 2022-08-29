@@ -29,7 +29,12 @@ namespace Engine {
         Renderer::RCamera fCamera;
         Renderer::RScene fScene;
 
-        EUICameraControls* fCameraControls;
+        // Entity object maps
+        EUnorderedMap<EDataBase::Entity, Renderer::RObject*> fEntityObjectMap;
+        EUnorderedMap<Renderer::RObject*, EDataBase::Entity> fObjectEntityMap;
+
+        EUICameraControls*  fCameraControls;
+        ESelectionContext   fSelectionCtx;
     public:
         Renderer::RScene& GetScene();
         const Renderer::RScene& GetScene() const;
@@ -47,7 +52,17 @@ namespace Engine {
         float GetWidth() const;
         float GetHeight() const;
 
+        const ESelectionContext& GetSelectionContext() const;
+        ESelectionContext& GetSelectionContext();
+
+        void PushToEntityObjectMap(EDataBase::Entity entity, Renderer::RObject* object);
+        void RemoveFromEntityObjectMap(EDataBase::Entity entity);
+        void RemoveFromEntityObjectMap(Renderer::RObject* object);
+        EDataBase::Entity GetEntityFromObject(Renderer::RObject* object) const;
+        Renderer::RObject* GetObjectFromEntity(EDataBase::Entity entity) const;
+
         EVector<EViewportTool*> GetRegisteredTools();
+        void ClearRegisteredTools();
         EViewportTool* GetActiveTool();
         void SetActiveTool(const EString& toolName);
 
