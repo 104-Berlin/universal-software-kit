@@ -72,7 +72,6 @@ if (${BUILD_TOOLS})
 add_subdirectory(src/tools)
 endif()
 
-#########################
 ######### MIDI ##########
 if (${BUILD_MIDI_TOOL} AND ${BUILD_EDITOR})
 add_subdirectory(deps/rtmidi)
@@ -98,7 +97,7 @@ endif()
 #########################
 ######## EXAMPLES #######
 if (${BUILD_EXAMPLES})
-add_subdirectory(src/extension-examples)
+#add_subdirectory(src/extension-examples)
 endif()
 
 
@@ -107,8 +106,7 @@ endif()
 ####### EDITOR ##########
 if ((WIN32 OR APPLE) AND ${BUILD_EDITOR})
 set(BUILD_SHARED_LIBS FALSE)
-  add_subdirectory(src/editor-extension)
-  add_subdirectory(deps/usk-graphics)
-
+  add_subdirectory(deps/software-gui)
   add_subdirectory(src/editor)
 endif()
+   

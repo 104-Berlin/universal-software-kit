@@ -1,9 +1,6 @@
 [submodule "deps/googletets"]
 	path = deps/googletets
 	url = https://github.com/google/googletest.git
-[submodule "deps/usk-graphics"]
-	path = deps/usk-graphics
-	url = https://github.com/104-Berlin/usk-graphics.git
 [submodule "deps/chai"]
 	path = deps/chai
 	url = https://github.com/ChaiScript/ChaiScript.git
@@ -13,3 +10,6 @@
 [submodule "deps/assimp"]
 	path = deps/assimp
 	url = https://github.com/assimp/assimp.git
+[submodule "deps/software-gui"]
+	path = deps/software-gui
+	url = https://github.com/104-Berlin/software-gui.git
