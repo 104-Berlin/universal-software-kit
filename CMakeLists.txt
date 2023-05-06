@@ -22,6 +22,7 @@ option(BUILD_CLT "Toggle the Command-Line-Tool" TRUE)
 option(BUILD_TOOLS "Toogle the build of the tools" TRUE)
 option(BUILD_MIDI_TOOL "Toggle the midi extension" TRUE)
 option(BUILD_ASSIMP "Toggle the assimp build" TRUE)
+option(BUILD_MEM_TEST "Toggle the memory test build" TRUE)
 
 
 # Editor only for windows and mac supported
@@ -87,10 +88,16 @@ endif()
 #########################
 ###### TESTING ##########
 if (${BUILD_TEST})
-  add_subdirectory(deps/googletets)
-  add_subdirectory(src/tests)
+add_subdirectory(deps/googletets)
+add_subdirectory(src/tests)
 endif()
 
+
+#########################
+###### MEM Test #########
+if (${BUILD_MEM_TEST})
+add_subdirectory(src/memory-test)
+endif()
 
 
 
